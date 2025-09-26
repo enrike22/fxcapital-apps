@@ -40,10 +40,12 @@ small{color:var(--muted)}
 .login-card h2{text-align:center;margin-bottom:12px}
 .input-wrap{position:relative}
 .input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
-.input-wrap input{padding-left:38px;height:46px;border-radius:12px}
+.input-wrap input{padding-left:38px;height:46px;border-radius:12px; /* ojo: espacio para icono derecho */
+  padding-right:44px;}
 .eye-btn{
   position:absolute;right:10px;top:50%;transform:translateY(-50%);
-  background:transparent;border:0;color:#fff;cursor:pointer;font-size:18px;width:32px;height:32px;display:flex;align-items:center;justify-content:center
+  background:transparent;border:0;cursor:pointer;width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;z-index:5;
 }
 .btn-primary{width:100%;height:46px;border-radius:999px;font-weight:700;background:#0f0f0f;color:#fff;border:1px solid #2a2a2a}
 .btn-primary:hover{filter:brightness(1.15)}
@@ -62,7 +64,7 @@ small{color:var(--muted)}
 .err{color:#ffb3b3;min-height:18px;text-align:center}
 .success{color:#b3ffcb;min-height:18px;text-align:center}
 
-/* Ojos blancos */
+/* Ojos visibles: blancos */
 .eye, .eye-off { width:22px; height:22px; fill:#fff }
 </style>
 </head>
@@ -180,7 +182,7 @@ small{color:var(--muted)}
   </div>
 </div>
 
-<!-- ===== MODAL (SOLO DESPUÉS DE ENTRAR) ===== -->
+<!-- ===== MODAL (solo después de entrar) ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
@@ -260,7 +262,7 @@ document.getElementById("loginForm").addEventListener("submit",async(e)=>{
   await init();
 });
 
-/*** BOTONES OJO (blancos) ***/
+/*** Botones ojo (blancos) ***/
 document.addEventListener('click',(e)=>{
   const btn=e.target.closest('.eye-btn');
   if(!btn) return;
@@ -272,14 +274,24 @@ document.addEventListener('click',(e)=>{
     : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9.5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
 });
 
-/*** APP ***/
+/*** APP helpers ***/
 function show(id,vis){document.getElementById(id).classList[vis?"remove":"add"]("hidden")}
 function isAppVisible(){ return !document.getElementById('app').classList.contains('hidden'); }
 function logout(){localStorage.removeItem("token");localStorage.removeItem("uid");localStorage.removeItem("email");location.reload()}
 
+/* Verifica si el token es válido; si no, limpia y muestra login */
+async function verifySession(){
+  if(!localStorage.token) return false;
+  const r = await fetch(`${PROJECT_URL}/auth/v1/user`,{
+    headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}
+  });
+  if(!r.ok){ localStorage.removeItem('token'); localStorage.removeItem('uid'); return false; }
+  return true;
+}
+
 async function init(){
-  // Garantiza que NO corra si no hay sesión válida
-  if(!localStorage.token){ show("app",false); show("unauth",true); return; }
+  const ok = await verifySession();
+  if(!ok){ show("app",false); show("unauth",true); return; }
   show("unauth",false); show("app",true);
   await loadAccount();
   await buildMonthResults();
@@ -290,9 +302,7 @@ async function init(){
 let ACCOUNT=null,PROFILE=null;
 async function loadAccount(){
   const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
-  if(!rp.ok){ // si el token no sirve, regresar a login
-    logout(); return;
-  }
+  if(!rp.ok){ logout(); return; }
   PROFILE=(await rp.json())[0]||null;
 
   const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`,{headers:hdr()});
@@ -348,7 +358,7 @@ const $pwdMsg=()=>document.getElementById('pwdMsg');
 const $pwdOk =()=>document.getElementById('pwdOk');
 
 function openPwdModal(forceMandatory){
-  if(!isAppVisible()) return; // garantía extra
+  if(!isAppVisible()) return; // seguridad extra
   $pwdMsg().textContent='';$pwdOk().textContent='';
   document.getElementById('pwdEmail').value=localStorage.email||'';
   ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
@@ -359,11 +369,13 @@ function openPwdModal(forceMandatory){
 function closePwdModal(){ $modal().classList.add('hidden'); }
 
 async function maybeAskPasswordChange(){
-  // Mostrar solo si el perfil existe y la app está visible
-  if(!isAppVisible() || !PROFILE?.id) return;
-  const mustByPolicy = PROFILE?.require_password_change === true;
-  const firstNotDone = PROFILE?.first_login_completed !== true;
+  if(!isAppVisible()) return;
+  const rp=PROFILE;
+  if(!rp) return;
+  const mustByPolicy = rp.require_password_change === true;
+  const firstNotDone = rp.first_login_completed !== true;
   if(mustByPolicy || firstNotDone){ openPwdModal(true); }
+
   document.getElementById('pwdSubmit').onclick=submitPasswordChange;
   document.getElementById('pwdCancel').onclick=closePwdModal;
 
@@ -386,14 +398,14 @@ async function submitPasswordChange(){
   if(neo.length<8){$pwdMsg().textContent='La nueva contraseña debe tener al menos 8 caracteres.';return;}
   if(neo!==rep){$pwdMsg().textContent='La confirmación no coincide.';return;}
 
-  // 1) Verificar credenciales actuales (solo para validar)
+  // 1) Validar credenciales actuales
   const rLogin=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
     method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
     body:JSON.stringify({email,password:cur})
   });
   if(!rLogin.ok){$pwdMsg().textContent='Correo o contraseña actual incorrectos.';return;}
 
-  // 2) Cambiar contraseña usando la SESIÓN ACTUAL del usuario logueado
+  // 2) Cambiar contraseña con la sesión actual (usuario logueado)
   const rPatch=await fetch(`${PROJECT_URL}/auth/v1/user`,{
     method:'PATCH',
     headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`,'Content-Type':'application/json'},
@@ -404,7 +416,7 @@ async function submitPasswordChange(){
     $pwdMsg().textContent=err?.msg||'No se pudo actualizar la contraseña.';return;
   }
 
-  // 3) Re-login con la nueva (refrescar token)
+  // 3) Re-login para refrescar token
   const rLoginNew=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
     method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
     body:JSON.stringify({email,password:neo})
@@ -427,8 +439,10 @@ async function submitPasswordChange(){
   setTimeout(()=>{ closePwdModal(); }, 900);
 }
 
-/*** ARRANQUE: NO tocar si no hay token ***/
+/*** ARRANQUE ***/
 (async function start(){
+  // Siempre empezamos mostrando LOGIN; si la sesión es válida, init() cambiará a APP.
+  show("app",false); show("unauth",true);
   if(localStorage.token){ await init(); }
 })();
 </script>
