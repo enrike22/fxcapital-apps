@@ -6,8 +6,9 @@
 <title>FX | CAPITAL R.L. — Admin</title>
 <style>
 :root { --bg:#000; --fg:#fff; --muted:#ffffffcc; --card:#0d0d0d; --border:#1a1a1a; }
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-.container{max-width:1100px;margin:0 auto;padding:24px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+.container{max-width:1200px;margin:0 auto;padding:24px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
 h1,h2,h3{margin:0 0 8px} label{display:block;margin:8px 0 4px}
 input,select,textarea{width:100%;background:#000;color:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
@@ -17,6 +18,9 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
 .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
 .hidden{display:none}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.inline{display:flex;gap:8px;align-items:center}
+.small{font-size:12px;color:var(--muted)}
+.nowrap{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -28,7 +32,7 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
       <label>Email</label><input id="email" type="email" required>
       <label>Contraseña</label><input id="password" type="password" required>
       <div style="margin-top:12px"><button type="submit">Entrar</button></div>
-      <p id="loginMsg" style="color:var(--muted);margin-top:8px"></p>
+      <p id="loginMsg" class="small" style="margin-top:8px"></p>
     </form>
   </div>
 
@@ -44,21 +48,52 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
       <div class="row">
         <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"></div>
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+
+        <div>
+          <label>Contraseña (para el cliente)</label>
+          <div class="inline">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres">
+            <button type="button" id="togglePass" title="Mostrar / ocultar">👁</button>
+          </div>
+          <div class="small">Se usa para crear al cliente en Auth. No se guarda en tu base de datos.</div>
+        </div>
+
         <div><label>Moneda</label>
-          <select id="u_currency"><option>GTQ</option><option>USD</option></select></div>
+          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
+        </div>
         <div><label>Capital inicial</label><input id="u_capital" type="number" min="0"></div>
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
         <div><label>Plan</label>
-          <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select></div>
+          <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select>
+        </div>
+
+        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
+        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
       </div>
-      <div style="margin-top:8px"><button onclick="saveUser()">Guardar</button> <span id="saveMsg" style="color:var(--muted)"></span></div>
+
+      <div style="margin-top:8px">
+        <button onclick="saveUser()">Guardar</button>
+        <span id="saveMsg" class="small" style="margin-left:8px"></span>
+      </div>
     </div>
 
     <!-- Lista de clientes -->
     <div class="card">
       <h2>Clientes</h2>
       <table>
-        <thead><tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Capital</th><th>Cuenta</th><th>BLACK</th><th>Acciones</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Plan</th>
+            <th>Capital</th>
+            <th class="nowrap">Banco</th>
+            <th class="nowrap">No. cuenta</th>
+            <th class="nowrap">Cuenta (ID)</th>
+            <th>BLACK</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
         <tbody id="users"></tbody>
       </table>
     </div>
@@ -82,17 +117,23 @@ const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
-/*** 1.1 URL de la Edge Function (crear usuario en Auth) ***/
-const EDGE_CREATE_USER_URL =
-  "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
-
-/*** Helpers ***/
 function headersJSON(){
-  return {
-    apikey: ANON_KEY,
-    Authorization: "Bearer " + (localStorage.token || ""),
-    "Content-Type":"application/json"
-  };
+  return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json" };
+}
+
+/*** 1.1 FUNCIÓN EDGE: crear usuario en Auth si no existe (usa la contraseña del formulario) ***/
+async function createAuthUserIfNeeded(email, password, fullName) {
+  const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + (localStorage.token || "")
+    },
+    body: JSON.stringify({ email, password, full_name: fullName })
+  });
+  return r; // 201=creado; 400=ya existía o error ignorable
 }
 
 /*** LOGIN ***/
@@ -115,18 +156,22 @@ function logout(){ localStorage.removeItem("token"); localStorage.removeItem("ui
 
 /*** LISTA USUARIOS ***/
 async function listUsers(){
-  const r = await fetch(`${BASE}/v_admin_users?select=*&order=created_at.desc`,
-    { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
+  const r = await fetch(
+    `${BASE}/v_admin_users?select=full_name,email,plan,principal_locked,account_id,black_enabled,bank_name,bank_account&order=created_at.desc`,
+    { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }}
+  );
   const rows = await r.json();
   const tb = document.getElementById("users"); tb.innerHTML="";
   rows.forEach(x=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${x.full_name||'—'}</td>
-      <td>${x.email}</td>
+      <td>${x.email||'—'}</td>
       <td>${x.plan||'—'}</td>
-      <td>Q${(x.principal_locked||0).toFixed(2)}</td>
-      <td>${x.account_id||'—'}</td>
+      <td>${(x.principal_locked||0).toLocaleString('es-GT',{minimumFractionDigits:2})}</td>
+      <td>${x.bank_name||'—'}</td>
+      <td class="nowrap">${x.bank_account||'—'}</td>
+      <td class="small">${x.account_id||'—'}</td>
       <td>${x.black_enabled?'Sí':'No'}</td>
       <td>
         ${x.account_id ? `
@@ -138,55 +183,39 @@ async function listUsers(){
   });
 }
 
-/*** 2) Crear usuario en Auth vía Edge. Si falla, detenemos con error claro ***/
-async function createAuthUserIfNeeded(email, fullName) {
-  const password = "Temp#12345!";
-  const res = await fetch(EDGE_CREATE_USER_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: "Bearer " + (localStorage.token || "")
-    },
-    body: JSON.stringify({ email, password, full_name: fullName })
-  });
-
-  const text = await res.text();
-  console.log("Edge create-user status:", res.status, "body:", text);
-
-  if (res.ok) return true;
-
-  try {
-    const json = JSON.parse(text);
-    throw new Error(`Edge create-user failed (${res.status}): ` + (json.error || json.message || text));
-  } catch {
-    throw new Error(`Edge create-user failed (${res.status}): ${text}`);
-  }
-}
-
-/*** CREAR / EDITAR (Edge primero, luego RPC) ***/
+/*** CREAR / EDITAR (con contraseña del admin + banco y cuenta) ***/
 async function saveUser(){
   const email    = document.getElementById("u_email").value.trim();
   const fullName = document.getElementById("u_name").value.trim();
+  const password = document.getElementById("u_pass").value;   // contraseña del cliente
   const currency = document.getElementById("u_currency").value;
   const capital  = Number(document.getElementById("u_capital").value||0);
   const joined   = document.getElementById("u_joined").value;
   const plan     = document.getElementById("u_plan").value;
+  const bankName = document.getElementById("u_bank_name").value.trim();
+  const bankAcct = document.getElementById("u_bank_account").value.trim();
   const msgEl    = document.getElementById("saveMsg");
   if (msgEl) msgEl.textContent = "…";
 
   try {
-    // 1) Crear en Auth si no existe. Si falla, mostramos y no seguimos.
-    await createAuthUserIfNeeded(email, fullName);
+    if (!email) throw new Error("Email requerido");
+    if (!fullName) throw new Error("Nombre requerido");
+    if (!password || password.length < 8)
+      throw new Error("Contraseña mínima de 8 caracteres");
 
-    // 2) RPC para upsert de perfil + cuenta
+    // 1) Crea/asegura el usuario en Auth
+    await createAuthUserIfNeeded(email, password, fullName);
+
+    // 2) Upsert de perfil + cuenta (RPC) — con banco y cuenta
     const body = {
       p_email: email,
       p_full_name: fullName,
       p_currency: currency,
       p_capital: capital,
       p_joined_at: joined,
-      p_plan: plan
+      p_plan: plan,
+      p_bank_name: bankName || null,
+      p_bank_account: bankAcct || null
     };
 
     const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
@@ -195,35 +224,37 @@ async function saveUser(){
       body: JSON.stringify(body)
     });
 
-    const t = await r.text();
-    console.log("RPC upsert status:", r.status, "body:", t);
-
-    if (!r.ok) throw new Error(t || "Error guardando");
+    if (!r.ok) {
+      const t = await r.text();
+      throw new Error(t || "Error guardando");
+    }
 
     if (msgEl) msgEl.textContent = "Guardado";
+    document.getElementById("u_pass").value = ""; // limpiar por seguridad
     await listUsers();
 
   } catch (e) {
     if (msgEl) msgEl.textContent = "Error";
     console.error(e);
-    alert("No se pudo guardar:\n" + (e.message || e));
+    alert("No se pudo guardar: " + (e.message || e));
   }
 }
 
+/*** Mostrar/ocultar contraseña del formulario ***/
+document.getElementById("togglePass").addEventListener("click", ()=>{
+  const inp = document.getElementById("u_pass");
+  inp.type = (inp.type === "password") ? "text" : "password";
+});
+
 /*** BLACK ON/OFF ***/
 async function toggleBlack(accountId, enabled){
-  await fetch(`${RPC}/enable_black_for_account`, {
-    method:"POST",
-    headers: headersJSON(),
-    body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
-  });
+  await fetch(`${RPC}/enable_black_for_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify({ p_account: accountId, p_enabled: enabled }) });
   await listUsers();
 }
 
 /*** NOTIFICACIONES (solicitudes) ***/
 async function loadNotifs(){
-  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`,
-    { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
   const rows = await r.json();
   const tb = document.getElementById("notifs"); tb.innerHTML="";
   rows.forEach(x=>{
