@@ -133,7 +133,7 @@ async function createAuthUserIfNeeded(email, password, fullName) {
     },
     body: JSON.stringify({ email, password, full_name: fullName })
   });
-  return r; // 201=creado; si ya existe, la función devuelve 400 y seguimos con el RPC
+  return r; // 201=creado; 400=ya existía o error ignorable
 }
 
 /*** LOGIN ***/
@@ -154,52 +154,46 @@ document.getElementById("loginForm").addEventListener("submit", async (e)=>{
 function show(id,vis){ document.getElementById(id).classList[vis?"remove":"add"]("hidden"); }
 function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
 
-/*** LISTA USUARIOS — ROBUSTA ***/
+/*** LISTA USUARIOS (ACTUALIZADA para la vista v_admin_users) ***/
 async function listUsers(){
-  try {
-    const url = `${BASE}/v_admin_users?select=full_name,email,plan,principal_locked,account_id,black_enabled,bank_name,bank_account,currency&order=created_at.desc`;
-    const r = await fetch(url, { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") } });
+  const url = `${BASE}/v_admin_users` +
+              `?select=full_name,email,plan,currency,principal_locked,account_id,black_enabled,bank_name,bank_account` +
+              `&order=full_name.asc`;
 
-    if (!r.ok) {
-      const text = await r.text();
-      throw new Error(`v_admin_users error: ${text}`);
-    }
+  const r = await fetch(url, {
+    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
+  });
 
-    const rows = await r.json();
-    if (!Array.isArray(rows)) {
-      throw new Error(`v_admin_users no devolvió un array: ${JSON.stringify(rows)}`);
-    }
-
-    const tb = document.getElementById("users"); tb.innerHTML="";
-    rows.forEach(x=>{
-      const currency = x.currency || "GTQ";
-      const capital  = Number(x.principal_locked ?? 0);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${x.full_name || '—'}</td>
-        <td>${x.email || '—'}</td>
-        <td>${x.plan || '—'}</td>
-        <td>${capital.toLocaleString('es-GT',{style:'currency',currency})}</td>
-        <td>${x.bank_name || '—'}</td>
-        <td class="nowrap">${x.bank_account || '—'}</td>
-        <td class="small">${x.account_id || '—'}</td>
-        <td>${x.black_enabled ? 'Sí' : 'No'}</td>
-        <td>
-          ${x.account_id ? `
-            <button onclick="toggleBlack('${x.account_id}', true)">Enable BLACK</button>
-            <button onclick="toggleBlack('${x.account_id}', false)">Disable BLACK</button>
-          ` : '—'}
-        </td>`;
-      tb.appendChild(tr);
-    });
-  } catch (err) {
-    console.error(err);
-    alert(`No se pudo cargar la lista de clientes:\n${err.message || err}`);
-    const tb = document.getElementById("users"); if (tb) tb.innerHTML = "";
+  if (!r.ok) {
+    const t = await r.text();
+    alert("No se pudo cargar la lista de clientes:\n" + t);
+    return;
   }
+
+  const rows = await r.json();
+  const tb = document.getElementById("users"); tb.innerHTML = "";
+  rows.forEach(x=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${x.full_name ?? '—'}</td>
+      <td>${x.email ?? '—'}</td>
+      <td>${x.plan ?? '—'}</td>
+      <td>${(x.principal_locked ?? 0).toLocaleString('es-GT',{minimumFractionDigits:2})}</td>
+      <td>${x.bank_name ?? '—'}</td>
+      <td class="nowrap">${x.bank_account ?? '—'}</td>
+      <td class="small">${x.account_id ?? '—'}</td>
+      <td>${x.black_enabled ? 'Sí' : 'No'}</td>
+      <td>
+        ${x.account_id ? `
+          <button onclick="toggleBlack('${x.account_id}', true)">Enable BLACK</button>
+          <button onclick="toggleBlack('${x.account_id}', false)">Disable BLACK</button>
+        ` : '—'}
+      </td>`;
+    tb.appendChild(tr);
+  });
 }
 
-/*** CREAR / EDITAR — con password, banco y cuenta; manejo de errores ***/
+/*** CREAR / EDITAR (con contraseña del admin + banco y cuenta) ***/
 async function saveUser(){
   const email    = document.getElementById("u_email").value.trim();
   const fullName = document.getElementById("u_name").value.trim();
@@ -216,21 +210,22 @@ async function saveUser(){
   try {
     if (!email) throw new Error("Email requerido");
     if (!fullName) throw new Error("Nombre requerido");
-    if (!password || password.length < 8) throw new Error("Contraseña mínima de 8 caracteres");
+    if (!password || password.length < 8)
+      throw new Error("Contraseña mínima de 8 caracteres");
 
-    // 1) Crear/asegurar usuario en Auth (si ya existe, esta llamada puede devolver error 400 y lo ignoramos)
-    try { await createAuthUserIfNeeded(email, password, fullName); } catch (ee) { console.warn(ee); }
+    // 1) Crear/asegurar usuario en Auth
+    await createAuthUserIfNeeded(email, password, fullName);
 
     // 2) Upsert de perfil + cuenta (RPC) — con banco y cuenta
     const body = {
-      p_email:         email,
-      p_full_name:     fullName,
-      p_currency:      currency,
-      p_capital:       capital,
-      p_joined_at:     joined,
-      p_plan:          plan,
-      p_bank_name:     bankName || null,
-      p_bank_account:  bankAcct || null
+      p_email: email,
+      p_full_name: fullName,
+      p_currency: currency,
+      p_capital: capital,
+      p_joined_at: joined,
+      p_plan: plan,
+      p_bank_name: bankName || null,
+      p_bank_account: bankAcct || null
     };
 
     const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
@@ -239,10 +234,7 @@ async function saveUser(){
       body: JSON.stringify(body)
     });
 
-    if (!r.ok) {
-      const t = await r.text();
-      throw new Error(t || "Error guardando (RPC)");
-    }
+    if (!r.ok) { throw new Error(await r.text() || "Error guardando"); }
 
     if (msgEl) msgEl.textContent = "Guardado";
     document.getElementById("u_pass").value = ""; // limpiar por seguridad
@@ -263,61 +255,44 @@ document.getElementById("togglePass").addEventListener("click", ()=>{
 
 /*** BLACK ON/OFF ***/
 async function toggleBlack(accountId, enabled){
-  try {
-    const r = await fetch(`${RPC}/enable_black_for_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
-    });
-    if (!r.ok) {
-      const t = await r.text(); throw new Error(t||"Error toggling BLACK");
-    }
-    await listUsers();
-  } catch (e) {
-    console.error(e); alert("No se pudo cambiar BLACK: "+(e.message||e));
-  }
+  await fetch(`${RPC}/enable_black_for_account`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
+  });
+  await listUsers();
 }
 
 /*** NOTIFICACIONES (solicitudes) ***/
 async function loadNotifs(){
-  try {
-    const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
-      headers:{ apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }
-    });
-    if (!r.ok) { const t = await r.text(); throw new Error(t); }
-    const rows = await r.json();
-    const tb = document.getElementById("notifs"); tb.innerHTML="";
-    (Array.isArray(rows)?rows:[]).forEach(x=>{
-      const p = x.payload || {};
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${new Date(x.created_at).toLocaleString()}</td>
-        <td>${p.account_id||'—'}</td>
-        <td>${p.kind||'—'}</td>
-        <td>${(p.penalty_pct??0)}%</td>
-        <td>
-          <button onclick="setWithdrawal('${p.withdrawal_id}','APPROVED')">Aprobar</button>
-          <button onclick="setWithdrawal('${p.withdrawal_id}','REJECTED')">Rechazar</button>
-        </td>`;
-      tb.appendChild(tr);
-    });
-  } catch (e) {
-    console.error(e); alert("No se pudieron cargar notificaciones: "+(e.message||e));
-  }
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
+    headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }
+  });
+  const rows = await r.json();
+  const tb = document.getElementById("notifs"); tb.innerHTML="";
+  rows.forEach(x=>{
+    const p = x.payload || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${new Date(x.created_at).toLocaleString()}</td>
+      <td>${p.account_id||'—'}</td>
+      <td>${p.kind||'—'}</td>
+      <td>${(p.penalty_pct??0)}%</td>
+      <td>
+        <button onclick="setWithdrawal('${p.withdrawal_id}','APPROVED')">Aprobar</button>
+        <button onclick="setWithdrawal('${p.withdrawal_id}','REJECTED')">Rechazar</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
 }
 
 async function setWithdrawal(id, status){
-  try {
-    const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
-      method:"PATCH",
-      headers:{ apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||""), "Content-Type":"application/json", "Prefer":"return=representation" },
-      body: JSON.stringify({ status })
-    });
-    if (!r.ok) { const t = await r.text(); throw new Error(t); }
-    await loadNotifs();
-  } catch (e) {
-    console.error(e); alert("No se pudo actualizar: "+(e.message||e));
-  }
+  await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
+    method:"PATCH",
+    headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token, "Content-Type":"application/json", "Prefer":"return=representation" },
+    body: JSON.stringify({ status })
+  });
+  await loadNotifs();
 }
 
 /*** INIT ***/
