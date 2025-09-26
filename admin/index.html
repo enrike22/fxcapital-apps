@@ -79,22 +79,20 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
 /*** 1) TUS DATOS DE SUPABASE ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
-const BASE = PROJECT_URL + "/rest/v1"; const RPC = BASE + "/rpc";
-function headersJSON(){ return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json" }; }
+const BASE = PROJECT_URL + "/rest/v1";
+const RPC  = BASE + "/rpc";
 
-/*** 1.1 FUNCIÓN EDGE: crear usuario en Auth si no existe ***/
-async function createAuthUserIfNeeded(email, password, fullName) {
-  const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
-  const r = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: "Bearer " + (localStorage.token || "")
-    },
-    body: JSON.stringify({ email, password, full_name: fullName })
-  });
-  return r; // 201=creado; 400=ya existía o error (seguimos al RPC)
+/*** 1.1 URL de la Edge Function (crear usuario en Auth) ***/
+const EDGE_CREATE_USER_URL =
+  "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
+
+/*** Helpers ***/
+function headersJSON(){
+  return {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + (localStorage.token || ""),
+    "Content-Type":"application/json"
+  };
 }
 
 /*** LOGIN ***/
@@ -117,7 +115,8 @@ function logout(){ localStorage.removeItem("token"); localStorage.removeItem("ui
 
 /*** LISTA USUARIOS ***/
 async function listUsers(){
-  const r = await fetch(`${BASE}/v_admin_users?select=*&order=created_at.desc`, { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
+  const r = await fetch(`${BASE}/v_admin_users?select=*&order=created_at.desc`,
+    { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
   const rows = await r.json();
   const tb = document.getElementById("users"); tb.innerHTML="";
   rows.forEach(x=>{
@@ -139,7 +138,33 @@ async function listUsers(){
   });
 }
 
-/*** CREAR / EDITAR (con Edge Function + RPC) ***/
+/*** 2) Crear usuario en Auth vía Edge. Si falla, detenemos con error claro ***/
+async function createAuthUserIfNeeded(email, fullName) {
+  const password = "Temp#12345!";
+  const res = await fetch(EDGE_CREATE_USER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + (localStorage.token || "")
+    },
+    body: JSON.stringify({ email, password, full_name: fullName })
+  });
+
+  const text = await res.text();
+  console.log("Edge create-user status:", res.status, "body:", text);
+
+  if (res.ok) return true;
+
+  try {
+    const json = JSON.parse(text);
+    throw new Error(`Edge create-user failed (${res.status}): ` + (json.error || json.message || text));
+  } catch {
+    throw new Error(`Edge create-user failed (${res.status}): ${text}`);
+  }
+}
+
+/*** CREAR / EDITAR (Edge primero, luego RPC) ***/
 async function saveUser(){
   const email    = document.getElementById("u_email").value.trim();
   const fullName = document.getElementById("u_name").value.trim();
@@ -151,10 +176,10 @@ async function saveUser(){
   if (msgEl) msgEl.textContent = "…";
 
   try {
-    // 1) Crear en Auth si no existe (clave temporal; cámbiala si quieres)
-    await createAuthUserIfNeeded(email, "ClaveTemporal123!", fullName).catch(()=>{});
+    // 1) Crear en Auth si no existe. Si falla, mostramos y no seguimos.
+    await createAuthUserIfNeeded(email, fullName);
 
-    // 2) Upsert de perfil + cuenta (RPC)
+    // 2) RPC para upsert de perfil + cuenta
     const body = {
       p_email: email,
       p_full_name: fullName,
@@ -170,10 +195,10 @@ async function saveUser(){
       body: JSON.stringify(body)
     });
 
-    if (!r.ok) {
-      const t = await r.text();
-      throw new Error(t || "Error guardando");
-    }
+    const t = await r.text();
+    console.log("RPC upsert status:", r.status, "body:", t);
+
+    if (!r.ok) throw new Error(t || "Error guardando");
 
     if (msgEl) msgEl.textContent = "Guardado";
     await listUsers();
@@ -181,19 +206,24 @@ async function saveUser(){
   } catch (e) {
     if (msgEl) msgEl.textContent = "Error";
     console.error(e);
-    alert("No se pudo guardar: " + (e.message || e));
+    alert("No se pudo guardar:\n" + (e.message || e));
   }
 }
 
 /*** BLACK ON/OFF ***/
 async function toggleBlack(accountId, enabled){
-  await fetch(`${RPC}/enable_black_for_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify({ p_account: accountId, p_enabled: enabled }) });
+  await fetch(`${RPC}/enable_black_for_account`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
+  });
   await listUsers();
 }
 
 /*** NOTIFICACIONES (solicitudes) ***/
 async function loadNotifs(){
-  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`,
+    { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
   const rows = await r.json();
   const tb = document.getElementById("notifs"); tb.innerHTML="";
   rows.forEach(x=>{
@@ -230,4 +260,3 @@ init();
 </script>
 </body>
 </html>
-
