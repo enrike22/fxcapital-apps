@@ -74,6 +74,26 @@ small{color:var(--muted)}
   .login-hero{ grid-template-columns: 1fr; padding:20px; }
   .features{ justify-content:center; }
 }
+
+/* ===== MODAL CAMBIO DE CONTRASEÑA (primer ingreso) ===== */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000;
+}
+.modal-card{
+  width:100%; max-width:520px;
+  background:linear-gradient(180deg,#151515,#1c1c1c);
+  border:1px solid #2a2a2a; border-radius:18px; padding:22px;
+  box-shadow: 0 15px 40px #000a;
+}
+.modal-card h3{ margin:0 0 8px; font-size:22px;}
+.modal-sub{ color:var(--muted); margin-bottom:14px;}
+.modal-actions{ display:flex; gap:10px; margin-top:12px;}
+.modal-actions .btn-primary{flex:1}
+.inline{ display:flex; align-items:center; gap:10px; margin-top:6px; }
+.helper{ font-size:12px; color:#9fb4d1; }
+.err{ color:#ffb3b3; min-height:18px; text-align:center; }
+.success{ color:#b3ffcb; min-height:18px; text-align:center; }
 </style>
 </head>
 <body>
@@ -221,6 +241,44 @@ small{color:var(--muted)}
   </div>
 </div>
 
+<!-- ===== MODAL: Primer Ingreso / Cambio de Contraseña ===== -->
+<div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
+  <div class="modal-card">
+    <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
+    <p class="modal-sub">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
+
+    <div class="input-wrap">
+      <span class="prefix">🔒</span>
+      <input id="curPwd" type="password" placeholder="Contraseña actual" autocomplete="current-password">
+      <button type="button" class="toggle" data-toggle="curPwd" aria-label="mostrar/ocultar">👁</button>
+    </div>
+    <label style="margin-top:8px"></label>
+    <div class="input-wrap">
+      <span class="prefix">🆕</span>
+      <input id="newPwd" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)" autocomplete="new-password">
+      <button type="button" class="toggle" data-toggle="newPwd" aria-label="mostrar/ocultar">👁</button>
+    </div>
+    <div class="input-wrap" style="margin-top:8px">
+      <span class="prefix">✅</span>
+      <input id="confPwd" type="password" placeholder="Confirmar nueva contraseña" autocomplete="new-password">
+      <button type="button" class="toggle" data-toggle="confPwd" aria-label="mostrar/ocultar">👁</button>
+    </div>
+    <div class="inline">
+      <input id="showAllPwds" type="checkbox">
+      <label for="showAllPwds" style="margin:0">Mostrar contraseñas</label>
+    </div>
+    <div class="helper">Use al menos 8 caracteres. Recomendado: combinación de letras, números y símbolos.</div>
+
+    <div id="pwdMsg" class="err"></div>
+    <div id="pwdOk" class="success"></div>
+
+    <div class="modal-actions">
+      <button id="pwdSubmit" class="btn-primary" type="button">Actualizar contraseña</button>
+      <button id="pwdLater" type="button" style="background:#111;color:#fff;border:1px solid #2a2a2a">Ahora no</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /*** CONFIG SUPABASE ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
@@ -244,11 +302,15 @@ document.getElementById("loginForm").addEventListener("submit", async (e)=>{
   });
   const data = await r.json();
   if(!r.ok){ document.getElementById("loginMsg").textContent="Login inválido"; return; }
-  localStorage.token = data.access_token; localStorage.uid = data.user.id;
+  localStorage.token = data.access_token; localStorage.uid = data.user.id; localStorage.email = email;
+
+  // banderas de primer ingreso
+  localStorage.setItem('firstLoginSeen:'+localStorage.uid, '0');
+
   await init();
 });
 
-/*** Mostrar/ocultar contraseña (👁) ***/
+/*** Mostrar/ocultar contraseña (👁) en login ***/
 (function(){
   const pwd = document.getElementById('password');
   const btn = document.getElementById('togglePwd');
@@ -262,20 +324,21 @@ document.getElementById("loginForm").addEventListener("submit", async (e)=>{
 
 /*** APP ***/
 function show(id,vis){ document.getElementById(id).classList[vis?"remove":"add"]("hidden"); }
-function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
+function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); localStorage.removeItem("email"); location.reload(); }
 
 async function init(){
   if(!localStorage.token){ show("app",false); show("unauth",true); return; }
   show("unauth",false); show("app",true);
   await loadAccount();
   await buildMonthResults();
+  await maybeAskPasswordChange();
 }
 
 /*** DATA CUENTA ***/
 let ACCOUNT=null, PROFILE=null;
 async function loadAccount(){
-  // profile
-  const rp = await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name`, { headers: hdr() });
+  // profile (agrega require_password_change si lo manejas en tu tabla)
+  const rp = await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change`, { headers: hdr() });
   PROFILE = (await rp.json())[0] || null;
 
   // account (propia)
@@ -383,6 +446,124 @@ async function sendWithdrawal(){
   alert("Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.");
   document.getElementById("w_msg").textContent = "Solicitud enviada.";
   document.getElementById("w_reason").value = ""; document.getElementById("w_amount").value = "";
+}
+
+/*** ===== PRIMER INGRESO: Modal de cambio de contraseña ===== ***/
+const $modal = ()=>document.getElementById('pwdModal');
+const $pwdMsg = ()=>document.getElementById('pwdMsg');
+const $pwdOk  = ()=>document.getElementById('pwdOk');
+
+function openPwdModal(){
+  $pwdMsg().textContent=''; $pwdOk().textContent='';
+  document.getElementById('curPwd').value='';
+  document.getElementById('newPwd').value='';
+  document.getElementById('confPwd').value='';
+  document.getElementById('showAllPwds').checked=false;
+  $modal().classList.remove('hidden');
+}
+function closePwdModal(){ $modal().classList.add('hidden'); }
+
+async function maybeAskPasswordChange(){
+  try{
+    const firstSeenKey = 'firstLoginSeen:'+localStorage.uid;
+    const mustChangeByProfile = !!PROFILE?.require_password_change;
+    const alreadySeen = localStorage.getItem(firstSeenKey) === '1';
+
+    if (mustChangeByProfile || !alreadySeen){
+      openPwdModal();
+    }
+
+    // controles
+    document.getElementById('pwdLater').onclick = ()=>{
+      localStorage.setItem(firstSeenKey,'1');
+      closePwdModal();
+    };
+    document.getElementById('pwdSubmit').onclick = submitPasswordChange;
+
+    // toggles "👁"
+    document.querySelectorAll('.toggle[data-toggle]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const id = btn.getAttribute('data-toggle');
+        const el = document.getElementById(id);
+        el.type = (el.type==='password' ? 'text' : 'password');
+        btn.textContent = (el.type==='password' ? '👁' : '🙈');
+      };
+    });
+
+    // checkbox "mostrar todas"
+    document.getElementById('showAllPwds').addEventListener('change', (e)=>{
+      ['curPwd','newPwd','confPwd'].forEach(id=>{
+        const el = document.getElementById(id);
+        el.type = e.target.checked ? 'text' : 'password';
+      });
+      document.querySelectorAll('.toggle[data-toggle]').forEach(btn=>{
+        const id = btn.getAttribute('data-toggle');
+        const el = document.getElementById(id);
+        btn.textContent = (el.type==='password' ? '👁' : '🙈');
+      });
+    });
+
+  }catch(e){ /* silencioso */ }
+}
+
+async function submitPasswordChange(){
+  const email = localStorage.email || '';
+  const cur = document.getElementById('curPwd').value;
+  const neo = document.getElementById('newPwd').value;
+  const rep = document.getElementById('confPwd').value;
+
+  $pwdMsg().textContent=''; $pwdOk().textContent='';
+
+  if(!cur || !neo || !rep){ $pwdMsg().textContent='Complete todos los campos.'; return; }
+  if(neo.length < 8){ $pwdMsg().textContent='La nueva contraseña debe tener al menos 8 caracteres.'; return; }
+  if(neo !== rep){ $pwdMsg().textContent='La confirmación no coincide.'; return; }
+
+  // 1) Verificar contraseña actual con login
+  const rLogin = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password: cur })
+  });
+  if(!rLogin.ok){ $pwdMsg().textContent = 'La contraseña actual no es correcta.'; return; }
+  const dataLogin = await rLogin.json();
+
+  // 2) Cambiar contraseña (requiere Bearer del usuario autenticado)
+  const rPatch = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+    method: 'PATCH',
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${dataLogin.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: neo })
+  });
+
+  if(!rPatch.ok){
+    const err = await rPatch.json().catch(()=>({}));
+    $pwdMsg().textContent = err?.msg || 'No se pudo actualizar la contraseña.';
+    return;
+  }
+
+  // 3) Re-login con la nueva contraseña y limpiar bandera
+  const rLoginNew = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password: neo })
+  });
+  if(rLoginNew.ok){
+    const data2 = await rLoginNew.json();
+    localStorage.token = data2.access_token; localStorage.uid = data2.user.id;
+  }
+
+  $pwdOk().textContent = 'Contraseña actualizada correctamente.';
+  localStorage.setItem('firstLoginSeen:'+localStorage.uid, '1');
+
+  // (Opcional) limpiar flag en perfil si lo usas
+  try{
+    if(PROFILE?.require_password_change === true){
+      await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`, {
+        method:'PATCH',
+        headers: hdrJSON(),
+        body: JSON.stringify({ require_password_change: false })
+      });
+    }
+  }catch(e){ /* no bloquear UX */ }
+
+  setTimeout(()=>{ closePwdModal(); }, 900);
 }
 
 /*** ARRANQUE ***/
