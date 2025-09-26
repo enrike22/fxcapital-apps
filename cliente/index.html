@@ -38,19 +38,17 @@ small{color:var(--muted)}
 .feature p{margin:0;color:#9fb4d1}
 .login-card{background:linear-gradient(180deg,#141414,#1e1e1e);border:1px solid #2a2a2a;border-radius:16px;padding:24px 22px;box-shadow:0 10px 30px #0007}
 .login-card h2{text-align:center;margin-bottom:12px}
+
+/* inputs con icono-ojito a la derecha */
 .input-wrap{position:relative}
 .input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
-.input-wrap input{padding-left:38px;height:46px;border-radius:12px; /* ojo: espacio para icono derecho */
-  padding-right:44px;}
+.input-wrap input{padding-left:38px;height:46px;border-radius:12px;padding-right:46px}
 .eye-btn{
-  position:absolute;right:10px;top:50%;transform:translateY(-50%);
-  background:transparent;border:0;cursor:pointer;width:32px;height:32px;
-  display:flex;align-items:center;justify-content:center;z-index:5;
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:34px;height:34px;background:transparent;border:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:auto;
 }
-.btn-primary{width:100%;height:46px;border-radius:999px;font-weight:700;background:#0f0f0f;color:#fff;border:1px solid #2a2a2a}
-.btn-primary:hover{filter:brightness(1.15)}
-#loginMsg{text-align:center;color:#ffb3b3;min-height:20px}
-@media (max-width:900px){.login-hero{grid-template-columns:1fr;padding:20px}.features{justify-content:center}}
+.eye,.eye-off{width:24px;height:24px;fill:#fff}
 
 /* ===== MODAL CAMBIO DE CONTRASEÑA ===== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
@@ -64,8 +62,7 @@ small{color:var(--muted)}
 .err{color:#ffb3b3;min-height:18px;text-align:center}
 .success{color:#b3ffcb;min-height:18px;text-align:center}
 
-/* Ojos visibles: blancos */
-.eye, .eye-off { width:22px; height:22px; fill:#fff }
+@media (max-width:900px){.login-hero{grid-template-columns:1fr;padding:20px}.features{justify-content:center}}
 </style>
 </head>
 <body>
@@ -182,7 +179,7 @@ small{color:var(--muted)}
   </div>
 </div>
 
-<!-- ===== MODAL (solo después de entrar) ===== -->
+<!-- ===== MODAL (solo DESPUÉS de entrar) ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
@@ -262,16 +259,19 @@ document.getElementById("loginForm").addEventListener("submit",async(e)=>{
   await init();
 });
 
-/*** Botones ojo (blancos) ***/
+/*** OJOS (toggle) y checkbox Mostrar contraseñas ***/
 document.addEventListener('click',(e)=>{
-  const btn=e.target.closest('.eye-btn');
-  if(!btn) return;
-  const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id);
-  if(!el) return;
+  const btn=e.target.closest('.eye-btn'); if(!btn) return;
+  const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
   el.type=(el.type==='password')?'text':'password';
   btn.innerHTML=(el.type==='password')
     ? `<svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>`
     : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9.5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
+});
+document.getElementById('showAllPwds').addEventListener('change',(e)=>{
+  ['curPwd','newPwd','confPwd'].forEach(id=>{
+    const el=document.getElementById(id); el.type=e.target.checked?'text':'password';
+  });
 });
 
 /*** APP helpers ***/
@@ -279,12 +279,10 @@ function show(id,vis){document.getElementById(id).classList[vis?"remove":"add"](
 function isAppVisible(){ return !document.getElementById('app').classList.contains('hidden'); }
 function logout(){localStorage.removeItem("token");localStorage.removeItem("uid");localStorage.removeItem("email");location.reload()}
 
-/* Verifica si el token es válido; si no, limpia y muestra login */
+/* Verifica token; si no es válido, limpia y muestra login */
 async function verifySession(){
   if(!localStorage.token) return false;
-  const r = await fetch(`${PROJECT_URL}/auth/v1/user`,{
-    headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}
-  });
+  const r = await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}});
   if(!r.ok){ localStorage.removeItem('token'); localStorage.removeItem('uid'); return false; }
   return true;
 }
@@ -295,7 +293,7 @@ async function init(){
   show("unauth",false); show("app",true);
   await loadAccount();
   await buildMonthResults();
-  await maybeAskPasswordChange(); // << SOLO aquí, después de mostrar el dashboard
+  await maybeAskPasswordChange(); // << SOLO aquí
 }
 
 /*** DATA CUENTA ***/
@@ -352,28 +350,28 @@ async function sendWithdrawal(){
   document.getElementById("w_reason").value="";document.getElementById("w_amount").value="";
 }
 
-/*** ===== MODAL PRIMER INGRESO (solo después) ===== ***/
+/*** ===== MODAL PRIMER INGRESO ===== ***/
 const $modal=()=>document.getElementById('pwdModal');
 const $pwdMsg=()=>document.getElementById('pwdMsg');
 const $pwdOk =()=>document.getElementById('pwdOk');
 
 function openPwdModal(forceMandatory){
-  if(!isAppVisible()) return; // seguridad extra
+  if(!isAppVisible()) return; // garantiza que sea después de login
+  if(sessionStorage.getItem('pwdModalShown')==='1') return; // no repetir en la sesión
   $pwdMsg().textContent='';$pwdOk().textContent='';
   document.getElementById('pwdEmail').value=localStorage.email||'';
   ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('showAllPwds').checked=false;
   document.getElementById('pwdCancel').style.display = forceMandatory ? 'none' : 'inline-block';
   $modal().classList.remove('hidden');
+  sessionStorage.setItem('pwdModalShown','1');
 }
 function closePwdModal(){ $modal().classList.add('hidden'); }
 
 async function maybeAskPasswordChange(){
-  if(!isAppVisible()) return;
-  const rp=PROFILE;
-  if(!rp) return;
-  const mustByPolicy = rp.require_password_change === true;
-  const firstNotDone = rp.first_login_completed !== true;
+  if(!isAppVisible() || !PROFILE?.id) return;
+  const mustByPolicy = PROFILE?.require_password_change === true;
+  const firstNotDone = PROFILE?.first_login_completed !== true;
   if(mustByPolicy || firstNotDone){ openPwdModal(true); }
 
   document.getElementById('pwdSubmit').onclick=submitPasswordChange;
@@ -405,7 +403,7 @@ async function submitPasswordChange(){
   });
   if(!rLogin.ok){$pwdMsg().textContent='Correo o contraseña actual incorrectos.';return;}
 
-  // 2) Cambiar contraseña con la sesión actual (usuario logueado)
+  // 2) Cambiar contraseña con la sesión actual
   const rPatch=await fetch(`${PROJECT_URL}/auth/v1/user`,{
     method:'PATCH',
     headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`,'Content-Type':'application/json'},
@@ -441,7 +439,7 @@ async function submitPasswordChange(){
 
 /*** ARRANQUE ***/
 (async function start(){
-  // Siempre empezamos mostrando LOGIN; si la sesión es válida, init() cambiará a APP.
+  // Siempre iniciamos mostrando LOGIN. init() solo corre si hay sesión válida.
   show("app",false); show("unauth",true);
   if(localStorage.token){ await init(); }
 })();
