@@ -6,7 +6,8 @@
 <title>FX | CAPITAL R.L. — Cliente</title>
 <style>
 :root{--bg:#000;--fg:#fff;--muted:#ffffffcc;--card:#0d0d0d;--border:#1a1a1a;}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
 .container{max-width:1100px;margin:0 auto;padding:24px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
 h1,h2,h3{margin:0 0 8px} p{margin:6px 0;color:var(--muted)}
@@ -16,73 +17,146 @@ button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:99
 table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:var(--muted)}
 .row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .grid-3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.hero{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
 .hidden{display:none}
-.center{display:flex;justify-content:center;align-items:center}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .icon{width:40px;height:40px;background:#000;border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center}
 hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 small{color:var(--muted)}
+
+/* ===== LOGIN HERO (interfaz estilo tarjeta) ===== */
+.login-hero {
+  display:grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap:32px;
+  align-items:center;
+  min-height: 65vh;
+  background: radial-gradient(1200px 600px at 30% -20%, #1a1a1a 0%, transparent 60%),
+              linear-gradient(#0b0b0b, #1b1b1b 40%, #2f2f2f 100%);
+  border-radius: 20px;
+  padding: 32px;
+}
+.brand-block h1{ font-size:48px; letter-spacing:1px; margin:0 0 6px; }
+.brand-block small{ color:var(--muted); }
+.features{ display:flex; gap:18px; margin-top:24px; flex-wrap:wrap; }
+.feature {
+  background:#0e1319; border:1px solid #1f2a3a; color:#dbe7ff;
+  width: 230px; padding:18px; border-radius:16px;
+  box-shadow: 0 6px 20px #0006;
+}
+.feature h3{ margin:10px 0 4px; font-size:18px; color:#fff; }
+.feature p{ margin:0; color:#9fb4d1; }
+.login-card{
+  background:linear-gradient(180deg,#141414,#1e1e1e);
+  border:1px solid #2a2a2a; border-radius:16px; padding:24px 22px;
+  box-shadow: 0 10px 30px #0007;
+}
+.login-card h2{ text-align:center; margin-bottom:12px; }
+.input-wrap{ position:relative; }
+.input-wrap .prefix{
+  position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.6;
+}
+.input-wrap input{
+  padding-left:38px; height:46px; border-radius:12px;
+}
+.input-wrap .toggle {
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  background:transparent; border:0; color:#aaa; cursor:pointer; font-size:18px;
+}
+.btn-primary{
+  width:100%; height:46px; border-radius:999px; font-weight:700;
+  background:#0f0f0f; color:#fff; border:1px solid #2a2a2a;
+}
+.btn-primary:hover{ filter:brightness(1.15); }
+#loginMsg{ text-align:center; color:#ffb3b3; min-height:20px; }
+
+@media (max-width: 900px){
+  .login-hero{ grid-template-columns: 1fr; padding:20px; }
+  .features{ justify-content:center; }
+}
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- Login -->
-  <div id="unauth" class="card">
-    <h1>Cliente — Iniciar sesión</h1>
-    <form id="loginForm">
-      <label>Email</label><input id="email" type="email" required>
-      <label>Contraseña</label><input id="password" type="password" required>
-      <div style="margin-top:12px"><button type="submit">Entrar</button></div>
-      <p id="loginMsg"></p>
-    </form>
+  <!-- ===== LOGIN (estilo tarjeta) ===== -->
+  <div id="unauth" class="login-hero">
+    <!-- Columna izquierda -->
+    <div class="brand-block">
+      <h1>FX | CAPITAL R.L.</h1>
+      <small>Asesoría – Confianza – Crecimiento</small>
+
+      <div class="features">
+        <div class="feature">
+          <div class="icon" style="border-color:#2a3b52;background:#0b1118">
+            <!-- escudo -->
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true">
+              <path d="M12 2l7 3v6c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5l7-3z"/>
+            </svg>
+          </div>
+          <h3>Seguridad</h3>
+          <p>Máxima protección</p>
+        </div>
+
+        <div class="feature">
+          <div class="icon" style="border-color:#2a3b52;background:#0b1118">
+            <!-- flechas -->
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true">
+              <path d="M4 14h3l2-3 3 5 2-3h6v2h-5l-3 4-3-5-1 2H4zM4 6h16v2H4z"/>
+            </svg>
+          </div>
+          <h3>Rentabilidad</h3>
+          <p>Hasta 25% semestral*</p>
+        </div>
+
+        <div class="feature">
+          <div class="icon" style="border-color:#2a3b52;background:#0b1118">
+            <!-- candado -->
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true">
+              <path d="M12 1a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z"/>
+            </svg>
+          </div>
+          <h3>Control</h3>
+          <p>Transparencia total</p>
+        </div>
+      </div>
+
+      <small>*El porcentaje final depende de su plan.</small>
+    </div>
+
+    <!-- Columna derecha (tarjeta login) -->
+    <div class="login-card">
+      <h2>Iniciar Sesión</h2>
+      <form id="loginForm" autocomplete="on">
+        <label>Correo Electrónico</label>
+        <div class="input-wrap">
+          <span class="prefix">✉️</span>
+          <input id="email" type="email" placeholder="tu@email.com" required>
+        </div>
+
+        <label style="margin-top:12px">Contraseña</label>
+        <div class="input-wrap">
+          <span class="prefix">🔒</span>
+          <input id="password" type="password" placeholder="••••••••" required>
+          <button type="button" class="toggle" id="togglePwd" aria-label="mostrar/ocultar">👁</button>
+        </div>
+
+        <div style="text-align:right;margin:8px 0 12px">
+          <a href="#" style="color:#9fb4d1;text-decoration:none">¿Olvidó su contraseña?</a>
+        </div>
+
+        <button class="btn-primary" type="submit">Iniciar Sesión</button>
+        <p id="loginMsg"></p>
+      </form>
+    </div>
   </div>
 
-  <!-- App -->
+  <!-- ===== APP ===== -->
   <div id="app" class="hidden">
 
     <div class="header">
       <h1>FX | CAPITAL R.L. — Panel Cliente</h1>
       <button onclick="logout()">Cerrar sesión</button>
-    </div>
-
-    <!-- Hero -->
-    <div class="card">
-      <div class="hero">
-        <div>
-          <div class="icon">
-            <!-- Escudo -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="white" aria-hidden="true">
-              <path d="M12 2l7 3v6c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5l7-3z"/>
-            </svg>
-          </div>
-          <h2>Seguridad</h2>
-          <p>Máxima protección</p>
-        </div>
-        <div>
-          <div class="icon">
-            <!-- Flechas trading -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="white" aria-hidden="true">
-              <path d="M4 14h3l2-3 3 5 2-3h6v2h-5l-3 4-3-5-1 2H4zM4 6h16v2H4z"/>
-            </svg>
-          </div>
-          <h2>Rentabilidad</h2>
-          <p>Hasta 25% interés semestral*</p>
-        </div>
-        <div>
-          <div class="icon">
-            <!-- Candado -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="white" aria-hidden="true">
-              <path d="M12 1a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z"/>
-            </svg>
-          </div>
-          <h2>Control</h2>
-          <p>Transparencia total</p>
-        </div>
-      </div>
-      <small>*El porcentaje final depende de su plan.</small>
     </div>
 
     <!-- Resumen cuenta -->
@@ -157,7 +231,7 @@ function hdrJSON(){ return { apikey:ANON_KEY, Authorization:"Bearer "+(localStor
 function hdr(){ return { apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }; }
 const GTZ = 'America/Guatemala';
 
-const PLAN_RATES = { STANDARD: 0.15/6, PLATINUM: 0.20/6, BLACK: 0.25/6 }; // mensual estimado (15/20/25% semestral)
+const PLAN_RATES = { STANDARD: 0.15/6, PLATINUM: 0.20/6, BLACK: 0.25/6 }; // mensual estimado
 
 /*** LOGIN ***/
 document.getElementById("loginForm").addEventListener("submit", async (e)=>{
@@ -173,6 +247,18 @@ document.getElementById("loginForm").addEventListener("submit", async (e)=>{
   localStorage.token = data.access_token; localStorage.uid = data.user.id;
   await init();
 });
+
+/*** Mostrar/ocultar contraseña (👁) ***/
+(function(){
+  const pwd = document.getElementById('password');
+  const btn = document.getElementById('togglePwd');
+  if (pwd && btn) {
+    btn.addEventListener('click', ()=>{
+      pwd.type = (pwd.type === 'password') ? 'text' : 'password';
+      btn.textContent = (pwd.type === 'password') ? '👁' : '🙈';
+    });
+  }
+})();
 
 /*** APP ***/
 function show(id,vis){ document.getElementById(id).classList[vis?"remove":"add"]("hidden"); }
@@ -221,7 +307,7 @@ function fridaysOfMonth(year, month0){ // month0: 0-11
 
 function randomParts(total, n){
   if(n<=0) return [];
-  const xs = Array.from({length:n},()=>Math.random()+0.5); // sesgo leve
+  const xs = Array.from({length:n},()=>Math.random()+0.5);
   const s = xs.reduce((a,b)=>a+b,0);
   return xs.map(v=> total*(v/s) );
 }
@@ -240,11 +326,8 @@ async function buildMonthResults(){
   const parts = randomParts(monthlyInterest, frs.length);
   const tbody = document.getElementById("weeks"); tbody.innerHTML="";
 
-  let shownTotal=0;
   frs.forEach((f,i)=>{
-    // muestra siempre las semanas (hasta las futuras, como estimado)
     const amt = parts[i];
-    shownTotal += amt;
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${f.toLocaleDateString('es-GT',{timeZone:GTZ})}</td><td>${money(amt, ACCOUNT.currency)}</td>`;
     tbody.appendChild(tr);
