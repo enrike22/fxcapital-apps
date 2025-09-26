@@ -24,127 +24,72 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
 hr{border:0;border-top:1px solid var(--border);margin:12px 0}
 small{color:var(--muted)}
 
-/* ===== LOGIN HERO (interfaz estilo tarjeta) ===== */
-.login-hero {
-  display:grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap:32px;
-  align-items:center;
-  min-height: 65vh;
-  background: radial-gradient(1200px 600px at 30% -20%, #1a1a1a 0%, transparent 60%),
-              linear-gradient(#0b0b0b, #1b1b1b 40%, #2f2f2f 100%);
-  border-radius: 20px;
-  padding: 32px;
+/* ===== LOGIN HERO ===== */
+.login-hero{
+  display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:center;min-height:65vh;
+  background:radial-gradient(1200px 600px at 30% -20%,#1a1a1a 0%,transparent 60%),linear-gradient(#0b0b0b,#1b1b1b 40%,#2f2f2f 100%);
+  border-radius:20px;padding:32px;
 }
-.brand-block h1{ font-size:48px; letter-spacing:1px; margin:0 0 6px; }
-.brand-block small{ color:var(--muted); }
-.features{ display:flex; gap:18px; margin-top:24px; flex-wrap:wrap; }
-.feature {
-  background:#0e1319; border:1px solid #1f2a3a; color:#dbe7ff;
-  width: 230px; padding:18px; border-radius:16px;
-  box-shadow: 0 6px 20px #0006;
+.brand-block h1{font-size:48px;letter-spacing:1px;margin:0 0 6px}
+.brand-block small{color:var(--muted)}
+.features{display:flex;gap:18px;margin-top:24px;flex-wrap:wrap}
+.feature{background:#0e1319;border:1px solid #1f2a3a;color:#dbe7ff;width:230px;padding:18px;border-radius:16px;box-shadow:0 6px 20px #0006}
+.feature h3{margin:10px 0 4px;font-size:18px;color:#fff}
+.feature p{margin:0;color:#9fb4d1}
+.login-card{background:linear-gradient(180deg,#141414,#1e1e1e);border:1px solid #2a2a2a;border-radius:16px;padding:24px 22px;box-shadow:0 10px 30px #0007}
+.login-card h2{text-align:center;margin-bottom:12px}
+.input-wrap{position:relative}
+.input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
+.input-wrap input{padding-left:38px;height:46px;border-radius:12px}
+.eye-btn{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:transparent;border:0;color:#aaa;cursor:pointer;font-size:18px;width:32px;height:32px;display:flex;align-items:center;justify-content:center
 }
-.feature h3{ margin:10px 0 4px; font-size:18px; color:#fff; }
-.feature p{ margin:0; color:#9fb4d1; }
-.login-card{
-  background:linear-gradient(180deg,#141414,#1e1e1e);
-  border:1px solid #2a2a2a; border-radius:16px; padding:24px 22px;
-  box-shadow: 0 10px 30px #0007;
-}
-.login-card h2{ text-align:center; margin-bottom:12px; }
-.input-wrap{ position:relative; }
-.input-wrap .prefix{
-  position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.6;
-}
-.input-wrap input{
-  padding-left:38px; height:46px; border-radius:12px;
-}
-.input-wrap .toggle {
-  position:absolute; right:10px; top:50%; transform:translateY(-50%);
-  background:transparent; border:0; color:#aaa; cursor:pointer; font-size:18px;
-}
-.btn-primary{
-  width:100%; height:46px; border-radius:999px; font-weight:700;
-  background:#0f0f0f; color:#fff; border:1px solid #2a2a2a;
-}
-.btn-primary:hover{ filter:brightness(1.15); }
-#loginMsg{ text-align:center; color:#ffb3b3; min-height:20px; }
+.btn-primary{width:100%;height:46px;border-radius:999px;font-weight:700;background:#0f0f0f;color:#fff;border:1px solid #2a2a2a}
+.btn-primary:hover{filter:brightness(1.15)}
+#loginMsg{text-align:center;color:#ffb3b3;min-height:20px}
+@media (max-width:900px){.login-hero{grid-template-columns:1fr;padding:20px}.features{justify-content:center}}
 
-@media (max-width: 900px){
-  .login-hero{ grid-template-columns: 1fr; padding:20px; }
-  .features{ justify-content:center; }
-}
-
-/* ===== MODAL CAMBIO DE CONTRASEÑA (primer ingreso) ===== */
-.modal-overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.6);
-  display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000;
-}
-.modal-card{
-  width:100%; max-width:520px;
-  background:linear-gradient(180deg,#151515,#1c1c1c);
-  border:1px solid #2a2a2a; border-radius:18px; padding:22px;
-  box-shadow: 0 15px 40px #000a;
-}
-.modal-card h3{ margin:0 0 8px; font-size:22px;}
-.modal-sub{ color:var(--muted); margin-bottom:14px;}
-.modal-actions{ display:flex; gap:10px; margin-top:12px;}
+/* ===== MODAL CAMBIO DE CONTRASEÑA ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.modal-card{width:100%;max-width:520px;background:linear-gradient(180deg,#151515,#1c1c1c);border:1px solid #2a2a2a;border-radius:18px;padding:22px;box-shadow:0 15px 40px #000a}
+.modal-card h3{margin:0 0 8px;font-size:22px}
+.modal-sub{color:var(--muted);margin-bottom:14px}
+.modal-actions{display:flex;gap:10px;margin-top:12px}
 .modal-actions .btn-primary{flex:1}
-.inline{ display:flex; align-items:center; gap:10px; margin-top:6px; }
-.helper{ font-size:12px; color:#9fb4d1; }
-.err{ color:#ffb3b3; min-height:18px; text-align:center; }
-.success{ color:#b3ffcb; min-height:18px; text-align:center; }
+.inline{display:flex;align-items:center;gap:10px;margin-top:6px}
+.helper{font-size:12px;color:#9fb4d1}
+.err{color:#ffb3b3;min-height:18px;text-align:center}
+.success{color:#b3ffcb;min-height:18px;text-align:center}
+
+/* SVGs inline for eyes */
+.eye, .eye-off { width:22px; height:22px; fill:#aaa }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- ===== LOGIN (estilo tarjeta) ===== -->
+  <!-- ===== LOGIN ===== -->
   <div id="unauth" class="login-hero">
-    <!-- Columna izquierda -->
     <div class="brand-block">
       <h1>FX | CAPITAL R.L.</h1>
       <small>Asesoría – Confianza – Crecimiento</small>
 
       <div class="features">
-        <div class="feature">
-          <div class="icon" style="border-color:#2a3b52;background:#0b1118">
-            <!-- escudo -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true">
-              <path d="M12 2l7 3v6c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5l7-3z"/>
-            </svg>
-          </div>
-          <h3>Seguridad</h3>
-          <p>Máxima protección</p>
-        </div>
-
-        <div class="feature">
-          <div class="icon" style="border-color:#2a3b52;background:#0b1118">
-            <!-- flechas -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true">
-              <path d="M4 14h3l2-3 3 5 2-3h6v2h-5l-3 4-3-5-1 2H4zM4 6h16v2H4z"/>
-            </svg>
-          </div>
-          <h3>Rentabilidad</h3>
-          <p>Hasta 25% semestral*</p>
-        </div>
-
-        <div class="feature">
-          <div class="icon" style="border-color:#2a3b52;background:#0b1118">
-            <!-- candado -->
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true">
-              <path d="M12 1a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z"/>
-            </svg>
-          </div>
-          <h3>Control</h3>
-          <p>Transparencia total</p>
-        </div>
+        <div class="feature"><div class="icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true"><path d="M12 2l7 3v6c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5l7-3z"/></svg>
+        </div><h3>Seguridad</h3><p>Máxima protección</p></div>
+        <div class="feature"><div class="icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true"><path d="M4 14h3l2-3 3 5 2-3h6v2h-5l-3 4-3-5-1 2H4zM4 6h16v2H4z"/></svg>
+        </div><h3>Rentabilidad</h3><p>Hasta 25% semestral*</p></div>
+        <div class="feature"><div class="icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#cfe2ff" aria-hidden="true"><path d="M12 1a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z"/></svg>
+        </div><h3>Control</h3><p>Transparencia total</p></div>
       </div>
 
       <small>*El porcentaje final depende de su plan.</small>
     </div>
 
-    <!-- Columna derecha (tarjeta login) -->
     <div class="login-card">
       <h2>Iniciar Sesión</h2>
       <form id="loginForm" autocomplete="on">
@@ -158,7 +103,9 @@ small{color:var(--muted)}
         <div class="input-wrap">
           <span class="prefix">🔒</span>
           <input id="password" type="password" placeholder="••••••••" required>
-          <button type="button" class="toggle" id="togglePwd" aria-label="mostrar/ocultar">👁</button>
+          <button type="button" class="eye-btn" data-toggle="password" aria-label="mostrar/ocultar">
+            <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+          </button>
         </div>
 
         <div style="text-align:right;margin:8px 0 12px">
@@ -173,13 +120,11 @@ small{color:var(--muted)}
 
   <!-- ===== APP ===== -->
   <div id="app" class="hidden">
-
     <div class="header">
       <h1>FX | CAPITAL R.L. — Panel Cliente</h1>
       <button onclick="logout()">Cerrar sesión</button>
     </div>
 
-    <!-- Resumen cuenta -->
     <div class="card">
       <h2>Mi cuenta</h2>
       <div class="grid-3">
@@ -192,20 +137,16 @@ small{color:var(--muted)}
       </div>
     </div>
 
-    <!-- Resultados -->
     <div class="card">
       <h2>Resultados del mes</h2>
       <p id="monthLabel">—</p>
       <table>
         <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
         <tbody id="weeks"></tbody>
-        <tfoot>
-          <tr><th>Total mes</th><th id="monthTotal">—</th></tr>
-        </tfoot>
+        <tfoot><tr><th>Total mes</th><th id="monthTotal">—</th></tr></tfoot>
       </table>
     </div>
 
-    <!-- Calculadora -->
     <div class="card">
       <h2>Calculadora de crecimiento</h2>
       <div class="row">
@@ -217,7 +158,6 @@ small{color:var(--muted)}
       <small>El plan se asigna automáticamente por capital. BLACK solo aparece si fue habilitado por el Administrador.</small>
     </div>
 
-    <!-- Retiros -->
     <div class="card">
       <h2>Solicitar retiro de capital</h2>
       <div class="row">
@@ -237,339 +177,252 @@ small{color:var(--muted)}
       <textarea id="w_reason" rows="4" placeholder="Explique brevemente los motivos…"></textarea>
       <div style="margin-top:10px"><button onclick="sendWithdrawal()">Enviar solicitud</button> <span id="w_msg" style="color:var(--muted)"></span></div>
     </div>
-
   </div>
 </div>
 
-<!-- ===== MODAL: Primer Ingreso / Cambio de Contraseña ===== -->
+<!-- ===== MODAL (DESPUÉS DE ENTRAR AL DASHBOARD) ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
     <p class="modal-sub">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
 
+    <label>Correo electrónico</label>
+    <div class="input-wrap">
+      <span class="prefix">✉️</span>
+      <input id="pwdEmail" type="email" placeholder="tu@email.com" autocomplete="email">
+    </div>
+
+    <label style="margin-top:8px">Contraseña actual</label>
     <div class="input-wrap">
       <span class="prefix">🔒</span>
-      <input id="curPwd" type="password" placeholder="Contraseña actual" autocomplete="current-password">
-      <button type="button" class="toggle" data-toggle="curPwd" aria-label="mostrar/ocultar">👁</button>
+      <input id="curPwd" type="password" placeholder="••••••••" autocomplete="current-password">
+      <button type="button" class="eye-btn" data-toggle="curPwd" aria-label="mostrar/ocultar">
+        <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      </button>
     </div>
-    <label style="margin-top:8px"></label>
+
+    <label style="margin-top:8px">Nueva contraseña</label>
     <div class="input-wrap">
       <span class="prefix">🆕</span>
-      <input id="newPwd" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)" autocomplete="new-password">
-      <button type="button" class="toggle" data-toggle="newPwd" aria-label="mostrar/ocultar">👁</button>
+      <input id="newPwd" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+      <button type="button" class="eye-btn" data-toggle="newPwd" aria-label="mostrar/ocultar">
+        <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      </button>
     </div>
-    <div class="input-wrap" style="margin-top:8px">
+
+    <label style="margin-top:8px">Confirmar nueva contraseña</label>
+    <div class="input-wrap">
       <span class="prefix">✅</span>
-      <input id="confPwd" type="password" placeholder="Confirmar nueva contraseña" autocomplete="new-password">
-      <button type="button" class="toggle" data-toggle="confPwd" aria-label="mostrar/ocultar">👁</button>
+      <input id="confPwd" type="password" placeholder="Repetir nueva contraseña" autocomplete="new-password">
+      <button type="button" class="eye-btn" data-toggle="confPwd" aria-label="mostrar/ocultar">
+        <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      </button>
     </div>
+
     <div class="inline">
       <input id="showAllPwds" type="checkbox">
       <label for="showAllPwds" style="margin:0">Mostrar contraseñas</label>
     </div>
-    <div class="helper">Use al menos 8 caracteres. Recomendado: combinación de letras, números y símbolos.</div>
+    <div class="helper">Use al menos 8 caracteres. Recomendado: letras, números y símbolos.</div>
 
     <div id="pwdMsg" class="err"></div>
     <div id="pwdOk" class="success"></div>
 
     <div class="modal-actions">
       <button id="pwdSubmit" class="btn-primary" type="button">Actualizar contraseña</button>
-      <button id="pwdLater" type="button" style="background:#111;color:#fff;border:1px solid #2a2a2a">Ahora no</button>
+      <button id="pwdCancel" type="button" style="background:#111;color:#fff;border:1px solid #2a2a2a">Cancelar</button>
     </div>
   </div>
 </div>
 
 <script>
-/*** CONFIG SUPABASE ***/
-const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
-const BASE = PROJECT_URL + "/rest/v1";
-
-function hdrJSON(){ return { apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||""), "Content-Type":"application/json" }; }
-function hdr(){ return { apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }; }
-const GTZ = 'America/Guatemala';
-
-const PLAN_RATES = { STANDARD: 0.15/6, PLATINUM: 0.20/6, BLACK: 0.25/6 }; // mensual estimado
+/*** SUPABASE ***/
+const PROJECT_URL="https://czvpehbubfrinutztnwh.supabase.co";
+const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const BASE=PROJECT_URL+"/rest/v1";
+function hdrJSON(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||""),"Content-Type":"application/json"}}
+function hdr(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||"")}}
+const GTZ='America/Guatemala';
+const PLAN_RATES={STANDARD:0.15/6,PLATINUM:0.20/6,BLACK:0.25/6};
 
 /*** LOGIN ***/
-document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+document.getElementById("loginForm").addEventListener("submit",async(e)=>{
   e.preventDefault();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
-    body: JSON.stringify({ email, password })
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const r=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password})
   });
-  const data = await r.json();
-  if(!r.ok){ document.getElementById("loginMsg").textContent="Login inválido"; return; }
-  localStorage.token = data.access_token; localStorage.uid = data.user.id; localStorage.email = email;
-
-  // banderas de primer ingreso
-  localStorage.setItem('firstLoginSeen:'+localStorage.uid, '0');
-
+  const data=await r.json();
+  if(!r.ok){document.getElementById("loginMsg").textContent="Login inválido";return;}
+  localStorage.token=data.access_token;localStorage.uid=data.user.id;localStorage.email=email;
   await init();
 });
 
-/*** Mostrar/ocultar contraseña (👁) en login ***/
-(function(){
-  const pwd = document.getElementById('password');
-  const btn = document.getElementById('togglePwd');
-  if (pwd && btn) {
-    btn.addEventListener('click', ()=>{
-      pwd.type = (pwd.type === 'password') ? 'text' : 'password';
-      btn.textContent = (pwd.type === 'password') ? '👁' : '🙈';
-    });
-  }
-})();
+/*** OJO login ***/
+document.addEventListener('click',(e)=>{
+  const btn=e.target.closest('.eye-btn');
+  if(!btn) return;
+  const id=btn.getAttribute('data-toggle');
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.type=(el.type==='password')?'text':'password';
+  btn.innerHTML=(el.type==='password')
+    ? `<svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>`
+    : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9.5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
+});
 
 /*** APP ***/
-function show(id,vis){ document.getElementById(id).classList[vis?"remove":"add"]("hidden"); }
-function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); localStorage.removeItem("email"); location.reload(); }
+function show(id,vis){document.getElementById(id).classList[vis?"remove":"add"]("hidden")}
+function logout(){localStorage.removeItem("token");localStorage.removeItem("uid");localStorage.removeItem("email");location.reload()}
 
 async function init(){
-  if(!localStorage.token){ show("app",false); show("unauth",true); return; }
-  show("unauth",false); show("app",true);
+  if(!localStorage.token){show("app",false);show("unauth",true);return;}
+  show("unauth",false);show("app",true);
   await loadAccount();
   await buildMonthResults();
-  await maybeAskPasswordChange();
+  await maybeAskPasswordChange(); // << aparece después de entrar
 }
 
 /*** DATA CUENTA ***/
-let ACCOUNT=null, PROFILE=null;
+let ACCOUNT=null,PROFILE=null;
 async function loadAccount(){
-  // profile (agrega require_password_change si lo manejas en tu tabla)
-  const rp = await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change`, { headers: hdr() });
-  PROFILE = (await rp.json())[0] || null;
+  const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
+  PROFILE=(await rp.json())[0]||null;
 
-  // account (propia)
-  const ra = await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`, { headers: hdr() });
-  ACCOUNT = (await ra.json())[0] || null;
+  const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`,{headers:hdr()});
+  ACCOUNT=(await ra.json())[0]||null;
 
-  // pintar
-  document.getElementById("c_name").textContent     = PROFILE?.full_name || "—";
-  document.getElementById("c_plan").textContent     = ACCOUNT?.plan || "—";
-  document.getElementById("c_currency").textContent = ACCOUNT?.currency || "—";
-  document.getElementById("c_capital").textContent  = money(ACCOUNT?.principal_locked||0, ACCOUNT?.currency||"GTQ");
-  document.getElementById("c_account").textContent  = ACCOUNT?.id || "—";
-  document.getElementById("c_black").textContent    = ACCOUNT?.black_enabled ? "Sí" : "No";
+  document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
+  document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
+  document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
+  document.getElementById("c_capital").textContent=money(ACCOUNT?.principal_locked||0,ACCOUNT?.currency||"GTQ");
+  document.getElementById("c_account").textContent=ACCOUNT?.id||"—";
+  document.getElementById("c_black").textContent=ACCOUNT?.black_enabled?"Sí":"No";
 }
 
-/*** RESULTADOS MENSUALES (VIERNES) ***/
-function money(n,cur){ const fm = new Intl.NumberFormat('es-GT',{style:'currency',currency: cur==='USD'?'USD':'GTQ'}); return fm.format(n); }
-function guateNow(){ return new Date(new Date().toLocaleString('en-US',{timeZone:GTZ})); }
-
-function fridaysOfMonth(year, month0){ // month0: 0-11
-  const days=[]; const d=new Date(Date.UTC(year,month0,1));
-  while(d.getUTCMonth()===month0){
-    const local = new Date(d.toLocaleString('en-US',{timeZone:GTZ}));
-    if(local.getDay()===5) days.push(new Date(local));
-    d.setUTCDate(d.getUTCDate()+1);
-  }
-  return days;
-}
-
-function randomParts(total, n){
-  if(n<=0) return [];
-  const xs = Array.from({length:n},()=>Math.random()+0.5);
-  const s = xs.reduce((a,b)=>a+b,0);
-  return xs.map(v=> total*(v/s) );
-}
-
+/*** RESULTADOS ***/
+function money(n,cur){return new Intl.NumberFormat('es-GT',{style:'currency',currency:cur==='USD'?'USD':'GTQ'}).format(n)}
+function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:GTZ}))}
+function fridaysOfMonth(y,m0){const days=[];const d=new Date(Date.UTC(y,m0,1));while(d.getUTCMonth()===m0){const local=new Date(d.toLocaleString('en-US',{timeZone:GTZ}));if(local.getDay()===5)days.push(new Date(local));d.setUTCDate(d.getUTCDate()+1)}return days}
+function randomParts(total,n){if(n<=0)return[];const xs=Array.from({length:n},()=>Math.random()+0.5);const s=xs.reduce((a,b)=>a+b,0);return xs.map(v=>total*(v/s))}
 async function buildMonthResults(){
-  if(!ACCOUNT){ return; }
-  const now = guateNow();
-  const y = now.getFullYear(); const m0 = now.getMonth();
-  const label = now.toLocaleString('es-GT',{timeZone:GTZ, month:'long', year:'numeric'});
-  document.getElementById("monthLabel").textContent = label;
-
-  const frs = fridaysOfMonth(y,m0);
-  const monthlyRate = PLAN_RATES[ACCOUNT.plan] || 0;
-  const monthlyInterest = (ACCOUNT.principal_locked||0) * monthlyRate;
-
-  const parts = randomParts(monthlyInterest, frs.length);
-  const tbody = document.getElementById("weeks"); tbody.innerHTML="";
-
-  frs.forEach((f,i)=>{
-    const amt = parts[i];
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${f.toLocaleDateString('es-GT',{timeZone:GTZ})}</td><td>${money(amt, ACCOUNT.currency)}</td>`;
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById("monthTotal").textContent = money(parts.reduce((a,b)=>a+b,0), ACCOUNT.currency);
-}
-
-/*** CALCULADORA (plan automático) ***/
-function detectPlan(capital, blackEnabled){
-  if(blackEnabled) return 'BLACK';
-  if(capital>=250000) return 'PLATINUM';
-  if(capital>=2000) return 'STANDARD';
-  return 'STANDARD';
-}
-function runCalculator(){
-  const cap = Number(document.getElementById("calc_capital").value||0);
-  const plan = detectPlan(cap, ACCOUNT?.black_enabled);
-  const monthly = cap * (PLAN_RATES[plan]||0);
-  document.getElementById("calc_plan").value = plan;
-  document.getElementById("calc_monthly").value = new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(monthly);
+  if(!ACCOUNT)return;
+  const now=guateNow(),y=now.getFullYear(),m0=now.getMonth();
+  document.getElementById("monthLabel").textContent=now.toLocaleString('es-GT',{timeZone:GTZ,month:'long',year:'numeric'});
+  const frs=fridaysOfMonth(y,m0);
+  const monthlyRate=PLAN_RATES[ACCOUNT.plan]||0;
+  const monthlyInterest=(ACCOUNT.principal_locked||0)*monthlyRate;
+  const parts=randomParts(monthlyInterest,frs.length);
+  const tbody=document.getElementById("weeks");tbody.innerHTML="";
+  frs.forEach((f,i)=>{const amt=parts[i];const tr=document.createElement("tr");tr.innerHTML=`<td>${f.toLocaleDateString('es-GT',{timeZone:GTZ})}</td><td>${money(amt,ACCOUNT.currency)}</td>`;tbody.appendChild(tr)});
+  document.getElementById("monthTotal").textContent=money(parts.reduce((a,b)=>a+b,0),ACCOUNT.currency);
 }
 
 /*** RETIROS ***/
 async function sendWithdrawal(){
-  if(!ACCOUNT){ return; }
-  const type = document.getElementById("w_type").value; // EARLY | HEALTH
-  const reason = document.getElementById("w_reason").value.trim();
-  const amount = Number(document.getElementById("w_amount").value||0);
-  const penalty = (type==='EARLY') ? 10 : 0;
-
-  // 1) crear retiro
-  const body = {
-    account_id: ACCOUNT.id,
-    kind: type,
-    reason,
-    penalty_pct: penalty,
-    amount: amount>0?amount:null,
-    status: 'PENDING'
-  };
-  const r1 = await fetch(`${BASE}/withdrawal_requests`, { method:'POST', headers: hdrJSON(), body: JSON.stringify(body) });
-  if(!r1.ok){ document.getElementById("w_msg").textContent="Error creando solicitud"; return; }
-  const [ret] = await r1.json();
-
-  // 2) notificación admin
-  const notif = {
-    type: 'WITHDRAWAL_REQUEST',
-    payload: { withdrawal_id: ret.id, account_id: ACCOUNT.id, kind: type, penalty_pct: penalty }
-  };
-  await fetch(`${BASE}/admin_notifications`, { method:'POST', headers: hdrJSON(), body: JSON.stringify(notif) });
-
-  // 3) mensaje al cliente
+  if(!ACCOUNT)return;
+  const type=document.getElementById("w_type").value;
+  const reason=document.getElementById("w_reason").value.trim();
+  const amount=Number(document.getElementById("w_amount").value||0);
+  const penalty=(type==='EARLY')?10:0;
+  const body={account_id:ACCOUNT.id,kind:type,reason,penalty_pct:penalty,amount:amount>0?amount:null,status:'PENDING'};
+  const r1=await fetch(`${BASE}/withdrawal_requests`,{method:'POST',headers:hdrJSON(),body:JSON.stringify(body)});
+  if(!r1.ok){document.getElementById("w_msg").textContent="Error creando solicitud";return;}
+  const [ret]=await r1.json();
+  const notif={type:'WITHDRAWAL_REQUEST',payload:{withdrawal_id:ret.id,account_id:ACCOUNT.id,kind:type,penalty_pct:penalty}};
+  await fetch(`${BASE}/admin_notifications`,{method:'POST',headers:hdrJSON(),body:JSON.stringify(notif)});
   alert("Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.");
-  document.getElementById("w_msg").textContent = "Solicitud enviada.";
-  document.getElementById("w_reason").value = ""; document.getElementById("w_amount").value = "";
+  document.getElementById("w_msg").textContent="Solicitud enviada.";
+  document.getElementById("w_reason").value="";document.getElementById("w_amount").value="";
 }
 
-/*** ===== PRIMER INGRESO: Modal de cambio de contraseña ===== ***/
-const $modal = ()=>document.getElementById('pwdModal');
-const $pwdMsg = ()=>document.getElementById('pwdMsg');
-const $pwdOk  = ()=>document.getElementById('pwdOk');
+/*** ===== MODAL PRIMER INGRESO ===== ***/
+const $modal=()=>document.getElementById('pwdModal');
+const $pwdMsg=()=>document.getElementById('pwdMsg');
+const $pwdOk =()=>document.getElementById('pwdOk');
 
-function openPwdModal(){
-  $pwdMsg().textContent=''; $pwdOk().textContent='';
-  document.getElementById('curPwd').value='';
-  document.getElementById('newPwd').value='';
-  document.getElementById('confPwd').value='';
+function openPwdModal(forceMandatory){
+  $pwdMsg().textContent='';$pwdOk().textContent='';
+  document.getElementById('pwdEmail').value=localStorage.email||'';
+  ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('showAllPwds').checked=false;
   $modal().classList.remove('hidden');
+  // Si es obligatorio, ocultamos "Cancelar"
+  document.getElementById('pwdCancel').style.display = forceMandatory ? 'none' : 'inline-block';
 }
 function closePwdModal(){ $modal().classList.add('hidden'); }
 
 async function maybeAskPasswordChange(){
-  try{
-    const firstSeenKey = 'firstLoginSeen:'+localStorage.uid;
-    const mustChangeByProfile = !!PROFILE?.require_password_change;
-    const alreadySeen = localStorage.getItem(firstSeenKey) === '1';
+  // Reglas: mostrar si require_password_change === true OR first_login_completed !== true
+  const mustByPolicy = PROFILE?.require_password_change === true;
+  const firstNotDone = PROFILE?.first_login_completed !== true;
+  if(mustByPolicy || firstNotDone){ openPwdModal(true); } // obligatorio en primer ingreso
+  document.getElementById('pwdSubmit').onclick=submitPasswordChange;
+  document.getElementById('pwdCancel').onclick=closePwdModal;
 
-    if (mustChangeByProfile || !alreadySeen){
-      openPwdModal();
-    }
-
-    // controles
-    document.getElementById('pwdLater').onclick = ()=>{
-      localStorage.setItem(firstSeenKey,'1');
-      closePwdModal();
-    };
-    document.getElementById('pwdSubmit').onclick = submitPasswordChange;
-
-    // toggles "👁"
-    document.querySelectorAll('.toggle[data-toggle]').forEach(btn=>{
-      btn.onclick = ()=>{
-        const id = btn.getAttribute('data-toggle');
-        const el = document.getElementById(id);
-        el.type = (el.type==='password' ? 'text' : 'password');
-        btn.textContent = (el.type==='password' ? '👁' : '🙈');
-      };
+  // checkbox "mostrar todas"
+  document.getElementById('showAllPwds').addEventListener('change',(e)=>{
+    ['curPwd','newPwd','confPwd'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.type=e.target.checked?'text':'password';
     });
-
-    // checkbox "mostrar todas"
-    document.getElementById('showAllPwds').addEventListener('change', (e)=>{
-      ['curPwd','newPwd','confPwd'].forEach(id=>{
-        const el = document.getElementById(id);
-        el.type = e.target.checked ? 'text' : 'password';
-      });
-      document.querySelectorAll('.toggle[data-toggle]').forEach(btn=>{
-        const id = btn.getAttribute('data-toggle');
-        const el = document.getElementById(id);
-        btn.textContent = (el.type==='password' ? '👁' : '🙈');
-      });
-    });
-
-  }catch(e){ /* silencioso */ }
+  });
 }
 
 async function submitPasswordChange(){
-  const email = localStorage.email || '';
-  const cur = document.getElementById('curPwd').value;
-  const neo = document.getElementById('newPwd').value;
-  const rep = document.getElementById('confPwd').value;
+  const email=(document.getElementById('pwdEmail').value||'').trim();
+  const cur=document.getElementById('curPwd').value;
+  const neo=document.getElementById('newPwd').value;
+  const rep=document.getElementById('confPwd').value;
+  $pwdMsg().textContent='';$pwdOk().textContent='';
 
-  $pwdMsg().textContent=''; $pwdOk().textContent='';
+  if(!email||!cur||!neo||!rep){$pwdMsg().textContent='Complete todos los campos.';return;}
+  if(neo.length<8){$pwdMsg().textContent='La nueva contraseña debe tener al menos 8 caracteres.';return;}
+  if(neo!==rep){$pwdMsg().textContent='La confirmación no coincide.';return;}
 
-  if(!cur || !neo || !rep){ $pwdMsg().textContent='Complete todos los campos.'; return; }
-  if(neo.length < 8){ $pwdMsg().textContent='La nueva contraseña debe tener al menos 8 caracteres.'; return; }
-  if(neo !== rep){ $pwdMsg().textContent='La confirmación no coincide.'; return; }
-
-  // 1) Verificar contraseña actual con login
-  const rLogin = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
-    body: JSON.stringify({ email, password: cur })
+  // 1) Verificar credenciales actuales
+  const rLogin=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password:cur})
   });
-  if(!rLogin.ok){ $pwdMsg().textContent = 'La contraseña actual no es correcta.'; return; }
-  const dataLogin = await rLogin.json();
+  if(!rLogin.ok){$pwdMsg().textContent='Correo o contraseña actual incorrectos.';return;}
+  const dataLogin=await rLogin.json();
 
-  // 2) Cambiar contraseña (requiere Bearer del usuario autenticado)
-  const rPatch = await fetch(`${PROJECT_URL}/auth/v1/user`, {
-    method: 'PATCH',
-    headers: { apikey: ANON_KEY, Authorization: `Bearer ${dataLogin.access_token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: neo })
+  // 2) Cambiar contraseña con el token del usuario
+  const rPatch=await fetch(`${PROJECT_URL}/auth/v1/user`,{
+    method:'PATCH',
+    headers:{apikey:ANON_KEY,Authorization:`Bearer ${dataLogin.access_token}`,'Content-Type':'application/json'},
+    body:JSON.stringify({password:neo})
   });
-
   if(!rPatch.ok){
-    const err = await rPatch.json().catch(()=>({}));
-    $pwdMsg().textContent = err?.msg || 'No se pudo actualizar la contraseña.';
-    return;
+    const err=await rPatch.json().catch(()=>({}));
+    $pwdMsg().textContent=err?.msg||'No se pudo actualizar la contraseña.';return;
   }
 
-  // 3) Re-login con la nueva contraseña y limpiar bandera
-  const rLoginNew = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
-    body: JSON.stringify({ email, password: neo })
+  // 3) Re-login con la nueva (para refrescar token local)
+  const rLoginNew=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password:neo})
   });
   if(rLoginNew.ok){
-    const data2 = await rLoginNew.json();
-    localStorage.token = data2.access_token; localStorage.uid = data2.user.id;
+    const data2=await rLoginNew.json();
+    localStorage.token=data2.access_token;localStorage.uid=data2.user.id;localStorage.email=email;
   }
 
-  $pwdOk().textContent = 'Contraseña actualizada correctamente.';
-  localStorage.setItem('firstLoginSeen:'+localStorage.uid, '1');
-
-  // (Opcional) limpiar flag en perfil si lo usas
+  // 4) Marcar primer ingreso completado y limpiar bandera de política
   try{
-    if(PROFILE?.require_password_change === true){
-      await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`, {
-        method:'PATCH',
-        headers: hdrJSON(),
-        body: JSON.stringify({ require_password_change: false })
-      });
-    }
-  }catch(e){ /* no bloquear UX */ }
+    await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`,{
+      method:'PATCH',headers:hdrJSON(),
+      body:JSON.stringify({ first_login_completed:true, require_password_change:false, last_password_changed_at:new Date().toISOString() })
+    });
+    PROFILE.first_login_completed=true; PROFILE.require_password_change=false;
+  }catch(e){/* no bloquear UX */ }
 
+  $pwdOk().textContent='Contraseña actualizada correctamente.';
   setTimeout(()=>{ closePwdModal(); }, 900);
 }
-
-/*** ARRANQUE ***/
-(async function start(){
-  if(localStorage.token){ show("unauth",false); show("app",true); await init(); }
-})();
 </script>
 </body>
 </html>
