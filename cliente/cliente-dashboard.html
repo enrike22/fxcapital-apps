@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FX | CAPITAL R.L. — Panel Cliente</title>
+<style>
+:root{--bg:#000;--fg:#fff;--muted:#ffffffcc;--card:#0d0d0d;--border:#1a1a1a}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1,h2{margin:0 0 8px} small{color:var(--muted)}
+.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
+.grid-3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:var(--muted)}
+.hidden{display:none}
+button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
+small{color:var(--muted)}
+/* ===== MODAL CAMBIO DE CONTRASEÑA ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.modal-card{width:100%;max-width:560px;background:linear-gradient(180deg,#151515,#1c1c1c);border:1px solid #2a2a2a;border-radius:18px;padding:22px;box-shadow:0 15px 40px #000a}
+.modal-card h3{margin:0 0 8px;font-size:22px}
+.modal-sub{color:var(--muted);margin-bottom:14px}
+label{display:block;margin:8px 0 4px}
+.input-wrap{position:relative}
+.input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
+.input-wrap input{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:10px 12px 10px 38px;height:46px;padding-right:46px}
+.eye-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
+.eye,.eye-off{width:24px;height:24px;fill:#fff}
+.inline{display:flex;align-items:center;gap:10px;margin-top:6px}
+.helper{font-size:12px;color:#9fb4d1}
+.err{color:#ffb3b3;min-height:18px;text-align:center}
+.success{color:#b3ffcb;min-height:18px;text-align:center}
+.modal-actions{display:flex;gap:10px;margin-top:12px}
+.modal-actions .primary{flex:1;background:#0f0f0f;color:#fff;border:1px solid #2a2a2a}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>FX | CAPITAL R.L. — Panel Cliente</h1>
+    <button id="logoutBtn">Cerrar sesión</button>
+  </div>
+
+  <!-- Resumen -->
+  <div class="card">
+    <h2>Mi cuenta</h2>
+    <div class="grid-3">
+      <div><span class="badge">Nombre</span><div id="c_name">—</div></div>
+      <div><span class="badge">Plan</span><div id="c_plan">—</div></div>
+      <div><span class="badge">Moneda</span><div id="c_currency">—</div></div>
+      <div><span class="badge">Capital</span><div id="c_capital">—</div></div>
+      <div><span class="badge">Cuenta (ID)</span><div id="c_account">—</div></div>
+      <div><span class="badge">BLACK habilitado</span><div id="c_black">—</div></div>
+    </div>
+  </div>
+
+  <!-- Resultados del mes (demo) -->
+  <div class="card">
+    <h2>Resultados del mes</h2>
+    <p id="monthLabel">—</p>
+    <table>
+      <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
+      <tbody id="weeks"></tbody>
+      <tfoot><tr><th>Total mes</th><th id="monthTotal">—</th></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MODAL PRIMER INGRESO ===== -->
+<div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
+  <div class="modal-card">
+    <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
+    <p class="modal-sub">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
+
+    <label>Correo electrónico</label>
+    <div class="input-wrap">
+      <span class="prefix">✉️</span>
+      <input id="pwdEmail" type="email" placeholder="tu@email.com" autocomplete="email">
+    </div>
+
+    <label style="margin-top:8px">Contraseña actual</label>
+    <div class="input-wrap">
+      <span class="prefix">🔒</span>
+      <input id="curPwd" type="password" placeholder="••••••••" autocomplete="current-password">
+      <button type="button" class="eye-btn" data-toggle="curPwd" aria-label="mostrar/ocultar">
+        <svg class="eye" viewBox="0 0 24 24" fill="#fff"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      </button>
+    </div>
+
+    <label style="margin-top:8px">Nueva contraseña</label>
+    <div class="input-wrap">
+      <span class="prefix">🆕</span>
+      <input id="newPwd" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+      <button type="button" class="eye-btn" data-toggle="newPwd" aria-label="mostrar/ocultar">
+        <svg class="eye" viewBox="0 0 24 24" fill="#fff"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      </button>
+    </div>
+
+    <label style="margin-top:8px">Confirmar nueva contraseña</label>
+    <div class="input-wrap">
+      <span class="prefix">✅</span>
+      <input id="confPwd" type="password" placeholder="Repetir nueva contraseña" autocomplete="new-password">
+      <button type="button" class="eye-btn" data-toggle="confPwd" aria-label="mostrar/ocultar">
+        <svg class="eye" viewBox="0 0 24 24" fill="#fff"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
+      </button>
+    </div>
+
+    <div class="inline">
+      <input id="showAllPwds" type="checkbox"><label for="showAllPwds" style="margin:0">Mostrar contraseñas</label>
+    </div>
+    <div class="helper">Use al menos 8 caracteres. Recomendado: letras, números y símbolos.</div>
+
+    <div id="pwdMsg" class="err"></div>
+    <div id="pwdOk" class="success"></div>
+
+    <div class="modal-actions">
+      <button id="pwdSubmit" class="primary" type="button">Actualizar contraseña</button>
+      <button id="pwdCancel" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*** CONFIG SUPABASE ***/
+const PROJECT_URL="https://czvpehbubfrinutztnwh.supabase.co";
+const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const BASE=PROJECT_URL+"/rest/v1";
+function hdr(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||"")}}
+function hdrJSON(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||""),"Content-Type":"application/json"}}
+const GTZ='America/Guatemala';
+
+/*** UTIL ***/
+function show(elId,visible){document.getElementById(elId).classList[visible?'remove':'add']('hidden')}
+function logout(){localStorage.clear();location.href='cliente-login.html'}
+document.getElementById('logoutBtn').onclick=logout;
+
+function money(n,cur){return new Intl.NumberFormat('es-GT',{style:'currency',currency:cur==='USD'?'USD':'GTQ'}).format(n)}
+function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:GTZ}))}
+
+/*** ESTADO ***/
+let PROFILE=null,ACCOUNT=null;
+
+/*** CARGA INICIAL (requiere sesión válida) ***/
+(async function boot(){
+  if(!localStorage.token){ logout(); return; }
+
+  // Verifica que el token sea válido
+  const rUser=await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}});
+  if(!rUser.ok){ logout(); return; }
+
+  // Cargar datos de perfil y cuenta
+  const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
+  PROFILE=(await rp.json())[0]||null;
+
+  const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`,{headers:hdr()});
+  ACCOUNT=(await ra.json())[0]||null;
+
+  // Pintar
+  document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
+  document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
+  document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
+  document.getElementById("c_capital").textContent=money(ACCOUNT?.principal_locked||0,ACCOUNT?.currency||"GTQ");
+  document.getElementById("c_account").textContent=ACCOUNT?.id||"—";
+  document.getElementById("c_black").textContent=ACCOUNT?.black_enabled?"Sí":"No";
+
+  // Demo resultados
+  buildMonthResults();
+
+  // MOSTRAR MODAL SOLO EN PRIMER INGRESO / OBLIGATORIO
+  const mustByPolicy = PROFILE?.require_password_change===true;
+  const firstNotDone = PROFILE?.first_login_completed!==true;
+  if(mustByPolicy || firstNotDone) openPwdModal(true);
+
+  // eventos del modal
+  document.getElementById('pwdSubmit').onclick=submitPasswordChange;
+  document.getElementById('pwdCancel').onclick=()=>closePwdModal();
+  document.getElementById('showAllPwds').addEventListener('change',(e)=>{
+    ['curPwd','newPwd','confPwd'].forEach(id=>{
+      const el=document.getElementById(id); el.type=e.target.checked?'text':'password';
+    });
+  });
+
+  // toggles individuales
+  document.addEventListener('click',(e)=>{
+    const btn=e.target.closest('.eye-btn'); if(!btn) return;
+    const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
+    el.type=(el.type==='password')?'text':'password';
+    btn.innerHTML=(el.type==='password')
+      ? `<svg class="eye" viewBox="0 0 24 24" fill="#fff"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>`
+      : `<svg class="eye-off" viewBox="0 0 24 24" fill="#fff"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9.5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
+  });
+
+})();
+
+function buildMonthResults(){
+  const PLAN_RATES={STANDARD:0.15/6,PLATINUM:0.20/6,BLACK:0.25/6};
+  if(!ACCOUNT) return;
+  const now=guateNow(); const y=now.getFullYear(), m0=now.getMonth();
+  document.getElementById('monthLabel').textContent=now.toLocaleString('es-GT',{timeZone:GTZ,month:'long',year:'numeric'});
+  // fridays
+  const frs=[]; const d=new Date(Date.UTC(y,m0,1));
+  while(d.getUTCMonth()===m0){ const local=new Date(d.toLocaleString('en-US',{timeZone:GTZ})); if(local.getDay()===5) frs.push(new Date(local)); d.setUTCDate(d.getUTCDate()+1);}
+  const parts=randomParts((ACCOUNT.principal_locked||0)*(PLAN_RATES[ACCOUNT.plan]||0), frs.length);
+  const tb=document.getElementById('weeks'); tb.innerHTML='';
+  frs.forEach((f,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${f.toLocaleDateString('es-GT',{timeZone:GTZ})}</td><td>${money(parts[i],ACCOUNT.currency)}</td>`; tb.appendChild(tr); });
+  document.getElementById('monthTotal').textContent=money(parts.reduce((a,b)=>a+b,0), ACCOUNT.currency);
+}
+function randomParts(total,n){if(n<=0)return[];const xs=Array.from({length:n},()=>Math.random()+0.5);const s=xs.reduce((a,b)=>a+b,0);return xs.map(v=> total*(v/s));}
+
+/*** Modal helpers ***/
+function openPwdModal(force){
+  // siempre obligatorio en primer ingreso → oculto botón cancelar
+  document.getElementById('pwdCancel').style.display = force ? 'none' : 'inline-block';
+  document.getElementById('pwdEmail').value = localStorage.email || '';
+  ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pwdMsg').textContent=''; document.getElementById('pwdOk').textContent='';
+  document.getElementById('pwdModal').classList.remove('hidden');
+}
+function closePwdModal(){ document.getElementById('pwdModal').classList.add('hidden'); }
+
+/*** Cambio de contraseña ***/
+async function submitPasswordChange(){
+  const email=(document.getElementById('pwdEmail').value||'').trim();
+  const cur=document.getElementById('curPwd').value;
+  const neo=document.getElementById('newPwd').value;
+  const rep=document.getElementById('confPwd').value;
+  const err=document.getElementById('pwdMsg'); const ok=document.getElementById('pwdOk'); err.textContent=''; ok.textContent='';
+
+  if(!email||!cur||!neo||!rep){ err.textContent='Complete todos los campos.'; return; }
+  if(neo.length<8){ err.textContent='La nueva contraseña debe tener al menos 8 caracteres.'; return; }
+  if(neo!==rep){ err.textContent='La confirmación no coincide.'; return; }
+
+  // Validar credenciales actuales
+  const rLogin=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password:cur})
+  });
+  if(!rLogin.ok){ err.textContent='Correo o contraseña actual incorrectos.'; return; }
+
+  // Cambiar contraseña con la sesión actual
+  const rPatch=await fetch(`${PROJECT_URL}/auth/v1/user`,{
+    method:'PATCH',
+    headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`,'Content-Type':'application/json'},
+    body:JSON.stringify({password:neo})
+  });
+  if(!rPatch.ok){ err.textContent='No se pudo actualizar la contraseña.'; return; }
+
+  // Re-login con la nueva contraseña
+  const rLoginNew=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password:neo})
+  });
+  if(rLoginNew.ok){
+    const d=await rLoginNew.json();
+    localStorage.token=d.access_token; localStorage.uid=d.user.id; localStorage.email=email;
+  }
+
+  // Marcar primer ingreso completado en perfiles
+  try{
+    await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`,{
+      method:'PATCH',headers:hdrJSON(),
+      body:JSON.stringify({ first_login_completed:true, require_password_change:false, last_password_changed_at:new Date().toISOString() })
+    });
+  }catch(e){}
+
+  ok.textContent='Contraseña actualizada correctamente.';
+  setTimeout(()=>closePwdModal(),900);
+}
+</script>
+</body>
+</html>
