@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FX | CAPITAL R.L. — Admin</title>
+<style>
+:root { --bg:#000; --fg:#fff; --muted:#ffffffcc; --card:#0d0d0d; --border:#1a1a1a; }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+h1,h2,h3{margin:0 0 8px} label{display:block;margin:8px 0 4px}
+input,select,textarea{width:100%;background:#000;color:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
+table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:var(--muted)}
+.row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
+.hidden{display:none}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="unauth" class="card">
+    <h1>Admin — Iniciar sesión</h1>
+    <form id="loginForm">
+      <label>Email</label><input id="email" type="email" required>
+      <label>Contraseña</label><input id="password" type="password" required>
+      <div style="margin-top:12px"><button type="submit">Entrar</button></div>
+      <p id="loginMsg" style="color:var(--muted);margin-top:8px"></p>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="header">
+      <h1>FX | CAPITAL R.L. — Panel Admin</h1>
+      <div><button onclick="logout()">Cerrar sesión</button></div>
+    </div>
+
+    <!-- Crear/Editar usuario -->
+    <div class="card">
+      <h2>Crear / Editar usuario</h2>
+      <div class="row">
+        <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"></div>
+        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+        <div><label>Moneda</label>
+          <select id="u_currency"><option>GTQ</option><option>USD</option></select></div>
+        <div><label>Capital inicial</label><input id="u_capital" type="number" min="0"></div>
+        <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
+        <div><label>Plan</label>
+          <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select></div>
+      </div>
+      <div style="margin-top:8px"><button onclick="saveUser()">Guardar</button> <span id="saveMsg" style="color:var(--muted)"></span></div>
+    </div>
+
+    <!-- Lista de clientes -->
+    <div class="card">
+      <h2>Clientes</h2>
+      <table>
+        <thead><tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Capital</th><th>Cuenta</th><th>BLACK</th><th>Acciones</th></tr></thead>
+        <tbody id="users"></tbody>
+      </table>
+    </div>
+
+    <!-- Solicitudes de retiro -->
+    <div class="card">
+      <h2>Solicitudes</h2>
+      <div style="margin-bottom:8px"><button onclick="loadNotifs()">Refrescar</button></div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
+        <tbody id="notifs"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/*** 1) TUS DATOS DE SUPABASE ***/
+const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const BASE = PROJECT_URL + "/rest/v1"; const RPC = BASE + "/rpc";
+function headersJSON(){ return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json" }; }
+
+/*** LOGIN ***/
+document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await r.json();
+  if(!r.ok){ document.getElementById("loginMsg").textContent="Login inválido"; return; }
+  localStorage.token = data.access_token; localStorage.uid = data.user.id;
+  init();
+});
+
+function show(id,vis){ document.getElementById(id).classList[vis?"remove":"add"]("hidden"); }
+function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
+
+/*** LISTA USUARIOS ***/
+async function listUsers(){
+  const r = await fetch(`${BASE}/v_admin_users?select=*&order=created_at.desc`, { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
+  const rows = await r.json();
+  const tb = document.getElementById("users"); tb.innerHTML="";
+  rows.forEach(x=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${x.full_name||'—'}</td>
+      <td>${x.email}</td>
+      <td>${x.plan||'—'}</td>
+      <td>Q${(x.principal_locked||0).toFixed(2)}</td>
+      <td>${x.account_id||'—'}</td>
+      <td>${x.black_enabled?'Sí':'No'}</td>
+      <td>
+        ${x.account_id ? `
+          <button onclick="toggleBlack('${x.account_id}', true)">Enable BLACK</button>
+          <button onclick="toggleBlack('${x.account_id}', false)">Disable BLACK</button>
+        ` : '—'}
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/*** CREAR / EDITAR ***/
+async function saveUser(){
+  const body = {
+    p_email: document.getElementById("u_email").value.trim(),
+    p_full_name: document.getElementById("u_name").value.trim(),
+    p_currency: document.getElementById("u_currency").value,
+    p_capital: Number(document.getElementById("u_capital").value||0),
+    p_joined_at: document.getElementById("u_joined").value,
+    p_plan: document.getElementById("u_plan").value
+  };
+  const r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(body) });
+  document.getElementById("saveMsg").textContent = r.ok ? "Guardado" : "Error";
+  await listUsers();
+}
+
+/*** BLACK ON/OFF ***/
+async function toggleBlack(accountId, enabled){
+  await fetch(`${RPC}/enable_black_for_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify({ p_account: accountId, p_enabled: enabled }) });
+  await listUsers();
+}
+
+/*** NOTIFICACIONES (solicitudes) ***/
+async function loadNotifs(){
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, { headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }});
+  const rows = await r.json();
+  const tb = document.getElementById("notifs"); tb.innerHTML="";
+  rows.forEach(x=>{
+    const p = x.payload || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${new Date(x.created_at).toLocaleString()}</td>
+      <td>${p.account_id||'—'}</td>
+      <td>${p.kind||'—'}</td>
+      <td>${(p.penalty_pct??0)}%</td>
+      <td>
+        <button onclick="setWithdrawal('${p.withdrawal_id}','APPROVED')">Aprobar</button>
+        <button onclick="setWithdrawal('${p.withdrawal_id}','REJECTED')">Rechazar</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+
+async function setWithdrawal(id, status){
+  await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
+    method:"PATCH",
+    headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token, "Content-Type":"application/json", "Prefer":"return=representation" },
+    body: JSON.stringify({ status })
+  });
+  await loadNotifs();
+}
+
+/*** INIT ***/
+async function init(){
+  if(localStorage.token){ show("unauth",false); show("app",true); await listUsers(); await loadNotifs(); }
+  else { show("app",false); show("unauth",true); }
+}
+init();
+</script>
+</body>
+</html>
