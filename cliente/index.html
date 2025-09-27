@@ -1,182 +1,118 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FX | CAPITAL R.L. — Iniciar sesión</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0b0b0c; --text:#fff; --muted:#9aa0ad; --card:#141416;
-      --panel:#16181d; --soft:#0e1014; --line:#2a2e36;
-      --brand:#2d66ff; --ring:0 0 0 3px rgba(45,102,255,.25);
-      --success:#17b57f; --warn:#edb437;
-      --radius:16px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1200px 800px at 10% 10%, #1b1d24 0%, #0b0b0c 55%) fixed;color:var(--text)}
-    .page{max-width:1200px;margin:36px auto;padding:0 18px}
-    header{margin-bottom:18px}
-    .brand{font-size:38px;font-weight:800;letter-spacing:.5px}
-    .grid{display:grid;grid-template-columns:1.2fr .9fr;gap:26px}
-    @media (max-width:980px){.grid{grid-template-columns:1fr;}}
-    /* Cards de features (columna izquierda) */
-    .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    @media (max-width:600px){.feature-grid{grid-template-columns:1fr}}
-    .feature{background:linear-gradient(180deg,#0f1116 0%, #0c0e13 100%);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:18px 18px 20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .feature h4{margin:8px 0 6px;font-size:18px}
-    .muted{color:var(--muted)}
-    .badge{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#0b0d12;border:1px solid #232731;margin-bottom:8px;box-shadow:0 8px 18px rgba(0,0,0,.35)}
-    /* Panel de login (columna derecha) */
-    .panel{background:linear-gradient(180deg,#111318 0%, #0f1116 100%);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
-    .panel h3{margin:2px 0 16px;font-size:24px}
-    label{display:block;margin:12px 0 6px;color:#cfd3dd;font-size:13px}
-    .input-wrap{position:relative}
-    .input{width:100%;background:#0c0e12;border:1px solid #272b33;color:#fff;border-radius:14px;padding:12px 44px 12px 42px;font:inherit}
-    .input:focus{outline:none;border-color:#2d66ff;box-shadow:var(--ring)}
-    .icon-left{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.9}
-    .toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#cfd3dd;cursor:pointer;border-radius:8px;padding:6px}
-    .toggle:focus{outline:none;box-shadow:var(--ring)}
-    .btn{width:100%;margin-top:16px;appearance:none;border:0;border-radius:999px;background:#fff;color:#000;padding:12px 16px;font-weight:800;cursor:pointer}
-    .btn:focus{outline:none;box-shadow:var(--ring)}
-    .link{color:#b9c7ff;text-decoration:none}
-    .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-    .err{margin-top:10px;color:#ff6b7a;font-size:13px;min-height:18px}
-    .footnote{margin-top:6px;color:#808694;font-size:12px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FX | CAPITAL R.L. — Iniciar sesión</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0d; --card:#17191d; --outline:rgba(255,255,255,.08);
+    --txt:#f5f7fb; --muted:#9aa1ac; --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;
+    color:var(--txt); font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  .wrap{max-width:1100px;margin:40px auto;padding:0 20px}
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:34px}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+  .brand h1{margin:0;font-weight:800;letter-spacing:.5px;font-size:clamp(28px,3.8vw,42px)}
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}
+  .card{background:var(--card);border:1px solid var(--outline);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+  .muted{color:var(--muted)}
+  .login{
+    background:linear-gradient(180deg,#171a21 0%, #121318 100%);
+    border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)
+  }
+  .input{
+    width:100%;background:#0f1116;border:1px solid var(--outline);border-radius:12px;
+    color:var(--txt);padding:12px 14px;outline:none
+  }
+  .row{display:flex;align-items:center;gap:10px}
+  .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .btn.primary{background:#fff;color:#000;width:100%}
+  .eye{cursor:pointer;user-select:none}
+</style>
 </head>
 <body>
-  <div class="page">
-    <header>
-      <div class="brand">FX | CAPITAL R.L.</div>
-      <div class="muted" style="margin-top:6px">Asesoría — Confianza — Crecimiento</div>
-    </header>
-
+  <div class="wrap">
     <div class="grid">
-      <!-- Columna izquierda: features -->
-      <section class="feature-grid">
-        <div class="feature">
-          <div class="badge" aria-hidden="true">
-            <!-- shield -->
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ac7ff"><path d="M12 2l7 4v6c0 5-3.4 7.6-7 10-3.6-2.4-7-5-7-10V6l7-4z"/></svg>
+      <div>
+        <div class="brand">
+          <h1>FX | CAPITAL R.L.</h1>
+          <div class="muted">Asesoría — Confianza — Crecimiento</div>
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <div style="font-weight:700">Seguridad</div>
+            <div class="muted">Máxima protección</div>
           </div>
-          <h4>Seguridad</h4>
-          <div class="muted">Máxima protección</div>
-        </div>
-
-        <div class="feature">
-          <div class="badge" aria-hidden="true">
-            <!-- sliders -->
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ac7ff"><path d="M4 21h6v-2H4v2zm0-8h16v-2H4v2zM14 3H4v2h10V3zm6 16h-6v2h6v-2zm0-10h-6v2h6V9zm0-8h-6v2h6V1z"/></svg>
+          <div class="card">
+            <div style="font-weight:700">Rentabilidad</div>
+            <div class="muted">Hasta 25% semestral*</div>
           </div>
-          <h4>Rentabilidad</h4>
-          <div class="muted">Hasta 25% semestral*</div>
-        </div>
-
-        <div class="feature">
-          <div class="badge" aria-hidden="true">
-            <!-- lock -->
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ac7ff"><path d="M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2v-9a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z"/></svg>
+          <div class="card" style="grid-column:1 / -1">
+            <div style="font-weight:700">Control</div>
+            <div class="muted">Transparencia total</div>
           </div>
-          <h4>Control</h4>
-          <div class="muted">Transparencia total</div>
         </div>
 
-        <div class="feature">
-          <div class="badge" aria-hidden="true">
-            <!-- chart -->
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ac7ff"><path d="M3 3h2v18H3V3zm4 10h2v8H7v-8zm4-6h2v14h-2V7zm4 4h2v10h-2V11zm4-8h2v18h-2V3z"/></svg>
+        <div class="muted" style="margin-top:14px;font-size:13px">
+          *El porcentaje final depende de su plan.
+        </div>
+      </div>
+
+      <div class="login">
+        <h2 style="margin:0 0 16px 0">Iniciar Sesión</h2>
+        <div style="margin-bottom:12px">
+          <div class="muted" style="margin-bottom:6px">Correo Electrónico</div>
+          <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email">
+        </div>
+        <div style="margin-bottom:16px">
+          <div class="muted" style="margin-bottom:6px">Contraseña</div>
+          <div class="row">
+            <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password">
+            <div id="toggleEye" class="eye">👁️</div>
           </div>
-          <h4>Resultados</h4>
-          <div class="muted">Seguimiento claro</div>
+          <div style="text-align:right;margin-top:6px"><a class="muted" href="#" onclick="alert('Solicítela a soporte');return false;">¿Olvidó su contraseña?</a></div>
         </div>
-
-        <div class="footnote" style="grid-column:1/-1">*El porcentaje final depende de su plan.</div>
-      </section>
-
-      <!-- Columna derecha: login -->
-      <section class="panel" aria-labelledby="loginTitle">
-        <h3 id="loginTitle">Iniciar Sesión</h3>
-
-        <label>Correo Electrónico</label>
-        <div class="input-wrap">
-          <span class="icon-left" aria-hidden="true">
-            <!-- mail -->
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ac7ff"><path d="M20 4H4a2 2 0 00-2 2v1l10 6 10-6V6a2 2 0 00-2-2zm0 5.2l-8 4.8-8-4.8V18a2 2 0 002 2h12a2 2 0 002-2V9.2z"/></svg>
-          </span>
-          <input id="email" class="input" type="email" placeholder="tu@email.com" autocomplete="username">
-        </div>
-
-        <label>Contraseña</label>
-        <div class="input-wrap">
-          <span class="icon-left" aria-hidden="true">
-            <!-- lock -->
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9ac7ff"><path d="M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2v-9a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z"/></svg>
-          </span>
-          <input id="password" class="input" type="password" placeholder="********" autocomplete="current-password">
-          <button id="togglePwd" class="toggle" aria-label="Mostrar u ocultar contraseña">👁️</button>
-        </div>
-
-        <div class="row">
-          <span></span>
-          <a class="link" href="#" onclick="alert('Contacte a soporte para restablecer su contraseña.');return false;">¿Olvidó su contraseña?</a>
-        </div>
-
-        <button id="loginBtn" class="btn">Iniciar Sesión</button>
-        <div id="msg" class="err"></div>
-      </section>
+        <button id="btnLogin" class="btn primary">Iniciar Sesión</button>
+      </div>
     </div>
   </div>
 
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-    // ---------- Config ----------
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-    const LOGIN_PATH = '/cliente-login.html';
-    const DASH_PATH  = '/cliente-dashboard.html';
-
+    const DASHBOARD_PATH = '/cliente-dashboard.html';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
-    // Si ya hay sesión => Dashboard
+    // si ya hay sesión, ir al dashboard
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
-      if (session) window.location.replace(DASH_PATH);
+      if (session) window.location.replace(DASHBOARD_PATH);
     })();
 
-    // Toggle ver/ocultar contraseña
-    document.getElementById('togglePwd').addEventListener('click', ()=>{
-      const input = document.getElementById('password');
-      input.type = input.type === 'password' ? 'text' : 'password';
-    });
+    document.getElementById('toggleEye').onclick = () => {
+      const p = document.getElementById('password');
+      p.type = p.type === 'password' ? 'text' : 'password';
+    };
 
-    // Iniciar sesión
-    document.getElementById('loginBtn').addEventListener('click', doLogin);
-    ['email','password'].forEach(id=>{
-      document.getElementById(id).addEventListener('keydown', e=>{
-        if (e.key === 'Enter') doLogin();
-      });
-    });
-
-    async function doLogin(){
+    document.getElementById('btnLogin').onclick = async () => {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const msg = document.getElementById('msg');
-      msg.textContent = '';
-      if (!email || !password){ msg.textContent = 'Ingrese email y contraseña.'; return; }
-      try{
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        window.location.replace(DASH_PATH);
-      }catch(e){
-        msg.textContent = e?.message || 'No se pudo iniciar sesión.';
-      }
-    }
+      if (!email || !password) { alert('Complete correo y contraseña'); return; }
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { alert('No se pudo iniciar sesión: ' + error.message); return; }
+      window.location.replace(DASHBOARD_PATH);
+    };
   </script>
 </body>
 </html>
