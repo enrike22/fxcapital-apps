@@ -145,7 +145,8 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:#2b3036;box-shado
       <div><span class="badge">Moneda</span><div id="c_currency">—</div></div>
       <div><span class="badge">Capital</span><div id="c_capital">—</div></div>
       <div><span class="badge">Cuenta (ID)</span><div id="c_account">—</div></div>
-      <!-- Se oculta BLACK habilitado para cliente -->
+      <div><span class="badge">Periodo (meses)</span><div id="c_months">—</div></div>
+      <div><span class="badge">Interés total del período</span><div id="c_term_interest">—</div></div>
     </div>
     <div style="margin-top:14px">
       <button id="openWithdraw" class="btn">Solicitar retiro</button>
@@ -206,7 +207,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:#2b3036;box-shado
   </div>
 </div>
 
-<!-- ===== Modal de contraseña (igual que antes) ===== -->
+<!-- ===== Modal de contraseña ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <div class="modal-titlebar">
@@ -238,7 +239,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:#2b3036;box-shado
   </div>
 </div>
 
-<!-- ===== Modal: Solicitud de retiro (espacios proporcionados) ===== -->
+<!-- ===== Modal: Solicitud de retiro ===== -->
 <div id="wdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="wdTitle">
   <div class="modal-card">
     <div class="modal-titlebar">
@@ -366,15 +367,25 @@ $wdModal.addEventListener('click',(e)=>{ if(e.target===$wdModal) closeWd(); });
   const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
   PROFILE=(await rp.json())[0]||null;
 
-  // Traer joined_at de accounts para filtrar semanas por fecha de ingreso
-  const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled,joined_at`,{headers:hdr()});
+  // joined_at, invest_months, interest_pct para cálculos y filtro de semanas
+  const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled,joined_at,invest_months,interest_pct`,{headers:hdr()});
   ACCOUNT=(await ra.json())[0]||null;
 
+  // Datos base
   document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
   document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
   document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
   document.getElementById("c_capital").textContent=money(ACCOUNT?.principal_locked||0,ACCOUNT?.currency||"GTQ");
   document.getElementById("c_account").textContent=ACCOUNT?.id||"—";
+
+  // Periodo + interés total del período (capital * tasaSem/100 * meses/6)
+  const months = Number(ACCOUNT?.invest_months || 6);
+  document.getElementById("c_months").textContent = months;
+
+  const planRateDefault = (ACCOUNT?.plan==='PLATINUM')?20:(ACCOUNT?.plan==='BLACK')?25:15; // default por plan
+  const rateSem = (ACCOUNT?.interest_pct ?? planRateDefault); // % por 6 meses
+  const totalInterest = (ACCOUNT?.principal_locked||0) * (rateSem/100) * (months/6);
+  document.getElementById("c_term_interest").textContent = money(totalInterest, ACCOUNT?.currency||"GTQ");
 
   buildMonthResults();
 
@@ -409,7 +420,7 @@ function updateSimPlan(){
   el.value = `${plan.name} ${plan.rateSem>0?`(${(plan.rateSem*100).toFixed(0)}% semestral)`:''}`;
 }
 
-/*** Simulación: mostrar SOLO interés mensual + KPIs ***/
+/*** Simulación: SOLO interés mensual + KPIs ***/
 function runSimulation(){
   const err = document.getElementById('sim_err'); err.textContent='';
   const out = document.getElementById('sim_out'); out.classList.add('hidden');
@@ -461,12 +472,11 @@ function buildMonthResults(){
     d.setUTCDate(d.getUTCDate()+1);
   }
 
-  // Fecha de ingreso (joined_at) -> solo mostrar a partir de ese día
+  // Fecha de ingreso -> solo a partir de ese día
   let joinedLocal = null;
   if (ACCOUNT?.joined_at){
     joinedLocal = new Date(new Date(ACCOUNT.joined_at).toLocaleString('en-US',{timeZone:GTZ}));
   }
-
   const fridaysFromJoin = joinedLocal
     ? fridays.filter(f => f >= startOfDay(joinedLocal))
     : fridays;
@@ -538,7 +548,7 @@ async function submitPasswordChange(){
   btn.disabled=false; btn.textContent=old;
 }
 
-/*** Enviar solicitud de retiro (sin user_id; políticas por accounts.user_id) ***/
+/*** Enviar solicitud de retiro (sin user_id) ***/
 document.getElementById('wdSubmit').onclick = async () => {
   const err = document.getElementById('wd_err'); const ok = document.getElementById('wd_ok'); err.textContent=''; ok.textContent='';
   if(!ACCOUNT){ err.textContent='No se encontró la cuenta.'; return; }
