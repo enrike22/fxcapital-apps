@@ -8,92 +8,46 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0b0d;
-    --panel:#121316;
-    --card:#17191d;
-    --soft:#21242b;
-    --muted:#9aa1ac;
-    --txt:#f5f7fb;
-    --brand:#5ea1ff;
-    --accent:#3d73ff;
-    --ok:#1ed760;
-    --danger:#ff4d4f;
-    --outline:rgba(255,255,255,.08);
-    --shadow:0 10px 30px rgba(0,0,0,.35);
-    --radius:16px;
+    --bg:#0b0b0d; --panel:#121316; --card:#17191d; --soft:#21242b;
+    --muted:#9aa1ac; --txt:#f5f7fb; --outline:rgba(255,255,255,.08);
+    --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;
-    color:var(--txt); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;color:var(--txt);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
   .wrap{max-width:1100px;margin:36px auto;padding:0 20px}
-  header{
-    display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;
-  }
-  .brand{
-    display:flex;gap:14px;align-items:center;
-  }
-  .brand-logo{
-    width:46px;height:46px;border-radius:12px;background:
-      radial-gradient(120% 120% at 20% 20%, #7fb3ff 0%, #3a6dff 40%, #1b2a57 80%); box-shadow:var(--shadow);
-  }
-  .brand h1{
-    margin:0;font-weight:800;letter-spacing:.5px;
-    font-size: clamp(22px, 2.9vw, 36px);
-  }
-  .brand h1 span{opacity:.9;font-weight:700}
-  .btn{
-    appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:600;
-    background:#fff;color:#000;cursor:pointer;box-shadow:var(--shadow);
-  }
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+  .brand{display:flex;gap:14px;align-items:center}
+  .brand-logo{width:46px;height:46px;border-radius:12px;background:radial-gradient(120% 120% at 20% 20%, #7fb3ff 0%, #3a6dff 40%, #1b2a57 80%);box-shadow:var(--shadow)}
+  .brand h1{margin:0;font-weight:800;letter-spacing:.5px;font-size:clamp(22px, 2.9vw, 36px)}
+  .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:600;background:#fff;color:#000;cursor:pointer;box-shadow:var(--shadow)}
   .btn.secondary{background:var(--soft);color:var(--txt);border:1px solid var(--outline)}
   .panel{background:var(--panel);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow)}
   .card{background:var(--card);border:1px solid var(--outline);border-radius:var(--radius)}
   .section{padding:22px}
-  /* Mi cuenta */
   .grid{display:grid;gap:14px}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   @media (max-width:920px){ .grid.cols-3{grid-template-columns:1fr 1fr} }
-  @media (max-width:680px){
-    .grid.cols-3,.grid.cols-2{grid-template-columns:1fr}
-    header{align-items:flex-start;gap:16px}
-  }
+  @media (max-width:680px){ .grid.cols-3{grid-template-columns:1fr} header{align-items:flex-start;gap:16px}}
   .group{padding:18px 20px}
-  .k{display:inline-block;font-size:13px;color:var(--muted);background:#0f1116;border:1px solid var(--outline);
-     padding:6px 10px;border-radius:999px;margin-bottom:8px}
+  .k{display:inline-block;font-size:13px;color:var(--muted);background:#0f1116;border:1px solid var(--outline);padding:6px 10px;border-radius:999px;margin-bottom:8px}
   .v{display:block;font-size:15px;font-weight:600}
-  /* Resultados */
   .table{width:100%;border-collapse:collapse}
   .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--outline)}
   .table th{color:var(--muted);font-weight:600;text-align:left}
   .sum-row td{font-weight:700}
   .note{color:var(--muted);font-size:13px;margin-top:10px}
-  /* Retiro modal (estructura básica para que no rompa el flujo si ya tenías estilos aparte) */
   dialog{border:0;border-radius:20px;background:linear-gradient(180deg,#14161b 0%, #0f1116 100%);color:var(--txt);width:min(840px,92vw)}
   dialog::backdrop{background:rgba(0,0,0,.55)}
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--outline)}
   .modal-b{padding:18px 22px}
-  .pill{border:1px solid var(--outline);border-radius:14px;padding:12px 14px}
-  .input, textarea{
-    width:100%;border:1px solid var(--outline);background:#0f1116;color:var(--txt);
-    border-radius:12px;padding:12px 14px;outline:none;
-  }
+  .pill{border:1px solid var(--outline);border-radius:14px;padding:12px 14px;color:#fff}
+  .selected{border-color:rgba(94,161,255,.7)!important}
+  .input, textarea{width:100%;border:1px solid var(--outline);background:#0f1116;color:var(--txt);border-radius:12px;padding:12px 14px;outline:none}
   textarea{min-height:120px;resize:vertical}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){ .row{grid-template-columns:1fr} }
-  .switch{
-    --w:42px; --h:24px; --knob:18px;
-    inline-size:var(--w); block-size:var(--h); background:#2a2d34; border-radius:999px;
-    border:1px solid var(--outline); position:relative; cursor:pointer; transition:.2s ease;
-  }
-  .switch::after{
-    content:""; position:absolute; inline-size:var(--knob); block-size:var(--knob); border-radius:50%;
-    background:#fff; top:50%; left:3px; translate:0 -50%; transition:.2s ease;
-    box-shadow:0 3px 10px rgba(0,0,0,.3);
-  }
+  .switch{--w:42px; --h:24px; --knob:18px; inline-size:var(--w); block-size:var(--h); background:#2a2d34; border-radius:999px; border:1px solid var(--outline); position:relative; cursor:pointer; transition:.2s ease}
+  .switch::after{content:""; position:absolute; inline-size:var(--knob); block-size:var(--knob); border-radius:50%; background:#fff; top:50%; left:3px; translate:0 -50%; transition:.2s ease; box-shadow:0 3px 10px rgba(0,0,0,.3)}
   .switch.on{ background:linear-gradient(90deg,#2b7cff,#6ba9ff) }
   .switch.on::after{ left:calc(var(--w) - var(--knob) - 3px) }
   .actions{display:flex;gap:12px;justify-content:flex-end;margin-top:8px}
@@ -105,7 +59,7 @@
   <div class="wrap">
     <header>
       <div class="brand">
-        <div class="brand-logo" id="brandLogo" title="FX Capital"></div>
+        <div class="brand-logo" title="FX Capital"></div>
         <h1>FX <span>| CAPITAL R.L.</span> — Panel del Cliente</h1>
       </div>
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
@@ -115,41 +69,18 @@
     <section class="panel section">
       <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
       <div class="grid cols-3">
-        <div class="card group">
-          <span class="k">Nombre</span>
-          <span id="valName" class="v">—</span>
-        </div>
-        <div class="card group">
-          <span class="k">Plan</span>
-          <span id="valPlan" class="v">—</span>
-        </div>
-        <div class="card group">
-          <span class="k">Moneda</span>
-          <span id="valCurrency" class="v">—</span>
-        </div>
-
-        <div class="card group">
-          <span class="k">Cuenta (ID)</span>
-          <span id="valAccountId" class="v">—</span>
-        </div>
-        <div class="card group">
-          <span class="k">Período (meses)</span>
-          <span id="valMonths" class="v">—</span>
-        </div>
-        <div class="card group">
-          <span class="k">Capital</span>
-          <span id="valCapital" class="v">Q 0.00</span>
-        </div>
-
+        <div class="card group"><span class="k">Nombre</span> <span id="valName" class="v">—</span></div>
+        <div class="card group"><span class="k">Plan</span> <span id="valPlan" class="v">—</span></div>
+        <div class="card group"><span class="k">Moneda</span> <span id="valCurrency" class="v">—</span></div>
+        <div class="card group"><span class="k">Cuenta (ID)</span> <span id="valAccountId" class="v">—</span></div>
+        <div class="card group"><span class="k">Período (meses)</span> <span id="valMonths" class="v">—</span></div>
+        <div class="card group"><span class="k">Capital</span> <span id="valCapital" class="v">Q 0.00</span></div>
         <div class="card group" style="grid-column:1 / -1">
           <span class="k">Interés total del período</span>
           <span id="valPeriodInterest" class="v">Q 0.00</span>
         </div>
       </div>
-
-      <div style="margin-top:16px">
-        <button class="btn secondary" id="btnOpenWithdraw">Solicitar retiro</button>
-      </div>
+      <div style="margin-top:16px"><button class="btn secondary" id="btnOpenWithdraw">Solicitar retiro</button></div>
     </section>
 
     <!-- RESULTADOS DEL MES -->
@@ -157,16 +88,10 @@
       <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
       <div class="muted" id="monthRange">—</div>
       <div style="overflow:auto;margin-top:8px">
-        <table class="table" id="weekTable">
-          <thead>
-            <tr><th>Viernes</th><th>Interés semanal</th></tr>
-          </thead>
-          <tbody id="weekBody">
-            <tr><td>—</td><td>—</td></tr>
-          </tbody>
-          <tfoot>
-            <tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr>
-          </tfoot>
+        <table class="table">
+          <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
+          <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
+          <tfoot><tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr></tfoot>
         </table>
       </div>
       <div id="monthNote" class="note">El período cierra el —.</div>
@@ -175,38 +100,21 @@
     <!-- SIMULADOR -->
     <section class="panel section" style="margin-top:18px">
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
-      <div class="muted" style="margin-bottom:14px">
-        Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.
-      </div>
+      <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
-        <div class="group card">
-          <span class="k">Capital a simular (Q)</span>
-          <input id="simCapital" class="input" type="number" min="0" placeholder="Ej. 40,000" />
-        </div>
-        <div class="group card">
-          <span class="k">Plan asignado (auto)</span>
-          <div id="simPlan" class="v">—</div>
-        </div>
-        <div class="group card">
-          <span class="k">Capital final estimado</span>
-          <div id="simFinal" class="v">Q 0.00</div>
-        </div>
+        <div class="group card"><span class="k">Capital a simular (Q)</span><input id="simCapital" class="input" type="number" min="0" placeholder="Ej. 40,000" /></div>
+        <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
+        <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
         <button class="btn" id="btnCalc">Calcular</button>
         <span id="simNote" class="note"></span>
       </div>
       <div style="overflow:auto;margin-top:12px">
-        <table class="table" id="simTable">
-          <thead>
-            <tr><th>Mes</th><th>Interés del mes</th></tr>
-          </thead>
-          <tbody id="simBody">
-            <tr><td>1</td><td>Q 0.00</td></tr>
-          </tbody>
-          <tfoot>
-            <tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr>
-          </tfoot>
+        <table class="table">
+          <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
+          <tbody id="simBody"><tr><td>1</td><td>Q 0.00</td></tr></tbody>
+          <tfoot><tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr></tfoot>
         </table>
       </div>
     </section>
@@ -220,14 +128,8 @@
     </div>
     <div class="modal-b">
       <div class="row">
-        <div class="pill" id="optEarly" tabindex="0" style="cursor:pointer">
-          <div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div>
-          <div class="muted">Aplicará una penalización del 10%.</div>
-        </div>
-        <div class="pill" id="optHealth" tabindex="0" style="cursor:pointer">
-          <div style="font-weight:700;margin-bottom:6px">Causas de salud</div>
-          <div class="muted">Exento de penalización.</div>
-        </div>
+        <div class="pill" id="optEarly" tabindex="0" style="cursor:pointer"><div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div><div class="muted">Aplicará una penalización del 10%.</div></div>
+        <div class="pill" id="optHealth" tabindex="0" style="cursor:pointer"><div style="font-weight:700;margin-bottom:6px">Causas de salud</div><div class="muted">Exento de penalización.</div></div>
       </div>
 
       <div class="row" style="margin-top:14px">
@@ -257,241 +159,122 @@
   <!-- Supabase + Lógica -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-  /*** CONFIG SUPABASE ***/
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
   const LOGIN_PATH = '/cliente-login.html';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
-  });
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
+  const $ = s=>document.querySelector(s);
+  const fmtQ = n => { try { return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ',maximumFractionDigits:2}).format(n||0)} catch{ return `Q ${(Number(n)||0).toFixed(2)}` } };
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=(val??'—') };
 
-  /*** HELPERS ***/
-  const $ = sel => document.querySelector(sel);
-  function fmtQ(n){
-    try{return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ',maximumFractionDigits:2}).format(n||0);}
-    catch{ return `Q ${(Number(n)||0).toFixed(2)}` }
-  }
-  function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=(val ?? '—'); }
-  function addClass(el,c){ el && el.classList.add(c); }
-  function remClass(el,c){ el && el.classList.remove(c); }
+  // Sesión obligatoria
+  (async()=>{ const {data:{session}}=await sb.auth.getSession(); if(!session) window.location.replace(LOGIN_PATH) })();
 
-  /*** CARGA CABECERA ***/
+  // Carga de datos
   async function loadHeader(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_PATH); return; }
-    const uid = session.user.id;
+    const {data:{session}}=await sb.auth.getSession(); if(!session) return;
+    const uid=session.user.id;
 
-    const [{ data: prof, error: e1 }, { data: acc, error: e2 }] = await Promise.all([
+    const [{data:prof},{data:acc}] = await Promise.all([
       sb.from('profiles').select('full_name,email').eq('id',uid).single(),
-      sb.from('accounts').select('id, plan, currency, capital, invest_months, interest_pct, joined_at')
-        .eq('user_id',uid).single()
+      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    setText('valName', (prof?.full_name || prof?.email || session.user.email));
+    setText('valName', (prof?.full_name||prof?.email||session.user.email));
+    if(!acc){ paintWeekTable([], '—','—',0); return; }
 
-    // Si la cuenta no existe, mantenemos rayitas
-    if(!acc){
-      setText('valAccountId','—');
-      setText('valPlan','—');
-      setText('valCurrency','—');
-      setText('valMonths','—');
-      setText('valCapital',fmtQ(0));
-      setText('valPeriodInterest',fmtQ(0));
-      paintWeekTable([], '—', '—', 0);
-      return;
-    }
+    setText('valAccountId', acc.id||'—');
+    setText('valPlan', acc.plan||'—');
+    setText('valCurrency', acc.currency||'—');
+    setText('valMonths', acc.invest_months??'—');
+    setText('valCapital', fmtQ(acc.capital||0));
 
-    setText('valAccountId', acc.id || '—');
-    setText('valPlan', acc.plan || '—');
-    setText('valCurrency', acc.currency || '—');
-    setText('valMonths', acc.invest_months ?? '—');
-    setText('valCapital', fmtQ(acc.capital || 0));
-
-    // Interés del período (simple, por semestres)
-    let interestTotal = 0;
+    let interestTotal=0;
     if(acc.capital && acc.interest_pct && acc.invest_months){
       interestTotal = acc.capital * (acc.interest_pct/100) * (acc.invest_months/6);
     }
     setText('valPeriodInterest', fmtQ(interestTotal));
-
-    // Resultados del mes (solo la semana vigente hasta cerrar el período mensual relativo al "día de ingreso")
-    paintCurrentMonth(session, acc);
+    renderMonthResults(acc);
   }
 
-  /*** RESULTADOS DEL MES ***/
-  function nextMonthSameDay(d){
-    const x = new Date(d); const m = x.getMonth(); const y = x.getFullYear();
-    const same = new Date(y, m+1, x.getDate());
-    // ajuste si el mes siguiente no tiene ese día (p.ej. 31 → 30/28)
-    while(same.getMonth() !== (m+1)%12){ same.setDate(same.getDate()-1); }
-    return same;
+  // Rango mensual anclado al día de ingreso
+  const toLocalDate = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  function getSemiRate({plan,interest_pct}){ if(interest_pct>0)return Number(interest_pct); const P=String(plan||'').toUpperCase(); if(P.includes('STANDARD'))return 15; if(P.includes('PLUS'))return 20; if(P.includes('PREMIUM')||P.includes('BLACK')||P.includes('PLATINUM'))return 25; return 15; }
+  function getAnchoredMonthRange(joinedAt, now=new Date()){
+    const j=new Date(joinedAt); const today=toLocalDate(now); const day=j.getDate();
+    let start=new Date(today.getFullYear(),today.getMonth(),day);
+    if(today<start) start=new Date(today.getFullYear(),today.getMonth()-1,day);
+    const end=new Date(start.getFullYear(),start.getMonth()+1,day);
+    return {start,end};
   }
-  function fridayOfSameWeek(d){
-    const x = new Date(d); const day = x.getDay(); // 0=Dom.. 5=Vie
-    const diff = (5 - day + 7) % 7;
-    const f = new Date(x); f.setDate(x.getDate() + diff); f.setHours(0,0,0,0);
-    return f;
+  function fridaysBetween(from,toExcl){ const out=[]; let d=new Date(from); while(d.getDay()!==5)d.setDate(d.getDate()+1); while(d<toExcl){ out.push(new Date(d)); d.setDate(d.getDate()+7);} return out; }
+  function splitMonthlyInterestByWeeks({capital,semiRatePct,periodStart,periodEnd,today=new Date()}){
+    const monthInterest = capital*(semiRatePct/100)/6;
+    const daysIn = Math.round((periodEnd-periodStart)/86400000); if(daysIn<=0) return {rows:[],monthInterest:0};
+    const cutoff = today<periodEnd ? today : periodEnd;
+    const frs = fridaysBetween(periodStart,cutoff);
+    const segs=[]; let segStart=new Date(periodStart);
+    for(const f of frs){ const segEnd=new Date(Math.min(f.getTime()+86400000,cutoff)); if(segEnd>segStart) segs.push({date:new Date(f),days:Math.round((segEnd-segStart)/86400000)}); segStart=segEnd; }
+    if(segStart<cutoff){ const last=new Date(cutoff); last.setDate(last.getDate()-1); segs.push({date:last,days:Math.round((cutoff-segStart)/86400000)}); }
+    if(!segs.length) return {rows:[],monthInterest:0};
+    const perDay = monthInterest/daysIn; const rows=[]; let acc=0;
+    segs.forEach((s,i)=>{ let amt=perDay*s.days; if(i===segs.length-1){ amt=monthInterest-acc } else { amt=Math.round(amt*100)/100; acc+=amt } rows.push({friday:s.date,interest:Math.round(amt*100)/100}) });
+    return {rows,monthInterest:Math.round(monthInterest*100)/100};
   }
-  function sameDay(a,b){ return a.getFullYear()==b.getFullYear() && a.getMonth()==b.getMonth() && a.getDate()==b.getDate(); }
-
-  async function paintCurrentMonth(session, acc){
-    const join = acc?.joined_at ? new Date(acc.joined_at) : new Date(); // fallback
-    join.setHours(0,0,0,0);
-
-    const start = new Date(join);
-    const end   = nextMonthSameDay(start); // cierra mes relativo
-
-    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    $('#monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
-
-    // Semana actual: mostramos solo la semana en curso (viernes)
-    const today  = new Date(); today.setHours(0,0,0,0);
-    const fri    = fridayOfSameWeek(today);
-
-    // si el viernes cae fuera del rango (antes de start o después de end) mostramos rayas
-    if(fri < start || fri > end){
-      paintWeekTable([], start, end, 0);
-      return;
-    }
-
-    // interés semanal = (capital * tasa_semestral)/6 / 4 aprox (4 semanas / mes)
-    // ajustamos para que el mes cierre con el interés exacto (distribución uniforme simple)
-    const semPct = (acc.interest_pct||0)/100;
-    const monthlyRate = semPct;          // % por 6 meses → interés del semestre es capital*semPct; por 1 mes es capital*(semPct/6)
-    const monthInterestExact = (acc.capital||0) * (semPct/6); // interés del mes exacto
-    const weekly = monthInterestExact / 4; // 4 semanas aprox
-
-    paintWeekTable([{date: fri, amount: weekly}], start, end, weekly);
-  }
-
-  function paintWeekTable(rows, start, end, sum){
-    const tb = $('#weekBody'); tb.innerHTML = '';
-    if(!rows.length){
-      tb.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
-      $('#weekSum').textContent = '—';
-      return;
-    }
-    for(const r of rows){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.date.toLocaleDateString('es-GT')}</td><td>${fmtQ(r.amount)}</td>`;
-      tb.appendChild(tr);
-    }
+  function paintWeekTable(rows,start,end,sum){
+    const tb=$('#weekBody'); tb.innerHTML='';
+    if(!rows.length){ tb.innerHTML='<tr><td>—</td><td>—</td></tr>'; $('#weekSum').textContent='—'; return; }
+    for(const r of rows){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.friday.toLocaleDateString('es-GT')}</td><td>${fmtQ(r.interest)}</td>`; tb.appendChild(tr); }
     $('#weekSum').textContent = fmtQ(sum||0);
   }
-
-  /*** SIMULADOR 6 MESES (simple) ***/
-  function autoPlanAndRate(capital){
-    // Estandar: 15% (Q2,000 - Q249,000)
-    // Platinum: 20% (Q250,000+)
-    // Black 25% (solo admin) → no disponible aquí; dejamos NO ELEGIBLE si no aplica
-    if(capital >= 2000 && capital < 250000) return {name:'STANDARD (15% semestral)', rate:0.15};
-    if(capital >= 250000) return {name:'PLATINUM (20% semestral)', rate:0.20};
-    return {name:'NO ELEGIBLE', rate:0};
+  function renderMonthResults(acc){
+    const joinedAt=acc.joined_at||acc.joinedAt; const capital=Number(acc.capital||0);
+    const rangeEl=$('#monthRange'), noteEl=$('#monthNote');
+    if(!joinedAt||capital<=0){ rangeEl.textContent='—'; noteEl.textContent=''; paintWeekTable([], '—','—',0); return; }
+    const {start,end}=getAnchoredMonthRange(joinedAt,new Date());
+    rangeEl.textContent=`${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
+    const semiRate=getSemiRate(acc);
+    const {rows,monthInterest}=splitMonthlyInterestByWeeks({capital,semiRatePct:semiRate,periodStart:start,periodEnd:end,today:new Date()});
+    if(!rows.length){ paintWeekTable([],start,end,0) } else { const sumNow=rows.reduce((a,b)=>a+(Number(b.interest)||0),0); paintWeekTable(rows,start,end,sumNow) }
+    const today=new Date(); noteEl.textContent = today>=end ? `El período cerró el ${end.toLocaleDateString('es-GT')}.` : `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
   }
+
+  // Simulador 6 meses (simple)
+  function autoPlanAndRate(capital){ if(capital>=2000&&capital<250000) return {name:'STANDARD (15% semestral)',rate:0.15}; if(capital>=250000) return {name:'PLATINUM (20% semestral)',rate:0.20}; return {name:'NO ELEGIBLE',rate:0}; }
   function simulate(){
-    const cap = Number($('#simCapital').value || 0);
-    const { name, rate } = autoPlanAndRate(cap);
-    $('#simPlan').textContent = name;
-
-    const months = 6;
-    const monthlyInterest = cap * (rate/6); // interés simple, fijo cada mes
-    const total = monthlyInterest * months;
-    $('#simFinal').textContent = fmtQ(cap + total);
-    $('#simSum').textContent = fmtQ(total);
-    $('#simNote').textContent = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-
-    const body = $('#simBody'); body.innerHTML = '';
-    for(let m=1;m<=months;m++){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`;
-      body.appendChild(tr);
-    }
+    const cap=Number($('#simCapital').value||0); const {name,rate}=autoPlanAndRate(cap);
+    $('#simPlan').textContent=name; const months=6; const mInt=cap*(rate/6); const total=mInt*months;
+    $('#simFinal').textContent=fmtQ(cap+total); $('#simSum').textContent=fmtQ(total); $('#simNote').textContent=`Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
+    const body=$('#simBody'); body.innerHTML=''; for(let m=1;m<=months;m++){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${m}</td><td>${fmtQ(mInt)}</td>`; body.appendChild(tr) }
   }
 
-  /*** RETIRO (UI) ***/
-  const dlg = $('#wdlg');
-  let withdrawType = 'early'; // early | health
-  function selectType(t){
-    withdrawType = t;
-    if(t==='early'){ addClass($('#optEarly'),'selected'); remClass($('#optHealth'),'selected'); }
-    else{ addClass($('#optHealth'),'selected'); remClass($('#optEarly'),'selected'); }
-    // borde visual
-    $('#optEarly').style.borderColor = t==='early' ? 'rgba(94,161,255,.7)' : 'var(--outline)';
-    $('#optHealth').style.borderColor = t==='health'? 'rgba(94,161,255,.7)' : 'var(--outline)';
-  }
-  function toggleSwitchAll(force){
-    const sw = $('#switchAll');
-    const on = (typeof force==='boolean') ? force : !sw.classList.contains('on');
-    sw.classList.toggle('on', on);
-    sw.setAttribute('aria-checked', String(on));
-    // si on → bloquea input monto
-    $('#wAmount').disabled = on;
-  }
+  // Retiro
+  const dlg=$('#wdlg'); let withdrawType='early';
+  function selectType(t){ withdrawType=t; if(t==='early'){ $('#optEarly').classList.add('selected'); $('#optHealth').classList.remove('selected') } else { $('#optHealth').classList.add('selected'); $('#optEarly').classList.remove('selected') } }
+  function toggleSwitchAll(force){ const sw=$('#switchAll'); const on=(typeof force==='boolean')?force:!sw.classList.contains('on'); sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on)); $('#wAmount').disabled=on }
 
-  /*** RETIRO (envío) — solo valida en front; tu backend/Edge Function ya envía email/notifica ***/
   async function sendWithdraw(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_PATH); return; }
-
-    // Traer cuenta para validaciones
-    const { data: acc } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
-    const capital = Number(acc?.capital||0);
-
-    const all = $('#switchAll').classList.contains('on');
-    const amount = all ? capital : Number($('#wAmount').value||0);
-    const reason = ($('#wReason').value||'').trim();
-
-    if(!all){
-      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
-      if(amount > capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-      const restante = capital - amount;
-      if(restante < 2000){ alert('Debe permanecer al menos Q 2,000 de capital (a menos que retire todo).'); return; }
-    }
-
-    if(reason.length < 5){ alert('Describa brevemente el motivo.'); return; }
-
-    // Guarda solicitud (a tu tabla) y que tu Edge Function/trigger notifique.
-    const payload = {
-      type: withdrawType,         // 'early' o 'health'
-      amount: amount,
-      reason: reason
-    };
-    // Inserción con user_id desde RLS (política de insert using auth.uid()) o RPC
-    const { error } = await sb.from('withdrawal_requests')
-      .insert({ request_type: withdrawType, amount: amount, reason: reason });
-    if(error){
-      alert('No se pudo enviar la solicitud.\n' + (error.message||error));
-      return;
-    }
-    alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
-    dlg.close();
+    const {data:{session}}=await sb.auth.getSession(); if(!session){ window.location.replace(LOGIN_PATH); return; }
+    const {data:acc}=await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
+    const capital=Number(acc?.capital||0); const all=$('#switchAll').classList.contains('on');
+    const amount=all?capital:Number($('#wAmount').value||0); const reason=($('#wReason').value||'').trim();
+    if(!all){ if(amount<=0) return alert('Ingrese un monto válido.'); if(amount>capital) return alert('El monto no puede ser mayor al capital.'); if(capital-amount<2000) return alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); }
+    if(reason.length<5) return alert('Describa brevemente el motivo.');
+    const {error}=await sb.from('withdrawal_requests').insert({request_type:withdrawType,amount,reason});
+    if(error) return alert('No se pudo enviar la solicitud.\n'+(error.message||error));
+    alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles.'); dlg.close();
   }
 
-  /*** INICIO ***/
+  // Eventos
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Botones
-    $('#btnSignOut').addEventListener('click', async ()=>{
-      await sb.auth.signOut();
-      window.location.replace(LOGIN_PATH);
-    });
-
-    $('#btnOpenWithdraw').addEventListener('click', ()=>{ dlg.showModal(); });
-    $('#xClose').addEventListener('click', ()=> dlg.close());
-    $('#wCancel').addEventListener('click', ()=> dlg.close());
-    $('#wSend').addEventListener('click', sendWithdraw);
-
-    $('#optEarly').addEventListener('click', ()=>selectType('early'));
-    $('#optHealth').addEventListener('click', ()=>selectType('health'));
-    selectType('early');
-
-    // switch accesible
-    const sw = $('#switchAll');
-    sw.addEventListener('click', ()=>toggleSwitchAll());
-    sw.addEventListener('keydown', (e)=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
-
-    $('#btnCalc').addEventListener('click', simulate);
-
-    loadHeader(); // carga datos del usuario
+    $('#btnSignOut').onclick = async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); };
+    $('#btnOpenWithdraw').onclick = ()=> dlg.showModal();
+    $('#xClose').onclick = ()=> dlg.close(); $('#wCancel').onclick=()=> dlg.close(); $('#wSend').onclick=sendWithdraw;
+    $('#optEarly').onclick = ()=>selectType('early'); $('#optHealth').onclick = ()=>selectType('health'); selectType('early');
+    $('#switchAll').addEventListener('click', ()=>toggleSwitchAll());
+    $('#switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); }});
+    $('#btnCalc').onclick = simulate;
+    loadHeader();
   });
   </script>
 </body>
