@@ -1,476 +1,574 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>FX | CAPITAL R.L. — Panel Cliente</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <style>
-    :root{
-      --bg:#0b0b0d;
-      --panel:#121316;
-      --panel-2:#16171b;
-      --muted:#9aa0a6;
-      --text:#f4f5f6;
-      --accent:#3d68ff;
-      --accent-2:#2b49b6;
-      --ok:#1db954;
-      --danger:#ff4747;
-      --chip:#1e2026;
-      --chip-text:#e3e6ea;
-      --divider:#22232a;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius: 16px;
-    }
-    html,body{height:100%}
-    body{
-      margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-    }
-    .container{max-width:1140px;margin:20px auto 80px;padding:0 20px}
-    header{
-      display:flex;align-items:center;justify-content:space-between;margin:12px 0 22px 0;
-    }
-    .brand{
-      display:flex;align-items:center;gap:14px;
-    }
-    .brand img{
-      width:42px;height:42px;border-radius:10px;object-fit:cover;background:#111;box-shadow:var(--shadow)
-    }
-    .title{
-      font-weight:800;letter-spacing:.3px;
-      font-size: clamp(22px, 3vw + 10px, 40px);
-      line-height:1.05
-    }
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;
-      height:44px;padding:0 18px;border-radius:999px;border:1px solid #2b2d35;
-      background:#fff;color:#111;font-weight:700;cursor:pointer;transition:.15s ease-in-out;
-      box-shadow:var(--shadow)
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn-outline{background:transparent;color:var(--text);border-color:#3a3c44}
-    .btn-full{width:100%}
-
-    .card{
-      background: radial-gradient(1200px 500px at -15% -30%, rgba(61,104,255,.12), transparent 35%) , var(--panel);
-      border:1px solid #1b1c22;border-radius:var(--radius);box-shadow:var(--shadow);
-      padding:22px 22px;
-    }
-    .card + .card{margin-top:22px}
-    .card h3{margin:0 0 14px 0;font-size:22px;letter-spacing:.2px}
-    .grid{
-      display:grid;gap:18px;
-      grid-template-columns: repeat(12,1fr);
-    }
-    .section{grid-column:1 / -1}
-
-    .kv{
-      display:flex;flex-direction:column;gap:8px;background:var(--panel-2);
-      border:1px solid #1d1f26;border-radius:14px;padding:14px 16px;min-height:76px;
-    }
-    .kv small{color:var(--muted);opacity:.9}
-    .chip{
-      display:inline-flex;align-items:center;gap:8px;font-weight:600;
-      background:var(--chip);color:var(--chip-text);padding:8px 12px;border-radius:999px;border:1px solid #2a2c35;
-    }
-    .muted{color:var(--muted)}
-    .divider{height:1px;background:var(--divider);margin:16px 0}
-
-    @media(min-width:900px){
-      .col-3{grid-column: span 3}
-      .col-4{grid-column: span 4}
-      .col-6{grid-column: span 6}
-      .col-8{grid-column: span 8}
-      .col-9{grid-column: span 9}
-      .col-12{grid-column: span 12}
-    }
-    @media(max-width:899px){
-      .col-3,.col-4,.col-6,.col-8,.col-9,.col-12{grid-column:1 / -1}
-    }
-
-    /* Tabla simple */
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:14px 12px;border-bottom:1px solid var(--divider)}
-    th{color:#c9cdd5;text-align:left;font-weight:700}
-    td{color:#e6e8ec}
-
-    /* Modal */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.50);display:none;align-items:center;justify-content:center;z-index:50}
-    .modal{width:min(940px,92vw);background:linear-gradient(180deg,#14161b,#111216);border:1px solid #22242c;border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 16px}
-    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 14px}
-    .modal h4{margin:0;font-size:22px}
-    .modal-close{height:36px;width:36px;border-radius:10px;display:inline-grid;place-items:center;background:#1a1c22;border:1px solid #2a2c34;color:#c7c9d0;cursor:pointer}
-    .modal-grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
-    .modal .pill{border:1px solid #2a2d35;border-radius:14px;padding:14px;cursor:pointer;background:#17191f}
-    .pill.active{outline:2px solid var(--accent);outline-offset:-2px}
-    .label{display:block;margin:10px 0 8px;color:#b8bcc6}
-    input[type="text"],input[type="number"],textarea{
-      width:100%;background:#0f1014;border:1px solid #2a2c34;border-radius:12px;
-      height:44px;color:var(--text);padding:0 12px;font:inherit
-    }
-    textarea{min-height:140px;padding:12px;resize:vertical}
-    .modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:12px}
-    .note{color:#98a0aa;font-size:13px}
-
-    /* Switch */
-    .switch{
-      display:inline-flex;align-items:center;gap:12px;user-select:none;cursor:pointer;margin-top:8px
-    }
-    .switch input{display:none}
-    .track{
-      width:52px;height:30px;background:#2a2c36;border:1px solid #3a3d48;border-radius:999px;position:relative;transition:.18s ease-in-out
-    }
-    .thumb{
-      width:24px;height:24px;position:absolute;top:2px;left:2px;border-radius:50%;
-      background:#cfd4dc;transition:.2s ease;box-shadow:0 1px 2px rgba(0,0,0,.35)
-    }
-    .switch input:checked + .track{background:var(--accent)}
-    .switch input:checked + .track .thumb{left:26px;background:#fff}
-
-    .btn-bar{display:flex;gap:12px;align-items:center;margin-top:10px}
-    .btn-primary{background:var(--accent);border-color:var(--accent-2);color:#fff}
-    .btn-primary:disabled{opacity:.6;cursor:not-allowed}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FX | CAPITAL R.L. — Panel del Cliente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0c;--card:#121214;--muted:#9aa0a6;--text:#fff;--line:#1f1f22;--chip:#17181a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .container{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
+  /* Header */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 1px 12px rgba(255,255,255,.06))}
+  .brand h1{margin:0;font-size:30px;font-weight:800;letter-spacing:.3px}
+  .btn{border:0;border-radius:999px;padding:12px 16px;font-weight:600;cursor:pointer}
+  .btn-ghost{background:#fff;color:#000}
+  .btn-ghost:hover{filter:brightness(.98)}
+  /* Cards */
+  .card{background:linear-gradient(180deg,#151515,#111);border:1px solid var(--line);border-radius:18px;padding:20px 22px}
+  .grid{display:grid;gap:18px}
+  .grid-2{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  .section-title{font-size:22px;font-weight:800;margin:0 0 10px}
+  .kvs{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:6px}
+  .kv{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .kv .lbl{display:inline-block;font-size:12px;color:var(--muted);margin-bottom:6px;background:#0e0e10;border:1px solid #222;border-radius:999px;padding:4px 10px}
+  .kv .val{font-size:16px}
+  .mt-16{margin-top:16px}
+  .mt-24{margin-top:24px}
+  .muted{color:var(--muted)}
+  /* Table */
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
+  .table th{color:var(--muted);text-align:left;font-size:13px;font-weight:600}
+  /* Inputs */
+  .input{display:flex;align-items:center;background:#0f0f10;border:1px solid #262626;border-radius:12px;padding:12px 14px}
+  .input input,.input select{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:14px}
+  .callout{display:flex;gap:12px;align-items:center;background:#0f0f10;border:1px dashed #2a2a2a;border-radius:12px;padding:10px 12px;color:var(--muted);font-size:13px}
+  .pill{display:inline-block;background:#0f0f10;border:1px solid #2a2a2a;border-radius:999px;padding:8px 12px;font-size:13px}
+  /* Modal */
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .modal{width:100%;max-width:860px;background:linear-gradient(180deg,#161616,#111);border:1px solid #222;border-radius:16px;box-shadow:0 40px 120px rgba(0,0,0,.6)}
+  .modal .hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .modal .hd h3{margin:0;font-size:20px}
+  .modal .bd{padding:18px 20px}
+  .modal .ft{display:flex;gap:12px;justify-content:flex-end;padding:16px 20px;border-top:1px solid var(--line)}
+  .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid #2a2a2a;background:#0f0f10;color:#bbb;cursor:pointer}
+  /* Option tiles */
+  .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .opt{border:1px solid #2a2a2a;background:#0f0f10;border-radius:14px;padding:14px;cursor:pointer}
+  .opt.active{outline:2px solid #3b82f6;border-color:#3b82f6}
+  .opt .t{font-weight:700;margin-bottom:4px}
+  .opt .s{color:var(--muted);font-size:13px}
+  /* Switch */
+  .switch{position:relative;width:50px;height:28px;background:#222;border-radius:999px;border:1px solid #333;transition:all .2s}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:all .2s}
+  .switch.on{background:#74f3b9;border-color:#74f3b9}
+  .switch.on::after{left:25px}
+  .switch-row{display:flex;align-items:center;gap:12px}
+  /* Buttons primary/secondary */
+  .btn-primary{background:#fff;color:#000}
+  .btn-secondary{background:#1a1a1a;color:#fff;border:1px solid #2a2a2a}
+  .center{display:flex;align-items:center;justify-content:center}
+  .right{display:flex;justify-content:flex-end}
+</style>
 </head>
 <body>
   <div class="container">
-    <header>
+    <div class="topbar">
       <div class="brand">
-        <img src="logo.png" alt="FX | CAPITAL R.L." onerror="this.style.display='none'">
-        <div class="title">FX | CAPITAL R.L. — Panel del Cliente</div>
+        <img src="logo.png" alt="FX" onerror="this.style.display='none'">
+        <h1>FX | CAPITAL R.L. — Panel del Cliente</h1>
       </div>
-      <button id="btnLogout" class="btn btn-outline">Cerrar sesión</button>
-    </header>
+      <button class="btn btn-ghost" id="logoutBtn">Cerrar sesión</button>
+    </div>
 
-    <section class="card">
-      <h3>Mi cuenta</h3>
-      <div class="grid">
-        <div class="kv col-4"><small>Nombre</small><div id="kv_name" class="chip muted">—</div></div>
-        <div class="kv col-4"><small>Plan</small><div id="kv_plan" class="chip muted">—</div></div>
-        <div class="kv col-4"><small>Moneda</small><div id="kv_currency" class="chip muted">—</div></div>
-
-        <div class="kv col-4"><small>Cuenta (ID)</small><div id="kv_acct" class="chip muted">—</div></div>
-        <div class="kv col-4"><small>Período (meses)</small><div id="kv_months" class="chip muted">—</div></div>
-        <div class="kv col-4"><small>Interés total del período</small><div id="kv_period_int" class="chip">Q 0.00</div></div>
-
-        <div class="kv col-12"><small>Capital</small><div id="kv_capital" class="chip" style="font-size:15px">Q 0.00</div></div>
-      </div>
-      <div style="margin-top:16px;display:flex;justify-content:flex-start">
-        <button class="btn btn-outline" id="btnOpenWithdrawal">Solicitar retiro</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <h3>Resultados del mes</h3>
-      <div id="periodLabel" class="muted" style="margin-bottom:10px">—</div>
-      <table>
-        <thead><tr><th style="width:55%">Viernes</th><th>Interés semanal</th></tr></thead>
-        <tbody id="weeklyRows"><tr><td class="muted">—</td><td class="muted">—</td></tr></tbody>
-        <tfoot><tr><th>Total mes</th><th id="monthTotal" class="muted">—</th></tr></tfoot>
-      </table>
-      <div class="note" id="closeNote" style="margin-top:10px"></div>
-    </section>
-
-    <section class="card">
-      <h3>Simulador de crecimiento</h3>
-      <div class="muted" style="margin-top:-8px;margin-bottom:8px">
-        Proyección con capitalización <b>no compuesta</b> (interés simple) por <b>6 meses</b>, según el plan asignado automáticamente por monto.
-      </div>
-
-      <div class="grid" style="margin-top:8px">
-        <div class="col-6">
-          <label class="label">Capital a simular (Q)</label>
-          <input id="sim_amount" type="number" inputmode="numeric" placeholder="Ej. 40,000"/>
+    <!-- Mi cuenta -->
+    <div class="card">
+      <h2 class="section-title">Mi cuenta</h2>
+      <div class="kvs">
+        <div class="kv">
+          <span class="lbl">Nombre</span>
+          <div class="val" id="kvName">—</div>
         </div>
-        <div class="col-6">
-          <label class="label">Plan asignado (auto)</label>
-          <div id="sim_plan" class="kv" style="height:44px;display:flex;align-items:center">—</div>
+        <div class="kv">
+          <span class="lbl">Plan</span>
+          <div class="val" id="kvPlan">—</div>
         </div>
-        <div class="col-12"><button id="btnSim" class="btn btn-primary">Calcular</button></div>
+        <div class="kv">
+          <span class="lbl">Moneda</span>
+          <div class="val" id="kvCurrency">—</div>
+        </div>
+        <div class="kv">
+          <span class="lbl">Capital</span>
+          <div class="val" id="kvCapital">Q 0.00</div>
+        </div>
+        <div class="kv">
+          <span class="lbl">Cuenta (ID)</span>
+          <div class="val" id="kvAccount">—</div>
+        </div>
+        <div class="kv">
+          <span class="lbl">Período (meses)</span>
+          <div class="val" id="kvMonths">—</div>
+        </div>
+        <div class="kv">
+          <span class="lbl">Interés total del período</span>
+          <div class="val" id="kvTotalInterest">Q 0.00</div>
+        </div>
+        <div class="kv">
+          <span class="lbl"> </span>
+          <div class="val right">
+            <button class="btn btn-secondary" id="openWithdraw">Solicitar retiro</button>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <div class="grid" style="margin-top:14px">
-        <div class="kv col-4"><small>Capital inicial</small><div id="sim_cap_start" class="chip">Q 0.00</div></div>
-        <div class="kv col-4"><small>Interés total acumulado</small><div id="sim_interest_total" class="chip">Q 0.00</div></div>
-        <div class="kv col-4"><small>Capital final estimado</small><div id="sim_cap_final" class="chip">Q 0.00</div></div>
-      </div>
-
-      <div class="divider"></div>
-      <h4 style="margin:0 0 8px 0">Interés generado por cada mes</h4>
-      <table>
-        <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
-        <tbody id="sim_monthly_rows">
-          <tr><td class="muted">1</td><td class="muted">Q 0.00</td></tr>
-          <tr><td class="muted">2</td><td class="muted">Q 0.00</td></tr>
-          <tr><td class="muted">3</td><td class="muted">Q 0.00</td></tr>
-          <tr><td class="muted">4</td><td class="muted">Q 0.00</td></tr>
-          <tr><td class="muted">5</td><td class="muted">Q 0.00</td></tr>
-          <tr><td class="muted">6</td><td class="muted">Q 0.00</td></tr>
+    <!-- Resultados del mes -->
+    <div class="card mt-24">
+      <h2 class="section-title">Resultados del mes</h2>
+      <div class="muted" id="periodRange">—</div>
+      <table class="table mt-16" id="weeklyTable">
+        <thead>
+          <tr><th>Viernes</th><th>Interés semanal</th></tr>
+        </thead>
+        <tbody id="weeklyBody">
+          <tr><td>—</td><td>—</td></tr>
         </tbody>
+        <tfoot>
+          <tr><th>Total mes</th><th id="weeklyTotal">—</th></tr>
+        </tfoot>
       </table>
-      <div class="note" id="sim_plan_note" style="margin-top:8px"></div>
-    </section>
+      <div class="muted mt-16" id="periodCloseNote"></div>
+    </div>
+
+    <!-- Simulador de crecimiento -->
+    <div class="card mt-24">
+      <h2 class="section-title">Simulador de crecimiento</h2>
+      <div class="muted">Proyección con capitalización <b>no compuesta</b> (interés simple) por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
+      <div class="grid grid-2 mt-16">
+        <div>
+          <label class="muted" style="font-size:12px;">Capital a simular (Q)</label>
+          <div class="input"><input id="simCapital" type="number" min="0" step="1" placeholder="Ej. 40,000"></div>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px;">Plan asignado (auto)</label>
+          <div class="pill" id="simPlan">—</div>
+        </div>
+      </div>
+      <div class="right mt-16">
+        <button class="btn btn-ghost" id="simCalc">Calcular</button>
+      </div>
+      <div class="grid grid-3 mt-16">
+        <div class="kv">
+          <span class="lbl">Capital inicial</span>
+          <div class="val" id="simStart">Q 0.00</div>
+        </div>
+        <div class="kv">
+          <span class="lbl">Interés total acumulado</span>
+          <div class="val" id="simInt">Q 0.00</div>
+        </div>
+        <div class="kv">
+          <span class="lbl">Capital final estimado</span>
+          <div class="val" id="simEnd">Q 0.00</div>
+        </div>
+      </div>
+      <div class="mt-16">
+        <table class="table">
+          <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
+          <tbody id="simBody"></tbody>
+        </table>
+        <div class="muted mt-8" id="simLegend"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Modal retiro -->
-  <div class="overlay" id="withdrawModal">
+  <!-- Modal Retiro -->
+  <div class="modal-back" id="withdrawBack" aria-hidden="true">
     <div class="modal">
-      <div class="modal-head">
-        <h4>Solicitud de retiro</h4>
-        <button class="modal-close" id="closeWithdraw">✕</button>
+      <div class="hd">
+        <h3>Solicitud de retiro</h3>
+        <button class="icon-btn" id="withdrawClose">✕</button>
       </div>
-
-      <div class="modal-grid" style="margin-bottom:8px">
-        <div>
-          <div class="label">Seleccione el tipo de retiro</div>
-          <div id="optEarly" class="pill active">
-            <div style="color:#fff;font-weight:700">Antes de tiempo</div>
-            <div class="muted">Aplicará una penalización del 10%.</div>
+      <div class="bd">
+        <div class="muted" style="margin-bottom:12px">Seleccione el tipo de retiro y complete la información.</div>
+        <div class="opt-grid">
+          <div class="opt active" data-type="early" id="optEarly">
+            <div class="t">Antes de tiempo</div>
+            <div class="s">Aplicará una penalización del 10%.</div>
+          </div>
+          <div class="opt" data-type="health" id="optHealth">
+            <div class="t">Causas de salud</div>
+            <div class="s">Exento de penalización.</div>
           </div>
         </div>
-        <div>
-          <div class="label" style="color:transparent">.</div>
-          <div id="optHealth" class="pill">
-            <div style="color:#fff;font-weight:700">Causas de salud</div>
-            <div class="muted">Exento de penalización.</div>
+
+        <div class="grid grid-2 mt-16">
+          <div>
+            <label class="muted" style="font-size:12px;">Monto a retirar (Q)</label>
+            <div class="input"><input id="wAmount" type="number" min="0" step="1" placeholder="Ej. 5,000"></div>
+            <div class="muted" style="font-size:12px;margin-top:8px">Si el retiro es parcial, debe permanecer al menos Q 2,000.</div>
+          </div>
+          <div>
+            <label class="muted" style="font-size:12px;">Motivo</label>
+            <div class="input" style="height:120px"><textarea id="wReason" style="resize:none;border:0;outline:0;background:transparent;color:#fff;width:100%;height:100%;font-family:inherit"></textarea></div>
           </div>
         </div>
-      </div>
 
-      <div class="modal-grid">
-        <div>
-          <label class="label">Monto a retirar (Q)</label>
-          <input id="wd_amount" type="number" inputmode="numeric" placeholder="Ej. 5,000">
-          <div class="note">Si el retiro es parcial, debe permanecer al menos Q 2,000.</div>
-
-          <label class="switch" for="wd_all">
-            <input id="wd_all" type="checkbox">
-            <span class="track"><span class="thumb"></span></span>
-            <span>Retirar todo mi capital</span>
-          </label>
+        <div class="switch-row mt-16" id="switchRow">
+          <div class="switch" id="wAllSwitch" role="switch" aria-checked="false"></div>
+          <div>Retirar todo mi capital</div>
+          <button class="pill" id="wAllBtn">Retirar todo mi capital</button>
         </div>
 
-        <div>
-          <label class="label">Motivo</label>
-          <textarea id="wd_reason" placeholder="Explique brevemente el motivo…"></textarea>
-        </div>
+        <div class="callout mt-16" id="wHint" style="display:none"></div>
       </div>
-
-      <div class="btn-bar">
-        <button class="btn btn-full btn-primary" id="btnSendWithdraw">Enviar solicitud</button>
-        <button class="btn btn-outline" id="btnCancelWithdraw">Cancelar</button>
+      <div class="ft">
+        <button class="btn btn-secondary" id="withdrawCancel">Cancelar</button>
+        <button class="btn btn-ghost" id="withdrawSend">Enviar solicitud</button>
       </div>
     </div>
   </div>
 
   <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.46.1/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-  // ================== CONFIG (ACTUALIZADO) ==================
-  const SUPABASE_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // === Credenciales (tuyas) ===
+    const SUPABASE_URL = "https://czvpehbubfrinutztnwh.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const fmtQ = n => 'Q ' + (Number(n||0)).toLocaleString('es-GT',{minimumFractionDigits:2, maximumFractionDigits:2});
-  const byId = id => document.getElementById(id);
+    // === Utiles ===
+    const fmtQ = n => 'Q ' + (Number(n||0).toLocaleString('es-GT', {minimumFractionDigits:2, maximumFractionDigits:2}));
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-  let currentUser = null;
-  let account = null;
+    const PLANS = {
+      STANDARD: 15,    // semestral
+      PLATINUM: 20,    // semestral
+      BLACK: 25        // semestral (visible si admin lo habilita)
+    };
 
-  (async function init(){
-    const { data: { session } } = await sb.auth.getSession();
-    if(!session){ location.href = "cliente-login.html"; return; }
-    currentUser = session.user;
+    let gAccount = null; // datos de la cuenta del cliente
+    let gProfile = null;
 
-    await loadOverview();
-    await renderWeekly();
-    setupUI();
-  })();
+    // === Guard de sesión ===
+    (async () => {
+      const { data:{ session } } = await sb.auth.getSession();
+      if (!session) {
+        window.location.replace('./cliente-login.html');
+        return;
+      }
+      await loadClientData();
+      buildSimulatorDefaults();
+      renderWeekly();
+    })();
 
-  async function loadOverview(){
-    const { data: prof } = await sb.from('profiles')
-      .select('id, full_name')
-      .eq('id', currentUser.id)
-      .maybeSingle();
+    // === Cerrar sesión ===
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try { await sb.auth.signOut(); } catch(_){}
+      window.location.replace('./cliente-login.html');
+    });
 
-    const { data: acc } = await sb.from('accounts')
-      .select('id, user_id, capital, currency, plan, invest_months, interest_pct, joined_at')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
+    // === Carga de datos de cliente ===
+    async function loadClientData(){
+      // 1) user
+      const { data:{ user } } = await sb.auth.getUser();
+      if (!user) {
+        window.location.replace('./cliente-login.html');
+        return;
+      }
 
-    account = acc || { id: '—', capital: 0, currency: 'GTQ', plan: '—', invest_months: null, interest_pct: null, joined_at: null };
+      // 2) profiles (nombre)
+      const { data:profRows } = await sb.from('profiles')
+        .select('id, full_name, account_id')
+        .eq('id', user.id)
+        .maybeSingle();
 
-    byId('kv_name').textContent = prof?.full_name || currentUser.email || '—';
-    byId('kv_plan').textContent = account.plan || '—';
-    byId('kv_currency').textContent = account.currency || '—';
-    byId('kv_acct').textContent = account.id || '—';
-    byId('kv_months').textContent = account.invest_months ?? '—';
-    byId('kv_capital').textContent = fmtQ(account.capital);
+      gProfile = profRows || { id: user.id, full_name: user.email, account_id: null };
 
-    const pct = (account.interest_pct ?? planPctFromCapital(account.capital));
-    const totalPeriod = (account.capital||0) * (pct/100);
-    byId('kv_period_int').textContent = fmtQ(totalPeriod);
-  }
+      // 3) accounts (plan, capital, currency, joined_at, invest_months, interest_pct)
+      let account = null;
 
-  function planPctFromCapital(capital){
-    const cap = Number(capital||0);
-    if(cap >= 250000) return 20;
-    if(cap >= 2000) return 15;
-    return 0;
-  }
+      if (gProfile?.account_id){
+        const { data:acc } = await sb.from('accounts')
+          .select('id, plan, capital, currency, joined_at, invest_months, interest_pct, black_enabled')
+          .eq('id', gProfile.account_id)
+          .maybeSingle();
+        account = acc;
+      }
 
-  async function renderWeekly(){
-    const capital = Number(account?.capital||0);
-    const pctSemi = (account?.interest_pct ?? planPctFromCapital(capital));
-    const monthlyPct = pctSemi/6;
+      // Fallback: por email si existiera vista
+      if (!account){
+        const { data:acc2 } = await sb.from('v_admin_users')
+          .select('account_id, plan, capital, currency, joined_at, invest_months, interest_pct, black_enabled')
+          .eq('email', user.email)
+          .maybeSingle();
+        if (acc2) account = { id: acc2.account_id, ...acc2 };
+      }
 
-    let joined = account?.joined_at ? new Date(account.joined_at) : new Date();
-    const now = new Date();
-    let start = new Date(now.getFullYear(), now.getMonth(), joined.getDate());
-    if (now < start) start = new Date(now.getFullYear(), now.getMonth()-1, joined.getDate());
-    let end = new Date(start); end.setMonth(end.getMonth()+1);
+      gAccount = account || {};
 
-    const fmtDate = d=>d.toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'});
-    byId('periodLabel').textContent = `${fmtDate(start)} — ${fmtDate(end)}`;
+      // Calcular tasa semestral
+      let plan = (gAccount.plan || 'STANDARD').toUpperCase();
+      if (plan === 'BLACK' && !gAccount.black_enabled) plan = 'STANDARD';
 
-    const weeks = buildFridaysBetween(start, end);
-    const monthlyInterest = capital * (monthlyPct/100);
-    const dayCounts = weeks.map(w => (Math.min(end, addDays(w,7)) - w)/(1000*3600*24));
-    const totalDays = dayCounts.reduce((a,b)=>a+b,0);
-    const portions = dayCounts.map(d => d/totalDays);
-    const weekly = portions.map(p => monthlyInterest * p);
+      let rate = Number(gAccount.interest_pct);
+      if (!rate) rate = PLANS[plan] || 15;
 
-    const rows = byId('weeklyRows');
-    rows.innerHTML = '';
-    let shownTotal = 0;
-    for(let i=0;i<weeks.length;i++){
-      const inPastWeek = now >= weeks[i];
-      if(!inPastWeek) break;
-      shownTotal += weekly[i];
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${fmtDate(weeks[i])}</td><td>${fmtQ(weekly[i])}</td>`;
-      rows.appendChild(tr);
+      // Interés total del período (simple): capital * (rate/100) * (months/6)
+      const months = Number(gAccount.invest_months || 6);
+      const cap = Number(gAccount.capital || 0);
+      const totalInterest = cap * (rate/100) * (months/6);
+
+      // Pintar
+      document.getElementById('kvName').textContent = gProfile?.full_name || user.email;
+      document.getElementById('kvPlan').textContent = plan;
+      document.getElementById('kvCurrency').textContent = (gAccount.currency || '—');
+      document.getElementById('kvCapital').textContent = fmtQ(cap);
+      document.getElementById('kvAccount').textContent = gAccount?.id || '—';
+      document.getElementById('kvMonths').textContent = months || '—';
+      document.getElementById('kvTotalInterest').textContent = fmtQ(totalInterest);
     }
 
-    const monthClosed = now >= end;
-    byId('monthTotal').textContent = monthClosed ? fmtQ(monthlyInterest) : '—';
-    byId('closeNote').textContent = `El período cierra el ${fmtDate(end)}.`;
-  }
-
-  function addDays(d, n){const x=new Date(d); x.setDate(x.getDate()+n); return x;}
-  function nextFriday(d){
-    const x=new Date(d); const day=x.getDay(); const diff=(5-day+7)%7;
-    x.setDate(x.getDate()+diff); return x;
-  }
-  function buildFridaysBetween(start,end){
-    let f = nextFriday(start);
-    const out=[];
-    while(f<end){ out.push(new Date(f)); f.setDate(f.getDate()+7); }
-    return out;
-  }
-
-  byId('btnSim').addEventListener('click', ()=>{
-    const amt = Number(byId('sim_amount').value||0);
-    const plan = autoPlan(amt);
-    const pctSemi = plan.pct;
-    const monthly = (pctSemi/6);
-    const interest6 = amt * (pctSemi/100);
-    const final = amt + interest6;
-
-    byId('sim_plan').textContent = `${plan.name} (${pctSemi}% semestral)`;
-    byId('sim_cap_start').textContent = fmtQ(amt);
-    byId('sim_interest_total').textContent = fmtQ(interest6);
-    byId('sim_cap_final').textContent = fmtQ(final);
-
-    const body = byId('sim_monthly_rows');
-    body.innerHTML = '';
-    for(let i=1;i<=6;i++){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i}</td><td>${fmtQ(amt*(monthly/100))}</td>`;
-      body.appendChild(tr);
-    }
-    byId('sim_plan_note').textContent = `Plan: ${plan.name}. Tasa semestral ${pctSemi}% • Tasa mensual ${(monthly).toFixed(2)}%.`;
-  });
-
-  function autoPlan(amt){
-    if(amt >= 250000) return { name:'PLATINUM', pct:20 };
-    if(amt >= 2000) return { name:'STANDARD', pct:15 };
-    return { name:'NO ELEGIBLE', pct:0 };
-  }
-
-  const overlay = byId('withdrawModal');
-  byId('btnOpenWithdrawal').addEventListener('click', ()=>{
-    setType('early');
-    byId('wd_amount').value = '';
-    byId('wd_reason').value = '';
-    byId('wd_all').checked = false;
-    overlay.style.display = 'flex';
-  });
-  byId('closeWithdraw').addEventListener('click', ()=> overlay.style.display='none');
-  byId('btnCancelWithdraw').addEventListener('click', ()=> overlay.style.display='none');
-
-  const pillEarly = byId('optEarly');
-  const pillHealth = byId('optHealth');
-  function setType(t){
-    if(t==='early'){ pillEarly.classList.add('active'); pillHealth.classList.remove('active'); }
-    else { pillHealth.classList.add('active'); pillEarly.classList.remove('active'); }
-  }
-  pillEarly.addEventListener('click', ()=> setType('early'));
-  pillHealth.addEventListener('click', ()=> setType('health'));
-
-  const wdAll = byId('wd_all');
-  document.querySelector('label.switch').addEventListener('click', ()=>{ setTimeout(()=> validateAmount(), 0); });
-
-  byId('wd_amount').addEventListener('input', validateAmount);
-  wdAll.addEventListener('change', validateAmount);
-
-  function validateAmount(){
-    const all = wdAll.checked;
-    const max = Number(account?.capital||0);
-    let val = Number(byId('wd_amount').value||0);
-    if(all){ byId('wd_amount').value = max; return true; }
-    if(val > max){ val = max; byId('wd_amount').value = val; }
-    if((max - val) < 2000){
-      const allowed = Math.max(0, max - 2000);
-      byId('wd_amount').value = allowed;
-    }
-    return true;
-  }
-
-  byId('btnSendWithdraw').addEventListener('click', async ()=>{
-    const all = wdAll.checked;
-    const amount = Number(byId('wd_amount').value||0);
-    const reason = (byId('wd_reason').value||'').trim();
-    const type = pillHealth.classList.contains('active') ? 'HEALTH' : 'EARLY';
-
-    if(amount<=0){ alert('Ingrese un monto válido.'); return; }
-    if(!all){
-      const max = Number(account?.capital||0);
-      if(amount>max){ alert('El monto no puede exceder su capital.'); return; }
-      if((max-amount)<2000){ alert('Para retiros parciales debe permanecer al menos Q 2,000.'); return; }
+    // === Resultados del mes (semanales) ===
+    function startOfPeriod(joinedAt){
+      // Desde el día de ingreso hasta el mismo día del mes siguiente
+      const j = new Date(joinedAt || new Date());
+      const now = new Date();
+      // Tomar la ventana que contiene a "now": si el día de mes actual >= día de ingreso → inicio es ese día de este mes; si no, el del mes anterior.
+      const d = j.getDate();
+      const start = new Date(now.getFullYear(), now.getMonth(), d);
+      if (start > now) start.setMonth(start.getMonth() - 1);
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      return { start, end };
     }
 
-    const payload = { account_id: account?.id || null, amount, reason, type };
-    const ins = await sb.from('withdrawal_requests').insert(payload).select('id').maybeSingle();
-    if(ins.error){ alert('No se pudo enviar la solicitud: ' + ins.error.message); return; }
+    function fridaysBetween(a,b){
+      // lista de viernes entre [a,b)
+      const res=[];
+      const d = new Date(a);
+      // llevar a viernes
+      const day = d.getDay(); // 0..6 (dom..sab)
+      const diff = (5 - day + 7) % 7; // 5=viernes
+      d.setDate(d.getDate()+diff);
+      while (d < b){
+        res.push(new Date(d));
+        d.setDate(d.getDate()+7);
+      }
+      return res;
+    }
 
-    try{
-      await fetch('/functions/v1/notify-withdrawal', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ account_id: account?.id, user_email: currentUser?.email, user_name: byId('kv_name').textContent || '', amount, type, reason })
-      });
-    }catch(e){}
+    function renderWeekly(){
+      const cap = Number(gAccount?.capital || 0);
+      const plan = (gAccount?.plan || 'STANDARD').toUpperCase();
+      const rate = Number(gAccount?.interest_pct) || PLANS[plan] || 15;
 
-    overlay.style.display='none';
-    alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
-  });
+      // mensual = capital * (rate/100)/6
+      const monthlyInterest = cap * (rate/100) / 6;
 
-  byId('btnLogout').addEventListener('click', async ()=>{
-    await sb.auth.signOut();
-    location.href = 'cliente-login.html';
-  });
+      const joinedAt = gAccount?.joined_at || new Date().toISOString().slice(0,10);
+      const { start, end } = startOfPeriod(joinedAt);
+      const now = new Date();
+      const until = now < end ? now : end; // mostrar solo hasta hoy
 
-  function setupUI(){}
+      // Rango en UI
+      const fmtRange = (d)=> d.toLocaleDateString('es-GT',{day:'numeric',month:'long',year:'numeric'});
+      document.getElementById('periodRange').textContent = `${fmtRange(start)} — ${fmtRange(end)}`;
+
+      // Viernes
+      const fridays = fridaysBetween(start, until);
+
+      // distribuir interés mensual en semanas por proporción de días de cada tramo dentro del mes
+      const tbody = document.getElementById('weeklyBody');
+      tbody.innerHTML='';
+      let totalShown = 0;
+
+      if (fridays.length === 0){
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>—</td><td>—</td>`;
+        tbody.appendChild(tr);
+      }else{
+        // calcular pesos por días
+        const segments = fridays.map((f,i)=>{
+          const segStart = (i===0)? start : fridays[i-1];
+          const segEnd = f;
+          const days = Math.max(1, Math.round((segEnd - segStart)/(1000*60*60*24)));
+          return { date: f, days };
+        });
+
+        // si todavía hay tramo residual hasta today (y antes del cierre) NO se muestra porque la regla es “hasta el viernes actual”
+        const daysSum = segments.reduce((s,x)=>s+x.days,0);
+        let allocated = 0;
+        segments.forEach((seg,i)=>{
+          let val = monthlyInterest * (seg.days / daysSum);
+          // redondeo a 2 y ajustamos el último para cerrar exacto el mensual
+          if (i < segments.length-1){
+            val = Math.round(val*100)/100;
+            allocated += val;
+          }else{
+            val = Math.round((monthlyInterest - allocated)*100)/100;
+          }
+          totalShown += val;
+
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${seg.date.toLocaleDateString('es-GT')}</td><td>${fmtQ(val)}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // total mostrado si cerró el período, sino guión
+      const totalCell = document.getElementById('weeklyTotal');
+      if (now >= end){
+        totalCell.textContent = fmtQ(monthlyInterest);
+        document.getElementById('periodCloseNote').textContent = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
+      }else{
+        totalCell.textContent = '—';
+        document.getElementById('periodCloseNote').textContent = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
+      }
+    }
+
+    // === Simulador (6 meses, simple) ===
+    function assignedPlanByAmount(amount){
+      if (amount >= 250000) return 'PLATINUM';
+      if (amount >= 2000) return 'STANDARD';
+      return 'NO ELEGIBLE';
+    }
+    function buildSimulatorDefaults(){
+      const simCap = document.getElementById('simCapital');
+      simCap.value = Number(gAccount?.capital || 0);
+      runSimulator();
+    }
+    function runSimulator(){
+      const cap = Number(document.getElementById('simCapital').value || 0);
+      const plan = assignedPlanByAmount(cap);
+      document.getElementById('simPlan').textContent = (plan==='NO ELEGIBLE')?'NO ELEGIBLE':`${plan} (${PLANS[plan]}% semestral)`;
+
+      if (plan==='NO ELEGIBLE'){
+        document.getElementById('simStart').textContent = fmtQ(cap);
+        document.getElementById('simInt').textContent = fmtQ(0);
+        document.getElementById('simEnd').textContent = fmtQ(cap);
+        document.getElementById('simBody').innerHTML = '';
+        document.getElementById('simLegend').textContent = '';
+        return;
+      }
+      const rate = PLANS[plan];
+      const months = 6;
+      const mInt = cap * (rate/100) / 6;
+      const total = mInt * months;
+
+      document.getElementById('simStart').textContent = fmtQ(cap);
+      document.getElementById('simInt').textContent = fmtQ(total);
+      document.getElementById('simEnd').textContent = fmtQ(cap + total);
+
+      const body = document.getElementById('simBody');
+      body.innerHTML = '';
+      for (let i=1;i<=6;i++){
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${i}</td><td>${fmtQ(mInt)}</td>`;
+        body.appendChild(tr);
+      }
+      document.getElementById('simLegend').textContent = `Plan: ${plan} · Tasa semestral ${rate}% · Tasa mensual ${(rate/6).toFixed(2)}%.`;
+    }
+    document.getElementById('simCalc').addEventListener('click', runSimulator);
+
+    // === Modal Retiro ===
+    const back = document.getElementById('withdrawBack');
+    const openWithdraw = document.getElementById('openWithdraw');
+    const closeWithdraw = document.getElementById('withdrawClose');
+    const cancelWithdraw = document.getElementById('withdrawCancel');
+    const sendWithdraw = document.getElementById('withdrawSend');
+    const optEarly = document.getElementById('optEarly');
+    const optHealth = document.getElementById('optHealth');
+    const wAmount = document.getElementById('wAmount');
+    const wReason = document.getElementById('wReason');
+    const wAllSwitch = document.getElementById('wAllSwitch');
+    const wAllBtn = document.getElementById('wAllBtn');
+    const wHint = document.getElementById('wHint');
+    const switchRow = document.getElementById('switchRow');
+
+    function openModal(){ back.style.display='flex'; wAmount.value=''; wReason.value=''; setAll(false); wHint.style.display='none'; }
+    function closeModal(){ back.style.display='none'; }
+
+    openWithdraw.addEventListener('click', openModal);
+    closeWithdraw.addEventListener('click', closeModal);
+    cancelWithdraw.addEventListener('click', closeModal);
+    back.addEventListener('click', (e)=>{ if(e.target===back) closeModal(); });
+
+    // seleccionar tipo
+    function setType(t){
+      if (t==='early'){ optEarly.classList.add('active'); optHealth.classList.remove('active'); }
+      else { optHealth.classList.add('active'); optEarly.classList.remove('active'); }
+    }
+    optEarly.addEventListener('click', ()=>setType('early'));
+    optHealth.addEventListener('click', ()=>setType('health'));
+
+    // switch retirar todo
+    function setAll(on){
+      if (on){
+        wAllSwitch.classList.add('on');
+        wAllSwitch.setAttribute('aria-checked','true');
+        // monto = capital
+        const cap = Number(gAccount?.capital || 0);
+        wAmount.value = cap;
+      }else{
+        wAllSwitch.classList.remove('on');
+        wAllSwitch.setAttribute('aria-checked','false');
+      }
+    }
+    function toggleAll(){ setAll(!wAllSwitch.classList.contains('on')); }
+    wAllSwitch.addEventListener('click', toggleAll);
+    wAllBtn.addEventListener('click', toggleAll);
+    switchRow.addEventListener('click', (e)=>{ if(!['INPUT','TEXTAREA','BUTTON'].includes(e.target.tagName)) toggleAll(); });
+
+    // Validaciones y envío
+    sendWithdraw.addEventListener('click', async ()=>{
+      const cap = Number(gAccount?.capital || 0);
+      const isAll = wAllSwitch.classList.contains('on');
+      const amount = isAll ? cap : Number(wAmount.value||0);
+      const type = optEarly.classList.contains('active') ? 'EARLY' : 'HEALTH';
+      const reason = (wReason.value||'').trim();
+
+      // reglas
+      if (!isAll){
+        if (amount<=0){ showHint('Ingrese un monto válido.'); return; }
+        if (amount>cap){ showHint('El monto no puede ser mayor al capital.'); return; }
+        if ((cap-amount) < 2000){ showHint('Debe permanecer al menos Q 2,000 en capital (a menos que retire todo).'); return; }
+      }
+
+      // Insertar solicitud (la RLS debe setear user_id con auth.uid())
+      try{
+        const { error } = await sb.from('withdrawal_requests').insert({
+          withdraw_type: type, // EARLY | HEALTH
+          amount: amount,
+          reason: reason,
+          withdraw_all: isAll
+        });
+        if (error) throw error;
+
+        // notificar a admins via Edge Function (si la tienes deploy)
+        try{
+          await sb.functions.invoke('notify-withdrawal', {
+            body: {
+              withdraw_type: type,
+              amount,
+              reason,
+              withdraw_all: isAll
+            }
+          });
+        }catch(_){}
+
+        alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
+        closeModal();
+      }catch(e){
+        showHint('No se pudo enviar la solicitud. Intenta nuevamente.');
+        console.error(e);
+      }
+    });
+
+    function showHint(msg){
+      wHint.style.display='flex';
+      wHint.textContent = msg;
+    }
   </script>
 </body>
 </html>
