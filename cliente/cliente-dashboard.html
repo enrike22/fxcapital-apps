@@ -5,63 +5,57 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Panel Cliente</title>
 <style>
-:root{--bg:#000;--fg:#fff;--muted:#ffffffcc;--card:#0d0d0d;--border:#1a1a1a}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+:root{--bg:#000;--fg:#fff;--muted:#ffffffcc;--card:#0f0f0f;--card2:#141414;--border:#1f1f1f;--accent:#ffffff;}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
 .container{max-width:1100px;margin:0 auto;padding:24px}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-h1,h2{margin:0 0 8px} small{color:var(--muted)}
+.card{background:linear-gradient(180deg,var(--card2),#181818);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px}
+h1,h2{margin:0 0 8px}
+.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px;color:#cfd6e4}
+.grid-3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+table{width:100%;border-collapse:collapse} th,td{padding:12px 10px;border-bottom:1px solid var(--border)} th{text-align:left;color:var(--muted)}
+small{color:var(--muted)}
 button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
+.btn-outline{background:transparent;border:1px solid var(--border);color:#fff}
+.pill{border-radius:999px;border:1px solid var(--border);padding:6px 10px;display:inline-block}
 .hidden{display:none !important}
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
-.grid-3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.key{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px}
-.value{margin-top:6px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:12px;border-bottom:1px solid var(--border)}
-th{text-align:left;color:var(--muted)}
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
-.kpi .box{background:#0f0f0f;border:1px solid var(--border);border-radius:12px;padding:12px}
-.kpi .label{color:var(--muted);font-size:13px;margin-bottom:4px}
-.kpi .num{font-size:20px;font-weight:700}
-
-/* ===== MODAL RETIRO ===== */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:10000}
-.modal.show{display:flex}
-.modal-card{width:100%;max-width:880px;background:linear-gradient(180deg,#151515,#1b1b1b);border:1px solid #2a2a2a;border-radius:18px;padding:20px 20px 16px;box-shadow:0 15px 40px #000a;position:relative}
-.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.modal-head h3{margin:0;font-size:22px}
+/* ===== MODAL CAMBIO DE CONTRASEÑA ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10000}
+.modal-card{width:100%;max-width:640px;background:linear-gradient(180deg,#151515,#1b1b1b);border:1px solid #2a2a2a;border-radius:18px;padding:22px 22px 16px;box-shadow:0 15px 40px #000a;position:relative}
+.modal-titlebar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.modal-titlebar h3{margin:0;font-size:22px}
 .close-x{width:36px;height:36px;border-radius:10px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.form-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
-.opt-row{display:flex;gap:14px}
-.opt-card{flex:1;border:1px solid #2a2a2a;background:#0e0e0e;border-radius:14px;padding:14px}
-.opt-card.active{outline:2px solid #4a4a4a}
-.opt-title{font-weight:700;margin-bottom:6px;color:#fff}
-.opt-sub{color:#eaeaea;font-size:13px}
-.switch{display:flex;align-items:center;gap:10px;margin-top:12px;color:#fff}
-.input{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:12px 14px;height:48px}
-.textarea{width:100%;min-height:120px;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:12px 14px}
-.help{color:#9fb4d1;font-size:12px;margin-top:6px}
-.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-sub{color:var(--muted);margin-bottom:14px}
+label{display:block;margin:8px 0 4px}
 
-/* ===== MODAL PASSWORD ===== */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:11000}
-.modal-overlay.show{display:flex}
-.pwd-card{width:100%;max-width:680px;background:linear-gradient(180deg,#151515,#1c1c1c);border:1px solid #2a2a2a;border-radius:18px;padding:22px 22px 16px;box-shadow:0 15px 40px #000a;position:relative}
-.pwd-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.pwd-title h3{margin:0;font-size:22px}
+/* inputs + ojos */
 .input-wrap{position:relative}
 .input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
-.input-wrap input{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:10px 64px 10px 42px;height:46px}
-.eye-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:42px;height:42px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
-.eye,.eye-off{width:28px;height:28px;fill:#fff}
-.inline{display:flex;align-items:center;gap:8px;margin-top:6px}
-.err{color:#ffb3b3;min-height:18px;text-align:center}
-.success{color:#b3ffcb;min-height:18px;text-align:center}
+.input-wrap input, .input-wrap textarea{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:10px 64px 10px 38px;height:50px;font-size:16px}
+textarea{padding:12px 12px 12px 42px;height:120px;resize:vertical}
+.eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:46px;height:46px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
+.eye,.eye-off{width:32px;height:32px;fill:#fff;opacity:.98}
 
 /* Toast */
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#101b10;border:1px solid #214c21;color:#c6f3c6;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px #000a;z-index:12000}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#101b10;border:1px solid #214c21;color:#c6f3c6;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px #000a;z-index:11000}
+
+/* ===== MODAL RETIRO ===== */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9000}
+.sheet-card{width:100%;max-width:900px;background:#151515;border:1px solid #303030;border-radius:18px;box-shadow:0 15px 40px #000a;padding:22px;position:relative}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.option-row{display:flex;gap:12px}
+.opt{flex:1;background:#0f1216;border:1px solid #253043;border-radius:14px;padding:16px;color:#fff}
+.opt h4{margin:0 0 4px}
+.opt p{margin:0;color:#a9b7d0;font-size:13px}
+.opt.active{outline:2px solid #7aa2ff}
+.opt *{color:#fff} /* fuerza blanco en tarjetas */
+
+/* Simulator stats */
+.kpi{background:#111;border:1px solid var(--border);border-radius:14px;padding:12px}
+.kpi h5{margin:0 0 6px;color:#cfd6e4}
+.kpi .v{font-weight:700;font-size:18px}
 </style>
 </head>
 <body>
@@ -73,124 +67,67 @@ th{text-align:left;color:var(--muted)}
 
   <div class="card">
     <h2>Mi cuenta</h2>
-    <small>Resumen de su portafolio y configuración actual.</small>
-    <div class="grid-3" style="margin-top:10px">
-      <div><span class="key">Nombre</span><div id="c_name" class="value">—</div></div>
-      <div><span class="key">Plan</span><div id="c_plan" class="value">—</div></div>
-      <div><span class="key">Moneda</span><div id="c_currency" class="value">—</div></div>
-      <div><span class="key">Cuenta (ID)</span><div id="c_account" class="value">—</div></div>
-      <div><span class="key">Periodo (meses)</span><div id="c_months" class="value">—</div></div>
-      <div><span class="key">Interés total del período</span><div id="c_period_interest" class="value">—</div></div>
+    <div class="grid-3">
+      <div><span class="badge">Nombre</span><div id="c_name">—</div></div>
+      <div><span class="badge">Plan</span><div id="c_plan">—</div></div>
+      <div><span class="badge">Moneda</span><div id="c_currency">—</div></div>
+      <div><span class="badge">Capital</span><div id="c_capital">—</div></div>
+      <div><span class="badge">Cuenta (ID)</span><div id="c_account">—</div></div>
+      <div><span class="badge">Período (meses)</span><div id="c_months">—</div></div>
+      <div><span class="badge">Interés total del período</span><div id="c_period_interest">—</div></div>
     </div>
-    <div class="kpi">
-      <div class="box"><div class="label">Capital</div><div id="c_capital" class="num">—</div></div>
-      <div class="box"><div class="label">Fecha de ingreso</div><div id="c_joined" class="num" style="font-size:16px">—</div></div>
-      <div class="box" style="display:flex;align-items:end;justify-content:flex-end">
-        <button id="openWithdraw">Solicitar retiro</button>
-      </div>
+    <div style="margin-top:12px">
+      <button id="withdrawBtn" class="btn-outline" type="button">Solicitar retiro</button>
     </div>
   </div>
 
   <div class="card">
     <h2>Resultados del mes</h2>
-    <p id="monthLabel">—</p>
+    <p id="periodLabel">—</p>
     <table>
       <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
       <tbody id="weeks"></tbody>
       <tfoot><tr><th>Total mes</th><th id="monthTotal">—</th></tr></tfoot>
     </table>
-    <small id="monthNote" class="muted"></small>
+    <small id="periodNote" class="pill" style="margin-top:8px;display:inline-block"></small>
   </div>
 
   <div class="card">
     <h2>Simulador de crecimiento</h2>
     <small>Proyección con capitalización <b>no compuesta</b> (interés simple) por <b>6 meses</b>, según el plan asignado automáticamente por monto.</small>
-    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-top:12px;align-items:end">
-      <div>
-        <label>Capital a simular (Q)</label>
-        <div class="input-wrap">
-          <span class="prefix">Q</span>
-          <input id="sim_amount" class="input" type="number" min="0" step="1" placeholder="Ej. 40,000">
-        </div>
+    <div class="grid-3" style="margin-top:10px">
+      <div class="input-wrap">
+        <span class="prefix">Q</span>
+        <input id="simCapital" type="number" placeholder="Ej. 40,000">
       </div>
-      <div><button id="sim_btn" type="button">Calcular</button></div>
-      <div>
-        <label>Plan asignado (auto)</label>
-        <input id="sim_plan_label" class="input" type="text" readonly>
+      <div class="input-wrap">
+        <input id="simPlan" type="text" disabled value="NO ELEGIBLE">
       </div>
+      <div><button id="simCalc" type="button">Calcular</button></div>
     </div>
 
-    <div class="kpi">
-      <div class="box"><div class="label">Capital inicial</div><div id="sim_capital" class="num">—</div></div>
-      <div class="box"><div class="label">Interés total acumulado (6m)</div><div id="sim_total_interest" class="num">—</div></div>
-      <div class="box"><div class="label">Capital final estimado</div><div id="sim_final" class="num">—</div></div>
+    <div class="grid-3" style="margin-top:14px">
+      <div class="kpi"><h5>Capital inicial</h5><div id="simCapKpi" class="v">—</div></div>
+      <div class="kpi"><h5>Interés total acumulado (6m)</h5><div id="simIntKpi" class="v">—</div></div>
+      <div class="kpi"><h5>Capital final estimado (6m)</h5><div id="simTotalKpi" class="v">—</div></div>
     </div>
 
-    <h3 style="margin-top:14px">Interés generado por cada mes</h3>
-    <table>
+    <table style="margin-top:12px">
       <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
-      <tbody id="sim_rows"></tbody>
+      <tbody id="simRows"></tbody>
     </table>
-    <small id="sim_note" class="muted"></small>
+    <small id="simFoot" style="display:block;margin-top:8px;color:#aab2c2"></small>
   </div>
 </div>
 
-<!-- ===== MODAL RETIRO ===== -->
-<div id="withdrawModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="wTitle">
+<!-- ===== MODAL CAMBIO CONTRASEÑA ===== -->
+<div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
-    <div class="modal-head">
-      <h3 id="wTitle">Solicitud de retiro</h3>
-      <button id="wClose" class="close-x" type="button" aria-label="Cerrar">✕</button>
+    <div class="modal-titlebar">
+      <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
+      <button id="pwdCloseX" class="close-x" type="button" title="Cerrar" aria-label="Cerrar">✕</button>
     </div>
-
-    <div class="form-grid">
-      <div>
-        <label style="display:block;margin-bottom:8px;color:#fff">Seleccione el tipo de retiro</label>
-        <div class="opt-row" id="wKinds">
-          <div class="opt-card active" data-kind="EARLY">
-            <div class="opt-title">Antes de tiempo</div>
-            <div class="opt-sub">Aplicará una penalización del <b>10%</b>.</div>
-          </div>
-          <div class="opt-card" data-kind="HEALTH">
-            <div class="opt-title">Causas de salud</div>
-            <div class="opt-sub">Exento de penalización.</div>
-          </div>
-        </div>
-
-        <div class="switch">
-          <input id="w_all" type="checkbox">
-          <label for="w_all">Retirar todo mi capital</label>
-        </div>
-      </div>
-
-      <div>
-        <label>Monto a retirar (Q)</label>
-        <div class="input-wrap">
-          <span class="prefix">Q</span>
-          <input id="w_amount" class="input" type="number" min="0" step="1" placeholder="Ej. 5,000">
-        </div>
-        <div class="help">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
-
-        <label style="margin-top:10px">Motivo</label>
-        <textarea id="w_reason" class="textarea" placeholder="Explique brevemente el motivo…"></textarea>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button id="wSend" type="button">Enviar solicitud</button>
-      <button id="wCancel" type="button">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== MODAL CAMBIO DE CONTRASEÑA ===== -->
-<div id="pwdModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
-  <div class="pwd-card">
-    <div class="pwd-title">
-      <h3 id="pwdTitle">Bienvenido a FX | CAPITAL R.L.</h3>
-      <button id="pwdCloseX" class="close-x" type="button" aria-label="Cerrar">✕</button>
-    </div>
-    <p class="modal-sub">Por seguridad, actualice su contraseña.</p>
+    <p class="modal-sub">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
 
     <label>Correo electrónico</label>
     <div class="input-wrap">
@@ -225,17 +162,66 @@ th{text-align:left;color:var(--muted)}
       </button>
     </div>
 
-    <div class="inline" style="margin-top:6px">
-      <input id="showAllPwds" type="checkbox"><label for="showAllPwds" style="margin:0">Mostrar contraseñas</label>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <label><input id="showAllPwds" type="checkbox"> Mostrar contraseñas</label>
     </div>
-    <div class="help">Use al menos 8 caracteres. Recomendado: letras, números y símbolos.</div>
+    <div class="helper" style="color:#aab2c2;margin-bottom:6px">Use al menos 8 caracteres. Recomendado: letras, números y símbolos.</div>
 
-    <div id="pwdMsg" class="err"></div>
-    <div id="pwdOk" class="success"></div>
+    <div id="pwdMsg" style="color:#ffb3b3;min-height:20px;text-align:center"></div>
+    <div id="pwdOk" style="color:#b3ffcb;min-height:20px;text-align:center"></div>
 
-    <div class="modal-actions">
-      <button id="pwdSubmit" type="button">Actualizar contraseña</button>
-      <button id="pwdCancel" type="button">Cancelar</button>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button id="pwdSubmit" class="btn-outline" type="button">Actualizar contraseña</button>
+      <button id="pwdCancel" class="btn-outline" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL RETIRO ===== -->
+<div id="wSheet" class="sheet hidden" role="dialog" aria-modal="true">
+  <div class="sheet-card">
+    <div class="sheet-head">
+      <h3>Solicitud de retiro</h3>
+      <button id="wClose" class="close-x" type="button">✕</button>
+    </div>
+    <div class="sheet-grid">
+      <div>
+        <label>Seleccione el tipo de retiro</label>
+        <div class="option-row">
+          <div id="optEarly" class="opt active" data-kind="EARLY">
+            <h4>Antes de tiempo</h4>
+            <p>Aplicará una penalización del 10%.</p>
+          </div>
+          <div id="optHealth" class="opt" data-kind="HEALTH">
+            <h4>Causas de salud</h4>
+            <p>Exento de penalización.</p>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label class="input-wrap" style="padding-left:0">
+            <span class="prefix">Q</span>
+            <input id="wAmount" type="number" placeholder="Ej. 5,000">
+          </label>
+          <small>Si el retiro es parcial, debe permanecer al menos Q 2,000.</small>
+        </div>
+
+        <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+          <input id="wAll" type="checkbox"><label for="wAll" style="margin:0">Retirar todo mi capital</label>
+        </div>
+      </div>
+      <div>
+        <label>Motivo</label>
+        <div class="input-wrap">
+          <span class="prefix">✏️</span>
+          <textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-start">
+      <button id="wSend" type="button">Enviar solicitud</button>
+      <button id="wCancel" type="button" class="btn-outline">Cancelar</button>
     </div>
   </div>
 </div>
@@ -250,20 +236,22 @@ const PROJECT_URL="https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE=PROJECT_URL+"/rest/v1";
 const supa = supabase.createClient(PROJECT_URL, ANON_KEY);
-
 function hdr(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||"")}}
 function hdrJSON(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||""),"Content-Type":"application/json"}}
 const GTZ='America/Guatemala';
-function logout(){localStorage.clear();location.href='cliente-login.html'}
-document.getElementById('logoutBtn').onclick=logout;
-function money(n,cur){try{return new Intl.NumberFormat('es-GT',{style:'currency',currency:cur==='USD'?'USD':'GTQ'}).format(n);}catch{return `Q ${Number(n||0).toFixed(2)}`}}
 function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:GTZ}))}
+function money(n,cur){return new Intl.NumberFormat('es-GT',{style:'currency',currency:(cur||'GTQ')==='USD'?'USD':'GTQ'}).format(n||0)}
 function toast(msg){const t=document.getElementById('toast'); t.textContent=msg||'Listo.'; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),2200);}
 
-/*** ESTADO ***/
+/*** STATE ***/
 let PROFILE=null,ACCOUNT=null;
+let PWD_FORCE=true;
 
-/*** OJOS password modal ***/
+/*** LOGOUT ***/
+function logout(){ localStorage.clear(); location.href='cliente-login.html'; }
+document.getElementById('logoutBtn').onclick=logout;
+
+/*** EYES toggle ***/
 document.addEventListener('click',(e)=>{
   const btn=e.target.closest('.eye-btn'); if(!btn) return;
   const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
@@ -273,194 +261,229 @@ document.addEventListener('click',(e)=>{
     : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9 .5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
 });
 
-/*** BOOT ***/
-(async function boot(){
-  if(!localStorage.token){ logout(); return; }
-
-  const rUser=await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}})
-  if(!rUser.ok){ logout(); return; }
-
-  const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed,joined_at`,{headers:hdr()});
-  PROFILE=(await rp.json())[0]||null;
-
-  const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled,invest_months,interest_pct,joined_at`,{headers:hdr()});
-  ACCOUNT=(await ra.json())[0]||null;
-
-  document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
-  document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
-  document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
-  document.getElementById("c_capital").textContent=money(ACCOUNT?.principal_locked||0,ACCOUNT?.currency||"GTQ");
-  document.getElementById("c_account").textContent=ACCOUNT?.id||"—";
-  document.getElementById("c_months").textContent=ACCOUNT?.invest_months ?? 6;
-  const joinedISO = ACCOUNT?.joined_at || PROFILE?.joined_at;
-  document.getElementById("c_joined").textContent = joinedISO ? new Date(joinedISO).toLocaleDateString('es-GT',{timeZone:GTZ}) : '—';
-
-  // interés total del período (simple)
-  const rate = getPlanRate(ACCOUNT?.plan, ACCOUNT?.black_enabled, ACCOUNT?.interest_pct);
-  const months = Number(ACCOUNT?.invest_months || 6);
-  const per6 = rate; // p.ej. 0.15 = 15% por 6m
-  const cycles = months/6;
-  const totalInterest = (ACCOUNT?.principal_locked||0) * per6 * cycles;
-  document.getElementById("c_period_interest").textContent = money(totalInterest, ACCOUNT?.currency||"GTQ");
-
-  buildMonthResults(joinedISO);
-  initSimulator();
-
-  // Password modal primera vez
-  const firstLoginNotDone = PROFILE?.first_login_completed !== true;
-  if (firstLoginNotDone) openPwdModal(true);
-
-  // Retiro
-  document.getElementById('openWithdraw').onclick=()=>{document.getElementById('withdrawModal').classList.add('show')};
-  document.getElementById('wClose').onclick=()=>{document.getElementById('withdrawModal').classList.remove('show')};
-  document.getElementById('wCancel').onclick=()=>{document.getElementById('withdrawModal').classList.remove('show')};
-  document.getElementById('wKinds').addEventListener('click',(e)=>{
-    const card=e.target.closest('.opt-card'); if(!card) return;
-    [...document.querySelectorAll('#wKinds .opt-card')].forEach(x=>x.classList.remove('active'));
-    card.classList.add('active');
-  });
-
-  // Ojos global (checkbox)
-  document.getElementById('showAllPwds').addEventListener('change',(e)=>{
-    ['curPwd','newPwd','confPwd'].forEach(id=>{
-      const el=document.getElementById(id); el.type=e.target.checked?'text':'password';
-    });
-  });
-  document.getElementById('pwdSubmit').onclick=submitPasswordChange;
-})();
-
-/*** Periodo mensual: desde el día de ingreso hasta la misma fecha del mes siguiente ***/
-function getCurrentPeriod(joinedIso){
-  const now = guateNow();
-  const joined = joinedIso ? new Date(new Date(joinedIso).toLocaleString('en-US',{timeZone:GTZ})) : now;
-  const day = joined.getDate();
-
-  // Encuentra el último periodo [start, end) tal que now ∈
-  // Recorremos hacia atrás mes a mes hasta encontrar start <= now < start+1m
-  let start = new Date(now);
-  start.setDate(day);
-  // si al poner el día nos quedamos en futuro, retrocede un mes
-  if (start > now) { start.setMonth(start.getMonth()-1); start.setDate(day); }
-  const end = new Date(start); end.setMonth(end.getMonth()+1);
-  return {start, end};
-}
-
-function listFridaysBetween(start,end){
-  // devuelve viernes dentro de [start, end)
-  const out=[];
-  const d=new Date(start);
-  d.setHours(0,0,0,0);
-  while(d<end){
-    if(d.getDay()===5) out.push(new Date(d));
-    d.setDate(d.getDate()+1);
-  }
-  return out;
-}
-
-function buildMonthResults(joinedIso){
-  if(!ACCOUNT) return;
-  const {start,end}=getCurrentPeriod(joinedIso);
-  const now = guateNow();
-  const fridays = listFridaysBetween(start,end);
-
-  // Solo mostrar viernes pasados (<= hoy)
-  const pastFridays = fridays.filter(f => f <= now);
-
-  // Interés simple por semana: repartimos el interés mensual en partes iguales por viernes del periodo
-  // interés mensual = capital * (rate/6)
-  const semiRate = getPlanRate(ACCOUNT.plan, ACCOUNT.black_enabled, ACCOUNT.interest_pct); // p.ej. 0.15
-  const monthlyRate = semiRate/6;
-  const monthlyInterest = (ACCOUNT.principal_locked||0) * monthlyRate;
-  const perFriday = pastFridays.length>0 ? (monthlyInterest / fridays.length) : 0;
-
-  // Label rango
-  const label = `${start.toLocaleDateString('es-GT',{timeZone:GTZ,day:'numeric',month:'long',year:'numeric'})} — ${end.toLocaleDateString('es-GT',{timeZone:GTZ,day:'numeric',month:'long',year:'numeric'})}`;
-  document.getElementById('monthLabel').textContent = label;
-
-  const tb=document.getElementById('weeks'); tb.innerHTML='';
-  pastFridays.forEach(f=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${f.toLocaleDateString('es-GT',{timeZone:GTZ})}</td><td>${money(perFriday, ACCOUNT.currency)}</td>`;
-    tb.appendChild(tr);
-  });
-
-  const isClosed = now >= end;
-  const totalEl = document.getElementById('monthTotal');
-  const noteEl = document.getElementById('monthNote');
-
-  if (isClosed){
-    totalEl.textContent = money(monthlyInterest, ACCOUNT.currency);
-    noteEl.textContent = 'Período cerrado.';
-  } else {
-    totalEl.textContent = '—';
-    noteEl.textContent = `El período cierra el ${end.toLocaleDateString('es-GT',{timeZone:GTZ})}.`;
-  }
-}
-
-/*** Plan rate helper (0.15, 0.20, 0.25) con override por interest_pct si existe ***/
-function getPlanRate(plan, blackEnabled, overridePct){
-  if (typeof overridePct === 'number' && overridePct > 0) return overridePct/100;
-  const P = String(plan||'STANDARD').toUpperCase();
-  if (P==='BLACK' && blackEnabled) return 0.25;
-  if (P==='PLATINUM') return 0.20;
-  return 0.15;
-}
-
-/*** SIMULADOR (6 meses fijo, interés simple) ***/
-function initSimulator(){
-  const inp = document.getElementById('sim_amount');
-  const btn = document.getElementById('sim_btn');
-  const rows = document.getElementById('sim_rows');
-  const capEl = document.getElementById('sim_capital');
-  const totEl = document.getElementById('sim_total_interest');
-  const finEl = document.getElementById('sim_final');
-  const planLabel = document.getElementById('sim_plan_label');
-  const note = document.getElementById('sim_note');
-
-  function assignPlan(capital){
-    // Asignación por monto (y BLACK solo si admin lo habilitó)
-    if (ACCOUNT?.black_enabled) return {name:'BLACK (25% semestral)', rate:0.25};
-    if (capital>=250000) return {name:'PLATINUM (20% semestral)', rate:0.20};
-    if (capital>=2000) return {name:'STANDARD (15% semestral)', rate:0.15};
-    return {name:'NO ELEGIBLE', rate:0};
-  }
-
-  function calc(){
-    const capital = Number(inp.value||0);
-    const plan = assignPlan(capital);
-    planLabel.value = plan.name;
-
-    const months = 6;
-    const monthlyRate = plan.rate/6;
-    const monthlyInterest = capital * monthlyRate; // interés simple
-    rows.innerHTML='';
-    for(let m=1;m<=6;m++){
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${m}</td><td>${money(monthlyInterest, ACCOUNT?.currency||'GTQ')}</td>`;
-      rows.appendChild(tr);
-    }
-    const totalInt = monthlyInterest*6;
-    capEl.textContent = money(capital, ACCOUNT?.currency||'GTQ');
-    totEl.textContent = money(totalInt, ACCOUNT?.currency||'GTQ');
-    finEl.textContent = money(capital+totalInt, ACCOUNT?.currency||'GTQ');
-    note.textContent = `Plan: ${plan.name.replace(' (', ' (').replace(')', ')')} • Tasa mensual ${(monthlyRate*100).toFixed(2)}%.`;
-  }
-
-  btn.onclick=calc;
-}
-
-/*** Password change ***/
+/*** MODAL helpers ***/
+const $pwdModal  = document.getElementById('pwdModal');
+const $pwdCancel = document.getElementById('pwdCancel');
+const $pwdCloseX = document.getElementById('pwdCloseX');
+function reallyHideModal(){ $pwdModal.classList.add('hidden'); $pwdModal.style.display='none'; setTimeout(()=>{$pwdModal.style.display='';},0); }
+function closePwdModal(){ reallyHideModal(); sessionStorage.pwdModalDismissed='1'; }
 function openPwdModal(force){
+  PWD_FORCE = !!force;
   document.getElementById('pwdCancel').style.display = force ? 'none' : 'inline-block';
   document.getElementById('pwdCloseX').style.display = force ? 'none' : 'flex';
   document.getElementById('pwdEmail').value = localStorage.email || '';
   ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pwdMsg').textContent=''; document.getElementById('pwdOk').textContent='';
-  document.getElementById('pwdModal').classList.add('show');
+  $pwdModal.classList.remove('hidden');
 }
-document.getElementById('pwdCloseX').onclick=()=>document.getElementById('pwdModal').classList.remove('show');
-document.getElementById('pwdCancel').onclick=()=>document.getElementById('pwdModal').classList.remove('show');
+['click','touchend'].forEach(evt=>{
+  $pwdCancel.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); if(!PWD_FORCE) closePwdModal();});
+  $pwdCloseX.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); if(!PWD_FORCE) closePwdModal();});
+});
+$pwdModal.addEventListener('click',(e)=>{ if(e.target===$pwdModal && !PWD_FORCE) closePwdModal(); });
+window.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && !PWD_FORCE && !$pwdModal.classList.contains('hidden')) closePwdModal(); });
+document.getElementById('showAllPwds').addEventListener('change',(e)=>{['curPwd','newPwd','confPwd'].forEach(id=>{const el=document.getElementById(id); el.type=e.target.checked?'text':'password';});});
 
+/*** WITHDRAW sheet ***/
+const $wSheet = document.getElementById('wSheet');
+document.getElementById('withdrawBtn').onclick=()=>{$wSheet.classList.remove('hidden');};
+document.getElementById('wClose').onclick=()=>{$wSheet.classList.add('hidden');};
+document.getElementById('wCancel').onclick=()=>{$wSheet.classList.add('hidden');};
+document.getElementById('optEarly').onclick=selOpt; document.getElementById('optHealth').onclick=selOpt;
+function selOpt(e){ document.querySelectorAll('.opt').forEach(x=>x.classList.remove('active')); e.currentTarget.classList.add('active'); }
+document.getElementById('wAll').addEventListener('change',(e)=>{ document.getElementById('wAmount').disabled=e.target.checked; });
+
+document.getElementById('wSend').onclick=async ()=>{
+  const kind = document.querySelector('.opt.active')?.dataset.kind || 'EARLY';
+  const all  = document.getElementById('wAll').checked;
+  const amt  = Number(document.getElementById('wAmount').value||0);
+  const reason = (document.getElementById('wReason').value||'').trim();
+  if(!all && (!amt || amt<=0)){ toast('Ingrese un monto válido.'); return; }
+  if(!reason){ toast('Indique un motivo.'); return; }
+  // payload SIN user_id (RLS lo toma de auth.uid())
+  const payload = { kind, withdraw_all: all, amount: all? null : amt, reason, account_id: ACCOUNT?.id || null };
+  try{
+    await fetch(`${BASE}/withdrawal_requests`,{
+      method:'POST', headers:{...hdrJSON(),"Prefer":"return=minimal"}, body:JSON.stringify(payload)
+    });
+    $wSheet.classList.add('hidden');
+    alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
+  }catch{ toast('No se pudo enviar la solicitud.'); }
+};
+
+/*** BOOT ***/
+(async function boot(){
+  if(!localStorage.token){ logout(); return; }
+
+  // Validar token
+  const rUser=await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}})
+  if(!rUser.ok){ logout(); return; }
+
+  // Perfil + Cuenta (traer joined_at, invest_months, interest_pct)
+  const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
+  PROFILE=(await rp.json())[0]||null;
+
+  const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled,joined_at,invest_months,interest_pct`,{headers:hdr()});
+  ACCOUNT=(await ra.json())[0]||null;
+
+  // Pintar cabecera
+  document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
+  document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
+  document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
+  document.getElementById("c_capital").textContent=money(ACCOUNT?.principal_locked||0,ACCOUNT?.currency||"GTQ");
+  document.getElementById("c_account").textContent=ACCOUNT?.id||"—";
+  document.getElementById("c_months").textContent=ACCOUNT?.invest_months ?? "—";
+
+  // Interés total del período (simple)
+  const semRate = getSemRate();
+  const totalPeriodInt = (ACCOUNT?.principal_locked||0) * semRate * ( (ACCOUNT?.invest_months||0)/6 );
+  document.getElementById("c_period_interest").textContent = money(totalPeriodInt, ACCOUNT?.currency);
+
+  // Construir resultados mensuales (ventana móvil)
+  buildMonthResults();
+
+  // Mostrar modal SOLO primera vez
+  const firstLoginNotDone = PROFILE?.first_login_completed !== true;
+  const localSkip = localStorage.pwdFirstDone === 'true' || sessionStorage.pwdModalDismissed === '1';
+  if (firstLoginNotDone && !localSkip) openPwdModal(true);
+
+  // Eventos modal password
+  document.getElementById('pwdSubmit').onclick=submitPasswordChange;
+
+  // Simulador
+  document.getElementById('simCalc').onclick=runSimulator;
+})();
+
+/*** Helpers negocio ***/
+function getSemRate(){
+  // Si el admin fijó interés personalizado en % semestral
+  if(typeof ACCOUNT?.interest_pct === 'number' && !isNaN(ACCOUNT.interest_pct)) return (ACCOUNT.interest_pct/100);
+  // Por plan
+  const p=(ACCOUNT?.plan||'').toUpperCase();
+  if(p==='BLACK') return 0.25;
+  if(p==='PLATINUM') return 0.20;
+  return 0.15; // STANDARD
+}
+
+function buildMonthResults(){
+  if(!ACCOUNT) return;
+
+  const capital = ACCOUNT.principal_locked||0;
+  const currency = ACCOUNT.currency||'GTQ';
+  const planRate = getSemRate();               // 0.15 | 0.20 | 0.25
+  const monthRate = planRate / 6;              // % mensual simple
+  const monthInterest = capital * monthRate;   // interés del mes (exacto)
+
+  // Ventana desde el día de ingreso a mismo día del mes siguiente
+  const joinedAt = ACCOUNT.joined_at ? new Date(ACCOUNT.joined_at) : guateNow();
+  const now = guateNow();
+  const start = shiftToLocalSameTime(joinedAt); // inicio de la ventana vigente (este mes móvil)
+  const end   = addOneMonthSameDay(start);
+
+  // Si ya pasó el cierre, mueve ventana al siguiente ciclo hasta abarcar "ahora"
+  while(now >= end){ start.setMonth(start.getMonth()+1); end.setMonth(end.getMonth()+1); }
+
+  // Rango visible
+  const label = `${fmtLong(start)} — ${fmtLong(end)}`;
+  document.getElementById('periodLabel').textContent = label;
+
+  // Fridays dentro del rango
+  const fridays = listFridaysBetween(start, end);
+  const pastFridays = fridays.filter(d=> d <= now);  // solo semanas transcurridas
+
+  // Distribución determinística para que las semanas varíen y el cierre cuadre exacto
+  const weights = seededWeekWeights(ACCOUNT.id, start, fridays.length);
+  const amounts = splitByWeights(monthInterest, weights); // array de N que suma exactamente
+
+  const tb=document.getElementById('weeks'); tb.innerHTML='';
+  let shownSum = 0;
+  pastFridays.forEach((d,i)=>{
+    const tr=document.createElement('tr');
+    const amt = amounts[i] || 0;
+    shownSum += amt;
+    tr.innerHTML=`<td>${d.toLocaleDateString('es-GT',{timeZone:GTZ})}</td><td>${money(amt,currency)}</td>`;
+    tb.appendChild(tr);
+  });
+
+  // Total solo al cierre del período
+  const atClose = now >= end;
+  document.getElementById('monthTotal').textContent = atClose ? money(monthInterest, currency) : '—';
+  const note = document.getElementById('periodNote');
+  note.textContent = atClose ? '' : `El período cierra el ${end.toLocaleDateString('es-GT',{timeZone:GTZ})}.`;
+  note.style.display = atClose ? 'none':'inline-block';
+}
+
+// Fechas utilitarias
+function fmtLong(d){ return d.toLocaleDateString('es-GT',{timeZone:GTZ, day:'numeric', month:'long', year:'numeric'}); }
+function shiftToLocalSameTime(d){
+  // Asegura fecha local (sin perder día) para GT
+  const local = new Date(d.toLocaleString('en-US',{timeZone:GTZ}));
+  return new Date(local.getFullYear(), local.getMonth(), local.getDate(), 0,0,0,0);
+}
+function addOneMonthSameDay(d){
+  const x=new Date(d); const m=x.getMonth(); x.setMonth(m+1);
+  // Si el mes tiene menos días, JS ajusta; está bien para un periodo "hasta esa fecha"
+  return x;
+}
+function listFridaysBetween(start,end){
+  const res=[]; const d=new Date(start);
+  // ir al primer viernes >= start
+  while(d.getDay()!==5){ d.setDate(d.getDate()+1); }
+  while(d<end){ res.push(new Date(d)); d.setDate(d.getDate()+7); }
+  return res;
+}
+// pesos determinísticos por cuenta y periodo
+function seededWeekWeights(accountId, startDate, n){
+  if(n<=0) return [];
+  const seed = hashStr(String(accountId) + '|' + startDate.toISOString());
+  let x = seed % 2147483647; if(x<=0) x+=2147483646;
+  const arr=[]; for(let i=0;i<n;i++){ x=(x*48271)%2147483647; arr.push(0.6 + (x/2147483647)); } // 0.6..1.6 aprox
+  const s=arr.reduce((a,b)=>a+b,0); return arr.map(v=>v/s);
+}
+function hashStr(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function splitByWeights(total,normW){
+  const n=normW.length; if(n===0) return [];
+  // repartir y ajustar centavos para que la suma sea exacta
+  const raw = normW.map(w=> total*w);
+  const cents = raw.map(v=> Math.floor(v*100));
+  let diff = Math.round(total*100) - cents.reduce((a,b)=>a+b,0);
+  // distribuir los centavos faltantes/sobrantes
+  let i=0; while(diff!==0){ const step = diff>0?1:-1; cents[i]+=step; diff-=step; i=(i+1)%n; }
+  return cents.map(c=> c/100);
+}
+
+/*** Simulador (6 meses fijo, interés simple) ***/
+function autoPlanForAmount(amount){
+  // BLACK aplica si la cuenta lo tiene habilitado
+  if(ACCOUNT?.black_enabled) return {name:'BLACK',rate:0.25};
+  if(amount>=250000) return {name:'PLATINUM',rate:0.20};
+  if(amount>=2000) return {name:'STANDARD',rate:0.15};
+  return {name:'NO ELEGIBLE',rate:0};
+}
+function runSimulator(){
+  const amt = Number(document.getElementById('simCapital').value||0);
+  const plan = autoPlanForAmount(amt);
+  const months = 6;
+  const monthRate = plan.rate/6;
+  const monthInt = amt * monthRate;
+  const totalInt = monthInt * months;
+  document.getElementById('simPlan').value = plan.name + (plan.rate?` (${Math.round(plan.rate*100)}% semestral)`:``);
+  document.getElementById('simCapKpi').textContent = money(amt, ACCOUNT?.currency);
+  document.getElementById('simIntKpi').textContent = money(totalInt, ACCOUNT?.currency);
+  document.getElementById('simTotalKpi').textContent = money(amt + totalInt, ACCOUNT?.currency);
+
+  const tb=document.getElementById('simRows'); tb.innerHTML='';
+  for(let m=1;m<=months;m++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${m}</td><td>${money(monthInt, ACCOUNT?.currency)}</td>`;
+    tb.appendChild(tr);
+  }
+  document.getElementById('simFoot').textContent = plan.rate
+    ? `Plan: ${plan.name}. Tasa semestral ${Math.round(plan.rate*100)}%. — Interés simple (no compuesto).`
+    : `Monto no elegible (< Q2,000).`;
+}
+
+/*** Cambio de contraseña ***/
 async function submitPasswordChange(){
   const email=(document.getElementById('pwdEmail').value||'').trim();
   const cur=document.getElementById('curPwd').value;
@@ -481,6 +504,7 @@ async function submitPasswordChange(){
   const { error: updErr } = await supa.auth.updateUser({ password: neo });
   if (updErr) { err.textContent = updErr.message || 'No se pudo actualizar la contraseña.'; btn.disabled=false; btn.textContent=oldTxt; return; }
 
+  // refrescar sesión local
   const { data: signInNew, error: signInNewErr } = await supa.auth.signInWithPassword({ email, password: neo });
   if (!signInNewErr && signInNew?.session?.access_token) {
     localStorage.token = signInNew.session.access_token;
@@ -488,6 +512,7 @@ async function submitPasswordChange(){
     localStorage.email = email;
   }
 
+  // marcar primer login completado (para NO mostrar más el modal)
   try{
     await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`,{
       method:'PATCH',headers:hdrJSON(),
@@ -495,8 +520,15 @@ async function submitPasswordChange(){
     });
   }catch{}
 
-  document.getElementById('pwdModal').classList.remove('show');
-  toast('Contraseña actualizada correctamente.');
+  localStorage.pwdFirstDone = 'true';
+  sessionStorage.pwdModalDismissed = '1';
+  PWD_FORCE = false;
+  document.getElementById('pwdCancel').style.display='inline-block';
+  document.getElementById('pwdCloseX').style.display='flex';
+
+  ok.textContent='Contraseña actualizada correctamente.';
+  setTimeout(()=>{ closePwdModal(); toast('Contraseña actualizada correctamente.'); }, 250);
+
   btn.disabled=false; btn.textContent=oldTxt;
 }
 </script>
