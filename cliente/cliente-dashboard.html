@@ -17,7 +17,6 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
 .hidden{display:none}
 button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
 small{color:var(--muted)}
-
 /* ===== MODAL CAMBIO DE CONTRASEÑA ===== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
 .modal-card{width:100%;max-width:560px;background:linear-gradient(180deg,#151515,#1c1c1c);border:1px solid #2a2a2a;border-radius:18px;padding:22px 22px 16px;box-shadow:0 15px 40px #000a;position:relative}
@@ -26,30 +25,21 @@ small{color:var(--muted)}
 .close-x{width:36px;height:36px;border-radius:10px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .modal-sub{color:var(--muted);margin-bottom:14px}
 label{display:block;margin:8px 0 4px}
-
 /* inputs con ojo a la derecha - VISIBLE */
 .input-wrap{position:relative}
 .input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
-.input-wrap input{
-  width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;
-  padding:10px 64px 10px 38px;
-  height:50px;font-size:16px;
-}
-.eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:46px;height:46px;
-  background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
+.input-wrap input{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:10px 64px 10px 38px;height:50px;font-size:16px}
+.eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:46px;height:46px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
 .eye,.eye-off{width:32px;height:32px;fill:#fff;opacity:.98}
 .eye-btn:hover .eye,.eye-btn:hover .eye-off{opacity:1}
-
 .inline{display:flex;align-items:center;gap:10px;margin-top:6px}
 .helper{font-size:12px;color:#9fb4d1}
 .err{color:#ffb3b3;min-height:18px;text-align:center}
 .success{color:#b3ffcb;min-height:18px;text-align:center}
 .modal-actions{display:flex;gap:10px;margin-top:12px}
 .modal-actions .primary{flex:1;background:#0f0f0f;color:#fff;border:1px solid #2a2a2a}
-
 /* Toast */
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
-  background:#101b10;border:1px solid #214c21;color:#c6f3c6;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px #000a;z-index:1100}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#101b10;border:1px solid #214c21;color:#c6f3c6;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px #000a;z-index:1100}
 </style>
 </head>
 <body>
@@ -59,7 +49,6 @@ label{display:block;margin:8px 0 4px}
     <button id="logoutBtn">Cerrar sesión</button>
   </div>
 
-  <!-- Resumen -->
   <div class="card">
     <h2>Mi cuenta</h2>
     <div class="grid-3">
@@ -72,7 +61,6 @@ label{display:block;margin:8px 0 4px}
     </div>
   </div>
 
-  <!-- Resultados del mes (demo) -->
   <div class="card">
     <h2>Resultados del mes</h2>
     <p id="monthLabel">—</p>
@@ -84,7 +72,7 @@ label{display:block;margin:8px 0 4px}
   </div>
 </div>
 
-<!-- ===== MODAL PRIMER INGRESO ===== -->
+<!-- ===== MODAL CAMBIO DE CONTRASEÑA ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <div class="modal-titlebar">
@@ -144,9 +132,7 @@ label{display:block;margin:8px 0 4px}
 <!-- Toast -->
 <div id="toast" class="toast hidden">Contraseña actualizada correctamente.</div>
 
-<!-- SDK de Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
 /*** CONFIG SUPABASE ***/
 const PROJECT_URL="https://czvpehbubfrinutztnwh.supabase.co";
@@ -162,7 +148,6 @@ const GTZ='America/Guatemala';
 function show(elId,visible){document.getElementById(elId).classList[visible?'remove':'add']('hidden')}
 function logout(){localStorage.clear();location.href='cliente-login.html'}
 document.getElementById('logoutBtn').onclick=logout;
-
 function money(n,cur){return new Intl.NumberFormat('es-GT',{style:'currency',currency:cur==='USD'?'USD':'GTQ'}).format(n)}
 function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:GTZ}))}
 function toast(msg){const t=document.getElementById('toast'); t.textContent=msg||'Listo.'; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),2200);}
@@ -170,22 +155,43 @@ function toast(msg){const t=document.getElementById('toast'); t.textContent=msg|
 /*** ESTADO ***/
 let PROFILE=null,ACCOUNT=null;
 
+/*** MODAL helpers (siempre disponibles) ***/
+const $modal  = document.getElementById('pwdModal');
+const $cancel = document.getElementById('pwdCancel');
+const $closeX = document.getElementById('pwdCloseX');
+
+function closePwdModal(){ $modal.classList.add('hidden'); }
+function openPwdModal(force){
+  // Si es primer login (obligatorio) ocultamos cerrar/cancelar
+  document.getElementById('pwdCancel').style.display = force ? 'none' : 'inline-block';
+  document.getElementById('pwdCloseX').style.display = force ? 'none' : 'flex';
+  document.getElementById('pwdEmail').value = localStorage.email || '';
+  ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pwdMsg').textContent=''; document.getElementById('pwdOk').textContent='';
+  $modal.classList.remove('hidden');
+}
+['click','touchend'].forEach(evt=>{
+  $cancel.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation();closePwdModal();});
+  $closeX.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation();closePwdModal();});
+});
+$modal.addEventListener('click',(e)=>{
+  const canClose = getComputedStyle(document.getElementById('pwdCancel')).display !== 'none';
+  if (e.target === $modal && canClose) closePwdModal();
+});
+
 /*** CARGA INICIAL (requiere sesión válida) ***/
 (async function boot(){
   if(!localStorage.token){ logout(); return; }
 
-  // Verifica token
   const rUser=await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}})
   if(!rUser.ok){ logout(); return; }
 
-  // Datos
   const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
   PROFILE=(await rp.json())[0]||null;
 
   const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`,{headers:hdr()});
   ACCOUNT=(await ra.json())[0]||null;
 
-  // Pintar
   document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
   document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
   document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
@@ -193,30 +199,27 @@ let PROFILE=null,ACCOUNT=null;
   document.getElementById("c_account").textContent=ACCOUNT?.id||"—";
   document.getElementById("c_black").textContent=ACCOUNT?.black_enabled?"Sí":"No";
 
-  // Demo resultados
   buildMonthResults();
 
-  // MOSTRAR MODAL (primera vez u obligatorio)
-  const mustByPolicy = PROFILE?.require_password_change===true;
-  const firstNotDone = PROFILE?.first_login_completed!==true;
+  // *** Mostrar SOLO en PRIMER LOGIN ***
+  const isFirstLogin = PROFILE?.first_login_completed !== true;
 
-  // Anti “rebote” por latencia: no reabrir si acaba de cambiar la contraseña (2 min)
+  // Guardia anti re-apertura por latencia (2 min) tras cambiar contraseña
   const just = Number(localStorage.pwdJustChangedAt||0);
   const avoidReopen = just && (Date.now()-just < 120000);
 
-  if(!avoidReopen && (mustByPolicy || firstNotDone)) openPwdModal(true);
+  if (!avoidReopen && isFirstLogin) {
+    openPwdModal(true); // obligatorio: sin cancelar/✕
+  }
 
-  // Eventos modal
   document.getElementById('pwdSubmit').onclick=submitPasswordChange;
-  document.getElementById('pwdCancel').onclick=closePwdModal;
-  document.getElementById('pwdCloseX').onclick=closePwdModal;
+
   document.getElementById('showAllPwds').addEventListener('change',(e)=>{
     ['curPwd','newPwd','confPwd'].forEach(id=>{
       const el=document.getElementById(id); el.type=e.target.checked?'text':'password';
     });
   });
 
-  // toggles (ojos)
   document.addEventListener('click',(e)=>{
     const btn=e.target.closest('.eye-btn'); if(!btn) return;
     const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
@@ -242,20 +245,7 @@ function buildMonthResults(){
 }
 function randomParts(total,n){if(n<=0)return[];const xs=Array.from({length:n},()=>Math.random()+0.5);const s=xs.reduce((a,b)=>a+b,0);return xs.map(v=> total*(v/s));}
 
-/*** Modal helpers ***/
-function openPwdModal(force){
-  // Si es obligatorio, escondemos cancelar y la X; si no, permitimos cerrar
-  document.getElementById('pwdCancel').style.display = force ? 'none' : 'inline-block';
-  document.getElementById('pwdCloseX').style.display = force ? 'none' : 'flex';
-
-  document.getElementById('pwdEmail').value = localStorage.email || '';
-  ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('pwdMsg').textContent=''; document.getElementById('pwdOk').textContent='';
-  document.getElementById('pwdModal').classList.remove('hidden');
-}
-function closePwdModal(){ document.getElementById('pwdModal').classList.add('hidden'); }
-
-/*** Cambio de contraseña con supabase-js ***/
+/*** Cambio de contraseña ***/
 async function submitPasswordChange(){
   const email=(document.getElementById('pwdEmail').value||'').trim();
   const cur=document.getElementById('curPwd').value;
@@ -267,15 +257,12 @@ async function submitPasswordChange(){
   if(neo.length<8){ err.textContent='La nueva contraseña debe tener al menos 8 caracteres.'; return; }
   if(neo!==rep){ err.textContent='La confirmación no coincide.'; return; }
 
-  // 1) Verificar credenciales actuales
-  const { error: signInErr, data: signInData } = await supa.auth.signInWithPassword({ email, password: cur });
+  const { error: signInErr } = await supa.auth.signInWithPassword({ email, password: cur });
   if (signInErr) { err.textContent='Correo o contraseña actual incorrectos.'; return; }
 
-  // 2) Cambiar contraseña usando el token actual
   const { error: updErr } = await supa.auth.updateUser({ password: neo });
   if (updErr) { err.textContent = updErr.message || 'No se pudo actualizar la contraseña.'; return; }
 
-  // 3) Re-login con la nueva para refrescar localStorage
   const { data: signInNew, error: signInNewErr } = await supa.auth.signInWithPassword({ email, password: neo });
   if (!signInNewErr && signInNew?.session?.access_token) {
     localStorage.token = signInNew.session.access_token;
@@ -283,7 +270,6 @@ async function submitPasswordChange(){
     localStorage.email = email;
   }
 
-  // 4) Marcar primer ingreso completado
   try{
     await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`,{
       method:'PATCH',headers:hdrJSON(),
@@ -291,7 +277,6 @@ async function submitPasswordChange(){
     });
   }catch{}
 
-  // Guard para no reabrir modal si los flags tardan en replicar
   localStorage.pwdJustChangedAt = Date.now().toString();
 
   ok.textContent='Contraseña actualizada correctamente.';
