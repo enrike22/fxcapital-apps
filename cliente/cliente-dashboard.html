@@ -5,44 +5,159 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Panel Cliente</title>
 <style>
-:root{--bg:#000;--fg:#fff;--muted:#ffffffcc;--card:#0d0d0d;--border:#1a1a1a}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-.container{max-width:1100px;margin:0 auto;padding:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-h1,h2{margin:0 0 8px} small{color:var(--muted)}
-.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
-.grid-3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:var(--muted)}
-.hidden{display:none !important}
-button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
-small{color:var(--muted)}
-input,select,textarea{width:100%;background:#000;color:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+/* ===== Design Tokens (corporativo oscuro) ===== */
+:root{
+  --bg:#0a0a0a;
+  --surface:#101214;
+  --card:#111315;
+  --card-2:#0f1012;
+  --fg:#f2f5f7;
+  --muted:#c7ced6cc;
+  --border:#21262c;
+  --brand:#e7e9ec;      /* blanco cálido para CTA */
+  --brand-weak:#cfd6dd;
+  --accent:#9fb4d1;     /* azul gris suave solo para notas */
+  --ring:#3a86ff33;     /* focus ring sutil */
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --radius:16px;
+}
 
-/* ===== MODAL GENÉRICO ===== */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10000}
-.modal-card{width:100%;max-width:560px;background:linear-gradient(180deg,#151515,#1c1c1c);border:1px solid #2a2a2a;border-radius:18px;padding:22px 22px 16px;box-shadow:0 15px 40px #000a;position:relative}
-.modal-titlebar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.modal-titlebar h3{margin:0;font-size:22px}
-.close-x{width:36px;height:36px;border-radius:10px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:
+    radial-gradient(1000px 600px at 10% -10%, #121416 0%, transparent 55%),
+    radial-gradient(1200px 800px at 90% 110%, #0c0d0f 0%, transparent 60%),
+    var(--bg);
+  color:var(--fg);
+  font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial, Apple Color Emoji, Segoe UI Emoji;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+
+.container{max-width:1120px;margin:0 auto;padding:28px 20px}
+
+/* ===== Header ===== */
+.header{display:flex;align-items:center;justify-content:space-between;margin:6px 0 20px}
+.header h1{
+  font-size:28px; letter-spacing:.3px; margin:0;
+  font-weight:800;
+}
+.btn{
+  --_bg:var(--brand);
+  --_fg:#0c0d0f;
+  background:var(--_bg); color:var(--_fg);
+  border:0; padding:12px 18px; border-radius:999px; font-weight:800; cursor:pointer;
+  transition:filter .15s ease, transform .02s ease;
+}
+.btn:hover{filter:brightness(.98)}
+.btn:active{transform:translateY(1px)}
+.btn-ghost{
+  --_bg:transparent; --_fg:var(--fg);
+  background:transparent; color:var(--fg);
+  border:1px solid var(--border);
+}
+.btn-secondary{
+  --_bg:#e3e6ea; --_fg:#101214;
+}
+
+/* ===== Cards ===== */
+.card{
+  background:linear-gradient(180deg, var(--card), var(--surface));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 18px;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
+}
+.card h2{margin:0 0 4px; font-size:18px}
+.card .sub{color:var(--muted); font-size:13px; margin:0 0 8px}
+
+/* ===== Badges & grid ===== */
+.badge{
+  display:inline-block; font-size:12px; color:var(--muted);
+  padding:6px 10px; border:1px solid var(--border); border-radius:999px; margin-right:8px
+}
+.grid-3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+/* ===== Table ===== */
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 10px;border-bottom:1px solid var(--border)}
+th{text-align:left;color:var(--muted);font-weight:600}
+
+/* ===== Forms ===== */
+label{display:block;margin:8px 0 6px;font-size:13px;color:var(--muted)}
+input,select,textarea{
+  width:100%; background: #0b0d0f; color:var(--fg);
+  border:1px solid var(--border); border-radius:12px; padding:12px 12px; font-size:14px;
+  transition:border .15s ease, box-shadow .15s ease;
+}
+input:focus,select:focus,textarea:focus{outline:0; border-color:#2b3036; box-shadow:0 0 0 3px var(--ring)}
+.helper{font-size:12px;color:var(--accent)}
+.err{color:#ffb3b3;min-height:18px;margin-top:4px}
+.success{color:#b3ffcb;min-height:18px;margin-top:4px}
+
+/* ===== Input con prefijo ===== */
+.input-prefix{position:relative}
+.input-prefix .prefix{
+  position:absolute; left:10px; top:50%; transform:translateY(-50%);
+  font-weight:700; color:#b8c0c8; opacity:.8
+}
+.input-prefix input{padding-left:36px}
+
+/* ===== Modal base ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:24px;z-index:10000}
+.modal-card{
+  width:100%; max-width:780px;
+  background:linear-gradient(180deg,#121315,#0e1012);
+  border:1px solid #1d2227; border-radius:20px; padding:18px 18px 16px; box-shadow:0 18px 60px rgba(0,0,0,.6);
+}
+.modal-titlebar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.modal-titlebar h3{margin:0;font-size:20px;letter-spacing:.2px}
+.close-x{
+  width:36px;height:36px;border-radius:12px;border:1px solid #2a2f35;background:#0b0d0f;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer
+}
 .modal-sub{color:var(--muted);margin-bottom:14px}
-label{display:block;margin:8px 0 4px}
 
-/* inputs + ojo grande */
-.input-wrap{position:relative}
-.input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
-.input-wrap input{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:10px 64px 10px 38px;height:50px;font-size:16px}
-.eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:46px;height:46px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
-.eye,.eye-off{width:32px;height:32px;fill:#fff;opacity:.98}
+/* ===== Modal de Retiro refinado ===== */
+.wd-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+@media (max-width:900px){ .wd-grid{grid-template-columns:1fr} }
 
-/* helpers */
-.inline{display:flex;align-items:center;gap:10px;margin-top:6px}
-.helper{font-size:12px;color:#9fb4d1}
-.err{color:#ffb3b3;min-height:18px}
-.success{color:#b3ffcb;min-height:18px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#101b10;border:1px solid #214c21;color:#c6f3c6;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px #000a;z-index:11000}
+.choice-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice-card{
+  position:relative; border:1px solid var(--border); border-radius:14px; padding:12px 12px 12px 42px;
+  background:var(--card-2); min-height:64px; cursor:pointer; transition: border .12s ease, box-shadow .12s ease, transform .02s ease;
+}
+.choice-card:hover{border-color:#2a2f35}
+.choice-card:active{transform:translateY(1px)}
+.choice-card input[type="radio"]{position:absolute;left:12px;top:18px;transform:scale(1.15)}
+.choice-title{font-weight:700;margin:0 0 4px}
+.choice-desc{margin:0;color:var(--muted);font-size:12px}
 
-/* tablas pequeñas */
+.divider{height:1px;background:linear-gradient(90deg,transparent,#1f2328,transparent);margin:10px 0}
+
+/* Switch retirar todo (accesible) */
+.switch{
+  display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+}
+.switch input{display:none}
+.switch .track{
+  width:48px;height:28px;border-radius:999px;background:#151a20;border:1px solid #242a31;position:relative;transition:background .18s ease,border .18s ease
+}
+.switch .thumb{
+  position:absolute;left:4px;top:4px;width:20px;height:20px;border-radius:999px;background:#e4e7ec;transition:left .18s ease, background .18s ease
+}
+.switch input:checked + .track{background:#2f3944;border-color:#38424c}
+.switch input:checked + .track .thumb{left:24px;background:#fff}
+
+/* Footer modal */
+.modal-actions{display:flex;gap:10px;margin-top:2px}
+.btn-wide{min-width:160px}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#121e12;border:1px solid #234d23;color:#dff2df;padding:12px 16px;border-radius:12px;box-shadow:var(--shadow);z-index:11000}
+
+/* Pequeños */
+.hidden{display:none !important}
 .small-table th,.small-table td{padding:8px}
 </style>
 </head>
@@ -50,11 +165,12 @@ label{display:block;margin:8px 0 4px}
 <div class="container">
   <div class="header">
     <h1>FX | CAPITAL R.L. — Panel Cliente</h1>
-    <button id="logoutBtn" type="button">Cerrar sesión</button>
+    <button id="logoutBtn" class="btn btn-secondary" type="button">Cerrar sesión</button>
   </div>
 
   <div class="card">
     <h2>Mi cuenta</h2>
+    <p class="sub">Resumen de su portafolio y configuración actual.</p>
     <div class="grid-3">
       <div><span class="badge">Nombre</span><div id="c_name">—</div></div>
       <div><span class="badge">Plan</span><div id="c_plan">—</div></div>
@@ -63,14 +179,14 @@ label{display:block;margin:8px 0 4px}
       <div><span class="badge">Cuenta (ID)</span><div id="c_account">—</div></div>
       <div><span class="badge">BLACK habilitado</span><div id="c_black">—</div></div>
     </div>
-    <div style="margin-top:12px">
-      <button id="openWithdraw">Solicitar retiro</button>
+    <div style="margin-top:14px">
+      <button id="openWithdraw" class="btn">Solicitar retiro</button>
     </div>
   </div>
 
   <div class="card">
     <h2>Resultados del mes</h2>
-    <p id="monthLabel">—</p>
+    <p id="monthLabel" class="sub">—</p>
     <table>
       <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
       <tbody id="weeks"></tbody>
@@ -80,10 +196,14 @@ label{display:block;margin:8px 0 4px}
 
   <div class="card">
     <h2>Simulador de crecimiento</h2>
+    <p class="sub">Proyección con capitalización mensual según el plan asignado automáticamente por monto.</p>
     <div class="grid-3">
       <div>
         <label>Capital a simular (Q)</label>
-        <input id="sim_capital" type="number" min="2000" step="0.01" placeholder="Ej. 40000">
+        <div class="input-prefix">
+          <span class="prefix">Q</span>
+          <input id="sim_capital" type="number" min="2000" step="0.01" placeholder="Ej. 40,000">
+        </div>
       </div>
       <div>
         <label>Meses</label>
@@ -96,14 +216,10 @@ label{display:block;margin:8px 0 4px}
         <input id="sim_plan" type="text" disabled>
       </div>
     </div>
-    <div class="inline">
-      <div class="helper">La simulación usa capitalización <b>mensual</b> según el plan asignado por monto.</div>
-    </div>
     <div id="sim_err" class="err"></div>
-    <div style="margin-top:10px">
-      <button id="runSim">Calcular</button>
-    </div>
-    <div id="sim_out" class="hidden" style="margin-top:14px">
+    <div style="margin-top:12px"><button id="runSim" class="btn btn-wide">Calcular</button></div>
+
+    <div id="sim_out" class="hidden" style="margin-top:16px">
       <table class="small-table">
         <thead><tr><th>Mes</th><th>Capital estimado</th></tr></thead>
         <tbody id="sim_rows"></tbody>
@@ -114,97 +230,93 @@ label{display:block;margin:8px 0 4px}
   </div>
 </div>
 
-<!-- ===== MODAL CAMBIO DE CONTRASEÑA ===== -->
+<!-- ===== Modal: Cambio de contraseña (sin cambios de UX) ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <div class="modal-titlebar">
-      <h3 id="pwdTitle">BIENVENIDO A FX | CAPITAL R.L.</h3>
-      <button id="pwdCloseX" class="close-x" type="button" title="Cerrar" aria-label="Cerrar">✕</button>
+      <h3 id="pwdTitle">Bienvenido a FX | CAPITAL R.L.</h3>
+      <button id="pwdCloseX" class="close-x" type="button" aria-label="Cerrar">✕</button>
     </div>
-    <p class="modal-sub">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
+    <p class="modal-sub">Por seguridad, actualice su contraseña.</p>
 
     <label>Correo electrónico</label>
-    <div class="input-wrap">
-      <span class="prefix">✉️</span>
-      <input id="pwdEmail" type="email" placeholder="tu@email.com" autocomplete="email">
-    </div>
+    <input id="pwdEmail" type="email" placeholder="tu@email.com" autocomplete="email">
 
     <label style="margin-top:8px">Contraseña actual</label>
-    <div class="input-wrap">
-      <span class="prefix">🔒</span>
-      <input id="curPwd" type="password" placeholder="••••••••" autocomplete="current-password">
-      <button type="button" class="eye-btn" data-toggle="curPwd" aria-label="mostrar/ocultar">
-        <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
-      </button>
-    </div>
+    <input id="curPwd" type="password" placeholder="••••••••" autocomplete="current-password">
 
     <label style="margin-top:8px">Nueva contraseña</label>
-    <div class="input-wrap">
-      <span class="prefix">🆕</span>
-      <input id="newPwd" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-      <button type="button" class="eye-btn" data-toggle="newPwd" aria-label="mostrar/ocultar">
-        <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
-      </button>
-    </div>
+    <input id="newPwd" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
 
     <label style="margin-top:8px">Confirmar nueva contraseña</label>
-    <div class="input-wrap">
-      <span class="prefix">✅</span>
-      <input id="confPwd" type="password" placeholder="Repetir nueva contraseña" autocomplete="new-password">
-      <button type="button" class="eye-btn" data-toggle="confPwd" aria-label="mostrar/ocultar">
-        <svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>
-      </button>
-    </div>
+    <input id="confPwd" type="password" placeholder="Repetir nueva contraseña" autocomplete="new-password">
 
-    <div class="inline">
-      <input id="showAllPwds" type="checkbox"><label for="showAllPwds" style="margin:0">Mostrar contraseñas</label>
-    </div>
-    <div class="helper">Use al menos 8 caracteres. Recomendado: letras, números y símbolos.</div>
-
+    <div class="helper" style="margin-top:6px">Use al menos 8 caracteres; combine letras, números y símbolos.</div>
     <div id="pwdMsg" class="err"></div>
     <div id="pwdOk" class="success"></div>
 
-    <div class="modal-actions">
-      <button id="pwdSubmit" class="primary" type="button">Actualizar contraseña</button>
-      <button id="pwdCancel" type="button">Cancelar</button>
+    <div class="modal-actions" style="margin-top:10px">
+      <button id="pwdSubmit" class="btn btn-wide" type="button">Actualizar contraseña</button>
+      <button id="pwdCancel" class="btn btn-ghost" type="button">Cancelar</button>
     </div>
   </div>
 </div>
 
-<!-- ===== MODAL SOLICITUD DE RETIRO ===== -->
+<!-- ===== Modal: Solicitud de retiro (rediseñado) ===== -->
 <div id="wdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="wdTitle">
   <div class="modal-card">
     <div class="modal-titlebar">
       <h3 id="wdTitle">Solicitud de retiro</h3>
-      <button id="wdCloseX" class="close-x" type="button" title="Cerrar" aria-label="Cerrar">✕</button>
+      <button id="wdCloseX" class="close-x" type="button" aria-label="Cerrar">✕</button>
     </div>
     <p class="modal-sub">Seleccione el tipo de retiro y complete la información.</p>
 
-    <label>Tipo de retiro</label>
-    <div class="inline">
-      <label class="inline"><input type="radio" name="wd_kind" value="EARLY" checked> Antes de tiempo (10% penalización)</label>
-      <label class="inline"><input type="radio" name="wd_kind" value="HEALTH"> Causas de salud (sin penalización)</label>
+    <div class="wd-grid">
+      <!-- Columna izquierda: opciones -->
+      <div>
+        <label>Tipo de retiro</label>
+        <div class="choice-row">
+          <label class="choice-card" for="optEarly">
+            <input id="optEarly" type="radio" name="wd_kind" value="EARLY" checked>
+            <p class="choice-title">Antes de tiempo</p>
+            <p class="choice-desc">Aplicará una penalización del 10%.</p>
+          </label>
+          <label class="choice-card" for="optHealth">
+            <input id="optHealth" type="radio" name="wd_kind" value="HEALTH">
+            <p class="choice-title">Causas de salud</p>
+            <p class="choice-desc">Exento de penalización.</p>
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <label class="switch" title="Retirar el 100% del capital">
+          <input id="wd_all" type="checkbox">
+          <span class="track"><span class="thumb"></span></span>
+          <span>Retirar todo mi capital</span>
+        </label>
+      </div>
+
+      <!-- Columna derecha: formulario -->
+      <div>
+        <label>Monto a retirar (Q)</label>
+        <div id="wd_amount_wrap" class="input-prefix">
+          <span class="prefix">Q</span>
+          <input id="wd_amount" type="number" min="0" step="0.01" placeholder="Ej. 5,000">
+          <div class="helper">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
+        </div>
+
+        <label style="margin-top:10px">Motivo</label>
+        <textarea id="wd_reason" rows="5" placeholder="Explique brevemente el motivo…"></textarea>
+
+        <div id="wd_err" class="err"></div>
+        <div id="wd_ok" class="success"></div>
+      </div>
     </div>
 
-    <div class="inline" style="margin-top:10px">
-      <input id="wd_all" type="checkbox"><label for="wd_all" style="margin:0">Retirar todo mi capital</label>
-    </div>
-
-    <div id="wd_amount_wrap" style="margin-top:8px">
-      <label>Monto a retirar (Q)</label>
-      <input id="wd_amount" type="number" min="0" step="0.01" placeholder="Ej. 5000">
-      <div class="helper">Debe dejar al menos Q2,000 de capital si el retiro es parcial.</div>
-    </div>
-
-    <label style="margin-top:8px">Motivo</label>
-    <textarea id="wd_reason" rows="4" placeholder="Explique brevemente el motivo…"></textarea>
-
-    <div id="wd_err" class="err"></div>
-    <div id="wd_ok" class="success"></div>
-
-    <div class="modal-actions">
-      <button id="wdSubmit" class="primary" type="button">Enviar solicitud</button>
-      <button id="wdCancel" type="button">Cancelar</button>
+    <div class="modal-actions" style="margin-top:12px">
+      <button id="wdSubmit" class="btn btn-wide" type="button">Enviar solicitud</button>
+      <button id="wdCancel" class="btn btn-ghost" type="button">Cancelar</button>
     </div>
   </div>
 </div>
@@ -230,10 +342,9 @@ function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:
 function toast(msg){const t=document.getElementById('toast'); t.textContent=msg||'Listo.'; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),2200);}
 
 /*** ESTADO ***/
-let PROFILE=null,ACCOUNT=null;
-let PWD_FORCE=true;
+let PROFILE=null,ACCOUNT=null; let PWD_FORCE=true;
 
-/*** MODAL helpers (pwd) ***/
+/*** Utilidades de modal (pwd) ***/
 const $pwdModal  = document.getElementById('pwdModal');
 const $pwdCancel = document.getElementById('pwdCancel');
 const $pwdCloseX = document.getElementById('pwdCloseX');
@@ -255,11 +366,19 @@ function openPwdModal(force){
 $pwdModal.addEventListener('click',(e)=>{ if(e.target===$pwdModal && !PWD_FORCE) closePwdModal(); });
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && !PWD_FORCE && !$pwdModal.classList.contains('hidden')) closePwdModal(); });
 
-/*** MODAL helpers (withdraw) ***/
+/*** Modal (retiro) ***/
 const $wdModal  = document.getElementById('wdModal');
 const $wdCancel = document.getElementById('wdCancel');
 const $wdCloseX = document.getElementById('wdCloseX');
-function openWdModal(){ document.getElementById('wd_err').textContent=''; document.getElementById('wd_ok').textContent=''; document.getElementById('wd_reason').value=''; document.getElementById('wd_amount').value=''; document.getElementById('wd_all').checked=false; document.getElementById('wd_amount_wrap').classList.remove('hidden'); $wdModal.classList.remove('hidden'); }
+function openWdModal(){
+  document.getElementById('wd_err').textContent='';
+  document.getElementById('wd_ok').textContent='';
+  document.getElementById('wd_reason').value='';
+  document.getElementById('wd_amount').value='';
+  document.getElementById('wd_all').checked=false;
+  document.getElementById('wd_amount_wrap').classList.remove('hidden');
+  $wdModal.classList.remove('hidden');
+}
 function closeWd(){ reallyHide($wdModal); }
 document.getElementById('openWithdraw').onclick=openWdModal;
 ['click','touchend'].forEach(evt=>{
@@ -271,19 +390,15 @@ $wdModal.addEventListener('click',(e)=>{ if(e.target===$wdModal) closeWd(); });
 /*** BOOT ***/
 (async function boot(){
   if(!localStorage.token){ logout(); return; }
-
-  // valida token
   const rUser=await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}})
   if(!rUser.ok){ logout(); return; }
 
-  // carga perfil y cuenta
   const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
   PROFILE=(await rp.json())[0]||null;
 
   const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`,{headers:hdr()});
   ACCOUNT=(await ra.json())[0]||null;
 
-  // pintar
   document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
   document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
   document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
@@ -293,46 +408,23 @@ $wdModal.addEventListener('click',(e)=>{ if(e.target===$wdModal) closeWd(); });
 
   buildMonthResults();
 
-  // mostrar modal de contraseña si aplica
   const needChange = PROFILE?.require_password_change === true || PROFILE?.first_login_completed !== true;
   const localSkip = localStorage.pwdFirstDone === 'true' || sessionStorage.pwdModalDismissed === '1';
   if (needChange && !localSkip) openPwdModal(true);
 
-  // ojos pwd
-  document.addEventListener('click',(e)=>{
-    const btn=e.target.closest('.eye-btn'); if(!btn) return;
-    const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
-    el.type=(el.type==='password')?'text':'password';
-    btn.innerHTML=(el.type==='password')
-      ? `<svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>`
-      : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9 .5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
-  });
-
-  document.getElementById('showAllPwds').addEventListener('change',(e)=>{
-    ['curPwd','newPwd','confPwd'].forEach(id=>{
-      const el=document.getElementById(id); el.type=e.target.checked?'text':'password';
-    });
-  });
-
-  document.getElementById('pwdSubmit').onclick=submitPasswordChange;
-
-  // simulador: autoplán en input
   document.getElementById('sim_capital').addEventListener('input',()=>updateSimPlan());
   updateSimPlan();
-
-  // run sim
   document.getElementById('runSim').onclick=runSimulation;
 
-  // withdraw UI handlers
   document.getElementById('wd_all').addEventListener('change',(e)=>{
     document.getElementById('wd_amount_wrap').classList.toggle('hidden', e.target.checked);
   });
 
+  document.getElementById('pwdSubmit').onclick=submitPasswordChange;
 })();
 
-/*** Lógica de plan asignado (para simulador) ***/
+/*** Plan asignado (simulador) ***/
 function planForAmount(q){
-  // BLACK solo si admin lo habilitó
   if (ACCOUNT?.black_enabled) return { name:'BLACK', rateSem:0.25 };
   if (q >= 250000) return { name:'PLATINUM', rateSem:0.20 };
   if (q >= 2000)   return { name:'STANDARD', rateSem:0.15 };
@@ -345,20 +437,18 @@ function updateSimPlan(){
   el.value = `${plan.name} ${plan.rateSem>0?`(${(plan.rateSem*100).toFixed(0)}% semestral)`:''}`;
 }
 
-/*** Simulación (capitalización mensual) ***/
+/*** Simulación mensual ***/
 function runSimulation(){
   const err = document.getElementById('sim_err'); err.textContent='';
   const out = document.getElementById('sim_out'); out.classList.add('hidden');
   const tbody = document.getElementById('sim_rows'); tbody.innerHTML='';
   const months = parseInt(document.getElementById('sim_months').value,10);
   let capital = Number(document.getElementById('sim_capital').value || 0);
-
   if (isNaN(capital) || capital < 2000){ err.textContent='Ingrese un capital válido (mínimo Q2,000).'; return; }
-
   const { name, rateSem } = planForAmount(capital);
   if (rateSem<=0){ err.textContent='El capital debe ser al menos Q2,000.'; return; }
 
-  const r_m = rateSem/6; // mensual
+  const r_m = rateSem/6;
   for(let m=1;m<=months;m++){
     capital = capital * (1 + r_m);
     const tr = document.createElement('tr');
@@ -371,7 +461,7 @@ function runSimulation(){
   out.classList.remove('hidden');
 }
 
-/*** Construye resultados del mes (mock aleatorio) ***/
+/*** Resultados del mes (demo) ***/
 function buildMonthResults(){
   const PLAN_RATES={STANDARD:0.15/6,PLATINUM:0.20/6,BLACK:0.25/6};
   if(!ACCOUNT) return;
@@ -393,7 +483,6 @@ async function submitPasswordChange(){
   const neo=document.getElementById('newPwd').value;
   const rep=document.getElementById('confPwd').value;
   const err=document.getElementById('pwdMsg'); const ok=document.getElementById('pwdOk'); err.textContent=''; ok.textContent='';
-
   if(!email||!cur||!neo||!rep){ err.textContent='Complete todos los campos.'; return; }
   if(neo.length<8){ err.textContent='La nueva contraseña debe tener al menos 8 caracteres.'; return; }
   if(neo!==rep){ err.textContent='La confirmación no coincide.'; return; }
@@ -432,7 +521,7 @@ async function submitPasswordChange(){
   btn.disabled=false; btn.textContent=oldTxt;
 }
 
-/*** Enviar solicitud de retiro ***/
+/*** Enviar solicitud de retiro (sin user_id) ***/
 document.getElementById('wdSubmit').onclick = async () => {
   const err = document.getElementById('wd_err'); const ok = document.getElementById('wd_ok'); err.textContent=''; ok.textContent='';
   if(!ACCOUNT){ err.textContent='No se encontró la cuenta.'; return; }
@@ -447,20 +536,18 @@ document.getElementById('wdSubmit').onclick = async () => {
     if (isNaN(amount) || amount<=0){ err.textContent='Monto inválido.'; return; }
     if (amount > (ACCOUNT.principal_locked||0)){ err.textContent='El monto excede su capital.'; return; }
     const remain = (ACCOUNT.principal_locked||0) - amount;
-    if (remain < 2000){ err.textContent='Si el retiro es parcial, debe quedar al menos Q2,000 de capital. Elija un monto menor o marque “Retirar todo”.'; return; }
+    if (remain < 2000){ err.textContent='Si el retiro es parcial, debe quedar al menos Q2,000 de capital. Elija un monto menor o active “Retirar todo mi capital”.'; return; }
   }
 
   const reason = (document.getElementById('wd_reason').value||'').trim();
   if (!reason){ err.textContent='Explique brevemente el motivo.'; return; }
 
-  // Insertar solicitud
   const payload = {
     account_id: ACCOUNT.id,
-    user_id: localStorage.uid,
     amount,
     currency: ACCOUNT.currency || 'GTQ',
     penalty_pct,
-    kind,                   // EARLY | HEALTH
+    kind,
     reason,
     status: 'PENDING',
     created_at: new Date().toISOString()
@@ -472,7 +559,6 @@ document.getElementById('wdSubmit').onclick = async () => {
   if (!r1.ok){ err.textContent='No se pudo enviar la solicitud.'; return; }
   const inserted = (await r1.json())[0];
 
-  // Notificación admin
   try{
     await fetch(`${BASE}/admin_notifications`,{
       method:'POST', headers: hdrJSON(),
@@ -485,12 +571,10 @@ document.getElementById('wdSubmit').onclick = async () => {
   }catch{}
 
   ok.textContent='Solicitud enviada.';
-  // Mensaje al usuario
   alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
   closeWd();
   toast('Solicitud enviada');
 };
-
 </script>
 </body>
 </html>
