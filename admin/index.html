@@ -5,171 +5,174 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Admin</title>
 <style>
-:root { --bg:#000; --fg:#fff; --muted:#ffffffcc; --card:#0d0d0d; --border:#1a1a1a; }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-.container{max-width:1200px;margin:0 auto;padding:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
-h1,h2,h3{margin:0 0 8px} label{display:block;margin:8px 0 4px}
-input,select,textarea{width:100%;background:#000;color:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
-button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
-table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:var(--muted)}
+:root { --bg:#0a0a0a; --fg:#f5f7fa; --muted:#cdd3da; --card:#0f1012; --border:#21262c; --shadow:0 14px 40px rgba(0,0,0,.5); --radius:18px; }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+.container{max-width:1200px;margin:0 auto;padding:28px 20px}
+.card{background:linear-gradient(180deg,var(--card),#101214);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow);margin-bottom:16px}
+h1,h2{margin:0 0 10px} label{display:block;margin:8px 0 6px;color:var(--muted);font-size:13px}
+input,select,textarea{width:100%;background:#0b0d0f;color:var(--fg);border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:14px}
+button{background:#fff;color:#0b0c0e;border:none;padding:12px 16px;border-radius:999px;font-weight:800;cursor:pointer}
+table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:#d7dce2}
 .row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
-.hidden{display:none}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .inline{display:flex;gap:8px;align-items:center}
 .small{font-size:12px;color:var(--muted)}
 .nowrap{white-space:nowrap}
+.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;margin-right:8px}
 </style>
 </head>
 <body>
 <div class="container">
 
-  <div id="unauth" class="card">
-    <h1>Admin — Iniciar sesión</h1>
-    <form id="loginForm">
-      <label>Email</label><input id="email" type="email" required>
-      <label>Contraseña</label><input id="password" type="password" required>
-      <div style="margin-top:12px"><button type="submit">Entrar</button></div>
-      <p id="loginMsg" class="small" style="margin-top:8px"></p>
-    </form>
+  <div class="header">
+    <h1>FX | CAPITAL R.L. — Panel Admin</h1>
+    <div><button onclick="logout()">Cerrar sesión</button></div>
   </div>
 
-  <div id="app" class="hidden">
-    <div class="header">
-      <h1>FX | CAPITAL R.L. — Panel Admin</h1>
-      <div><button onclick="logout()">Cerrar sesión</button></div>
-    </div>
+  <!-- Crear/Editar usuario -->
+  <div class="card">
+    <h2>Crear / Editar usuario</h2>
+    <div class="row">
+      <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"></div>
+      <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
 
-    <!-- Crear/Editar usuario -->
-    <div class="card">
-      <h2>Crear / Editar usuario</h2>
-      <div class="row">
-        <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"></div>
-        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
-
-        <div>
-          <label>Contraseña (para el cliente)</label>
-          <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres">
-            <button type="button" id="togglePass" title="Mostrar / ocultar">👁</button>
-          </div>
-          <div class="small">Se usa para crear al cliente en Auth. No se guarda en tu base de datos.</div>
+      <div>
+        <label>Contraseña (para el cliente)</label>
+        <div class="inline">
+          <input id="u_pass" type="password" placeholder="Mín. 8 caracteres">
+          <button type="button" id="togglePass" title="Mostrar / ocultar">👁</button>
         </div>
-
-        <div><label>Moneda</label>
-          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
-        </div>
-        <div><label>Capital inicial</label><input id="u_capital" type="number" min="0"></div>
-        <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
-        <div><label>Plan</label>
-          <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select>
-        </div>
-
-        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
-        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
+        <div class="small">Se usa para crear al cliente en Auth. No se guarda en tu base de datos.</div>
       </div>
 
-      <div style="margin-top:8px">
-        <button onclick="saveUser()">Guardar</button>
-        <span id="saveMsg" class="small" style="margin-left:8px"></span>
+      <div><label>Moneda</label>
+        <select id="u_currency"><option>GTQ</option><option>USD</option></select>
       </div>
+      <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01"></div>
+      <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
+      <div><label>Plan</label>
+        <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select>
+      </div>
+
+      <!-- NUEVO: meses de inversión -->
+      <div>
+        <label>Meses de inversión</label>
+        <select id="u_months">
+          <option>6</option><option selected>12</option><option>18</option><option>24</option>
+          <option>30</option><option>36</option><option>42</option><option>48</option>
+          <option>54</option><option>60</option>
+        </select>
+      </div>
+
+      <!-- NUEVO: tasa de interés semestral (%) -->
+      <div>
+        <label>Tasa semestral (%)</label>
+        <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25">
+        <div class="small">Porcentaje aplicado cada 6 meses. Si se deja vacío se usará el del plan (15/20/25).</div>
+      </div>
+
+      <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
+      <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
     </div>
 
-    <!-- Lista de clientes -->
-    <div class="card">
-      <h2>Clientes</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Capital</th>
-            <th class="nowrap">Banco</th>
-            <th class="nowrap">No. cuenta</th>
-            <th class="nowrap">Cuenta (ID)</th>
-            <th>BLACK</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="users"></tbody>
-      </table>
+    <div style="margin-top:8px">
+      <button onclick="saveUser()">Guardar</button>
+      <span id="saveMsg" class="small" style="margin-left:8px"></span>
     </div>
+  </div>
 
-    <!-- Solicitudes de retiro -->
-    <div class="card">
-      <h2>Solicitudes</h2>
-      <div style="margin-bottom:8px"><button onclick="loadNotifs()">Refrescar</button></div>
-      <table>
-        <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
-        <tbody id="notifs"></tbody>
-      </table>
-    </div>
+  <!-- Lista de clientes -->
+  <div class="card">
+    <h2>Clientes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th><th>Email</th><th>Plan</th><th>Capital</th>
+          <th>Banco</th><th class="nowrap">No. cuenta</th><th class="nowrap">Cuenta (ID)</th>
+          <th>Meses</th><th>Tasa %/6m</th>
+          <th>BLACK</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="users"></tbody>
+    </table>
+  </div>
+
+  <!-- Solicitudes -->
+  <div class="card">
+    <h2>Solicitudes</h2>
+    <div style="margin-bottom:8px"><button onclick="loadNotifs()">Refrescar</button></div>
+    <table>
+      <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
+      <tbody id="notifs"></tbody>
+    </table>
   </div>
 </div>
 
 <script>
-/*** 1) TUS DATOS DE SUPABASE ***/
+/*** SUPABASE ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
+function headersJSON(){return { apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||""), "Content-Type":"application/json" }}
 
-function headersJSON(){
-  return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json" };
-}
-
-/*** 1.1 FUNCIÓN EDGE: crear usuario en Auth si no existe (usa la contraseña del formulario) ***/
+/*** Edge Function: crear usuario Auth si no existe ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
-  const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
+  const url = PROJECT_URL.replace(".supabase.co","") + ".functions.supabase.co/admin-create-user";
   const r = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: ANON_KEY,
-      Authorization: "Bearer " + (localStorage.token || "")
-    },
+    headers: { "Content-Type":"application/json", apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
     body: JSON.stringify({ email, password, full_name: fullName })
   });
-  return r; // 201=creado; 400=ya existía o error ignorable
+  return r;
 }
 
-/*** LOGIN ***/
-document.getElementById("loginForm").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-    method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
-    body: JSON.stringify({ email, password })
-  });
-  const data = await r.json();
-  if(!r.ok){ document.getElementById("loginMsg").textContent="Login inválido"; return; }
-  localStorage.token = data.access_token; localStorage.uid = data.user.id;
-  init();
-});
-
+/*** LOGIN (igual) ***/
 function show(id,vis){ document.getElementById(id).classList[vis?"remove":"add"]("hidden"); }
 function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
+document.addEventListener("DOMContentLoaded", async ()=>{
+  if(!localStorage.token){
+    const c=document.createElement('div'); c.className='card'; c.innerHTML=`
+      <h2>Admin — Iniciar sesión</h2>
+      <form id="loginForm">
+        <label>Email</label><input id="email" type="email" required>
+        <label>Contraseña</label><input id="password" type="password" required>
+        <div style="margin-top:12px"><button type="submit">Entrar</button></div>
+        <p id="loginMsg" class="small" style="margin-top:8px"></p>
+      </form>`;
+    document.querySelector('.container').prepend(c);
+    document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+        method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" }, body: JSON.stringify({ email, password })
+      });
+      const data = await r.json();
+      if(!r.ok){ document.getElementById("loginMsg").textContent="Login inválido"; return; }
+      localStorage.token = data.access_token; localStorage.uid = data.user.id;
+      location.reload();
+    });
+  }else{
+    await listUsers(); await loadNotifs();
+  }
+});
 
-/*** LISTA USUARIOS (ACTUALIZADA para la vista v_admin_users) ***/
+/*** Mostrar/ocultar contraseña ***/
+document.addEventListener("click",(e)=>{
+  if(e.target && e.target.id==="togglePass"){
+    const inp = document.getElementById("u_pass");
+    inp.type = (inp.type==="password") ? "text" : "password";
+  }
+});
+
+/*** LISTA USUARIOS (agrega meses y tasa) ***/
 async function listUsers(){
   const url = `${BASE}/v_admin_users` +
-              `?select=full_name,email,plan,currency,principal_locked,account_id,black_enabled,bank_name,bank_account` +
+              `?select=full_name,email,plan,currency,principal_locked,account_id,black_enabled,bank_name,bank_account,invest_months,interest_pct` +
               `&order=full_name.asc`;
-
-  const r = await fetch(url, {
-    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
-  });
-
-  if (!r.ok) {
-    const t = await r.text();
-    alert("No se pudo cargar la lista de clientes:\n" + t);
-    return;
-  }
-
+  const r = await fetch(url,{ headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token } });
+  if (!r.ok){ alert("No se pudo cargar la lista"); return; }
   const rows = await r.json();
   const tb = document.getElementById("users"); tb.innerHTML = "";
   rows.forEach(x=>{
@@ -182,6 +185,8 @@ async function listUsers(){
       <td>${x.bank_name ?? '—'}</td>
       <td class="nowrap">${x.bank_account ?? '—'}</td>
       <td class="small">${x.account_id ?? '—'}</td>
+      <td>${x.invest_months ?? '—'}</td>
+      <td>${x.interest_pct ?? '—'}</td>
       <td>${x.black_enabled ? 'Sí' : 'No'}</td>
       <td>
         ${x.account_id ? `
@@ -193,7 +198,7 @@ async function listUsers(){
   });
 }
 
-/*** CREAR / EDITAR (con contraseña del admin + banco y cuenta) ***/
+/*** GUARDAR / EDITAR (agrega months + rate) ***/
 async function saveUser(){
   const email    = document.getElementById("u_email").value.trim();
   const fullName = document.getElementById("u_name").value.trim();
@@ -202,6 +207,8 @@ async function saveUser(){
   const capital  = Number(document.getElementById("u_capital").value||0);
   const joined   = document.getElementById("u_joined").value;
   const plan     = document.getElementById("u_plan").value;
+  const months   = parseInt(document.getElementById("u_months").value,10);
+  const rate     = document.getElementById("u_rate").value === "" ? null : Number(document.getElementById("u_rate").value);
   const bankName = document.getElementById("u_bank_name").value.trim();
   const bankAcct = document.getElementById("u_bank_account").value.trim();
   const msgEl    = document.getElementById("saveMsg");
@@ -210,13 +217,10 @@ async function saveUser(){
   try {
     if (!email) throw new Error("Email requerido");
     if (!fullName) throw new Error("Nombre requerido");
-    if (!password || password.length < 8)
-      throw new Error("Contraseña mínima de 8 caracteres");
+    if (!password || password.length < 8) throw new Error("Contraseña mínima de 8 caracteres");
 
-    // 1) Crear/asegurar usuario en Auth
     await createAuthUserIfNeeded(email, password, fullName);
 
-    // 2) Upsert de perfil + cuenta (RPC) — con banco y cuenta
     const body = {
       p_email: email,
       p_full_name: fullName,
@@ -225,45 +229,36 @@ async function saveUser(){
       p_joined_at: joined,
       p_plan: plan,
       p_bank_name: bankName || null,
-      p_bank_account: bankAcct || null
+      p_bank_account: bankAcct || null,
+      // NUEVO
+      p_invest_months: months,
+      p_interest_pct: rate // puede ser null => backend usará tasa por plan
     };
 
     const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify(body)
+      method:"POST", headers: headersJSON(), body: JSON.stringify(body)
     });
-
-    if (!r.ok) { throw new Error(await r.text() || "Error guardando"); }
+    if (!r.ok) throw new Error(await r.text() || "Error guardando");
 
     if (msgEl) msgEl.textContent = "Guardado";
-    document.getElementById("u_pass").value = ""; // limpiar por seguridad
+    document.getElementById("u_pass").value = "";
     await listUsers();
 
   } catch (e) {
     if (msgEl) msgEl.textContent = "Error";
-    console.error(e);
     alert("No se pudo guardar: " + (e.message || e));
   }
 }
 
-/*** Mostrar/ocultar contraseña del formulario ***/
-document.getElementById("togglePass").addEventListener("click", ()=>{
-  const inp = document.getElementById("u_pass");
-  inp.type = (inp.type === "password") ? "text" : "password";
-});
-
 /*** BLACK ON/OFF ***/
 async function toggleBlack(accountId, enabled){
   await fetch(`${RPC}/enable_black_for_account`, {
-    method:"POST",
-    headers: headersJSON(),
-    body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
+    method:"POST", headers: headersJSON(), body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
   });
   await listUsers();
 }
 
-/*** NOTIFICACIONES (solicitudes) ***/
+/*** NOTIFICACIONES ***/
 async function loadNotifs(){
   const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
     headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }
@@ -294,13 +289,6 @@ async function setWithdrawal(id, status){
   });
   await loadNotifs();
 }
-
-/*** INIT ***/
-async function init(){
-  if(localStorage.token){ show("unauth",false); show("app",true); await listUsers(); await loadNotifs(); }
-  else { show("app",false); show("unauth",true); }
-}
-init();
 </script>
 </body>
 </html>
