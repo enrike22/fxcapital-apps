@@ -1,573 +1,400 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>FX | CAPITAL R.L. — Panel del Cliente</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#0b0b0c;--card:#121214;--muted:#9aa0a6;--text:#fff;--line:#1f1f22;--chip:#17181a;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .container{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
-  /* Header */
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-  .brand{display:flex;align-items:center;gap:14px}
-  .brand img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 1px 12px rgba(255,255,255,.06))}
-  .brand h1{margin:0;font-size:30px;font-weight:800;letter-spacing:.3px}
-  .btn{border:0;border-radius:999px;padding:12px 16px;font-weight:600;cursor:pointer}
-  .btn-ghost{background:#fff;color:#000}
-  .btn-ghost:hover{filter:brightness(.98)}
-  /* Cards */
-  .card{background:linear-gradient(180deg,#151515,#111);border:1px solid var(--line);border-radius:18px;padding:20px 22px}
-  .grid{display:grid;gap:18px}
-  .grid-2{grid-template-columns:1fr 1fr}
-  .grid-3{grid-template-columns:repeat(3,1fr)}
-  .section-title{font-size:22px;font-weight:800;margin:0 0 10px}
-  .kvs{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:6px}
-  .kv{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:14px}
-  .kv .lbl{display:inline-block;font-size:12px;color:var(--muted);margin-bottom:6px;background:#0e0e10;border:1px solid #222;border-radius:999px;padding:4px 10px}
-  .kv .val{font-size:16px}
-  .mt-16{margin-top:16px}
-  .mt-24{margin-top:24px}
-  .muted{color:var(--muted)}
-  /* Table */
-  .table{width:100%;border-collapse:collapse}
-  .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
-  .table th{color:var(--muted);text-align:left;font-size:13px;font-weight:600}
-  /* Inputs */
-  .input{display:flex;align-items:center;background:#0f0f10;border:1px solid #262626;border-radius:12px;padding:12px 14px}
-  .input input,.input select{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:14px}
-  .callout{display:flex;gap:12px;align-items:center;background:#0f0f10;border:1px dashed #2a2a2a;border-radius:12px;padding:10px 12px;color:var(--muted);font-size:13px}
-  .pill{display:inline-block;background:#0f0f10;border:1px solid #2a2a2a;border-radius:999px;padding:8px 12px;font-size:13px}
-  /* Modal */
-  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
-  .modal{width:100%;max-width:860px;background:linear-gradient(180deg,#161616,#111);border:1px solid #222;border-radius:16px;box-shadow:0 40px 120px rgba(0,0,0,.6)}
-  .modal .hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
-  .modal .hd h3{margin:0;font-size:20px}
-  .modal .bd{padding:18px 20px}
-  .modal .ft{display:flex;gap:12px;justify-content:flex-end;padding:16px 20px;border-top:1px solid var(--line)}
-  .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid #2a2a2a;background:#0f0f10;color:#bbb;cursor:pointer}
-  /* Option tiles */
-  .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .opt{border:1px solid #2a2a2a;background:#0f0f10;border-radius:14px;padding:14px;cursor:pointer}
-  .opt.active{outline:2px solid #3b82f6;border-color:#3b82f6}
-  .opt .t{font-weight:700;margin-bottom:4px}
-  .opt .s{color:var(--muted);font-size:13px}
-  /* Switch */
-  .switch{position:relative;width:50px;height:28px;background:#222;border-radius:999px;border:1px solid #333;transition:all .2s}
-  .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:all .2s}
-  .switch.on{background:#74f3b9;border-color:#74f3b9}
-  .switch.on::after{left:25px}
-  .switch-row{display:flex;align-items:center;gap:12px}
-  /* Buttons primary/secondary */
-  .btn-primary{background:#fff;color:#000}
-  .btn-secondary{background:#1a1a1a;color:#fff;border:1px solid #2a2a2a}
-  .center{display:flex;align-items:center;justify-content:center}
-  .right{display:flex;justify-content:flex-end}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FX | CAPITAL R.L. — Panel Cliente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0b0c; --card:#141416; --muted:#8e9096; --text:#fff;
+      --brand:#2d66ff; --brand-600:#244fe0; --ok:#18b689; --danger:#ff5a6a;
+      --ring:0 0 0 3px rgba(45,102,255,.25);
+      --radius:14px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#0b0b0c;color:var(--text)}
+    .wrap{max-width:1100px;margin:40px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand h1{font-size:32px;margin:0;font-weight:800;letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .btn{appearance:none;border:0;background:#fff;color:#000;font-weight:700;padding:12px 18px;border-radius:999px;cursor:pointer}
+    .btn:focus{outline:none;box-shadow:var(--ring)}
+    .btn-outline{background:transparent;color:#fff;border:1px solid #30323a}
+    .card{background:#15161b;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    @media (max-width:880px){.grid-2{grid-template-columns:1fr}}
+    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#181a20;border:1px solid #2a2d35;color:#cfd2da;font-size:12px}
+    .h2{font-size:22px;margin:0 0 12px 0}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:14px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .table th{color:#b9bcc6;font-weight:600;text-align:left}
+    .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .input, select, textarea{width:100%;background:#0f1014;border:1px solid #2b2e35;color:#fff;border-radius:12px;padding:12px 14px;font:inherit}
+    textarea{min-height:120px;resize:vertical}
+    .pill-tabs{display:flex;gap:12px}
+    .pill{flex:1;cursor:pointer;border:1px solid #2b2e35;border-radius:14px;padding:14px;background:#0f1014}
+    .pill.active{border-color:#2d66ff; box-shadow:0 0 0 2px rgba(45,102,255,.25) inset}
+    .pill h4{margin:0 0 6px;font-size:14px}
+    .pill p{margin:0;color:#aab0bd;font-size:12px}
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modal{width:min(760px,100%);background:#15161b;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 18px 16px}
+    .modal header{margin:0 0 8px}
+    .modal h3{margin:0;font-size:22px}
+    .x{background:transparent;border:0;color:#c9ccd6;cursor:pointer;font-size:18px;border-radius:8px}
+    .x:hover{color:#fff}
+    /* Switch */
+    .switch{--w:44px; --h:26px; --pad:3px; position:relative; display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none}
+    .switch input{display:none}
+    .switch .track{width:var(--w); height:var(--h); background:#2b2e35; border-radius:999px; position:relative; transition:.22s all}
+    .switch .thumb{width:calc(var(--h) - var(--pad)*2); height:calc(var(--h) - var(--pad)*2); background:#fff; border-radius:50%; position:absolute; top:var(--pad); left:var(--pad); transition:.22s transform}
+    .switch input:checked + .track{background:#2d66ff}
+    .switch input:checked + .track .thumb{transform:translateX(calc(var(--w) - var(--h)))}
+    .switch .txt{color:#d6dae3}
+    .helper{color:#a9afbc;font-size:12px}
+    .note{color:#a9afbc;font-size:13px}
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="topbar">
+  <div class="wrap">
+    <header>
       <div class="brand">
-        <img src="logo.png" alt="FX" onerror="this.style.display='none'">
-        <h1>FX | CAPITAL R.L. — Panel del Cliente</h1>
+        <h1>FX | CAPITAL R.L. — <span class="muted">Panel del Cliente</span></h1>
       </div>
-      <button class="btn btn-ghost" id="logoutBtn">Cerrar sesión</button>
-    </div>
+      <button id="logoutBtn" class="btn btn-outline">Cerrar sesión</button>
+    </header>
 
     <!-- Mi cuenta -->
-    <div class="card">
-      <h2 class="section-title">Mi cuenta</h2>
-      <div class="kvs">
-        <div class="kv">
-          <span class="lbl">Nombre</span>
-          <div class="val" id="kvName">—</div>
+    <section class="card">
+      <h2 class="h2">Mi cuenta</h2>
+      <div class="grid grid-2">
+        <div>
+          <div class="row">
+            <span class="tag">Nombre</span>
+            <div id="acc_name" class="tag" style="background:#101116;color:#fff;border-color:#23252b">—</div>
+          </div>
+          <div class="row">
+            <span class="tag">Cuenta (ID)</span>
+            <div id="acc_id" class="tag" style="background:#101116;color:#fff;border-color:#23252b">—</div>
+          </div>
+          <button id="openWithdraw" class="btn" style="margin-top:12px">Solicitar retiro</button>
         </div>
-        <div class="kv">
-          <span class="lbl">Plan</span>
-          <div class="val" id="kvPlan">—</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Moneda</span>
-          <div class="val" id="kvCurrency">—</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Capital</span>
-          <div class="val" id="kvCapital">Q 0.00</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Cuenta (ID)</span>
-          <div class="val" id="kvAccount">—</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Período (meses)</span>
-          <div class="val" id="kvMonths">—</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Interés total del período</span>
-          <div class="val" id="kvTotalInterest">Q 0.00</div>
-        </div>
-        <div class="kv">
-          <span class="lbl"> </span>
-          <div class="val right">
-            <button class="btn btn-secondary" id="openWithdraw">Solicitar retiro</button>
+        <div>
+          <div class="row">
+            <span class="tag">Plan</span>
+            <div id="acc_plan" class="tag" style="background:#101116;color:#fff;border-color:#23252b">—</div>
+            <span class="tag">Moneda</span>
+            <div id="acc_currency" class="tag" style="background:#101116;color:#fff;border-color:#23252b">—</div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="tag">Período (meses)</span>
+            <div id="acc_months" class="tag" style="background:#101116;color:#fff;border-color:#23252b">—</div>
+            <span class="tag">Capital</span>
+            <div id="acc_capital" class="tag" style="background:#101116;color:#fff;border-color:#23252b">Q 0.00</div>
+            <span class="tag">Interés total del período</span>
+            <div id="acc_interest_total" class="tag" style="background:#101116;color:#fff;border-color:#23252b">Q 0.00</div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Resultados del mes -->
-    <div class="card mt-24">
-      <h2 class="section-title">Resultados del mes</h2>
-      <div class="muted" id="periodRange">—</div>
-      <table class="table mt-16" id="weeklyTable">
-        <thead>
-          <tr><th>Viernes</th><th>Interés semanal</th></tr>
-        </thead>
-        <tbody id="weeklyBody">
-          <tr><td>—</td><td>—</td></tr>
-        </tbody>
-        <tfoot>
-          <tr><th>Total mes</th><th id="weeklyTotal">—</th></tr>
-        </tfoot>
+    <section class="card" style="margin-top:18px">
+      <h2 class="h2">Resultados del mes</h2>
+      <div class="note" id="period_note">—</div>
+      <table class="table" style="margin-top:10px">
+        <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
+        <tbody id="weeks_tbody"><tr><td>—</td><td>—</td></tr></tbody>
+        <tfoot><tr><th>Total mes</th><th id="weeks_total">—</th></tr></tfoot>
       </table>
-      <div class="muted mt-16" id="periodCloseNote"></div>
-    </div>
+      <div class="helper" id="close_note" style="margin-top:8px"></div>
+    </section>
 
-    <!-- Simulador de crecimiento -->
-    <div class="card mt-24">
-      <h2 class="section-title">Simulador de crecimiento</h2>
-      <div class="muted">Proyección con capitalización <b>no compuesta</b> (interés simple) por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
-      <div class="grid grid-2 mt-16">
+    <!-- Simulador (6 meses) -->
+    <section class="card" style="margin-top:18px">
+      <h2 class="h2">Simulador de crecimiento</h2>
+      <div class="helper">Interés simple por <b>6 meses</b>, con plan asignado automáticamente por monto.</div>
+      <div class="grid grid-2" style="margin-top:12px">
         <div>
-          <label class="muted" style="font-size:12px;">Capital a simular (Q)</label>
-          <div class="input"><input id="simCapital" type="number" min="0" step="1" placeholder="Ej. 40,000"></div>
+          <label class="helper">Capital a simular (Q)</label>
+          <input id="sim_amount" class="input" inputmode="numeric" placeholder="Ej. 40,000" />
         </div>
         <div>
-          <label class="muted" style="font-size:12px;">Plan asignado (auto)</label>
-          <div class="pill" id="simPlan">—</div>
+          <label class="helper">Plan asignado (auto)</label>
+          <input id="sim_plan" class="input" disabled />
         </div>
       </div>
-      <div class="right mt-16">
-        <button class="btn btn-ghost" id="simCalc">Calcular</button>
-      </div>
-      <div class="grid grid-3 mt-16">
-        <div class="kv">
-          <span class="lbl">Capital inicial</span>
-          <div class="val" id="simStart">Q 0.00</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Interés total acumulado</span>
-          <div class="val" id="simInt">Q 0.00</div>
-        </div>
-        <div class="kv">
-          <span class="lbl">Capital final estimado</span>
-          <div class="val" id="simEnd">Q 0.00</div>
-        </div>
-      </div>
-      <div class="mt-16">
+      <div style="margin-top:12px">
         <table class="table">
           <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
-          <tbody id="simBody"></tbody>
+          <tbody id="sim_tbody"><tr><td>1</td><td>—</td></tr></tbody>
         </table>
-        <div class="muted mt-8" id="simLegend"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal retiro -->
+  <div class="modal-backdrop" id="wd_backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wd_title">
+      <header>
+        <h3 id="wd_title">Solicitud de retiro</h3>
+        <button class="x" id="wd_close" aria-label="Cerrar">✕</button>
+      </header>
+      <div class="pill-tabs" id="wd_types">
+        <div class="pill active" data-type="early">
+          <h4>Antes de tiempo</h4>
+          <p>Aplicará una penalización del 10%.</p>
+        </div>
+        <div class="pill" data-type="health">
+          <h4>Causas de salud</h4>
+          <p>Exento de penalización.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:14px">
+        <div>
+          <label class="helper">Monto a retirar (Q)</label>
+          <input id="wd_amount" class="input" placeholder="Ej. 5,000" inputmode="numeric">
+          <div class="helper" style="margin-top:6px">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
+
+          <label class="switch" style="margin-top:12px" id="wd_switch">
+            <input id="wd_all" type="checkbox">
+            <span class="track"><span class="thumb"></span></span>
+            <span class="txt">Retirar todo mi capital</span>
+          </label>
+        </div>
+        <div>
+          <label class="helper">Motivo</label>
+          <textarea id="wd_reason" placeholder="Explique brevemente el motivo…"></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:space-between;margin-top:12px">
+        <button id="wd_submit" class="btn" style="flex:1">Enviar solicitud</button>
+        <button id="wd_cancel" class="btn btn-outline">Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Retiro -->
-  <div class="modal-back" id="withdrawBack" aria-hidden="true">
-    <div class="modal">
-      <div class="hd">
-        <h3>Solicitud de retiro</h3>
-        <button class="icon-btn" id="withdrawClose">✕</button>
-      </div>
-      <div class="bd">
-        <div class="muted" style="margin-bottom:12px">Seleccione el tipo de retiro y complete la información.</div>
-        <div class="opt-grid">
-          <div class="opt active" data-type="early" id="optEarly">
-            <div class="t">Antes de tiempo</div>
-            <div class="s">Aplicará una penalización del 10%.</div>
-          </div>
-          <div class="opt" data-type="health" id="optHealth">
-            <div class="t">Causas de salud</div>
-            <div class="s">Exento de penalización.</div>
-          </div>
-        </div>
-
-        <div class="grid grid-2 mt-16">
-          <div>
-            <label class="muted" style="font-size:12px;">Monto a retirar (Q)</label>
-            <div class="input"><input id="wAmount" type="number" min="0" step="1" placeholder="Ej. 5,000"></div>
-            <div class="muted" style="font-size:12px;margin-top:8px">Si el retiro es parcial, debe permanecer al menos Q 2,000.</div>
-          </div>
-          <div>
-            <label class="muted" style="font-size:12px;">Motivo</label>
-            <div class="input" style="height:120px"><textarea id="wReason" style="resize:none;border:0;outline:0;background:transparent;color:#fff;width:100%;height:100%;font-family:inherit"></textarea></div>
-          </div>
-        </div>
-
-        <div class="switch-row mt-16" id="switchRow">
-          <div class="switch" id="wAllSwitch" role="switch" aria-checked="false"></div>
-          <div>Retirar todo mi capital</div>
-          <button class="pill" id="wAllBtn">Retirar todo mi capital</button>
-        </div>
-
-        <div class="callout mt-16" id="wHint" style="display:none"></div>
-      </div>
-      <div class="ft">
-        <button class="btn btn-secondary" id="withdrawCancel">Cancelar</button>
-        <button class="btn btn-ghost" id="withdrawSend">Enviar solicitud</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-    // === Credenciales (tuyas) ===
-    const SUPABASE_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ========= CONFIG =========
+    const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+    const LOGIN_PATH = '/cliente-login.html';
+    const DASH_PATH  = '/cliente-dashboard.html';
 
-    // === Utiles ===
-    const fmtQ = n => 'Q ' + (Number(n||0).toLocaleString('es-GT', {minimumFractionDigits:2, maximumFractionDigits:2}));
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const fmtQ = v => `Q ${Number(v||0).toLocaleString('es-GT', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    const $ = sel => document.querySelector(sel);
 
-    const PLANS = {
-      STANDARD: 15,    // semestral
-      PLATINUM: 20,    // semestral
-      BLACK: 25        // semestral (visible si admin lo habilita)
-    };
+    let account = null, user = null;
 
-    let gAccount = null; // datos de la cuenta del cliente
-    let gProfile = null;
-
-    // === Guard de sesión ===
+    // Gate de sesión: si no hay sesión → login
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
-      if (!session) {
-        window.location.replace('./cliente-login.html');
-        return;
-      }
-      await loadClientData();
-      buildSimulatorDefaults();
+      if (!session) { window.location.replace(LOGIN_PATH); return; }
+      user = session.user;
+      await loadAccount();
+      renderAccount();
       renderWeekly();
+      setupUI();
     })();
 
-    // === Cerrar sesión ===
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try { await sb.auth.signOut(); } catch(_){}
-      window.location.replace('./cliente-login.html');
+    // Cerrar sesión → login
+    $('#logoutBtn').addEventListener('click', async () => {
+      try { await sb.auth.signOut(); } catch(e){}
+      window.location.replace(LOGIN_PATH);
     });
 
-    // === Carga de datos de cliente ===
-    async function loadClientData(){
-      // 1) user
-      const { data:{ user } } = await sb.auth.getUser();
-      if (!user) {
-        window.location.replace('./cliente-login.html');
-        return;
-      }
-
-      // 2) profiles (nombre)
-      const { data:profRows } = await sb.from('profiles')
-        .select('id, full_name, account_id')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      gProfile = profRows || { id: user.id, full_name: user.email, account_id: null };
-
-      // 3) accounts (plan, capital, currency, joined_at, invest_months, interest_pct)
-      let account = null;
-
-      if (gProfile?.account_id){
-        const { data:acc } = await sb.from('accounts')
-          .select('id, plan, capital, currency, joined_at, invest_months, interest_pct, black_enabled')
-          .eq('id', gProfile.account_id)
-          .maybeSingle();
-        account = acc;
-      }
-
-      // Fallback: por email si existiera vista
-      if (!account){
-        const { data:acc2 } = await sb.from('v_admin_users')
-          .select('account_id, plan, capital, currency, joined_at, invest_months, interest_pct, black_enabled')
-          .eq('email', user.email)
-          .maybeSingle();
-        if (acc2) account = { id: acc2.account_id, ...acc2 };
-      }
-
-      gAccount = account || {};
-
-      // Calcular tasa semestral
-      let plan = (gAccount.plan || 'STANDARD').toUpperCase();
-      if (plan === 'BLACK' && !gAccount.black_enabled) plan = 'STANDARD';
-
-      let rate = Number(gAccount.interest_pct);
-      if (!rate) rate = PLANS[plan] || 15;
-
-      // Interés total del período (simple): capital * (rate/100) * (months/6)
-      const months = Number(gAccount.invest_months || 6);
-      const cap = Number(gAccount.capital || 0);
-      const totalInterest = cap * (rate/100) * (months/6);
-
-      // Pintar
-      document.getElementById('kvName').textContent = gProfile?.full_name || user.email;
-      document.getElementById('kvPlan').textContent = plan;
-      document.getElementById('kvCurrency').textContent = (gAccount.currency || '—');
-      document.getElementById('kvCapital').textContent = fmtQ(cap);
-      document.getElementById('kvAccount').textContent = gAccount?.id || '—';
-      document.getElementById('kvMonths').textContent = months || '—';
-      document.getElementById('kvTotalInterest').textContent = fmtQ(totalInterest);
+    async function loadAccount(){
+      // nombre (si existe profile)
+      let profName = null;
+      try{
+        const { data:prof } = await sb.from('profiles').select('id, full_name').eq('id', user.id).maybeSingle();
+        profName = prof?.full_name || null;
+      }catch{}
+      const { data } = await sb.from('accounts')
+        .select('id, capital, currency, plan, invest_months, interest_pct, joined_at')
+        .eq('user_id', user.id).maybeSingle();
+      account = data || null;
+      if (account) account.full_name = profName || user.email;
     }
 
-    // === Resultados del mes (semanales) ===
-    function startOfPeriod(joinedAt){
-      // Desde el día de ingreso hasta el mismo día del mes siguiente
-      const j = new Date(joinedAt || new Date());
-      const now = new Date();
-      // Tomar la ventana que contiene a "now": si el día de mes actual >= día de ingreso → inicio es ese día de este mes; si no, el del mes anterior.
-      const d = j.getDate();
-      const start = new Date(now.getFullYear(), now.getMonth(), d);
-      if (start > now) start.setMonth(start.getMonth() - 1);
-      const end = new Date(start);
-      end.setMonth(end.getMonth() + 1);
-      return { start, end };
-    }
+    function renderAccount(){
+      $('#acc_name').textContent     = account?.full_name || user?.email || '—';
+      $('#acc_id').textContent       = account?.id || '—';
+      $('#acc_plan').textContent     = account?.plan || '—';
+      $('#acc_currency').textContent = account?.currency || '—';
+      $('#acc_months').textContent   = account?.invest_months ?? '—';
+      $('#acc_capital').textContent  = fmtQ(account?.capital || 0);
 
-    function fridaysBetween(a,b){
-      // lista de viernes entre [a,b)
-      const res=[];
-      const d = new Date(a);
-      // llevar a viernes
-      const day = d.getDay(); // 0..6 (dom..sab)
-      const diff = (5 - day + 7) % 7; // 5=viernes
-      d.setDate(d.getDate()+diff);
-      while (d < b){
-        res.push(new Date(d));
-        d.setDate(d.getDate()+7);
+      // interés total del periodo (simple)
+      let itotal = 0;
+      if (account?.capital && account?.interest_pct && account?.invest_months){
+        const per6   = (account.interest_pct/100) * account.capital;
+        const factor = (account.invest_months/6);
+        itotal = per6 * factor;
       }
-      return res;
+      $('#acc_interest_total').textContent = fmtQ(itotal);
     }
 
     function renderWeekly(){
-      const cap = Number(gAccount?.capital || 0);
-      const plan = (gAccount?.plan || 'STANDARD').toUpperCase();
-      const rate = Number(gAccount?.interest_pct) || PLANS[plan] || 15;
+      const tbody = $('#weeks_tbody');
+      tbody.innerHTML = '';
+      $('#weeks_total').textContent = '—';
+      $('#period_note').textContent = '—';
+      $('#close_note').textContent  = '';
 
-      // mensual = capital * (rate/100)/6
-      const monthlyInterest = cap * (rate/100) / 6;
-
-      const joinedAt = gAccount?.joined_at || new Date().toISOString().slice(0,10);
-      const { start, end } = startOfPeriod(joinedAt);
-      const now = new Date();
-      const until = now < end ? now : end; // mostrar solo hasta hoy
-
-      // Rango en UI
-      const fmtRange = (d)=> d.toLocaleDateString('es-GT',{day:'numeric',month:'long',year:'numeric'});
-      document.getElementById('periodRange').textContent = `${fmtRange(start)} — ${fmtRange(end)}`;
-
-      // Viernes
-      const fridays = fridaysBetween(start, until);
-
-      // distribuir interés mensual en semanas por proporción de días de cada tramo dentro del mes
-      const tbody = document.getElementById('weeklyBody');
-      tbody.innerHTML='';
-      let totalShown = 0;
-
-      if (fridays.length === 0){
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>—</td><td>—</td>`;
-        tbody.appendChild(tr);
-      }else{
-        // calcular pesos por días
-        const segments = fridays.map((f,i)=>{
-          const segStart = (i===0)? start : fridays[i-1];
-          const segEnd = f;
-          const days = Math.max(1, Math.round((segEnd - segStart)/(1000*60*60*24)));
-          return { date: f, days };
-        });
-
-        // si todavía hay tramo residual hasta today (y antes del cierre) NO se muestra porque la regla es “hasta el viernes actual”
-        const daysSum = segments.reduce((s,x)=>s+x.days,0);
-        let allocated = 0;
-        segments.forEach((seg,i)=>{
-          let val = monthlyInterest * (seg.days / daysSum);
-          // redondeo a 2 y ajustamos el último para cerrar exacto el mensual
-          if (i < segments.length-1){
-            val = Math.round(val*100)/100;
-            allocated += val;
-          }else{
-            val = Math.round((monthlyInterest - allocated)*100)/100;
-          }
-          totalShown += val;
-
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${seg.date.toLocaleDateString('es-GT')}</td><td>${fmtQ(val)}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-
-      // total mostrado si cerró el período, sino guión
-      const totalCell = document.getElementById('weeklyTotal');
-      if (now >= end){
-        totalCell.textContent = fmtQ(monthlyInterest);
-        document.getElementById('periodCloseNote').textContent = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
-      }else{
-        totalCell.textContent = '—';
-        document.getElementById('periodCloseNote').textContent = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
-      }
-    }
-
-    // === Simulador (6 meses, simple) ===
-    function assignedPlanByAmount(amount){
-      if (amount >= 250000) return 'PLATINUM';
-      if (amount >= 2000) return 'STANDARD';
-      return 'NO ELEGIBLE';
-    }
-    function buildSimulatorDefaults(){
-      const simCap = document.getElementById('simCapital');
-      simCap.value = Number(gAccount?.capital || 0);
-      runSimulator();
-    }
-    function runSimulator(){
-      const cap = Number(document.getElementById('simCapital').value || 0);
-      const plan = assignedPlanByAmount(cap);
-      document.getElementById('simPlan').textContent = (plan==='NO ELEGIBLE')?'NO ELEGIBLE':`${plan} (${PLANS[plan]}% semestral)`;
-
-      if (plan==='NO ELEGIBLE'){
-        document.getElementById('simStart').textContent = fmtQ(cap);
-        document.getElementById('simInt').textContent = fmtQ(0);
-        document.getElementById('simEnd').textContent = fmtQ(cap);
-        document.getElementById('simBody').innerHTML = '';
-        document.getElementById('simLegend').textContent = '';
+      if (!account?.joined_at || !account?.capital || !account?.interest_pct) {
+        tbody.innerHTML = '<tr><td>—</td><td>—</td></tr>';
         return;
       }
-      const rate = PLANS[plan];
-      const months = 6;
-      const mInt = cap * (rate/100) / 6;
-      const total = mInt * months;
+      const joined = new Date(account.joined_at);
+      const today  = new Date();
 
-      document.getElementById('simStart').textContent = fmtQ(cap);
-      document.getElementById('simInt').textContent = fmtQ(total);
-      document.getElementById('simEnd').textContent = fmtQ(cap + total);
+      // Ventana mensual: del día que entró al mismo día del mes siguiente
+      const start = new Date(today);
+      start.setDate(joined.getDate());
+      if (start > today) start.setMonth(start.getMonth()-1);
+      const end = new Date(start); end.setMonth(end.getMonth()+1);
 
-      const body = document.getElementById('simBody');
-      body.innerHTML = '';
-      for (let i=1;i<=6;i++){
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${i}</td><td>${fmtQ(mInt)}</td>`;
-        body.appendChild(tr);
+      const fmt = (d)=> d.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+      $('#period_note').textContent = `${fmt(start)} — ${fmt(end)}`;
+      $('#close_note').textContent  = `El período cierra el ${fmt(end)}.`;
+
+      const monthly = (account.interest_pct/100)*account.capital/6; // simple
+      const fridays = [];
+      const day = new Date(start);
+      while(day.getDay() !== 5) day.setDate(day.getDate()+1); // 5=viernes
+      while(day < end){ fridays.push(new Date(day)); day.setDate(day.getDate()+7); }
+
+      let showCount = 0;
+      for(const f of fridays){ if (today >= f) showCount++; }
+      if (showCount === 0) { tbody.innerHTML = '<tr><td>—</td><td>—</td></tr>'; return; }
+
+      const weeks = fridays.length || 4;
+      const base  = monthly / weeks;
+      const deltas = Array.from({length:weeks}, ()=> (Math.random()*0.04 - 0.02));
+      const sumFactor = deltas.reduce((a,b)=>a+b,0);
+      for (let i=0;i<deltas.length;i++) deltas[i] -= sumFactor/weeks;
+
+      for (let i=0;i<showCount;i++){
+        const f = fridays[i];
+        const interest = Math.max(0, base * (1 + deltas[i]));
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${fmt(f)}</td><td>${fmtQ(interest)}</td>`;
+        tbody.appendChild(tr);
       }
-      document.getElementById('simLegend').textContent = `Plan: ${plan} · Tasa semestral ${rate}% · Tasa mensual ${(rate/6).toFixed(2)}%.`;
+      if (today >= end) $('#weeks_total').textContent = fmtQ(monthly);
     }
-    document.getElementById('simCalc').addEventListener('click', runSimulator);
 
-    // === Modal Retiro ===
-    const back = document.getElementById('withdrawBack');
-    const openWithdraw = document.getElementById('openWithdraw');
-    const closeWithdraw = document.getElementById('withdrawClose');
-    const cancelWithdraw = document.getElementById('withdrawCancel');
-    const sendWithdraw = document.getElementById('withdrawSend');
-    const optEarly = document.getElementById('optEarly');
-    const optHealth = document.getElementById('optHealth');
-    const wAmount = document.getElementById('wAmount');
-    const wReason = document.getElementById('wReason');
-    const wAllSwitch = document.getElementById('wAllSwitch');
-    const wAllBtn = document.getElementById('wAllBtn');
-    const wHint = document.getElementById('wHint');
-    const switchRow = document.getElementById('switchRow');
-
-    function openModal(){ back.style.display='flex'; wAmount.value=''; wReason.value=''; setAll(false); wHint.style.display='none'; }
-    function closeModal(){ back.style.display='none'; }
-
-    openWithdraw.addEventListener('click', openModal);
-    closeWithdraw.addEventListener('click', closeModal);
-    cancelWithdraw.addEventListener('click', closeModal);
-    back.addEventListener('click', (e)=>{ if(e.target===back) closeModal(); });
-
-    // seleccionar tipo
-    function setType(t){
-      if (t==='early'){ optEarly.classList.add('active'); optHealth.classList.remove('active'); }
-      else { optHealth.classList.add('active'); optEarly.classList.remove('active'); }
+    // Simulador 6 meses
+    function autoPlan(amount){
+      let plan='NO ELEGIBLE', pct=0;
+      if (amount >= 2000 && amount < 250000){ plan='STANDARD (15% semestral)'; pct=15; }
+      else if (amount >= 250000){ plan='PLATINUM (20% semestral)'; pct=20; }
+      return {plan,pct};
     }
-    optEarly.addEventListener('click', ()=>setType('early'));
-    optHealth.addEventListener('click', ()=>setType('health'));
-
-    // switch retirar todo
-    function setAll(on){
-      if (on){
-        wAllSwitch.classList.add('on');
-        wAllSwitch.setAttribute('aria-checked','true');
-        // monto = capital
-        const cap = Number(gAccount?.capital || 0);
-        wAmount.value = cap;
-      }else{
-        wAllSwitch.classList.remove('on');
-        wAllSwitch.setAttribute('aria-checked','false');
-      }
+    document.getElementById('sim_amount').addEventListener('change', calcSim);
+    function calcSim(){
+      const raw = document.getElementById('sim_amount').value.replace(/[^\d.]/g,'');
+      const amount = Number(raw||0);
+      const {plan,pct} = autoPlan(amount);
+      document.getElementById('sim_plan').value = plan;
+      const tbody = document.getElementById('sim_tbody');
+      if (pct===0){ tbody.innerHTML = '<tr><td>1</td><td>—</td></tr>'; return; }
+      const m = (pct/100)*amount/6; // 6 meses simple
+      let rows='';
+      for(let i=1;i<=6;i++) rows += `<tr><td>${i}</td><td>${fmtQ(m)}</td></tr>`;
+      tbody.innerHTML = rows;
     }
-    function toggleAll(){ setAll(!wAllSwitch.classList.contains('on')); }
-    wAllSwitch.addEventListener('click', toggleAll);
-    wAllBtn.addEventListener('click', toggleAll);
-    switchRow.addEventListener('click', (e)=>{ if(!['INPUT','TEXTAREA','BUTTON'].includes(e.target.tagName)) toggleAll(); });
 
-    // Validaciones y envío
-    sendWithdraw.addEventListener('click', async ()=>{
-      const cap = Number(gAccount?.capital || 0);
-      const isAll = wAllSwitch.classList.contains('on');
-      const amount = isAll ? cap : Number(wAmount.value||0);
-      const type = optEarly.classList.contains('active') ? 'EARLY' : 'HEALTH';
-      const reason = (wReason.value||'').trim();
+    // Retiro
+    function setupUI(){
+      // abrir/cerrar modal
+      document.getElementById('openWithdraw').addEventListener('click', ()=> document.getElementById('wd_backdrop').style.display='flex');
+      document.getElementById('wd_close').addEventListener('click', ()=> document.getElementById('wd_backdrop').style.display='none');
+      document.getElementById('wd_cancel').addEventListener('click', ()=> document.getElementById('wd_backdrop').style.display='none');
 
-      // reglas
-      if (!isAll){
-        if (amount<=0){ showHint('Ingrese un monto válido.'); return; }
-        if (amount>cap){ showHint('El monto no puede ser mayor al capital.'); return; }
-        if ((cap-amount) < 2000){ showHint('Debe permanecer al menos Q 2,000 en capital (a menos que retire todo).'); return; }
+      // tabs
+      document.querySelectorAll('#wd_types .pill').forEach(p=>{
+        p.addEventListener('click', ()=>{
+          document.querySelectorAll('#wd_types .pill').forEach(x=>x.classList.remove('active'));
+          p.classList.add('active');
+        });
+      });
+
+      // switch retirar todo
+      const all = document.getElementById('wd_all');
+      const amount = document.getElementById('wd_amount');
+      document.getElementById('wd_switch').addEventListener('click', (e)=>{
+        e.preventDefault(); all.checked = !all.checked; applyAll();
+      });
+      all.addEventListener('change', applyAll);
+      function applyAll(){
+        if (!account) return;
+        if (all.checked){ amount.value = String(account.capital||0); amount.setAttribute('disabled','disabled'); }
+        else { amount.removeAttribute('disabled'); amount.value=''; }
       }
 
-      // Insertar solicitud (la RLS debe setear user_id con auth.uid())
+      // enviar solicitud
+      document.getElementById('wd_submit').addEventListener('click', submitWithdraw);
+    }
+
+    async function submitWithdraw(){
+      if (!account) return alert('Cuenta no disponible.');
+      const type = document.querySelector('#wd_types .pill.active')?.dataset.type || 'early';
+      const reason = document.getElementById('wd_reason').value.trim();
+      const all = document.getElementById('wd_all').checked;
+      const amountInput = document.getElementById('wd_amount');
+      let amt = 0;
+      if (all){ amt = account.capital||0; }
+      else{
+        const raw = amountInput.value.replace(/[^\d.]/g,''); amt = Number(raw||0);
+        if (amt<=0) return alert('Ingrese un monto válido.');
+        if (amt > (account.capital||0)) return alert('No puede retirar más que su capital.');
+        if ((account.capital - amt) < 2000) return alert('Si el retiro es parcial, el capital restante no puede ser menor a Q 2,000.');
+      }
+      if (!reason) return alert('Por favor, escriba el motivo.');
+
       try{
         const { error } = await sb.from('withdrawal_requests').insert({
-          withdraw_type: type, // EARLY | HEALTH
-          amount: amount,
-          reason: reason,
-          withdraw_all: isAll
+          account_id: account.id,
+          amount: amt,
+          type: type === 'early' ? 'EARLY' : 'HEALTH',
+          reason
         });
         if (error) throw error;
 
-        // notificar a admins via Edge Function (si la tienes deploy)
+        // Notificación por Edge Function (opcional)
         try{
-          await sb.functions.invoke('notify-withdrawal', {
-            body: {
-              withdraw_type: type,
-              amount,
-              reason,
-              withdraw_all: isAll
-            }
+          await fetch(`${SUPABASE_URL}/functions/v1/notify-withdrawal`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({
+              account_id: account.id,
+              client_name: account.full_name || user.email,
+              client_email: user.email,
+              amount: amt,
+              type: (type === 'early' ? 'EARLY' : 'HEALTH'),
+              reason
+            })
           });
         }catch(_){}
 
         alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
-        closeModal();
+        document.getElementById('wd_backdrop').style.display='none';
       }catch(e){
-        showHint('No se pudo enviar la solicitud. Intenta nuevamente.');
-        console.error(e);
+        console.error(e); alert('No se pudo registrar la solicitud.');
       }
-    });
-
-    function showHint(msg){
-      wHint.style.display='flex';
-      wHint.textContent = msg;
     }
   </script>
 </body>
