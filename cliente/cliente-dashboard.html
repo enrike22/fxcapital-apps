@@ -17,8 +17,9 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
 .hidden{display:none !important}
 button{background:#fff;color:#000;border:none;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer}
 small{color:var(--muted)}
+input,select,textarea{width:100%;background:#000;color:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
 
-/* ===== MODAL CAMBIO DE CONTRASEÑA ===== */
+/* ===== MODAL GENÉRICO ===== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10000}
 .modal-card{width:100%;max-width:560px;background:linear-gradient(180deg,#151515,#1c1c1c);border:1px solid #2a2a2a;border-radius:18px;padding:22px 22px 16px;box-shadow:0 15px 40px #000a;position:relative}
 .modal-titlebar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -33,17 +34,16 @@ label{display:block;margin:8px 0 4px}
 .input-wrap input{width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:10px 64px 10px 38px;height:50px;font-size:16px}
 .eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:46px;height:46px;background:transparent;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
 .eye,.eye-off{width:32px;height:32px;fill:#fff;opacity:.98}
-.eye-btn:hover .eye,.eye-btn:hover .eye-off{opacity:1}
 
+/* helpers */
 .inline{display:flex;align-items:center;gap:10px;margin-top:6px}
 .helper{font-size:12px;color:#9fb4d1}
-.err{color:#ffb3b3;min-height:18px;text-align:center}
-.success{color:#b3ffcb;min-height:18px;text-align:center}
-.modal-actions{display:flex;gap:10px;margin-top:12px}
-.modal-actions .primary{flex:1;background:#0f0f0f;color:#fff;border:1px solid #2a2a2a}
-
-/* Toast */
+.err{color:#ffb3b3;min-height:18px}
+.success{color:#b3ffcb;min-height:18px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#101b10;border:1px solid #214c21;color:#c6f3c6;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px #000a;z-index:11000}
+
+/* tablas pequeñas */
+.small-table th,.small-table td{padding:8px}
 </style>
 </head>
 <body>
@@ -63,6 +63,9 @@ label{display:block;margin:8px 0 4px}
       <div><span class="badge">Cuenta (ID)</span><div id="c_account">—</div></div>
       <div><span class="badge">BLACK habilitado</span><div id="c_black">—</div></div>
     </div>
+    <div style="margin-top:12px">
+      <button id="openWithdraw">Solicitar retiro</button>
+    </div>
   </div>
 
   <div class="card">
@@ -74,9 +77,44 @@ label{display:block;margin:8px 0 4px}
       <tfoot><tr><th>Total mes</th><th id="monthTotal">—</th></tr></tfoot>
     </table>
   </div>
+
+  <div class="card">
+    <h2>Simulador de crecimiento</h2>
+    <div class="grid-3">
+      <div>
+        <label>Capital a simular (Q)</label>
+        <input id="sim_capital" type="number" min="2000" step="0.01" placeholder="Ej. 40000">
+      </div>
+      <div>
+        <label>Meses</label>
+        <select id="sim_months">
+          <option>6</option><option selected>12</option><option>18</option><option>24</option><option>36</option>
+        </select>
+      </div>
+      <div>
+        <label>Plan asignado (auto)</label>
+        <input id="sim_plan" type="text" disabled>
+      </div>
+    </div>
+    <div class="inline">
+      <div class="helper">La simulación usa capitalización <b>mensual</b> según el plan asignado por monto.</div>
+    </div>
+    <div id="sim_err" class="err"></div>
+    <div style="margin-top:10px">
+      <button id="runSim">Calcular</button>
+    </div>
+    <div id="sim_out" class="hidden" style="margin-top:14px">
+      <table class="small-table">
+        <thead><tr><th>Mes</th><th>Capital estimado</th></tr></thead>
+        <tbody id="sim_rows"></tbody>
+        <tfoot><tr><th>Final</th><th id="sim_final">—</th></tr></tfoot>
+      </table>
+      <div class="helper" id="sim_summary" style="margin-top:6px"></div>
+    </div>
+  </div>
 </div>
 
-<!-- ===== MODAL ===== -->
+<!-- ===== MODAL CAMBIO DE CONTRASEÑA ===== -->
 <div id="pwdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
   <div class="modal-card">
     <div class="modal-titlebar">
@@ -133,8 +171,46 @@ label{display:block;margin:8px 0 4px}
   </div>
 </div>
 
+<!-- ===== MODAL SOLICITUD DE RETIRO ===== -->
+<div id="wdModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="wdTitle">
+  <div class="modal-card">
+    <div class="modal-titlebar">
+      <h3 id="wdTitle">Solicitud de retiro</h3>
+      <button id="wdCloseX" class="close-x" type="button" title="Cerrar" aria-label="Cerrar">✕</button>
+    </div>
+    <p class="modal-sub">Seleccione el tipo de retiro y complete la información.</p>
+
+    <label>Tipo de retiro</label>
+    <div class="inline">
+      <label class="inline"><input type="radio" name="wd_kind" value="EARLY" checked> Antes de tiempo (10% penalización)</label>
+      <label class="inline"><input type="radio" name="wd_kind" value="HEALTH"> Causas de salud (sin penalización)</label>
+    </div>
+
+    <div class="inline" style="margin-top:10px">
+      <input id="wd_all" type="checkbox"><label for="wd_all" style="margin:0">Retirar todo mi capital</label>
+    </div>
+
+    <div id="wd_amount_wrap" style="margin-top:8px">
+      <label>Monto a retirar (Q)</label>
+      <input id="wd_amount" type="number" min="0" step="0.01" placeholder="Ej. 5000">
+      <div class="helper">Debe dejar al menos Q2,000 de capital si el retiro es parcial.</div>
+    </div>
+
+    <label style="margin-top:8px">Motivo</label>
+    <textarea id="wd_reason" rows="4" placeholder="Explique brevemente el motivo…"></textarea>
+
+    <div id="wd_err" class="err"></div>
+    <div id="wd_ok" class="success"></div>
+
+    <div class="modal-actions">
+      <button id="wdSubmit" class="primary" type="button">Enviar solicitud</button>
+      <button id="wdCancel" type="button">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
-<div id="toast" class="toast hidden">Contraseña actualizada correctamente.</div>
+<div id="toast" class="toast hidden">Listo.</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -145,29 +221,24 @@ const BASE=PROJECT_URL+"/rest/v1";
 const supa = supabase.createClient(PROJECT_URL, ANON_KEY);
 
 function hdr(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||"")}}
-function hdrJSON(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||""),"Content-Type":"application/json"}}
+function hdrJSON(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||""),"Content-Type":"application/json","Prefer":"return=representation"}}
 const GTZ='America/Guatemala';
 function logout(){localStorage.clear();location.href='cliente-login.html'}
 document.getElementById('logoutBtn').onclick=logout;
 function money(n,cur){return new Intl.NumberFormat('es-GT',{style:'currency',currency:cur==='USD'?'USD':'GTQ'}).format(n)}
 function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:GTZ}))}
-function toast(msg){const t=document.getElementById('toast'); t.textContent=msg||'Listo.'; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),2000);}
+function toast(msg){const t=document.getElementById('toast'); t.textContent=msg||'Listo.'; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),2200);}
 
 /*** ESTADO ***/
 let PROFILE=null,ACCOUNT=null;
 let PWD_FORCE=true;
 
-/*** MODAL helpers ***/
-const $modal  = document.getElementById('pwdModal');
-const $cancel = document.getElementById('pwdCancel');
-const $closeX = document.getElementById('pwdCloseX');
-
-function reallyHideModal(){
-  $modal.classList.add('hidden');
-  $modal.style.display='none';
-  setTimeout(()=>{$modal.style.display='';},0);
-}
-function closePwdModal(){ reallyHideModal(); sessionStorage.pwdModalDismissed='1'; }
+/*** MODAL helpers (pwd) ***/
+const $pwdModal  = document.getElementById('pwdModal');
+const $pwdCancel = document.getElementById('pwdCancel');
+const $pwdCloseX = document.getElementById('pwdCloseX');
+function reallyHide(el){el.classList.add('hidden'); el.style.display='none'; setTimeout(()=>{el.style.display='';},0);}
+function closePwdModal(){ reallyHide($pwdModal); sessionStorage.pwdModalDismissed='1'; }
 function openPwdModal(force){
   PWD_FORCE = !!force;
   document.getElementById('pwdCancel').style.display = force ? 'none' : 'inline-block';
@@ -175,28 +246,44 @@ function openPwdModal(force){
   document.getElementById('pwdEmail').value = localStorage.email || '';
   ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pwdMsg').textContent=''; document.getElementById('pwdOk').textContent='';
-  $modal.classList.remove('hidden');
+  $pwdModal.classList.remove('hidden');
 }
 ['click','touchend'].forEach(evt=>{
-  $cancel.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); if(!PWD_FORCE) closePwdModal();});
-  $closeX.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); if(!PWD_FORCE) closePwdModal();});
+  $pwdCancel.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); if(!PWD_FORCE) closePwdModal();});
+  $pwdCloseX.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); if(!PWD_FORCE) closePwdModal();});
 });
-$modal.addEventListener('click',(e)=>{ if(e.target===$modal && !PWD_FORCE) closePwdModal(); });
-window.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && !PWD_FORCE && !$modal.classList.contains('hidden')) closePwdModal(); });
+$pwdModal.addEventListener('click',(e)=>{ if(e.target===$pwdModal && !PWD_FORCE) closePwdModal(); });
+window.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && !PWD_FORCE && !$pwdModal.classList.contains('hidden')) closePwdModal(); });
+
+/*** MODAL helpers (withdraw) ***/
+const $wdModal  = document.getElementById('wdModal');
+const $wdCancel = document.getElementById('wdCancel');
+const $wdCloseX = document.getElementById('wdCloseX');
+function openWdModal(){ document.getElementById('wd_err').textContent=''; document.getElementById('wd_ok').textContent=''; document.getElementById('wd_reason').value=''; document.getElementById('wd_amount').value=''; document.getElementById('wd_all').checked=false; document.getElementById('wd_amount_wrap').classList.remove('hidden'); $wdModal.classList.remove('hidden'); }
+function closeWd(){ reallyHide($wdModal); }
+document.getElementById('openWithdraw').onclick=openWdModal;
+['click','touchend'].forEach(evt=>{
+  $wdCancel.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); closeWd();});
+  $wdCloseX.addEventListener(evt,(e)=>{e.preventDefault();e.stopPropagation(); closeWd();});
+});
+$wdModal.addEventListener('click',(e)=>{ if(e.target===$wdModal) closeWd(); });
 
 /*** BOOT ***/
 (async function boot(){
   if(!localStorage.token){ logout(); return; }
 
+  // valida token
   const rUser=await fetch(`${PROJECT_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:`Bearer ${localStorage.token}`}})
   if(!rUser.ok){ logout(); return; }
 
+  // carga perfil y cuenta
   const rp=await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}&select=id,full_name,require_password_change,first_login_completed`,{headers:hdr()});
   PROFILE=(await rp.json())[0]||null;
 
   const ra=await fetch(`${BASE}/accounts?user_id=eq.${localStorage.uid}&select=id,currency,principal_locked,plan,black_enabled`,{headers:hdr()});
   ACCOUNT=(await ra.json())[0]||null;
 
+  // pintar
   document.getElementById("c_name").textContent=PROFILE?.full_name||"—";
   document.getElementById("c_plan").textContent=ACCOUNT?.plan||"—";
   document.getElementById("c_currency").textContent=ACCOUNT?.currency||"—";
@@ -206,12 +293,12 @@ window.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && !PWD_FORCE && !$
 
   buildMonthResults();
 
-  // Mostrar SOLO primera vez
-  const firstLoginNotDone = PROFILE?.first_login_completed !== true;
+  // mostrar modal de contraseña si aplica
+  const needChange = PROFILE?.require_password_change === true || PROFILE?.first_login_completed !== true;
   const localSkip = localStorage.pwdFirstDone === 'true' || sessionStorage.pwdModalDismissed === '1';
-  if (firstLoginNotDone && !localSkip) openPwdModal(true);
+  if (needChange && !localSkip) openPwdModal(true);
 
-  // Ojos
+  // ojos pwd
   document.addEventListener('click',(e)=>{
     const btn=e.target.closest('.eye-btn'); if(!btn) return;
     const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
@@ -228,8 +315,63 @@ window.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && !PWD_FORCE && !$
   });
 
   document.getElementById('pwdSubmit').onclick=submitPasswordChange;
+
+  // simulador: autoplán en input
+  document.getElementById('sim_capital').addEventListener('input',()=>updateSimPlan());
+  updateSimPlan();
+
+  // run sim
+  document.getElementById('runSim').onclick=runSimulation;
+
+  // withdraw UI handlers
+  document.getElementById('wd_all').addEventListener('change',(e)=>{
+    document.getElementById('wd_amount_wrap').classList.toggle('hidden', e.target.checked);
+  });
+
 })();
 
+/*** Lógica de plan asignado (para simulador) ***/
+function planForAmount(q){
+  // BLACK solo si admin lo habilitó
+  if (ACCOUNT?.black_enabled) return { name:'BLACK', rateSem:0.25 };
+  if (q >= 250000) return { name:'PLATINUM', rateSem:0.20 };
+  if (q >= 2000)   return { name:'STANDARD', rateSem:0.15 };
+  return { name:'NO ELEGIBLE', rateSem:0 };
+}
+function updateSimPlan(){
+  const val = Number(document.getElementById('sim_capital').value || 0);
+  const plan = planForAmount(val);
+  const el = document.getElementById('sim_plan');
+  el.value = `${plan.name} ${plan.rateSem>0?`(${(plan.rateSem*100).toFixed(0)}% semestral)`:''}`;
+}
+
+/*** Simulación (capitalización mensual) ***/
+function runSimulation(){
+  const err = document.getElementById('sim_err'); err.textContent='';
+  const out = document.getElementById('sim_out'); out.classList.add('hidden');
+  const tbody = document.getElementById('sim_rows'); tbody.innerHTML='';
+  const months = parseInt(document.getElementById('sim_months').value,10);
+  let capital = Number(document.getElementById('sim_capital').value || 0);
+
+  if (isNaN(capital) || capital < 2000){ err.textContent='Ingrese un capital válido (mínimo Q2,000).'; return; }
+
+  const { name, rateSem } = planForAmount(capital);
+  if (rateSem<=0){ err.textContent='El capital debe ser al menos Q2,000.'; return; }
+
+  const r_m = rateSem/6; // mensual
+  for(let m=1;m<=months;m++){
+    capital = capital * (1 + r_m);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${m}</td><td>Q ${capital.toLocaleString('es-GT',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+    tbody.appendChild(tr);
+  }
+  document.getElementById('sim_final').textContent = `Q ${capital.toLocaleString('es-GT',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const summary = `Plan: ${name} — Tasa semestral ${(rateSem*100).toFixed(0)}% · Tasa mensual ${(r_m*100).toFixed(2)}%.`;
+  document.getElementById('sim_summary').textContent = summary;
+  out.classList.remove('hidden');
+}
+
+/*** Construye resultados del mes (mock aleatorio) ***/
 function buildMonthResults(){
   const PLAN_RATES={STANDARD:0.15/6,PLATINUM:0.20/6,BLACK:0.25/6};
   if(!ACCOUNT) return;
@@ -268,6 +410,7 @@ async function submitPasswordChange(){
   const { data: signInNew, error: signInNewErr } = await supa.auth.signInWithPassword({ email, password: neo });
   if (!signInNewErr && signInNew?.session?.access_token) {
     localStorage.token = signInNew.session.access_token;
+    localStorage.refresh_token = signInNew.session.refresh_token || '';
     localStorage.uid   = signInNew.user.id;
     localStorage.email = email;
   }
@@ -279,19 +422,75 @@ async function submitPasswordChange(){
     });
   }catch{}
 
-  // 👉 desbloquear cierre y evitar re-apertura
   localStorage.pwdFirstDone = 'true';
   sessionStorage.pwdModalDismissed = '1';
   PWD_FORCE = false;
-  document.getElementById('pwdCancel').style.display='inline-block';
-  document.getElementById('pwdCloseX').style.display='flex';
 
   ok.textContent='Contraseña actualizada correctamente.';
-  // cerrar con seguridad (clase + estilo)
   setTimeout(()=>{ closePwdModal(); toast('Contraseña actualizada correctamente.'); }, 250);
 
   btn.disabled=false; btn.textContent=oldTxt;
 }
+
+/*** Enviar solicitud de retiro ***/
+document.getElementById('wdSubmit').onclick = async () => {
+  const err = document.getElementById('wd_err'); const ok = document.getElementById('wd_ok'); err.textContent=''; ok.textContent='';
+  if(!ACCOUNT){ err.textContent='No se encontró la cuenta.'; return; }
+  const kind = (document.querySelector('input[name="wd_kind"]:checked')||{}).value || 'EARLY';
+  const penalty_pct = kind==='EARLY'?10:0;
+
+  let amount = 0;
+  const all = document.getElementById('wd_all').checked;
+  if (all){ amount = Number(ACCOUNT.principal_locked||0); }
+  else {
+    amount = Number(document.getElementById('wd_amount').value||0);
+    if (isNaN(amount) || amount<=0){ err.textContent='Monto inválido.'; return; }
+    if (amount > (ACCOUNT.principal_locked||0)){ err.textContent='El monto excede su capital.'; return; }
+    const remain = (ACCOUNT.principal_locked||0) - amount;
+    if (remain < 2000){ err.textContent='Si el retiro es parcial, debe quedar al menos Q2,000 de capital. Elija un monto menor o marque “Retirar todo”.'; return; }
+  }
+
+  const reason = (document.getElementById('wd_reason').value||'').trim();
+  if (!reason){ err.textContent='Explique brevemente el motivo.'; return; }
+
+  // Insertar solicitud
+  const payload = {
+    account_id: ACCOUNT.id,
+    user_id: localStorage.uid,
+    amount,
+    currency: ACCOUNT.currency || 'GTQ',
+    penalty_pct,
+    kind,                   // EARLY | HEALTH
+    reason,
+    status: 'PENDING',
+    created_at: new Date().toISOString()
+  };
+
+  const r1 = await fetch(`${BASE}/withdrawal_requests`,{
+    method:'POST', headers: hdrJSON(), body: JSON.stringify(payload)
+  });
+  if (!r1.ok){ err.textContent='No se pudo enviar la solicitud.'; return; }
+  const inserted = (await r1.json())[0];
+
+  // Notificación admin
+  try{
+    await fetch(`${BASE}/admin_notifications`,{
+      method:'POST', headers: hdrJSON(),
+      body: JSON.stringify({
+        kind: 'WITHDRAWAL_REQUEST',
+        payload: { withdrawal_id: inserted.id, account_id: ACCOUNT.id, kind, penalty_pct, amount, currency: ACCOUNT.currency },
+        created_at: new Date().toISOString()
+      })
+    });
+  }catch{}
+
+  ok.textContent='Solicitud enviada.';
+  // Mensaje al usuario
+  alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles, de lunes a viernes, dentro del horario laboral establecido.');
+  closeWd();
+  toast('Solicitud enviada');
+};
+
 </script>
 </body>
 </html>
