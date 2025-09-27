@@ -30,14 +30,12 @@ label{display:block;margin:8px 0 4px}
 .input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
 .input-wrap input{
   width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;
-  padding:10px 64px 10px 38px;   /* más espacio para el ojo a la derecha */
-  height:50px;
-  font-size:16px;
+  padding:10px 64px 10px 38px;
+  height:50px;font-size:16px;
 }
 .eye-btn{
   position:absolute;right:6px;top:50%;transform:translateY(-50%);
-  width:46px;height:46px;               /* MÁS GRANDE */
-  background:transparent;border:0;cursor:pointer;
+  width:46px;height:46px;background:transparent;border:0;cursor:pointer;
   display:flex;align-items:center;justify-content:center;z-index:5
 }
 .eye,.eye-off{width:32px;height:32px;fill:#fff;opacity:.98}
@@ -161,6 +159,7 @@ function guateNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:
 
 /*** ESTADO ***/
 let PROFILE=null,ACCOUNT=null;
+let MODAL_MANDATORY=false; // <-- controla si se puede cerrar
 
 /*** CARGA INICIAL (requiere sesión válida) ***/
 (async function boot(){
@@ -195,7 +194,7 @@ let PROFILE=null,ACCOUNT=null;
 
   // eventos del modal
   document.getElementById('pwdSubmit').onclick=submitPasswordChange;
-  document.getElementById('pwdCancel').onclick=()=>closePwdModal();
+  document.getElementById('pwdCancel').onclick=()=>{ if(!MODAL_MANDATORY) closePwdModal(); };
   document.getElementById('showAllPwds').addEventListener('change',(e)=>{
     ['curPwd','newPwd','confPwd'].forEach(id=>{
       const el=document.getElementById(id); el.type=e.target.checked?'text':'password';
@@ -231,13 +230,18 @@ function randomParts(total,n){if(n<=0)return[];const xs=Array.from({length:n},()
 
 /*** Modal helpers ***/
 function openPwdModal(force){
-  document.getElementById('pwdCancel').style.display = force ? 'none' : 'inline-block';
+  MODAL_MANDATORY = !!force;
+  document.getElementById('pwdCancel').style.display = MODAL_MANDATORY ? 'none' : 'inline-block';
   document.getElementById('pwdEmail').value = localStorage.email || '';
   ['curPwd','newPwd','confPwd'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pwdMsg').textContent=''; document.getElementById('pwdOk').textContent='';
   document.getElementById('pwdModal').classList.remove('hidden');
 }
-function closePwdModal(){ document.getElementById('pwdModal').classList.add('hidden'); }
+function closePwdModal(){
+  // si es obligatorio, NO se permite cerrar manualmente
+  if (MODAL_MANDATORY) return;
+  document.getElementById('pwdModal').classList.add('hidden');
+}
 
 /*** Cambio de contraseña con supabase-js (fiable) ***/
 async function submitPasswordChange(){
@@ -252,7 +256,7 @@ async function submitPasswordChange(){
   if(neo!==rep){ err.textContent='La confirmación no coincide.'; return; }
 
   // 1) Verificar credenciales actuales (login silencioso)
-  const { error: signInErr, data: signInData } = await supa.auth.signInWithPassword({ email, password: cur });
+  const { error: signInErr } = await supa.auth.signInWithPassword({ email, password: cur });
   if (signInErr) { err.textContent='Correo o contraseña actual incorrectos.'; return; }
 
   // 2) Cambiar contraseña usando el token actual
@@ -267,15 +271,19 @@ async function submitPasswordChange(){
     localStorage.email = email;
   }
 
-  // 4) Marcar primer ingreso completado
+  // 4) Marcar primer ingreso completado (y actualizar flags locales)
   try{
     await fetch(`${BASE}/profiles?id=eq.${localStorage.uid}`,{
       method:'PATCH',headers:hdrJSON(),
       body:JSON.stringify({ first_login_completed:true, require_password_change:false, last_password_changed_at:new Date().toISOString() })
     });
+    PROFILE.first_login_completed = true;
+    PROFILE.require_password_change = false;
   }catch{}
 
   ok.textContent='Contraseña actualizada correctamente.';
+  // ya no es obligatorio: permite cerrar y ciérralo
+  MODAL_MANDATORY = false;
   setTimeout(()=>closePwdModal(),900);
 }
 </script>
