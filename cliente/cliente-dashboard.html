@@ -25,21 +25,22 @@ small{color:var(--muted)}
 .modal-sub{color:var(--muted);margin-bottom:14px}
 label{display:block;margin:8px 0 4px}
 
-/* inputs con ojo a la derecha - VERSION VISIBLE */
+/* inputs con ojo a la derecha - VERSIÓN MUY VISIBLE */
 .input-wrap{position:relative}
 .input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
 .input-wrap input{
   width:100%;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:12px;
-  padding:10px 56px 10px 38px;   /* más espacio para el ojo a la derecha */
-  height:46px;
+  padding:10px 64px 10px 38px;   /* más espacio para el ojo a la derecha */
+  height:50px;
+  font-size:16px;
 }
 .eye-btn{
-  position:absolute;right:8px;top:50%;transform:translateY(-50%);
-  width:40px;height:40px;               /* MÁS GRANDE */
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:46px;height:46px;               /* MÁS GRANDE */
   background:transparent;border:0;cursor:pointer;
   display:flex;align-items:center;justify-content:center;z-index:5
 }
-.eye,.eye-off{width:28px;height:28px;fill:#fff;opacity:.95}
+.eye,.eye-off{width:32px;height:32px;fill:#fff;opacity:.98}
 .eye-btn:hover .eye,.eye-btn:hover .eye-off{opacity:1}
 
 .inline{display:flex;align-items:center;gap:10px;margin-top:6px}
@@ -136,11 +137,16 @@ label{display:block;margin:8px 0 4px}
   </div>
 </div>
 
+<!-- SDK de Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 /*** CONFIG SUPABASE ***/
 const PROJECT_URL="https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE=PROJECT_URL+"/rest/v1";
+const supa = supabase.createClient(PROJECT_URL, ANON_KEY);
+
 function hdr(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||"")}}
 function hdrJSON(){return{apikey:ANON_KEY,Authorization:"Bearer "+(localStorage.token||""),"Content-Type":"application/json"}}
 const GTZ='America/Guatemala';
@@ -196,14 +202,14 @@ let PROFILE=null,ACCOUNT=null;
     });
   });
 
-  // toggles individuales
+  // toggles individuales (ojos)
   document.addEventListener('click',(e)=>{
     const btn=e.target.closest('.eye-btn'); if(!btn) return;
     const id=btn.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
     el.type=(el.type==='password')?'text':'password';
     btn.innerHTML=(el.type==='password')
       ? `<svg class="eye" viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/></svg>`
-      : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9.5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
+      : `<svg class="eye-off" viewBox="0 0 24 24"><path d="M2 5l2-2 17 17-2 2-3.6-3.6C13.7 19 12.9 19 12 19 5 19 2 12 2 12a17 17 0 0 1 5.2-6.3L2 5zm7.3 2.9A5 5 0 0 0 7 12a5 5 0 0 0 5 5c.6 0 1.1-.1 1.6-.3L9.3 7.9zM12 5c7 0 10 7 10 7a16.8 16.8 0 0 1-3.2 4.7l-1.5-1.5A14.6 14.6 0 0 0 20 12s-3-7-8-7c-1 0-2 .2-2.9 .5L7.7 4.1C9 3.7 10.4 3.5 12 3.5z"/></svg>`;
   });
 
 })();
@@ -233,7 +239,7 @@ function openPwdModal(force){
 }
 function closePwdModal(){ document.getElementById('pwdModal').classList.add('hidden'); }
 
-/*** Cambio de contraseña (FIX: usar token fresco del login de verificación) ***/
+/*** Cambio de contraseña con supabase-js (fiable) ***/
 async function submitPasswordChange(){
   const email=(document.getElementById('pwdEmail').value||'').trim();
   const cur=document.getElementById('curPwd').value;
@@ -245,40 +251,20 @@ async function submitPasswordChange(){
   if(neo.length<8){ err.textContent='La nueva contraseña debe tener al menos 8 caracteres.'; return; }
   if(neo!==rep){ err.textContent='La confirmación no coincide.'; return; }
 
-  // 1) Validar credenciales actuales y OBTENER access_token fresco
-  const rLogin=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
-    body:JSON.stringify({email,password:cur})
-  });
-  const loginJson = await rLogin.json().catch(()=>null);
-  if(!rLogin.ok || !loginJson?.access_token){
-    err.textContent='Correo o contraseña actual incorrectos.'; return;
-  }
+  // 1) Verificar credenciales actuales (login silencioso)
+  const { error: signInErr, data: signInData } = await supa.auth.signInWithPassword({ email, password: cur });
+  if (signInErr) { err.textContent='Correo o contraseña actual incorrectos.'; return; }
 
-  // 2) Cambiar contraseña usando ese token fresco
-  const rPatch=await fetch(`${PROJECT_URL}/auth/v1/user`,{
-    method:'PATCH',
-    headers:{
-      apikey:ANON_KEY,
-      Authorization:`Bearer ${loginJson.access_token}`,  // <-- token correcto
-      'Content-Type':'application/json'
-    },
-    body:JSON.stringify({password:neo})
-  });
-  if(!rPatch.ok){
-    let e=null; try{ e=await rPatch.json(); }catch{}
-    err.textContent = e?.msg || e?.message || e?.error_description || 'No se pudo actualizar la contraseña.';
-    return;
-  }
+  // 2) Cambiar contraseña usando el token actual
+  const { error: updErr } = await supa.auth.updateUser({ password: neo });
+  if (updErr) { err.textContent = updErr.message || 'No se pudo actualizar la contraseña.'; return; }
 
   // 3) Re-login con la nueva para refrescar localStorage
-  const rLoginNew=await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-    method:"POST",headers:{apikey:ANON_KEY,"Content-Type":"application/json"},
-    body:JSON.stringify({email,password:neo})
-  });
-  if(rLoginNew.ok){
-    const d=await rLoginNew.json();
-    localStorage.token=d.access_token; localStorage.uid=d.user.id; localStorage.email=email;
+  const { data: signInNew, error: signInNewErr } = await supa.auth.signInWithPassword({ email, password: neo });
+  if (!signInNewErr && signInNew?.session?.access_token) {
+    localStorage.token = signInNew.session.access_token;
+    localStorage.uid   = signInNew.user.id;
+    localStorage.email = email;
   }
 
   // 4) Marcar primer ingreso completado
@@ -287,7 +273,7 @@ async function submitPasswordChange(){
       method:'PATCH',headers:hdrJSON(),
       body:JSON.stringify({ first_login_completed:true, require_password_change:false, last_password_changed_at:new Date().toISOString() })
     });
-  }catch(e){}
+  }catch{}
 
   ok.textContent='Contraseña actualizada correctamente.';
   setTimeout(()=>closePwdModal(),900);
