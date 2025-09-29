@@ -207,7 +207,6 @@
         </div>
       </div>
 
-      <!-- Más espacio entre campos y botones -->
       <div class="actions" style="margin-top:28px">
         <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
         <button class="btn" id="savePwd">Guardar y continuar</button>
@@ -309,27 +308,54 @@
     const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
     sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on;
   }
-  async function sendWithdraw(){
+
+  // >>> NUEVO: enviar por correo vía Edge Function
+  async function enviarSolicitudRetiro(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
-    const { data: acc } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
+
+    // Traer datos de la cuenta para validar capital y obtener account_id
+    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
+    if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
+
     const capital=Number(acc?.capital||0);
     const all=$('#switchAll').classList.contains('on');
     const amount=all? capital : Number($('#wAmount').value||0);
     const reason=($('#wReason').value||'').trim();
+
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
       const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 de capital (a menos que retire todo).'); return; }
     }
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
-    const { error } = await sb.from('withdrawal_requests').insert({ request_type:withdrawType, amount:amount, reason:reason });
-    if(error){ alert('No se pudo enviar la solicitud.\n'+(error.message||error)); return; }
-    alert('Hemos recibido su solicitud; será atendida en un lapso no mayor a 24 horas hábiles.');
+
+    // Invocar la Edge Function (usa los secrets: TO_EMAILS, FROM_EMAIL en Supabase)
+    const { data, error } = await sb.functions.invoke('send-withdrawal-email', {
+      body: {
+        amount,
+        reason,
+        full_withdrawal: all,
+        account_id: acc?.id || null,
+        user_email: session.user.email,
+        user_name: $('#valName')?.textContent || ''
+      }
+    });
+
+    if(error){
+      alert('No se pudo enviar la solicitud.\n' + (error.message || JSON.stringify(error)));
+      return;
+    }
+
+    alert('Solicitud enviada. Te escribiremos pronto.');
     dlg.close();
+    // Limpiar campos
+    $('#wAmount').value = '';
+    $('#wReason').value = '';
+    toggleSwitchAll(false);
   }
 
-  // ===== CAMBIO DE CONTRASEÑA FORZADO (MÓDULO) =====
+  // ===== CAMBIO DE CONTRASEÑA FORZADO (MÓDULO)
   const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
   const __fxpwd_blocker  = document.getElementById('panelBlocker');
 
@@ -444,7 +470,8 @@
     document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
     document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wSend').addEventListener('click', sendWithdraw);
+    // <<< cambiamos el handler para usar la Edge Function
+    document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
 
     // Palanca
     document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
