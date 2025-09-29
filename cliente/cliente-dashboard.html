@@ -10,7 +10,7 @@
   :root{
     --bg:#0b0b0d; --panel:#121316; --card:#17191d; --soft:#21242b;
     --muted:#9aa1ac; --txt:#f5f7fb; --outline:rgba(255,255,255,.08);
-    --danger:#ff4d4f; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
+    --brand:#5ea1ff; --danger:#ff4d4f; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
   }
   *{box-sizing:border-box} html,body{height:100%}
   body{margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;color:var(--txt);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -41,12 +41,17 @@
   dialog::backdrop{background:rgba(0,0,0,.55)}
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--outline)}
   .modal-b{padding:18px 22px}
-  .pill{border:1px solid var(--outline);border-radius:14px;padding:12px 14px}
+  .pill{border:1px solid var(--outline);border-radius:14px;padding:12px 14px;cursor:pointer;user-select:none}
+  .pill.selected{border-color:rgba(94,161,255,.85);box-shadow:0 0 0 2px rgba(94,161,255,.25) inset}
   .input, textarea{width:100%;border:1px solid var(--outline);background:#0f1116;color:var(--txt);border-radius:12px;padding:12px 14px;outline:none}
   textarea{min-height:120px;resize:vertical}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){ .row{grid-template-columns:1fr} }
-  /* Bloqueo del panel cuando se exige cambio de contraseña */
+  /* SWITCH (palanca) */
+  .switch{--w:52px;--h:30px;--knob:24px;inline-size:var(--w);block-size:var(--h);background:#2a2d34;border-radius:999px;border:1px solid var(--outline);position:relative;cursor:pointer;transition:.2s ease;display:inline-block}
+  .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background:#fff;top:50%;left:3px;translate:0 -50%;transition:.2s ease;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+  .switch.on{background:linear-gradient(90deg,#2b7cff,#6ba9ff)}
+  .switch.on::after{left:calc(var(--w) - var(--knob) - 3px)}
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
 </style>
@@ -128,17 +133,32 @@
     </div>
     <div class="modal-b">
       <div class="row">
-        <div class="pill" id="optEarly" tabindex="0" style="cursor:pointer"><div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div><div class="muted">Aplicará una penalización del 10%.</div></div>
-        <div class="pill" id="optHealth" tabindex="0" style="cursor:pointer"><div style="font-weight:700;margin-bottom:6px">Causas de salud</div><div class="muted">Exento de penalización.</div></div>
+        <div class="pill" id="optEarly" tabindex="0" role="button" aria-pressed="true">
+          <div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div>
+          <div class="muted">Aplicará una penalización del 10%.</div>
+        </div>
+        <div class="pill" id="optHealth" tabindex="0" role="button" aria-pressed="false">
+          <div style="font-weight:700;margin-bottom:6px">Causas de salud</div>
+          <div class="muted">Exento de penalización.</div>
+        </div>
       </div>
       <div class="row" style="margin-top:14px">
-        <div><div class="k">Monto a retirar (Q)</div><input id="wAmount" class="input" type="number" min="0" placeholder="Ej. 5,000"><div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div></div>
-        <div><div class="k">Motivo</div><textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea></div>
+        <div>
+          <div class="k">Monto a retirar (Q)</div>
+          <input id="wAmount" class="input" type="number" min="0" placeholder="Ej. 5,000">
+          <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
+        </div>
+        <div>
+          <div class="k">Motivo</div>
+          <textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea>
+        </div>
       </div>
+
       <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
-        <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+        <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0" title="Retirar todo mi capital"></div>
         <div>Retirar todo mi capital</div>
       </div>
+
       <div class="actions">
         <button class="btn secondary" id="wCancel">Cancelar</button>
         <button class="btn" id="wSend">Enviar solicitud</button>
@@ -165,63 +185,41 @@
   <!-- Supabase + Lógica -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-  /* === CONFIG === */
+  const BASE_URL = 'https://clientes.fxcapital-gt.com/';  // redirección deseada
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-  const LOGIN_PATH = '/cliente-login.html';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
 
-  /* === HELPERS === */
   const $ = s=>document.querySelector(s);
-  function fmtQ(n){ try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } }
-  function clampDate(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+  const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
+  const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  // misma fecha del mes siguiente (si el mes no tiene ese día, cae al último día)
   function nextMonthSameDay(d){
     const x=clampDate(d);
     const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
     while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); }
     t.setHours(0,0,0,0); return t;
   }
-  // viernes de la semana de 'd'
-  function fridayOfSameWeek(d){
-    const x=clampDate(d); const dow=x.getDay(); const add=(5-dow+7)%7; // 5=viernes
-    const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f;
-  }
-  // primera ventana mensual que contiene "today"
-  function currentWindow(joinedAt, today){
-    let start=clampDate(joinedAt), end=nextMonthSameDay(start);
-    while(end <= today){ start=end; end=nextMonthSameDay(start); }
-    return {start,end};
-  }
-  // listar todos los viernes en [start, end)
-  function fridaysInRange(start,end){
-    let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7);
-    const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); }
-    return list.length? list : []; // normalmente 4 o 5
-  }
+  function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
+  function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
+  function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
 
-  /* === TABLA RESULTADOS === */
   function paintWeeks(acc){
     const today=clampDate(new Date());
     const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
-
     const {start,end}=currentWindow(joined,today);
-    document.getElementById('monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    document.getElementById('monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
+    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
+    $('#monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
 
     const cap=Number(acc.capital||0);
     const semRate=Number(acc.interest_pct||0)/100;
     const monthly=cap*(semRate/6);
 
     const allFridays = fridaysInRange(start,end);
-    const weekly = allFridays.length>0 ? (monthly / allFridays.length) : 0;
+    const weekly = allFridays.length? (monthly/allFridays.length) : 0;
 
-    const tbody=document.getElementById('weekBody');
-    tbody.innerHTML='';
-
-    // Mostramos los viernes que ya ocurrieron (<= hoy) dentro de la ventana
-    const cutoff = today < end ? today : end; // si ya cerró, mostramos todos
+    const tbody=$('#weekBody'); tbody.innerHTML='';
+    const cutoff = today < end ? today : end;
     const shown = allFridays.filter(f => f < cutoff);
 
     if(shown.length===0){
@@ -233,84 +231,59 @@
         tbody.appendChild(tr);
       });
     }
-
-    // Footer: si el mes cerró, total mensual; si no, “—”
-    document.getElementById('weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
+    $('#weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
   }
 
-  /* === CARGA CABECERA === */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_PATH); return; }
+    if(!session){ window.location.href = BASE_URL; return; }
     const uid=session.user.id;
 
-    // Perfil + bandera de contraseña + cuenta
     const [{ data: prof }, { data: acc }] = await Promise.all([
       sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    // Forzar cambio de contraseña (sólo nuevos clientes)
-    const mustChange = !!(prof && prof.must_change_password === true);
-    if(mustChange){ enforcePasswordChange(); }
+    if(prof?.must_change_password === true){ enforcePasswordChange(); }
 
-    document.getElementById('valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
+    $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
+    if(!acc){ ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>$('#'+id).textContent='—'); $('#valCapital').textContent=fmtQ(0); $('#valPeriodInterest').textContent=fmtQ(0); return; }
 
-    if(!acc){
-      ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>document.getElementById(id).textContent='—');
-      document.getElementById('valCapital').textContent=fmtQ(0);
-      document.getElementById('valPeriodInterest').textContent=fmtQ(0);
-      return;
-    }
-
-    document.getElementById('valAccountId').textContent = acc.id||'—';
-    document.getElementById('valPlan').textContent = acc.plan||'—';
-    document.getElementById('valCurrency').textContent = acc.currency||'—';
-    document.getElementById('valMonths').textContent = acc.invest_months ?? '—';
-    document.getElementById('valCapital').textContent = fmtQ(acc.capital||0);
+    $('#valAccountId').textContent = acc.id||'—';
+    $('#valPlan').textContent = acc.plan||'—';
+    $('#valCurrency').textContent = acc.currency||'—';
+    $('#valMonths').textContent = acc.invest_months ?? '—';
+    $('#valCapital').textContent = fmtQ(acc.capital||0);
 
     const semPct = (acc.interest_pct||0)/100;
     const totalPeriodInterest = (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
-    document.getElementById('valPeriodInterest').textContent = fmtQ(totalPeriodInterest);
+    $('#valPeriodInterest').textContent = fmtQ(totalPeriodInterest);
 
     paintWeeks(acc);
   }
 
-  /* === SIMULADOR (6 meses, simple) === */
-  function autoPlanAndRate(capital){
-    if(capital >= 2000 && capital < 250000) return {name:'STANDARD (15% semestral)', rate:0.15};
-    if(capital >= 250000)                return {name:'PLATINUM (20% semestral)', rate:0.20};
-    return {name:'NO ELEGIBLE', rate:0};
-  }
-  function simulate(){
-    const cap=Number(document.getElementById('simCapital').value||0);
-    const {name,rate}=autoPlanAndRate(cap);
-    document.getElementById('simPlan').textContent=name;
-    const months=6, monthlyInterest=cap*(rate/6), total=monthlyInterest*months;
-    document.getElementById('simFinal').textContent=fmtQ(cap+total);
-    document.getElementById('simSum').textContent=fmtQ(total);
-    document.getElementById('simNote').textContent=`Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-    const body=document.getElementById('simBody'); body.innerHTML='';
-    for(let m=1;m<=months;m++){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`; body.appendChild(tr); }
-  }
-
-  /* === RETIROS === */
-  const dlg=document.getElementById('wdlg');
+  // ===== RETIROS =====
+  const dlg = $('#wdlg');
   let withdrawType='early';
-  function selectType(t){ withdrawType=t; }
+  function markPill(){
+    $('#optEarly').classList.toggle('selected', withdrawType==='early');
+    $('#optEarly').setAttribute('aria-pressed', String(withdrawType==='early'));
+    $('#optHealth').classList.toggle('selected', withdrawType==='health');
+    $('#optHealth').setAttribute('aria-pressed', String(withdrawType==='health'));
+  }
+  function selectType(t){ withdrawType=t; markPill(); }
   function toggleSwitchAll(force){
-    const sw=document.getElementById('switchAll');
-    const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
-    sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on)); document.getElementById('wAmount').disabled=on;
+    const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
+    sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on;
   }
   async function sendWithdraw(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_PATH); return; }
+    if(!session){ window.location.href = BASE_URL; return; }
     const { data: acc } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
     const capital=Number(acc?.capital||0);
-    const all=document.getElementById('switchAll').classList.contains('on');
-    const amount=all? capital : Number(document.getElementById('wAmount').value||0);
-    const reason=(document.getElementById('wReason').value||'').trim();
+    const all=$('#switchAll').classList.contains('on');
+    const amount=all? capital : Number($('#wAmount').value||0);
+    const reason=($('#wReason').value||'').trim();
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
@@ -323,9 +296,8 @@
     dlg.close();
   }
 
-  /* === CAMBIO DE CONTRASEÑA FORZADO (sólo nuevos clientes) === */
-  const forceDlg = document.getElementById('forcePwdDlg');
-  const blocker = document.getElementById('panelBlocker');
+  // ===== CAMBIO DE CONTRASEÑA FORZADO =====
+  const forceDlg = $('#forcePwdDlg'), blocker = $('#panelBlocker');
   function lockPanel(lock){
     blocker.classList.toggle('on', !!lock);
     document.querySelectorAll('button,input,textarea,select').forEach(el=>{
@@ -335,12 +307,12 @@
   }
   function enforcePasswordChange(){ lockPanel(true); forceDlg.showModal(); }
   async function saveNewPassword(){
-    const p1 = (document.getElementById('newPwd').value||'').trim();
-    const p2 = (document.getElementById('newPwd2').value||'').trim();
+    const p1 = ($('#newPwd').value||'').trim();
+    const p2 = ($('#newPwd2').value||'').trim();
     if(p1.length<8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
     if(p1!==p2){ alert('Las contraseñas no coinciden.'); return; }
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ alert('Sesión no válida.'); window.location.replace(LOGIN_PATH); return; }
+    if(!session){ window.location.href = BASE_URL; return; }
     const up = await sb.auth.updateUser({ password:p1 });
     if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
     const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
@@ -348,18 +320,32 @@
     forceDlg.close(); lockPanel(false); alert('¡Contraseña actualizada! Bienvenido al panel.');
   }
 
-  /* === INIT === */
+  // ===== INIT =====
   document.addEventListener('DOMContentLoaded', ()=>{
-    document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
-    document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
-    document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wSend').addEventListener('click', sendWithdraw);
-    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
-    document.getElementById('btnCalc').addEventListener('click', simulate);
+    // Sesión
+    $('#btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
-    document.getElementById('savePwd').addEventListener('click', saveNewPassword);
-    document.getElementById('logoutNow').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
+    // Retiros
+    $('#btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
+    $('#xClose').addEventListener('click', ()=> dlg.close());
+    $('#wCancel').addEventListener('click', ()=> dlg.close());
+    $('#wSend').addEventListener('click', sendWithdraw);
+
+    // Palanca
+    $('#switchAll').addEventListener('click', ()=>toggleSwitchAll());
+    $('#switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
+
+    // Selección de motivo (click + teclado)
+    $('#optEarly').addEventListener('click', ()=>selectType('early'));
+    $('#optHealth').addEventListener('click', ()=>selectType('health'));
+    ['optEarly','optHealth'].forEach(id=>{
+      $('#'+id).addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); $('#'+id).click(); } });
+    });
+    selectType('early'); // estado inicial
+
+    // Cambio de contraseña
+    $('#savePwd').addEventListener('click', saveNewPassword);
+    $('#logoutNow').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
     loadHeader();
   });
