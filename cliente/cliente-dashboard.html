@@ -43,7 +43,7 @@
   .modal-b{padding:18px 22px}
   .pill{border:1px solid var(--outline);border-radius:14px;padding:12px 14px;cursor:pointer;user-select:none}
   .pill.selected{border-color:rgba(94,161,255,.85);box-shadow:0 0 0 2px rgba(94,161,255,.25) inset}
-  .input, textarea{width:100%;border:1px solid var(--outline);background:#0f1116;color:var(--txt);border-radius:12px;padding:12px 14px;outline:none}
+  .input, textarea{width:100%;border:1px solid var(--outline);background:#0f1116;color:#f5f7fb;border-radius:12px;padding:12px 14px;outline:none}
   textarea{min-height:120px;resize:vertical}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){ .row{grid-template-columns:1fr} }
@@ -52,8 +52,11 @@
   .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background:#fff;top:50%;left:3px;translate:0 -50%;transition:.2s ease;box-shadow:0 3px 10px rgba(0,0,0,.3)}
   .switch.on{background:linear-gradient(90deg,#2b7cff,#6ba9ff)}
   .switch.on::after{left:calc(var(--w) - var(--knob) - 3px)}
-  .blocker{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);display:none}
+  /* === Forzado de contraseña (mínimo) === */
+  .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
+  #forcePwdDlg{border:0;border-radius:20px;background:#0f1116;color:#f5f7fb;width:min(840px,92vw)}
+  #forcePwdDlg::backdrop{background:rgba(0,0,0,.55)}
 </style>
 </head>
 <body>
@@ -244,7 +247,8 @@
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    if(prof?.must_change_password === true){ enforcePasswordChange(); }
+    // Forzado de contraseña (sólo si must_change_password = true)
+    if (prof?.must_change_password === true) __fxpwd_enforce();
 
     $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
     if(!acc){ ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>$('#'+id).textContent='—'); $('#valCapital').textContent=fmtQ(0); $('#valPeriodInterest').textContent=fmtQ(0); return; }
@@ -296,28 +300,38 @@
     dlg.close();
   }
 
-  // ===== CAMBIO DE CONTRASEÑA FORZADO =====
-  const forceDlg = $('#forcePwdDlg'), blocker = $('#panelBlocker');
-  function lockPanel(lock){
-    blocker.classList.toggle('on', !!lock);
+  // ===== CAMBIO DE CONTRASEÑA FORZADO (MÓDULO) =====
+  const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
+  const __fxpwd_blocker  = document.getElementById('panelBlocker');
+
+  function __fxpwd_lockPanel(lock){
+    if(!__fxpwd_blocker) return;
+    __fxpwd_blocker.classList.toggle('on', !!lock);
     document.querySelectorAll('button,input,textarea,select').forEach(el=>{
-      if(el.closest('#forcePwdDlg')) return;
+      if(__fxpwd_forceDlg && el.closest('#forcePwdDlg')) return;
       el.disabled = !!lock;
     });
   }
-  function enforcePasswordChange(){ lockPanel(true); forceDlg.showModal(); }
-  async function saveNewPassword(){
-    const p1 = ($('#newPwd').value||'').trim();
-    const p2 = ($('#newPwd2').value||'').trim();
-    if(p1.length<8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
-    if(p1!==p2){ alert('Las contraseñas no coinciden.'); return; }
+  function __fxpwd_enforce(){
+    __fxpwd_lockPanel(true);
+    if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
+  }
+  async function __fxpwd_save(){
+    const p1 = (document.getElementById('newPwd')?.value || '').trim();
+    const p2 = (document.getElementById('newPwd2')?.value || '').trim();
+    if(p1.length < 8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+    if(p1 !== p2){ alert('Las contraseñas no coinciden.'); return; }
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
     const up = await sb.auth.updateUser({ password:p1 });
     if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
     const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
     if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
-    forceDlg.close(); lockPanel(false); alert('¡Contraseña actualizada! Bienvenido al panel.');
+    __fxpwd_forceDlg?.close(); __fxpwd_lockPanel(false); alert('¡Contraseña actualizada! Bienvenido al panel.');
+  }
+  async function __fxpwd_logout(){
+    await sb.auth.signOut();
+    window.location.href = BASE_URL;
   }
 
   // ===== INIT =====
@@ -343,9 +357,9 @@
     });
     selectType('early'); // estado inicial
 
-    // Cambio de contraseña
-    $('#savePwd').addEventListener('click', saveNewPassword);
-    $('#logoutNow').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
+    // Cambio de contraseña (eventos de botones del modal)
+    document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
+    document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
 
     loadHeader();
   });
