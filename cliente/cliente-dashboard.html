@@ -58,7 +58,7 @@
   #forcePwdDlg{border:0;border-radius:20px;background:#0f1116;color:#f5f7fb;width:min(840px,92vw)}
   #forcePwdDlg::backdrop{background:rgba(0,0,0,.55)}
 
-  /* Ojos grandes para mostrar/ocultar contraseña */
+  /* Ojos grandes + estados de error */
   .pwd-field{position:relative}
   .pwd-field .input{padding-right:56px}
   .eye-btn{
@@ -68,6 +68,8 @@
     display:grid; place-items:center; cursor:pointer;
   }
   .eye-btn svg{width:28px; height:28px}
+  .input.invalid{border-color:var(--danger) !important}
+  .err{color:var(--danger); font-size:12px; margin-top:6px}
 </style>
 </head>
 <body>
@@ -190,20 +192,23 @@
         <div>
           <div class="k">Nueva contraseña</div>
           <div class="pwd-field">
-            <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres">
-            <button type="button" id="eyeNew" class="eye-btn" aria-pressed="false" title="Mostrar/ocultar"></button>
+            <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres" aria-describedby="errNew">
+            <button type="button" id="eyeNew" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar contraseña"></button>
           </div>
+          <div id="errNew" class="err" role="alert" aria-live="polite" style="display:none"></div>
         </div>
         <div>
           <div class="k">Confirmar contraseña</div>
           <div class="pwd-field">
-            <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña">
-            <button type="button" id="eyeNew2" class="eye-btn" aria-pressed="false" title="Mostrar/ocultar"></button>
+            <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña" aria-describedby="errNew2">
+            <button type="button" id="eyeNew2" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar confirmación"></button>
           </div>
+          <div id="errNew2" class="err" role="alert" aria-live="polite" style="display:none"></div>
         </div>
       </div>
 
-      <div class="actions">
+      <!-- Más espacio entre campos y botones -->
+      <div class="actions" style="margin-top:28px">
         <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
         <button class="btn" id="savePwd">Guardar y continuar</button>
       </div>
@@ -213,7 +218,7 @@
   <!-- Supabase + Lógica -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-  const BASE_URL = 'https://clientes.fxcapital-gt.com/';  // redirección deseada
+  const BASE_URL = 'https://clientes.fxcapital-gt.com/';
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
@@ -272,7 +277,6 @@
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    // Forzado de contraseña (sólo si must_change_password = true)
     if (prof?.must_change_password === true) __fxpwd_enforce();
 
     $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
@@ -292,7 +296,7 @@
   }
 
   // ===== RETIROS =====
-  const dlg = $('#wdlg');
+  const dlg = document.getElementById('wdlg');
   let withdrawType='early';
   function markPill(){
     $('#optEarly').classList.toggle('selected', withdrawType==='early');
@@ -341,25 +345,8 @@
     __fxpwd_lockPanel(true);
     if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
   }
-  async function __fxpwd_save(){
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
-    const p2 = (document.getElementById('newPwd2')?.value || '').trim();
-    if(p1.length < 8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
-    if(p1 !== p2){ alert('Las contraseñas no coinciden.'); return; }
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.href = BASE_URL; return; }
-    const up = await sb.auth.updateUser({ password:p1 });
-    if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
-    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
-    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
-    __fxpwd_forceDlg?.close(); __fxpwd_lockPanel(false); alert('¡Contraseña actualizada! Bienvenido al panel.');
-  }
-  async function __fxpwd_logout(){
-    await sb.auth.signOut();
-    window.location.href = BASE_URL;
-  }
 
-  /* Iconos (ojo / ojo tachado) y vínculo con los inputs */
+  // Iconos (ojo / ojo tachado) + vínculo con inputs
   const __eyeSVG = `
 <svg viewBox="0 0 24 24" fill="none">
   <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
@@ -384,35 +371,104 @@
     });
   }
 
+  // Validación visual en tiempo real
+  function __fxpwd_setError(inputEl, errEl, msg){
+    if(!inputEl || !errEl) return;
+    if(msg){
+      inputEl.classList.add('invalid');
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }else{
+      inputEl.classList.remove('invalid');
+      errEl.textContent = '';
+      errEl.style.display = 'none';
+    }
+  }
+  function __fxpwd_validate(){
+    const p1 = (document.getElementById('newPwd')?.value || '').trim();
+    const p2 = (document.getElementById('newPwd2')?.value || '').trim();
+    const in1 = document.getElementById('newPwd');
+    const in2 = document.getElementById('newPwd2');
+    const e1  = document.getElementById('errNew');
+    const e2  = document.getElementById('errNew2');
+
+    let ok = true;
+    if(p1.length < 8){
+      __fxpwd_setError(in1,e1,'La contraseña debe tener al menos 8 caracteres.');
+      ok = false;
+    }else{
+      __fxpwd_setError(in1,e1,'');
+    }
+    if(p2.length === 0){
+      __fxpwd_setError(in2,e2,'Confirme su contraseña.');
+      ok = false;
+    }else if(p1 !== p2){
+      __fxpwd_setError(in2,e2,'Las contraseñas no coinciden.');
+      ok = false;
+    }else{
+      __fxpwd_setError(in2,e2,'');
+    }
+    return ok;
+  }
+
+  async function __fxpwd_save(){
+    // Validación previa
+    if(!__fxpwd_validate()) return;
+
+    const p1 = (document.getElementById('newPwd')?.value || '').trim();
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ window.location.href = BASE_URL; return; }
+
+    const up = await sb.auth.updateUser({ password:p1 });
+    if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
+
+    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
+    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
+
+    __fxpwd_forceDlg?.close();
+    __fxpwd_lockPanel(false);
+    alert('¡Contraseña actualizada! Bienvenido al panel.');
+  }
+
+  async function __fxpwd_logout(){
+    await sb.auth.signOut();
+    window.location.href = BASE_URL;
+  }
+
   // ===== INIT =====
   document.addEventListener('DOMContentLoaded', ()=>{
     // Sesión
-    $('#btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
+    document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
     // Retiros
-    const dlg = document.getElementById('wdlg');
-    $('#btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
-    $('#xClose').addEventListener('click', ()=> dlg.close());
-    $('#wCancel').addEventListener('click', ()=> dlg.close());
-    $('#wSend').addEventListener('click', sendWithdraw);
+    document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
+    document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
+    document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
+    document.getElementById('wSend').addEventListener('click', sendWithdraw);
 
     // Palanca
-    $('#switchAll').addEventListener('click', ()=>toggleSwitchAll());
-    $('#switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
+    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
+    document.getElementById('switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
 
     // Selección de motivo (click + teclado)
-    $('#optEarly').addEventListener('click', ()=>selectType('early'));
-    $('#optHealth').addEventListener('click', ()=>selectType('health'));
+    document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
+    document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
     ['optEarly','optHealth'].forEach(id=>{
-      $('#'+id).addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); $('#'+id).click(); } });
+      document.getElementById(id).addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); document.getElementById(id).click(); } });
     });
-    selectType('early'); // estado inicial
+    selectType('early');
 
-    // Cambio de contraseña (eventos de botones del modal)
+    // Cambio de contraseña — eventos
     document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
     document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
 
-    // Conectar ojos grandes
+    // Validación en vivo
+    ['newPwd','newPwd2'].forEach(id=>{
+      document.getElementById(id)?.addEventListener('input', __fxpwd_validate);
+      document.getElementById(id)?.addEventListener('blur', __fxpwd_validate);
+    });
+
+    // Ojos grandes
     __bindPwdEye('newPwd','eyeNew');
     __bindPwdEye('newPwd2','eyeNew2');
 
