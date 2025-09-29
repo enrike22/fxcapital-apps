@@ -29,19 +29,14 @@
     color:var(--txt); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   }
   .wrap{max-width:1100px;margin:36px auto;padding:0 20px}
-  header{
-    display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;
-  }
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
   .brand{display:flex;gap:14px;align-items:center}
-  .brand-logo{
-    width:46px;height:46px;border-radius:12px;
-    background: radial-gradient(120% 120% at 20% 20%, #7fb3ff 0%, #3a6dff 40%, #1b2a57 80%);
-    box-shadow:var(--shadow);
-  }
+  .brand-logo{width:46px;height:46px;border-radius:12px;background: radial-gradient(120% 120% at 20% 20%, #7fb3ff 0%, #3a6dff 40%, #1b2a57 80%);box-shadow:var(--shadow)}
   .brand h1{margin:0;font-weight:800;letter-spacing:.5px;font-size:clamp(22px,2.9vw,36px)}
   .brand h1 span{opacity:.9;font-weight:700}
   .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:600;background:#fff;color:#000;cursor:pointer;box-shadow:var(--shadow)}
   .btn.secondary{background:var(--soft);color:var(--txt);border:1px solid var(--outline)}
+  .btn.danger{background:var(--danger);color:#fff}
   .panel{background:var(--panel);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow)}
   .card{background:var(--card);border:1px solid var(--outline);border-radius:var(--radius)}
   .section{padding:22px}
@@ -74,10 +69,13 @@
   .actions{display:flex;gap:12px;justify-content:flex-end;margin-top:8px}
   .btn.full{width:100%;border-radius:14px;padding:14px 16px;font-size:15px}
   .muted{color:var(--muted)}
+  /* Bloqueo del panel cuando la contraseña es obligatoria */
+  .blocker{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);display:none}
+  .blocker.on{display:block}
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="appWrap">
     <header>
       <div class="brand">
         <div class="brand-logo" title="FX Capital"></div>
@@ -153,6 +151,9 @@
     </section>
   </div>
 
+  <!-- BLOQUEO (cuando se exige cambio de contraseña) -->
+  <div class="blocker" id="panelBlocker"></div>
+
   <!-- MODAL RETIRO -->
   <dialog id="wdlg">
     <div class="modal-h">
@@ -192,6 +193,30 @@
     </div>
   </dialog>
 
+  <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
+  <dialog id="forcePwdDlg">
+    <div class="modal-h">
+      <div style="font-weight:800">Por seguridad, cambia tu contraseña</div>
+    </div>
+    <div class="modal-b">
+      <p class="muted" style="margin-top:0">Este paso es obligatorio sólo la primera vez que ingresas.</p>
+      <div class="row">
+        <div>
+          <div class="k">Nueva contraseña</div>
+          <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres">
+        </div>
+        <div>
+          <div class="k">Confirmar contraseña</div>
+          <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
+        <button class="btn" id="savePwd">Guardar y continuar</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Supabase + Lógica -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
@@ -205,32 +230,37 @@
   const $ = s=>document.querySelector(s);
   function fmtQ(n){ try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } }
   function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=(val ?? '—'); }
+  function clampDate(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
 
-  // Devuelve misma fecha del mes siguiente (ajustando si el mes no tiene ese día)
+  // misma fecha del mes siguiente (si el mes no tiene ese día, cae al último día)
   function nextMonthSameDay(d){
-    const x=new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const x=clampDate(d);
     const target=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
     while(target.getMonth() !== (x.getMonth()+1)%12){ target.setDate(target.getDate()-1); }
     target.setHours(0,0,0,0);
     return target;
   }
-  // Rueda la ventana mensual (start/end) para que contenga "today"
+  // ventana mensual que contiene "today"
   function currentWindow(joinedAt, today){
-    let start=new Date(joinedAt.getFullYear(),joinedAt.getMonth(),joinedAt.getDate()); start.setHours(0,0,0,0);
+    let start=clampDate(joinedAt);
     let end=nextMonthSameDay(start);
     while(end <= today){ start = end; end = nextMonthSameDay(start); }
     return {start,end};
   }
-  // Viernes de la semana de d
-  function fridayOfSameWeek(d){
-    const x=new Date(d); const dow=x.getDay(); const diff=(5-dow+7)%7; // 5=viernes
-    const f=new Date(x); f.setDate(x.getDate()+diff); f.setHours(0,0,0,0); return f;
+  // viernes siguiente (o mismo día si ya es viernes)
+  function nextFriday(date){
+    const x=clampDate(date);
+    const dow=x.getDay(); // 0 dom .. 6 sab
+    const add=(5 - dow + 7) % 7; // 5 = viernes
+    const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f;
   }
-  function countFridaysInRange(start,end){
-    let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7);
-    let c=0; while(f<end){ c++; f.setDate(f.getDate()+7); } return c||4;
-  }
+  // ¿está d en [a,b)?
   function inRange(d,a,b){ return d>=a && d<b; }
+  // cuenta viernes en rango (por si quieres usarlo)
+  function countFridaysInRange(start,end){
+    let f=nextFriday(start); if(f<start) f.setDate(f.getDate()+7);
+    let c=0; while(f<end){ c++; f.setDate(f.getDate()+7); } return Math.max(c,4);
+  }
 
   /* === CARGA CABECERA & RESULTADOS === */
   async function loadHeader(){
@@ -238,10 +268,15 @@
     if(!session){ window.location.replace(LOGIN_PATH); return; }
     const uid=session.user.id;
 
+    // Perfil + bandera de contraseña + cuenta
     const [{ data: prof }, { data: acc }] = await Promise.all([
-      sb.from('profiles').select('full_name,email').eq('id',uid).single(),
+      sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
+
+    // Forzar cambio de contraseña si corresponde
+    const mustChange = !!(prof && prof.must_change_password === true);
+    if(mustChange){ enforcePasswordChange(); }
 
     setText('valName', (prof?.full_name || prof?.email || session.user.email));
 
@@ -271,7 +306,7 @@
     $('#monthNote').textContent = 'El período cierra el —.';
   }
 
-  function paintWeekTableSingle(date, amount, sumOrDash){
+  function paintWeekRow(date, amount, footer){
     const tb = $('#weekBody'); tb.innerHTML = '';
     if(date && amount!=null){
       const tr=document.createElement('tr');
@@ -280,40 +315,39 @@
     } else {
       tb.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
     }
-    $('#weekSum').textContent = (sumOrDash===null? '—' : (typeof sumOrDash==='number'? fmtQ(sumOrDash): '—'));
+    $('#weekSum').textContent = (footer===undefined? '—' : (footer===null? '—' : fmtQ(footer)));
   }
 
   function paintCurrentMonth(acc){
-    const today=new Date(); today.setHours(0,0,0,0);
-    const joined = acc?.joined_at ? new Date(acc.joined_at) : today;
-    joined.setHours(0,0,0,0);
+    const today=clampDate(new Date());
+    const joined = acc?.joined_at ? clampDate(new Date(acc.joined_at)) : today;
 
     const {start,end} = currentWindow(joined, today);
-
     $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
     $('#monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
 
     const capital = Number(acc.capital||0);
     const semRate = Number(acc.interest_pct||0)/100;
-    const monthExact = capital * (semRate/6); // interés exacto del mes
+    const monthlyInterest = capital * (semRate/6);
 
-    // Si el mes YA cerró (hoy >= end): no mostramos semana, sólo total mensual
+    // Si el mes YA cerró, sólo total mensual
     if(today >= end){
-      paintWeekTableSingle(null,null, monthExact);
+      paintWeekRow(null,null, monthlyInterest);
       return;
     }
 
-    // Semana actual (viernes) dentro de la ventana → se muestra SOLO esa
-    const fri = fridayOfSameWeek(today);
-    if(!inRange(fri, start, end)){
-      paintWeekTableSingle(null,null,'—');
-      return;
+    // Mostrar SIEMPRE el PRÓXIMO viernes dentro del período
+    let f = nextFriday(today);
+    if(f < start) f = nextFriday(start);
+    if(!inRange(f, start, end)){
+      // si el próximo viernes se pasa del fin, intenta el viernes anterior dentro del rango
+      const prev = new Date(f); prev.setDate(f.getDate()-7);
+      if(inRange(prev, start, end)){ f = prev; } else { paintWeekRow(null,null,'—'); return; }
     }
 
-    // Para que no “baile” la suma, dividimos el interés mensual entre el # de viernes del rango
-    const nWeeks = countFridaysInRange(start,end);         // 4 o 5 normalmente
-    const weekly = monthExact / nWeeks;                    // reparto uniforme
-    paintWeekTableSingle(fri, weekly, null);               // null => footer “—”
+    const nWeeks = countFridaysInRange(start,end);
+    const weekly = monthlyInterest / nWeeks;
+    paintWeekRow(f, weekly, undefined); // footer em-dash hasta que cierre el mes
   }
 
   /* === SIMULADOR (6 meses, simple) === */
@@ -366,6 +400,47 @@
     dlg.close();
   }
 
+  /* === CAMBIO DE CONTRASEÑA FORZADO === */
+  const forceDlg = $('#forcePwdDlg');
+  const blocker = $('#panelBlocker');
+
+  function lockPanel(lock){
+    blocker.classList.toggle('on', !!lock);
+    // opcional: deshabilitar botones si quieres
+    document.querySelectorAll('button,input,textarea,select').forEach(el=>{
+      if(el.closest('#forcePwdDlg')) return; // no bloquear el modal
+      el.disabled = !!lock;
+    });
+  }
+
+  function enforcePasswordChange(){
+    lockPanel(true);
+    forceDlg.showModal();
+  }
+
+  async function saveNewPassword(){
+    const p1 = ($('#newPwd').value||'').trim();
+    const p2 = ($('#newPwd2').value||'').trim();
+    if(p1.length < 8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+    if(p1 !== p2){ alert('Las contraseñas no coinciden.'); return; }
+
+    const { data:{ session }, error:gsErr } = await sb.auth.getSession();
+    if(gsErr || !session){ alert('Sesión no válida.'); window.location.replace(LOGIN_PATH); return; }
+
+    const up = await sb.auth.updateUser({ password: p1 });
+    if(up.error){ alert('No se pudo actualizar la contraseña: ' + up.error.message); return; }
+
+    // Quitar la obligación en profiles.must_change_password
+    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
+    if(upd.error){ 
+      // si el campo no existe o falla, al menos permite continuar
+      console.warn('No se pudo actualizar must_change_password:', upd.error.message);
+    }
+    forceDlg.close();
+    lockPanel(false);
+    alert('¡Contraseña actualizada! Bienvenido al panel.');
+  }
+
   /* === INIT === */
   document.addEventListener('DOMContentLoaded', ()=>{
     $('#btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
@@ -378,6 +453,11 @@
     selectType('early');
     const sw=$('#switchAll'); sw.addEventListener('click', ()=>toggleSwitchAll()); sw.addEventListener('keydown',(e)=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
     $('#btnCalc').addEventListener('click', simulate);
+
+    // Forzado de contraseña
+    $('#savePwd').addEventListener('click', saveNewPassword);
+    $('#logoutNow').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
+
     loadHeader();
   });
   </script>
