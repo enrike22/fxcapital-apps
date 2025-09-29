@@ -120,7 +120,10 @@
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
       <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
-        <div class="group card"><span class="k">Capital a simular (Q)</span><input id="simCapital" class="input" type="number" min="0" placeholder="Ej. 40,000" /></div>
+        <div class="group card"><span class="k">Capital a simular (Q)</span>
+          <!-- mínimo Q 2000 -->
+          <input id="simCapital" class="input" type="number" min="2000" placeholder="Ej. 40,000" />
+        </div>
         <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
         <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
       </div>
@@ -314,7 +317,6 @@
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
 
-    // Traer datos de la cuenta para validar capital y obtener account_id
     const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
     if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
 
@@ -330,7 +332,6 @@
     }
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
 
-    // Invocar la Edge Function (usa los secrets: TO_EMAILS, FROM_EMAIL en Supabase)
     const { data, error } = await sb.functions.invoke('send-withdrawal-email', {
       body: {
         amount,
@@ -349,7 +350,6 @@
 
     alert('Solicitud enviada. Te escribiremos pronto.');
     dlg.close();
-    // Limpiar campos
     $('#wAmount').value = '';
     $('#wReason').value = '';
     toggleSwitchAll(false);
@@ -372,7 +372,6 @@
     if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
   }
 
-  // Iconos (ojo / ojo tachado) + vínculo con inputs
   const __eyeSVG = `
 <svg viewBox="0 0 24 24" fill="none">
   <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
@@ -397,7 +396,6 @@
     });
   }
 
-  // Validación visual en tiempo real
   function __fxpwd_setError(inputEl, errEl, msg){
     if(!inputEl || !errEl) return;
     if(msg){
@@ -438,7 +436,6 @@
   }
 
   async function __fxpwd_save(){
-    // Validación previa
     if(!__fxpwd_validate()) return;
 
     const p1 = (document.getElementById('newPwd')?.value || '').trim();
@@ -461,23 +458,50 @@
     window.location.href = BASE_URL;
   }
 
+  /* ======= SIMULADOR (Q2000 mínimo) ======= */
+  function autoPlanAndRate(capital){
+    if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
+    if(capital >= 250000)                     return { name:'PLATINUM (20% semestral)', rate:0.20 };
+    return { name:'NO ELEGIBLE', rate:0 };
+  }
+  function simulate(){
+    const cap = Number(document.getElementById('simCapital').value || 0);
+    if(cap < 2000){
+      alert('El capital mínimo para simular es Q 2,000.');
+      return;
+    }
+    const {name, rate} = autoPlanAndRate(cap);
+    document.getElementById('simPlan').textContent = name;
+
+    const months = 6;
+    const monthlyInterest = cap * (rate/6);
+    const total = monthlyInterest * months;
+
+    document.getElementById('simFinal').textContent = fmtQ(cap + total);
+    document.getElementById('simSum').textContent   = fmtQ(total);
+    document.getElementById('simNote').textContent  = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
+
+    const body = document.getElementById('simBody');
+    body.innerHTML = '';
+    for(let m=1;m<=months;m++){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`;
+      body.appendChild(tr);
+    }
+  }
+
   // ===== INIT =====
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Sesión
     document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
-    // Retiros
     document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
     document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
-    // <<< cambiamos el handler para usar la Edge Function
     document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
 
-    // Palanca
     document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
     document.getElementById('switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
 
-    // Selección de motivo (click + teclado)
     document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
     document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
     ['optEarly','optHealth'].forEach(id=>{
@@ -485,19 +509,19 @@
     });
     selectType('early');
 
-    // Cambio de contraseña — eventos
     document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
     document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
 
-    // Validación en vivo
     ['newPwd','newPwd2'].forEach(id=>{
       document.getElementById(id)?.addEventListener('input', __fxpwd_validate);
       document.getElementById(id)?.addEventListener('blur', __fxpwd_validate);
     });
 
-    // Ojos grandes
     __bindPwdEye('newPwd','eyeNew');
     __bindPwdEye('newPwd2','eyeNew2');
+
+    /* Listener del botón Calcular */
+    document.getElementById('btnCalc').addEventListener('click', simulate);
 
     loadHeader();
   });
