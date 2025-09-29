@@ -8,43 +8,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0b0d;
-    --panel:#121316;
-    --card:#17191d;
-    --soft:#21242b;
-    --muted:#9aa1ac;
-    --txt:#f5f7fb;
-    --brand:#5ea1ff;
-    --accent:#3d73ff;
-    --ok:#1ed760;
-    --danger:#ff4d4f;
-    --outline:rgba(255,255,255,.08);
-    --shadow:0 10px 30px rgba(0,0,0,.35);
-    --radius:16px;
+    --bg:#0b0b0d; --panel:#121316; --card:#17191d; --soft:#21242b;
+    --muted:#9aa1ac; --txt:#f5f7fb; --outline:rgba(255,255,255,.08);
+    --danger:#ff4d4f; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;
-    color:var(--txt); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;color:var(--txt);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   .wrap{max-width:1100px;margin:36px auto;padding:0 20px}
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
   .brand{display:flex;gap:14px;align-items:center}
   .brand-logo{width:46px;height:46px;border-radius:12px;background: radial-gradient(120% 120% at 20% 20%, #7fb3ff 0%, #3a6dff 40%, #1b2a57 80%);box-shadow:var(--shadow)}
   .brand h1{margin:0;font-weight:800;letter-spacing:.5px;font-size:clamp(22px,2.9vw,36px)}
-  .brand h1 span{opacity:.9;font-weight:700}
   .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:600;background:#fff;color:#000;cursor:pointer;box-shadow:var(--shadow)}
-  .btn.secondary{background:var(--soft);color:var(--txt);border:1px solid var(--outline)}
+  .btn.secondary{background:var(--soft);color:#fff;border:1px solid var(--outline)}
   .btn.danger{background:var(--danger);color:#fff}
   .panel{background:var(--panel);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow)}
   .card{background:var(--card);border:1px solid var(--outline);border-radius:var(--radius)}
   .section{padding:22px}
   .grid{display:grid;gap:14px}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   @media (max-width:920px){ .grid.cols-3{grid-template-columns:1fr 1fr} }
-  @media (max-width:680px){ .grid.cols-3,.grid.cols-2{grid-template-columns:1fr} header{align-items:flex-start;gap:16px}}
+  @media (max-width:680px){ .grid.cols-3{grid-template-columns:1fr} header{align-items:flex-start;gap:16px} }
   .group{padding:18px 20px}
   .k{display:inline-block;font-size:13px;color:var(--muted);background:#0f1116;border:1px solid var(--outline);padding:6px 10px;border-radius:999px;margin-bottom:8px}
   .v{display:block;font-size:15px;font-weight:600}
@@ -62,14 +46,7 @@
   textarea{min-height:120px;resize:vertical}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){ .row{grid-template-columns:1fr} }
-  .switch{--w:42px;--h:24px;--knob:18px;inline-size:var(--w);block-size:var(--h);background:#2a2d34;border-radius:999px;border:1px solid var(--outline);position:relative;cursor:pointer;transition:.2s ease}
-  .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background:#fff;top:50%;left:3px;translate:0 -50%;transition:.2s ease;box-shadow:0 3px 10px rgba(0,0,0,.3)}
-  .switch.on{background:linear-gradient(90deg,#2b7cff,#6ba9ff)}
-  .switch.on::after{left:calc(var(--w) - var(--knob) - 3px)}
-  .actions{display:flex;gap:12px;justify-content:flex-end;margin-top:8px}
-  .btn.full{width:100%;border-radius:14px;padding:14px 16px;font-size:15px}
-  .muted{color:var(--muted)}
-  /* Bloqueo del panel cuando la contraseña es obligatoria */
+  /* Bloqueo del panel cuando se exige cambio de contraseña */
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
 </style>
@@ -79,7 +56,7 @@
     <header>
       <div class="brand">
         <div class="brand-logo" title="FX Capital"></div>
-        <h1>FX <span>| CAPITAL R.L.</span> — Panel del Cliente</h1>
+        <h1>FX | CAPITAL R.L. — Panel del Cliente</h1>
       </div>
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
     </header>
@@ -108,16 +85,10 @@
       <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
       <div class="muted" id="monthRange">—</div>
       <div style="overflow:auto;margin-top:8px">
-        <table class="table" id="weekTable">
-          <thead>
-            <tr><th>Viernes</th><th>Interés semanal</th></tr>
-          </thead>
-          <tbody id="weekBody">
-            <tr><td>—</td><td>—</td></tr>
-          </tbody>
-          <tfoot>
-            <tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr>
-          </tfoot>
+        <table class="table">
+          <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
+          <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
+          <tfoot><tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr></tfoot>
         </table>
       </div>
       <div id="monthNote" class="note">El período cierra el —.</div>
@@ -126,14 +97,9 @@
     <!-- SIMULADOR -->
     <section class="panel section" style="margin-top:18px">
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
-      <div class="muted" style="margin-bottom:14px">
-        Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.
-      </div>
+      <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
-        <div class="group card">
-          <span class="k">Capital a simular (Q)</span>
-          <input id="simCapital" class="input" type="number" min="0" placeholder="Ej. 40,000" />
-        </div>
+        <div class="group card"><span class="k">Capital a simular (Q)</span><input id="simCapital" class="input" type="number" min="0" placeholder="Ej. 40,000" /></div>
         <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
         <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
       </div>
@@ -162,25 +128,12 @@
     </div>
     <div class="modal-b">
       <div class="row">
-        <div class="pill" id="optEarly" tabindex="0" style="cursor:pointer">
-          <div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div>
-          <div class="muted">Aplicará una penalización del 10%.</div>
-        </div>
-        <div class="pill" id="optHealth" tabindex="0" style="cursor:pointer">
-          <div style="font-weight:700;margin-bottom:6px">Causas de salud</div>
-          <div class="muted">Exento de penalización.</div>
-        </div>
+        <div class="pill" id="optEarly" tabindex="0" style="cursor:pointer"><div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div><div class="muted">Aplicará una penalización del 10%.</div></div>
+        <div class="pill" id="optHealth" tabindex="0" style="cursor:pointer"><div style="font-weight:700;margin-bottom:6px">Causas de salud</div><div class="muted">Exento de penalización.</div></div>
       </div>
       <div class="row" style="margin-top:14px">
-        <div>
-          <div class="k">Monto a retirar (Q)</div>
-          <input id="wAmount" class="input" type="number" min="0" placeholder="Ej. 5,000">
-          <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
-        </div>
-        <div>
-          <div class="k">Motivo</div>
-          <textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea>
-        </div>
+        <div><div class="k">Monto a retirar (Q)</div><input id="wAmount" class="input" type="number" min="0" placeholder="Ej. 5,000"><div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div></div>
+        <div><div class="k">Motivo</div><textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
         <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
@@ -188,27 +141,19 @@
       </div>
       <div class="actions">
         <button class="btn secondary" id="wCancel">Cancelar</button>
-        <button class="btn full" id="wSend">Enviar solicitud</button>
+        <button class="btn" id="wSend">Enviar solicitud</button>
       </div>
     </div>
   </dialog>
 
   <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
   <dialog id="forcePwdDlg">
-    <div class="modal-h">
-      <div style="font-weight:800">Por seguridad, cambia tu contraseña</div>
-    </div>
+    <div class="modal-h"><div style="font-weight:800">Por seguridad, cambia tu contraseña</div></div>
     <div class="modal-b">
       <p class="muted" style="margin-top:0">Este paso es obligatorio sólo la primera vez que ingresas.</p>
       <div class="row">
-        <div>
-          <div class="k">Nueva contraseña</div>
-          <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres">
-        </div>
-        <div>
-          <div class="k">Confirmar contraseña</div>
-          <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña">
-        </div>
+        <div><div class="k">Nueva contraseña</div><input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres"></div>
+        <div><div class="k">Confirmar contraseña</div><input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña"></div>
       </div>
       <div class="actions">
         <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
@@ -229,40 +174,71 @@
   /* === HELPERS === */
   const $ = s=>document.querySelector(s);
   function fmtQ(n){ try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } }
-  function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=(val ?? '—'); }
   function clampDate(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
 
   // misma fecha del mes siguiente (si el mes no tiene ese día, cae al último día)
   function nextMonthSameDay(d){
     const x=clampDate(d);
-    const target=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
-    while(target.getMonth() !== (x.getMonth()+1)%12){ target.setDate(target.getDate()-1); }
-    target.setHours(0,0,0,0);
-    return target;
+    const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
+    while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); }
+    t.setHours(0,0,0,0); return t;
   }
-  // ventana mensual que contiene "today"
-  function currentWindow(joinedAt, today){
-    let start=clampDate(joinedAt);
-    let end=nextMonthSameDay(start);
-    while(end <= today){ start = end; end = nextMonthSameDay(start); }
-    return {start,end};
-  }
-  // viernes siguiente (o mismo día si ya es viernes)
-  function nextFriday(date){
-    const x=clampDate(date);
-    const dow=x.getDay(); // 0 dom .. 6 sab
-    const add=(5 - dow + 7) % 7; // 5 = viernes
+  // viernes de la semana de 'd'
+  function fridayOfSameWeek(d){
+    const x=clampDate(d); const dow=x.getDay(); const add=(5-dow+7)%7; // 5=viernes
     const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f;
   }
-  // ¿está d en [a,b)?
-  function inRange(d,a,b){ return d>=a && d<b; }
-  // cuenta viernes en rango (por si quieres usarlo)
-  function countFridaysInRange(start,end){
-    let f=nextFriday(start); if(f<start) f.setDate(f.getDate()+7);
-    let c=0; while(f<end){ c++; f.setDate(f.getDate()+7); } return Math.max(c,4);
+  // primera ventana mensual que contiene "today"
+  function currentWindow(joinedAt, today){
+    let start=clampDate(joinedAt), end=nextMonthSameDay(start);
+    while(end <= today){ start=end; end=nextMonthSameDay(start); }
+    return {start,end};
+  }
+  // listar todos los viernes en [start, end)
+  function fridaysInRange(start,end){
+    let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7);
+    const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); }
+    return list.length? list : []; // normalmente 4 o 5
   }
 
-  /* === CARGA CABECERA & RESULTADOS === */
+  /* === TABLA RESULTADOS === */
+  function paintWeeks(acc){
+    const today=clampDate(new Date());
+    const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
+
+    const {start,end}=currentWindow(joined,today);
+    document.getElementById('monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
+    document.getElementById('monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
+
+    const cap=Number(acc.capital||0);
+    const semRate=Number(acc.interest_pct||0)/100;
+    const monthly=cap*(semRate/6);
+
+    const allFridays = fridaysInRange(start,end);
+    const weekly = allFridays.length>0 ? (monthly / allFridays.length) : 0;
+
+    const tbody=document.getElementById('weekBody');
+    tbody.innerHTML='';
+
+    // Mostramos los viernes que ya ocurrieron (<= hoy) dentro de la ventana
+    const cutoff = today < end ? today : end; // si ya cerró, mostramos todos
+    const shown = allFridays.filter(f => f < cutoff);
+
+    if(shown.length===0){
+      tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
+    }else{
+      shown.forEach(f=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Footer: si el mes cerró, total mensual; si no, “—”
+    document.getElementById('weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
+  }
+
+  /* === CARGA CABECERA === */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.replace(LOGIN_PATH); return; }
@@ -274,80 +250,30 @@
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    // Forzar cambio de contraseña si corresponde
+    // Forzar cambio de contraseña (sólo nuevos clientes)
     const mustChange = !!(prof && prof.must_change_password === true);
     if(mustChange){ enforcePasswordChange(); }
 
-    setText('valName', (prof?.full_name || prof?.email || session.user.email));
+    document.getElementById('valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
 
     if(!acc){
-      setText('valAccountId','—'); setText('valPlan','—'); setText('valCurrency','—'); setText('valMonths','—');
-      setText('valCapital',fmtQ(0)); setText('valPeriodInterest',fmtQ(0));
-      paintWeeksEmpty(); return;
-    }
-
-    setText('valAccountId', acc.id||'—');
-    setText('valPlan', acc.plan||'—');
-    setText('valCurrency', acc.currency||'—');
-    setText('valMonths', acc.invest_months ?? '—');
-    setText('valCapital', fmtQ(acc.capital||0));
-
-    const semPct = (acc.interest_pct||0)/100;
-    const totalPeriodInterest = (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
-    setText('valPeriodInterest', fmtQ(totalPeriodInterest));
-
-    paintCurrentMonth(acc);
-  }
-
-  function paintWeeksEmpty(){
-    const tb = $('#weekBody'); tb.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
-    $('#weekSum').textContent = '—';
-    $('#monthRange').textContent = '—';
-    $('#monthNote').textContent = 'El período cierra el —.';
-  }
-
-  function paintWeekRow(date, amount, footer){
-    const tb = $('#weekBody'); tb.innerHTML = '';
-    if(date && amount!=null){
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${date.toLocaleDateString('es-GT')}</td><td>${fmtQ(amount)}</td>`;
-      tb.appendChild(tr);
-    } else {
-      tb.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
-    }
-    $('#weekSum').textContent = (footer===undefined? '—' : (footer===null? '—' : fmtQ(footer)));
-  }
-
-  function paintCurrentMonth(acc){
-    const today=clampDate(new Date());
-    const joined = acc?.joined_at ? clampDate(new Date(acc.joined_at)) : today;
-
-    const {start,end} = currentWindow(joined, today);
-    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    $('#monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
-
-    const capital = Number(acc.capital||0);
-    const semRate = Number(acc.interest_pct||0)/100;
-    const monthlyInterest = capital * (semRate/6);
-
-    // Si el mes YA cerró, sólo total mensual
-    if(today >= end){
-      paintWeekRow(null,null, monthlyInterest);
+      ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>document.getElementById(id).textContent='—');
+      document.getElementById('valCapital').textContent=fmtQ(0);
+      document.getElementById('valPeriodInterest').textContent=fmtQ(0);
       return;
     }
 
-    // Mostrar SIEMPRE el PRÓXIMO viernes dentro del período
-    let f = nextFriday(today);
-    if(f < start) f = nextFriday(start);
-    if(!inRange(f, start, end)){
-      // si el próximo viernes se pasa del fin, intenta el viernes anterior dentro del rango
-      const prev = new Date(f); prev.setDate(f.getDate()-7);
-      if(inRange(prev, start, end)){ f = prev; } else { paintWeekRow(null,null,'—'); return; }
-    }
+    document.getElementById('valAccountId').textContent = acc.id||'—';
+    document.getElementById('valPlan').textContent = acc.plan||'—';
+    document.getElementById('valCurrency').textContent = acc.currency||'—';
+    document.getElementById('valMonths').textContent = acc.invest_months ?? '—';
+    document.getElementById('valCapital').textContent = fmtQ(acc.capital||0);
 
-    const nWeeks = countFridaysInRange(start,end);
-    const weekly = monthlyInterest / nWeeks;
-    paintWeekRow(f, weekly, undefined); // footer em-dash hasta que cierre el mes
+    const semPct = (acc.interest_pct||0)/100;
+    const totalPeriodInterest = (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
+    document.getElementById('valPeriodInterest').textContent = fmtQ(totalPeriodInterest);
+
+    paintWeeks(acc);
   }
 
   /* === SIMULADOR (6 meses, simple) === */
@@ -357,37 +283,34 @@
     return {name:'NO ELEGIBLE', rate:0};
   }
   function simulate(){
-    const cap=Number($('#simCapital').value||0);
+    const cap=Number(document.getElementById('simCapital').value||0);
     const {name,rate}=autoPlanAndRate(cap);
-    $('#simPlan').textContent=name;
+    document.getElementById('simPlan').textContent=name;
     const months=6, monthlyInterest=cap*(rate/6), total=monthlyInterest*months;
-    $('#simFinal').textContent=fmtQ(cap+total);
-    $('#simSum').textContent=fmtQ(total);
-    $('#simNote').textContent=`Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-    const body=$('#simBody'); body.innerHTML='';
+    document.getElementById('simFinal').textContent=fmtQ(cap+total);
+    document.getElementById('simSum').textContent=fmtQ(total);
+    document.getElementById('simNote').textContent=`Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
+    const body=document.getElementById('simBody'); body.innerHTML='';
     for(let m=1;m<=months;m++){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`; body.appendChild(tr); }
   }
 
   /* === RETIROS === */
-  const dlg=$('#wdlg');
+  const dlg=document.getElementById('wdlg');
   let withdrawType='early';
-  function selectType(t){
-    withdrawType=t;
-    $('#optEarly').style.borderColor = t==='early' ? 'rgba(94,161,255,.7)' : 'var(--outline)';
-    $('#optHealth').style.borderColor= t==='health'? 'rgba(94,161,255,.7)' : 'var(--outline)';
-  }
+  function selectType(t){ withdrawType=t; }
   function toggleSwitchAll(force){
-    const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
-    sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on)); $('#wAmount').disabled=on;
+    const sw=document.getElementById('switchAll');
+    const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
+    sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on)); document.getElementById('wAmount').disabled=on;
   }
   async function sendWithdraw(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.replace(LOGIN_PATH); return; }
     const { data: acc } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
     const capital=Number(acc?.capital||0);
-    const all=$('#switchAll').classList.contains('on');
-    const amount=all? capital : Number($('#wAmount').value||0);
-    const reason=($('#wReason').value||'').trim();
+    const all=document.getElementById('switchAll').classList.contains('on');
+    const amount=all? capital : Number(document.getElementById('wAmount').value||0);
+    const reason=(document.getElementById('wReason').value||'').trim();
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
@@ -400,63 +323,43 @@
     dlg.close();
   }
 
-  /* === CAMBIO DE CONTRASEÑA FORZADO === */
-  const forceDlg = $('#forcePwdDlg');
-  const blocker = $('#panelBlocker');
-
+  /* === CAMBIO DE CONTRASEÑA FORZADO (sólo nuevos clientes) === */
+  const forceDlg = document.getElementById('forcePwdDlg');
+  const blocker = document.getElementById('panelBlocker');
   function lockPanel(lock){
     blocker.classList.toggle('on', !!lock);
-    // opcional: deshabilitar botones si quieres
     document.querySelectorAll('button,input,textarea,select').forEach(el=>{
-      if(el.closest('#forcePwdDlg')) return; // no bloquear el modal
+      if(el.closest('#forcePwdDlg')) return;
       el.disabled = !!lock;
     });
   }
-
-  function enforcePasswordChange(){
-    lockPanel(true);
-    forceDlg.showModal();
-  }
-
+  function enforcePasswordChange(){ lockPanel(true); forceDlg.showModal(); }
   async function saveNewPassword(){
-    const p1 = ($('#newPwd').value||'').trim();
-    const p2 = ($('#newPwd2').value||'').trim();
-    if(p1.length < 8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
-    if(p1 !== p2){ alert('Las contraseñas no coinciden.'); return; }
-
-    const { data:{ session }, error:gsErr } = await sb.auth.getSession();
-    if(gsErr || !session){ alert('Sesión no válida.'); window.location.replace(LOGIN_PATH); return; }
-
-    const up = await sb.auth.updateUser({ password: p1 });
-    if(up.error){ alert('No se pudo actualizar la contraseña: ' + up.error.message); return; }
-
-    // Quitar la obligación en profiles.must_change_password
+    const p1 = (document.getElementById('newPwd').value||'').trim();
+    const p2 = (document.getElementById('newPwd2').value||'').trim();
+    if(p1.length<8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+    if(p1!==p2){ alert('Las contraseñas no coinciden.'); return; }
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ alert('Sesión no válida.'); window.location.replace(LOGIN_PATH); return; }
+    const up = await sb.auth.updateUser({ password:p1 });
+    if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
     const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
-    if(upd.error){ 
-      // si el campo no existe o falla, al menos permite continuar
-      console.warn('No se pudo actualizar must_change_password:', upd.error.message);
-    }
-    forceDlg.close();
-    lockPanel(false);
-    alert('¡Contraseña actualizada! Bienvenido al panel.');
+    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
+    forceDlg.close(); lockPanel(false); alert('¡Contraseña actualizada! Bienvenido al panel.');
   }
 
   /* === INIT === */
   document.addEventListener('DOMContentLoaded', ()=>{
-    $('#btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
-    $('#btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
-    $('#xClose').addEventListener('click', ()=> dlg.close());
-    $('#wCancel').addEventListener('click', ()=> dlg.close());
-    $('#wSend').addEventListener('click', sendWithdraw);
-    $('#optEarly').addEventListener('click', ()=>selectType('early'));
-    $('#optHealth').addEventListener('click', ()=>selectType('health'));
-    selectType('early');
-    const sw=$('#switchAll'); sw.addEventListener('click', ()=>toggleSwitchAll()); sw.addEventListener('keydown',(e)=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
-    $('#btnCalc').addEventListener('click', simulate);
+    document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
+    document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
+    document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
+    document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
+    document.getElementById('wSend').addEventListener('click', sendWithdraw);
+    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
+    document.getElementById('btnCalc').addEventListener('click', simulate);
 
-    // Forzado de contraseña
-    $('#savePwd').addEventListener('click', saveNewPassword);
-    $('#logoutNow').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
+    document.getElementById('savePwd').addEventListener('click', saveNewPassword);
+    document.getElementById('logoutNow').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.replace(LOGIN_PATH); });
 
     loadHeader();
   });
