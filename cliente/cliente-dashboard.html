@@ -57,6 +57,17 @@
   .blocker.on{display:block}
   #forcePwdDlg{border:0;border-radius:20px;background:#0f1116;color:#f5f7fb;width:min(840px,92vw)}
   #forcePwdDlg::backdrop{background:rgba(0,0,0,.55)}
+
+  /* Ojos grandes para mostrar/ocultar contraseña */
+  .pwd-field{position:relative}
+  .pwd-field .input{padding-right:56px}
+  .eye-btn{
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    width:48px; height:48px; border-radius:14px;
+    border:1px solid var(--outline); background:#0f1116; color:#fff;
+    display:grid; place-items:center; cursor:pointer;
+  }
+  .eye-btn svg{width:28px; height:28px}
 </style>
 </head>
 <body>
@@ -171,13 +182,27 @@
 
   <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
   <dialog id="forcePwdDlg">
-    <div class="modal-h"><div style="font-weight:800">Por seguridad, cambia tu contraseña</div></div>
+    <div class="modal-h"><div style="font-weight:800">BIENVENIDO A FX|CAPITAL R.L.</div></div>
     <div class="modal-b">
-      <p class="muted" style="margin-top:0">Este paso es obligatorio sólo la primera vez que ingresas.</p>
+      <p class="muted" style="margin-top:0">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
+
       <div class="row">
-        <div><div class="k">Nueva contraseña</div><input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres"></div>
-        <div><div class="k">Confirmar contraseña</div><input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña"></div>
+        <div>
+          <div class="k">Nueva contraseña</div>
+          <div class="pwd-field">
+            <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres">
+            <button type="button" id="eyeNew" class="eye-btn" aria-pressed="false" title="Mostrar/ocultar"></button>
+          </div>
+        </div>
+        <div>
+          <div class="k">Confirmar contraseña</div>
+          <div class="pwd-field">
+            <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña">
+            <button type="button" id="eyeNew2" class="eye-btn" aria-pressed="false" title="Mostrar/ocultar"></button>
+          </div>
+        </div>
       </div>
+
       <div class="actions">
         <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
         <button class="btn" id="savePwd">Guardar y continuar</button>
@@ -334,12 +359,38 @@
     window.location.href = BASE_URL;
   }
 
+  /* Iconos (ojo / ojo tachado) y vínculo con los inputs */
+  const __eyeSVG = `
+<svg viewBox="0 0 24 24" fill="none">
+  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
+  <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+</svg>`;
+  const __eyeOffSVG = `
+<svg viewBox="0 0 24 24" fill="none">
+  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/>
+</svg>`;
+  function __bindPwdEye(inputId, btnId){
+    const inp = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if(!inp || !btn) return;
+    btn.innerHTML = __eyeSVG;
+    btn.addEventListener('click', ()=>{
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', String(show));
+      btn.innerHTML = show ? __eyeOffSVG : __eyeSVG;
+    });
+  }
+
   // ===== INIT =====
   document.addEventListener('DOMContentLoaded', ()=>{
     // Sesión
     $('#btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
     // Retiros
+    const dlg = document.getElementById('wdlg');
     $('#btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     $('#xClose').addEventListener('click', ()=> dlg.close());
     $('#wCancel').addEventListener('click', ()=> dlg.close());
@@ -360,6 +411,10 @@
     // Cambio de contraseña (eventos de botones del modal)
     document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
     document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
+
+    // Conectar ojos grandes
+    __bindPwdEye('newPwd','eyeNew');
+    __bindPwdEye('newPwd2','eyeNew2');
 
     loadHeader();
   });
