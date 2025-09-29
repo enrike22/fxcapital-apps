@@ -8,32 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Paleta azul oscuro estilo referencia */
-    --bg:#0a0f1a;             /* fondo base */
-    --panel:#0f141d;          /* paneles grandes */
-    --card:#151b24;           /* tarjetas/cajas */
-    --soft:#1d2530;           /* botones secundarios / superficies suaves */
-
-    /* Texto */
-    --muted:#9fb0c3;          /* texto secundario */
-    --txt:#e9eef7;            /* texto principal claro */
-
-    /* Accentos y bordes */
-    --brand:#6aa3ff;          /* acento azul */
-    --danger:#ff4d4f;         /* peligro igual */
-    --outline:rgba(255,255,255,.06); /* bordes sutiles */
-
-    --shadow:0 10px 30px rgba(3,6,12,.35);
-    --radius:16px;
+    --bg:#0b0b0d; --panel:#121316; --card:#17191d; --soft:#21242b;
+    --muted:#9aa1ac; --txt:#f5f7fb; --outline:rgba(255,255,255,.08);
+    --brand:#5ea1ff; --danger:#ff4d4f; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
   }
   *{box-sizing:border-box} html,body{height:100%}
-  body{
-    margin:0;
-    /* Degradado azul oscuro */
-    background:radial-gradient(1200px 800px at 15% -20%, #142032 0%, #0a0f1a 55%) fixed;
-    color:var(--txt);
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
-  }
+  body{margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;color:var(--txt);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   .wrap{max-width:1100px;margin:36px auto;padding:0 20px}
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
   .brand{display:flex;gap:14px;align-items:center}
@@ -261,8 +241,8 @@
     const today=clampDate(new Date());
     const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
     const {start,end}=currentWindow(joined,today);
-    document.getElementById('monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    document.getElementById('monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
+    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
+    $('#monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
 
     const cap=Number(acc.capital||0);
     const semRate=Number(acc.interest_pct||0)/100;
@@ -271,7 +251,7 @@
     const allFridays = fridaysInRange(start,end);
     const weekly = allFridays.length? (monthly/allFridays.length) : 0;
 
-    const tbody=document.getElementById('weekBody'); tbody.innerHTML='';
+    const tbody=$('#weekBody'); tbody.innerHTML='';
     const cutoff = today < end ? today : end;
     const shown = allFridays.filter(f => f < cutoff);
 
@@ -284,7 +264,7 @@
         tbody.appendChild(tr);
       });
     }
-    document.getElementById('weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
+    $('#weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
   }
 
   async function loadHeader(){
@@ -299,23 +279,18 @@
 
     if (prof?.must_change_password === true) __fxpwd_enforce();
 
-    document.getElementById('valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
-    if(!acc){
-      ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>document.getElementById(id).textContent='—');
-      document.getElementById('valCapital').textContent=fmtQ(0);
-      document.getElementById('valPeriodInterest').textContent=fmtQ(0);
-      return;
-    }
+    $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
+    if(!acc){ ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>$('#'+id).textContent='—'); $('#valCapital').textContent=fmtQ(0); $('#valPeriodInterest').textContent=fmtQ(0); return; }
 
-    document.getElementById('valAccountId').textContent = acc.id||'—';
-    document.getElementById('valPlan').textContent = acc.plan||'—';
-    document.getElementById('valCurrency').textContent = acc.currency||'—';
-    document.getElementById('valMonths').textContent = acc.invest_months ?? '—';
-    document.getElementById('valCapital').textContent = fmtQ(acc.capital||0);
+    $('#valAccountId').textContent = acc.id||'—';
+    $('#valPlan').textContent = acc.plan||'—';
+    $('#valCurrency').textContent = acc.currency||'—';
+    $('#valMonths').textContent = acc.invest_months ?? '—';
+    $('#valCapital').textContent = fmtQ(acc.capital||0);
 
     const semPct = (acc.interest_pct||0)/100;
     const totalPeriodInterest = (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
-    document.getElementById('valPeriodInterest').textContent = fmtQ(totalPeriodInterest);
+    $('#valPeriodInterest').textContent = fmtQ(totalPeriodInterest);
 
     paintWeeks(acc);
   }
@@ -324,24 +299,24 @@
   const dlg = document.getElementById('wdlg');
   let withdrawType='early';
   function markPill(){
-    document.getElementById('optEarly').classList.toggle('selected', withdrawType==='early');
-    document.getElementById('optEarly').setAttribute('aria-pressed', String(withdrawType==='early'));
-    document.getElementById('optHealth').classList.toggle('selected', withdrawType==='health');
-    document.getElementById('optHealth').setAttribute('aria-pressed', String(withdrawType==='health'));
+    $('#optEarly').classList.toggle('selected', withdrawType==='early');
+    $('#optEarly').setAttribute('aria-pressed', String(withdrawType==='early'));
+    $('#optHealth').classList.toggle('selected', withdrawType==='health');
+    $('#optHealth').setAttribute('aria-pressed', String(withdrawType==='health'));
   }
   function selectType(t){ withdrawType=t; markPill(); }
   function toggleSwitchAll(force){
-    const sw=document.getElementById('switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
-    sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); document.getElementById('wAmount').disabled=on;
+    const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
+    sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on;
   }
   async function sendWithdraw(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
     const { data: acc } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
     const capital=Number(acc?.capital||0);
-    const all=document.getElementById('switchAll').classList.contains('on');
-    const amount=all? capital : Number(document.getElementById('wAmount').value||0);
-    const reason=(document.getElementById('wReason').value||'').trim();
+    const all=$('#switchAll').classList.contains('on');
+    const amount=all? capital : Number($('#wAmount').value||0);
+    const reason=($('#wReason').value||'').trim();
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
@@ -437,6 +412,7 @@
   }
 
   async function __fxpwd_save(){
+    // Validación previa
     if(!__fxpwd_validate()) return;
 
     const p1 = (document.getElementById('newPwd')?.value || '').trim();
