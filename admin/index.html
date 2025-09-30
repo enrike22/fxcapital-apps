@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FX | CAPITAL R.L. — Admin</title>
 <style>
 :root { --bg:#0a0a0a; --fg:#f5f7fa; --muted:#cdd3da; --card:#0f1012; --border:#21262c; --shadow:0 14px 40px rgba(0,0,0,.5); --radius:18px; }
@@ -10,21 +10,24 @@
 body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 .container{max-width:1200px;margin:0 auto;padding:28px 20px}
 .card{background:linear-gradient(180deg,var(--card),#101214);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow);margin-bottom:16px}
-h1,h2,h3{margin:0 0 10px} label{display:block;margin:8px 0 6px;color:var(--muted);font-size:13px}
+h1,h2,h3{margin:0 0 10px}
+label{display:block;margin:8px 0 6px;color:var(--muted);font-size:13px}
 input,select,textarea{width:100%;background:#0b0d0f;color:var(--fg);border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:14px}
-button{background:#fff;color:#0b0c0e;border:none;padding:12px 16px;border-radius:999px;font-weight:800;cursor:pointer}
-table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid var(--border)} th{text-align:left;color:#d7dce2}
+button{background:#fff;color:#0b0c0e;border:none;padding:10px 14px;border-radius:999px;font-weight:800;cursor:pointer}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid var(--border)}
+th{text-align:left;color:#d7dce2}
 .row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .inline{display:flex;gap:8px;align-items:center}
 .small{font-size:12px;color:var(--muted)}
 .nowrap{white-space:nowrap}
 .hidden{display:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#16181c;border:1px solid var(--border);font-size:12px}
 </style>
 </head>
 <body>
 <div class="container">
-
   <!-- HEADER -->
   <div class="header">
     <h1>FX | CAPITAL R.L. — Panel Admin</h1>
@@ -35,8 +38,8 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
   <div id="unauth" class="card">
     <h2>Admin — Iniciar sesión</h2>
     <form id="loginForm">
-      <label>Email</label><input id="email" type="email" required>
-      <label>Contraseña</label><input id="password" type="password" required>
+      <label>Email</label><input id="email" type="email" required />
+      <label>Contraseña</label><input id="password" type="password" required />
       <div style="margin-top:12px"><button type="submit">Entrar</button></div>
       <p id="loginMsg" class="small" style="margin-top:8px"></p>
     </form>
@@ -48,23 +51,33 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
     <div class="card">
       <h2>Crear / Editar usuario</h2>
       <div class="row">
-        <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"></div>
-        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+        <div>
+          <label>Email</label>
+          <input id="u_email" placeholder="cliente@demo.com" />
+          <div class="small">Para editar, puedes escribir el email del cliente o usar el botón <b>Editar</b> en la lista.</div>
+        </div>
+
+        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo" /></div>
 
         <div>
           <label>Contraseña (para el cliente)</label>
           <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres" />
             <button type="button" id="togglePass" title="Mostrar/ocultar">👁</button>
           </div>
           <div class="small">Se usa para crear al cliente en Auth. No se guarda en tu base de datos.</div>
         </div>
 
         <div><label>Moneda</label>
-          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
+          <select id="u_currency">
+            <option>GTQ</option><option>USD</option>
+          </select>
         </div>
-        <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01"></div>
-        <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
+
+        <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01" /></div>
+
+        <div><label>Fecha ingreso</label><input id="u_joined" type="date" /></div>
+
         <div><label>Plan</label>
           <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select>
         </div>
@@ -72,7 +85,7 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
         <div>
           <label>Meses de inversión</label>
           <select id="u_months">
-            <option>6</option><option selected>12</option><option>18</option><option>24</option>
+            <option>6</option><option>12</option><option>18</option><option>24</option>
             <option>30</option><option>36</option><option>42</option><option>48</option>
             <option>54</option><option>60</option>
           </select>
@@ -80,12 +93,13 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
 
         <div>
           <label>Tasa semestral (%)</label>
-          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25">
-          <div class="small">Porcentaje aplicado cada 6 meses. Si se deja vacío se usará el del plan (15/20/25).</div>
+          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25" />
+          <div class="small">Porcentaje aplicado cada 6 meses. Si se deja vacío, se usará el del plan (15/20/25).</div>
         </div>
 
-        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
-        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
+        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" /></div>
+        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" /></div>
+        <div><label>Tipo de cuenta</label><input id="u_bank_type" placeholder="Ahorro / Monetaria / ..." /></div>
       </div>
 
       <div style="margin-top:8px">
@@ -100,10 +114,17 @@ table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px 
       <table>
         <thead>
           <tr>
-            <th>Nombre</th><th>Email</th><th>Plan</th><th>Capital</th>
-            <th>Banco</th><th class="nowrap">No. cuenta</th><th class="nowrap">Cuenta (ID)</th>
-            <th>Meses</th><th>Tasa %/6m</th>
-            <th>BLACK</th><th>Acciones</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Plan</th>
+            <th>Capital</th>
+            <th>Banco</th>
+            <th class="nowrap">No. cuenta</th>
+            <th class="nowrap">Tipo de cuenta</th>
+            <th class="nowrap">Cuenta (ID)</th>
+            <th>Meses</th>
+            <th>Tasa %/6m</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="users"></tbody>
@@ -129,21 +150,20 @@ const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
+/*** HELPERS ***/
 function headersJSON(){
   return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json", "Prefer":"return=representation" };
 }
-
-/*** HELPERS UI ***/
 function show(el, visible){ el.classList.toggle('hidden', !visible); }
 function $(id){ return document.getElementById(id); }
+const fmtQ = (n, curr="GTQ") => new Intl.NumberFormat('es-GT',{style:'currency',currency:curr,maximumFractionDigits:2}).format(Number(n||0));
 
-/*** AUTH FLOW ***/
+/*** AUTH ***/
 async function doLogin(e){
   e.preventDefault();
   const email = $("email").value.trim();
   const password = $("password").value;
   $("loginMsg").textContent = "";
-
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
       method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
@@ -153,11 +173,8 @@ async function doLogin(e){
     if(!r.ok){ $("loginMsg").textContent = data?.error_description || "Login inválido"; return; }
     localStorage.token = data.access_token; localStorage.uid = data.user.id;
     await initApp();
-  }catch(err){
-    $("loginMsg").textContent = "Error de red";
-  }
+  }catch(err){ $("loginMsg").textContent = "Error de red"; }
 }
-
 function logout(){
   localStorage.removeItem("token");
   localStorage.removeItem("uid");
@@ -166,6 +183,7 @@ function logout(){
 
 /*** EDGE FUNCTION: crear usuario Auth si no existe ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
+  if (!password) return { ok:true, status:200 }; // permitir editar sin cambiar password
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
   const r = await fetch(url, {
     method: "POST",
@@ -175,47 +193,65 @@ async function createAuthUserIfNeeded(email, password, fullName) {
   return r; // 201 creado | 400 ya existe
 }
 
-/*** LISTA USUARIOS (vista v_admin_users con meses y tasa si existen) ***/
+/*** LISTA USUARIOS (vista v_admin_users) ***/
 async function listUsers(){
   const url = `${BASE}/v_admin_users` +
-              `?select=full_name,email,plan,currency,principal_locked,account_id,black_enabled,bank_name,bank_account,invest_months,interest_pct` +
+              `?select=full_name,email,plan,currency,capital,principal_locked,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at` +
               `&order=full_name.asc`;
-
   const r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   if (!r.ok) { const t = await r.text(); alert("No se pudo cargar la lista de clientes:\n" + t); return; }
 
   const rows = await r.json();
   const tb = $("users"); tb.innerHTML = "";
   rows.forEach(x=>{
+    // Capital robusto (si la vista trae 'capital', usarlo; si no, probar principal_locked si es número)
+    let cap = Number.isFinite(Number(x.capital)) ? Number(x.capital)
+              : (Number.isFinite(Number(x.principal_locked)) ? Number(x.principal_locked) : 0);
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${x.full_name ?? '—'}</td>
       <td>${x.email ?? '—'}</td>
       <td>${x.plan ?? '—'}</td>
-      <td>${(x.principal_locked ?? 0).toLocaleString('es-GT',{minimumFractionDigits:2})}</td>
+      <td>${fmtQ(cap, x.currency || 'GTQ')}</td>
       <td>${x.bank_name ?? '—'}</td>
       <td class="nowrap">${x.bank_account ?? '—'}</td>
+      <td class="nowrap">${x.bank_account_type ?? '—'}</td>
       <td class="small">${x.account_id ?? '—'}</td>
       <td>${x.invest_months ?? '—'}</td>
       <td>${x.interest_pct ?? '—'}</td>
-      <td>${x.black_enabled ? 'Sí' : 'No'}</td>
       <td>
-        ${x.account_id ? `
-          <button onclick="toggleBlack('${x.account_id}', true)">Enable BLACK</button>
-          <button onclick="toggleBlack('${x.account_id}', false)">Disable BLACK</button>
-        ` : '—'}
+        <button onclick='editRow(${JSON.stringify(x).replaceAll("'","&#39;")})'>Editar</button>
       </td>`;
     tb.appendChild(tr);
   });
 }
 
-/*** GUARDAR / EDITAR (con fallback si el RPC aún no acepta meses/tasa) ***/
+/*** CARGAR FILA EN EL FORMULARIO ***/
+function editRow(x){
+  $("u_email").value        = x.email || "";
+  $("u_name").value         = x.full_name || "";
+  $("u_currency").value     = x.currency || "GTQ";
+  $("u_capital").value      = (Number.isFinite(Number(x.capital)) ? x.capital :
+                              (Number.isFinite(Number(x.principal_locked)) ? x.principal_locked : "")) || "";
+  $("u_joined").value       = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
+  $("u_plan").value         = x.plan || "STANDARD";
+  $("u_months").value       = x.invest_months || "6";
+  $("u_rate").value         = (x.interest_pct ?? "");
+  $("u_bank_name").value    = x.bank_name || "";
+  $("u_bank_account").value = x.bank_account || "";
+  $("u_bank_type").value    = x.bank_account_type || "";
+  $("u_pass").value         = ""; // nunca prellenar contraseñas
+  $("saveMsg").textContent  = "Editando: " + (x.full_name || x.email || "");
+}
+
+/*** GUARDAR / EDITAR ***/
 async function saveUser(){
   const email    = $("u_email").value.trim();
   const fullName = $("u_name").value.trim();
-  const password = $("u_pass").value;
+  const password = $("u_pass").value; // opcional para editar
   const currency = $("u_currency").value;
-  const capital  = Number($("u_capital").value || 0);
+  const capital  = $("u_capital").value === "" ? null : Number($("u_capital").value);
   const joined   = $("u_joined").value || null;
   const plan     = $("u_plan").value;
   const months   = parseInt($("u_months").value, 10);
@@ -223,17 +259,22 @@ async function saveUser(){
   const rate     = rateStr === "" ? null : Number(rateStr);
   const bankName = $("u_bank_name").value.trim();
   const bankAcct = $("u_bank_account").value.trim();
+  const bankType = $("u_bank_type").value.trim();
   const msgEl    = $("saveMsg");
   if (msgEl) msgEl.textContent = "…";
 
   try {
     if (!email) throw new Error("Email requerido");
     if (!fullName) throw new Error("Nombre requerido");
-    if (!password || password.length < 8) throw new Error("Contraseña mínima de 8 caracteres");
-    if (isNaN(capital) || capital < 0) throw new Error("Capital inválido");
+    if (capital !== null && (isNaN(capital) || capital < 0)) throw new Error("Capital inválido");
 
-    await createAuthUserIfNeeded(email, password, fullName);
+    // (1) Crear usuario en Auth si hace falta (sólo si password provisto)
+    const authRes = await createAuthUserIfNeeded(email, password, fullName);
+    if (!authRes.ok && authRes.status !== 400) { // 400: ya existe
+      throw new Error("No se pudo crear el usuario en Auth");
+    }
 
+    // (2) Intento con RPC versión NUEVA (con months y rate)
     const bodyNew = {
       p_email: email,
       p_full_name: fullName,
@@ -251,12 +292,12 @@ async function saveUser(){
       method:"POST", headers: headersJSON(), body: JSON.stringify(bodyNew)
     });
 
+    // (3) Si no existe ese RPC o firma, uso la firma ANTIGUA (sin months/rate)
     if (!r.ok) {
       const txt = await r.text();
-      const isNoMatch = txt.includes("PGRST202") || txt.includes("Could not find the function");
-      if (!isNoMatch) throw new Error(txt || "Error guardando");
+      const isNoMatch = txt.includes("PGRST202") || txt.includes("Could not find the function") || txt.includes("No function matches");
+      if (!isNoMatch) throw new Error(txt || "Error guardando (RPC nuevo)");
 
-      // Firma antigua
       const bodyOld = {
         p_email: email,
         p_full_name: fullName,
@@ -267,13 +308,12 @@ async function saveUser(){
         p_bank_name: bankName || null,
         p_bank_account: bankAcct || null
       };
-
       r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
         method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld)
       });
-      if (!r.ok) throw new Error(await r.text() || "Error guardando");
+      if (!r.ok) throw new Error(await r.text() || "Error guardando (RPC antiguo)");
 
-      // Fallback: PATCH a accounts (si la vista expone la cuenta)
+      // Pongo months/rate con PATCH si tengo account_id
       try {
         const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
         if (rV.ok) {
@@ -283,29 +323,40 @@ async function saveUser(){
             await fetch(`${BASE}/accounts?id=eq.${accId}`, {
               method:"PATCH",
               headers: headersJSON(),
-              body: JSON.stringify({ invest_months: months, interest_pct: rate })
+              body: JSON.stringify({
+                invest_months: months,
+                interest_pct: rate
+              })
             });
           }
         }
       } catch (e) { console.warn("PATCH months/rate fallback:", e); }
     }
 
+    // (4) Guardar tipo de cuenta (vía PATCH a accounts)
+    try {
+      const rV2 = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
+      if (rV2.ok) {
+        const rows2 = await rV2.json();
+        const accId2 = rows2?.[0]?.account_id;
+        if (accId2) {
+          await fetch(`${BASE}/accounts?id=eq.${accId2}`, {
+            method:"PATCH",
+            headers: headersJSON(),
+            body: JSON.stringify({ bank_account_type: (bankType || null) })
+          });
+        }
+      }
+    } catch (e) { console.warn("PATCH bank_account_type:", e); }
+
     if (msgEl) msgEl.textContent = "Guardado";
-    $("u_pass").value = "";
+    $("u_pass").value = ""; // limpiar password
     await listUsers();
 
   } catch (e) {
     if (msgEl) msgEl.textContent = "Error";
     alert("No se pudo guardar: " + (e.message || e));
   }
-}
-
-/*** BLACK ON/OFF ***/
-async function toggleBlack(accountId, enabled){
-  await fetch(`${RPC}/enable_black_for_account`, {
-    method:"POST", headers: headersJSON(), body: JSON.stringify({ p_account: accountId, p_enabled: enabled })
-  });
-  await listUsers();
 }
 
 /*** NOTIFICACIONES ***/
@@ -341,7 +392,6 @@ async function setWithdrawal(id, status){
 
 /*** INIT ***/
 async function initApp(){
-  // si hay token mostramos app
   if(localStorage.token){
     show($("unauth"), false);
     show($("app"), true);
@@ -359,12 +409,12 @@ async function initApp(){
 document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
-  $("togglePass").addEventListener("click", ()=> {
+  $("togglePass").addEventListener("click", ()=>{
     const inp = $("u_pass"); inp.type = (inp.type === "password") ? "text" : "password";
   });
   $("saveBtn").addEventListener("click", saveUser);
   $("btnRefreshNotifs").addEventListener("click", loadNotifs);
-  initApp(); // arranque
+  initApp();
 });
 </script>
 </body>
