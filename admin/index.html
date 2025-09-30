@@ -41,7 +41,7 @@ th{text-align:left;color:#d7dce2}
     <h1>FX | CAPITAL R.L. — Panel Admin</h1>
     <div class="inline">
       <div class="searchbar">
-        <input id="q" type="search" placeholder="Buscar (nombre, email, plan, banco, cuenta, ID…)" aria-label="Buscar cliente">
+        <input id="q" type="search" placeholder="Buscar (nombre, email, plan, banco, cuenta…)" aria-label="Buscar cliente">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -133,7 +133,7 @@ th{text-align:left;color:#d7dce2}
             <th>Banco</th>
             <th class="nowrap">No. cuenta</th>
             <th class="nowrap">Tipo de cuenta</th>
-            <th class="nowrap">Cuenta (ID)</th>
+            <!-- Cuenta (ID) oculto en UI -->
             <th>Meses</th>
             <th class="nowrap">Tasa %/6m</th>
             <th class="nowrap">Acciones</th>
@@ -190,7 +190,7 @@ async function doLogin(e){
 }
 function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
 
-/*** EDGE FUNCTION opcional para crear/borrar auth ***/
+/*** Edge Functions auxiliares (opcional) ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
   if(!password) return { ok:true, status:204 };
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
@@ -207,9 +207,9 @@ async function deleteAuthUserIfAvailable(user_id, email){
 let CACHED = [];
 
 async function listUsers(){
-  const url = `${BASE}/v_admin_users` +
-              `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at` +
-              `&order=full_name.asc`;
+  const url = `${BASE}/v_admin_users`
+            + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
+            + `&order=full_name.asc`;
   const r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   if (!r.ok) { const t = await r.text(); alert("No se pudo cargar la lista de clientes:\n" + t); return; }
   CACHED = await r.json();
@@ -228,7 +228,7 @@ function renderUsers(rows){
       <td>${x.bank_name ?? '—'}</td>
       <td class="nowrap">${x.bank_account ?? '—'}</td>
       <td class="nowrap">${x.bank_account_type ?? '—'}</td>
-      <td class="small nowrap">${x.account_id ?? '—'}</td>
+      <!-- Cuenta (ID) omitida en UI pero disponible en x.account_id -->
       <td>${x.invest_months ?? '—'}</td>
       <td>${x.interest_pct ?? '—'}</td>
       <td class="nowrap">
@@ -244,7 +244,7 @@ $("q")?.addEventListener("input", (e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
   const filt = CACHED.filter(x=>{
-    return [x.full_name, x.email, x.plan, x.bank_name, x.bank_account, x.account_id, x.bank_account_type]
+    return [x.full_name, x.email, x.plan, x.bank_name, x.bank_account, x.bank_account_type /*, x.account_id*/]
       .filter(Boolean)
       .some(v => String(v).toLowerCase().includes(q));
   });
@@ -268,25 +268,21 @@ function editClient(x){
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
-/*** Eliminar cliente (solicitudes -> cuenta -> perfil + intentar auth) ***/
+/*** Eliminar cliente (borra solicitudes -> cuenta -> perfil + Auth si está la Edge) ***/
 async function deleteClient(x){
-  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}\nCuenta (ID): ${x.account_id||'—'}`;
+  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
 
   try{
-    // 1) borrar solicitudes ligadas a la cuenta (si existe)
     if(x.account_id){
       await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
       await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
       await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
     }
-    // 2) borrar perfil
     if(x.user_id){
       await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: headersJSON() });
     }
-    // 3) intentar borrar en Auth (opcional, si tienes Edge Function)
     await deleteAuthUserIfAvailable(x.user_id, x.email);
-
     await listUsers();
     alert("Cliente eliminado.");
   }catch(e){
@@ -358,6 +354,7 @@ async function saveUser(){
       });
       if (!r.ok) throw new Error(await r.text() || "Error guardando");
 
+      // completar meses/tasa si la firma antigua no los soportaba
       try {
         const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
         if (rV.ok) {
@@ -403,7 +400,7 @@ function clearForm(){
   $("saveMsg").textContent="";
 }
 
-/*** NOTIFICACIONES (solo lectura aquí) ***/
+/*** NOTIFICACIONES (solo lectura) ***/
 async function loadNotifs(){
   const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
     headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }
