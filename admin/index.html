@@ -247,30 +247,29 @@ async function createAuthUserIfNeeded(email, password, fullName) {
   return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
 }
 
-/*** LISTA USUARIOS (vista filtrada con fallback) - NO CACHE ***/
+/*** LISTA USUARIOS (vista filtrada con fallback) — NO CACHE ***/
 let CACHED = [];
 const VIEW_PRIMARY = 'v_admin_users_filtered';
 const VIEW_FALLBACK = 'v_admin_users';
 
 async function listUsers(){
   let view = VIEW_PRIMARY;
-  const ts = `_ts=${Date.now()}`;
   const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`;
-  let url = `${BASE}/${view}?select=${encodeURIComponent(sel)}&order=full_name.asc&${ts}`;
+  let url = `${BASE}/${view}?select=${encodeURIComponent(sel)}&order=full_name.asc`;
 
-  const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache" };
+  const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
   let r = await fetch(url, { headers: h, cache: "no-store" });
 
   if (r.status === 404) {
     view = VIEW_FALLBACK;
-    url = `${BASE}/${view}?select=${encodeURIComponent(sel)}&order=full_name.asc&${ts}`;
+    url = `${BASE}/${view}?select=${encodeURIComponent(sel)}&order=full_name.asc`;
     r = await fetch(url, { headers: h, cache: "no-store" });
   }
 
   if (!r.ok) {
     const t = await r.text();
     if (/column .*phone.* does not exist|unknown column/i.test(t)) {
-      const url2 = `${BASE}/${view}?select=${encodeURIComponent(sel.replace("phone,",""))}&order=full_name.asc&${ts}`;
+      const url2 = `${BASE}/${view}?select=${encodeURIComponent(sel.replace("phone,",""))}&order=full_name.asc`;
       const r2 = await fetch(url2, { headers: h, cache: "no-store" });
       if (!r2.ok) { alert("No se pudo cargar la lista:\n"+(await r2.text())); return; }
       CACHED = await r2.json();
@@ -288,24 +287,36 @@ async function listUsers(){
   renderUsers(CACHED);
 }
 
-/*** FIX: hidratar teléfonos — solo UUID válidos en el IN ***/
+/*** Hidratar teléfonos — usa or=(id.eq....) en grupos para evitar PGRST100 ***/
 async function hydratePhonesFromProfiles(rows){
   try{
     const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const ids = rows.map(r=>r.user_id).filter(id => typeof id === "string" && uuidRe.test(id));
     if (!ids.length) return;
-    const inList = '(' + ids.join(',') + ')'; // sin comillas para uuid
-    const r = await fetch(`${BASE}/profiles?id=in.${encodeURIComponent(inList)}&select=id,phone`, {
-      headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token },
-      cache: "no-store"
-    });
-    if (!r.ok) return;
-    const profs = await r.json();
-    const map = new Map(profs.map(p=>[p.id, p.phone]));
+
+    // chankear para URLs cortas
+    const chunk = (arr,n)=> arr.reduce((a,_,i)=> (i%n? a[a.length-1].push(arr[i]):a.push([arr[i]]),a),[]);
+    const groups = chunk(ids, 15);
+
+    const map = new Map();
+    for (const g of groups) {
+      const orExpr = g.map(id => `id.eq.${id}`).join(',');
+      const url = `${BASE}/profiles?or=(${encodeURIComponent(orExpr)})&select=id,phone`;
+      const r = await fetch(url, {
+        headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token, "Cache-Control":"no-cache" },
+        cache: "no-store"
+      });
+      if (!r.ok) continue;
+      const profs = await r.json();
+      profs.forEach(p => map.set(p.id, p.phone));
+    }
+
     rows.forEach(row=>{
       if (row && row.user_id && map.has(row.user_id)) row.phone = map.get(row.user_id) || null;
     });
-  }catch{}
+  }catch(e){
+    console.warn("hydratePhonesFromProfiles error:", e?.message||e);
+  }
 }
 
 function renderUsers(rows){
@@ -476,7 +487,6 @@ async function deleteClient(x){
   if(!confirm(msg)) return;
 
   const jh = headersJSON();
-  const ts = `_ts=${Date.now()}`;
   const mustOk = async (resp, label) => {
     if (!resp.ok) {
       const t = await resp.text().catch(()=> '');
@@ -489,7 +499,7 @@ async function deleteClient(x){
 
   // 1) RPC primero (si existe con p_dry_run)
   try{
-    const r = await fetch(`${RPC}/admin_delete_user_cascade?${ts}`, {
+    const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
       method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email, p_dry_run: false })
     });
     if (r.status === 404) throw new Error("RPC no existe");
@@ -532,7 +542,7 @@ async function deleteClient(x){
     console.warn("Auth delete error:", e?.message||e);
   }
 
-  // 3) UI optimista + reconsulta sin caché
+  // 3) UI optimista + reconsulta
   CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
   renderUsers(CACHED);
   await listUsers();
@@ -543,8 +553,7 @@ async function deleteClient(x){
 async function deleteClientManual(x, jh, mustOk) {
   // asegurar IDs
   if (!x?.user_id || !x?.account_id) {
-    const ts = `_ts=${Date.now()}`;
-    const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id&${ts}`, {
+    const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, {
       headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache" },
       cache: "no-store"
     });
@@ -576,8 +585,7 @@ async function deleteClientManual(x, jh, mustOk) {
 
 /*** NOTIFICACIONES ***/
 async function loadNotifs(){
-  const ts = `_ts=${Date.now()}`;
-  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc&${ts}`, {
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
     headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token, "Cache-Control":"no-cache" },
     cache:"no-store"
   });
