@@ -270,7 +270,7 @@ async function listUsers(){
   if (!r.ok) {
     const t = await r.text();
     if (/column .*phone.* does not exist|unknown column/i.test(t)) {
-      const url2 = `${BASE}/${view}?select=${encodeURIComponent(sel.replace("email,phone","email"))}&order=full_name.asc&${ts}`;
+      const url2 = `${BASE}/${view}?select=${encodeURIComponent(sel.replace("phone,",""))}&order=full_name.asc&${ts}`;
       const r2 = await fetch(url2, { headers: h, cache: "no-store" });
       if (!r2.ok) { alert("No se pudo cargar la lista:\n"+(await r2.text())); return; }
       CACHED = await r2.json();
@@ -288,11 +288,15 @@ async function listUsers(){
   renderUsers(CACHED);
 }
 
+/*** FIX: hidratar teléfonos sin comillas en el IN (evita PGRST100) ***/
 async function hydratePhonesFromProfiles(rows){
   try{
     const ids = rows.map(r=>r.user_id).filter(Boolean);
     if (!ids.length) return;
-    const inList = '(' + ids.map(id => `"${String(id).replace(/"/g,'\\"')}"`).join(',') + ')';
+
+    // Para UUID: id=in.(uuid1,uuid2)  ← sin comillas
+    const inList = '(' + ids.join(',') + ')';
+
     const r = await fetch(`${BASE}/profiles?id=in.${encodeURIComponent(inList)}&select=id,phone`, {
       headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token },
       cache: "no-store"
@@ -468,7 +472,7 @@ async function saveUser(){
   }
 }
 
-/*** BORRAR USUARIO: RPC -> Auth -> fallback manual, no-cache y UI optimista ***/
+/*** BORRAR USUARIO: RPC -> Auth (con user_id) -> fallback manual, no-cache y UI optimista ***/
 async function deleteClient(x){
   const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
@@ -485,10 +489,8 @@ async function deleteClient(x){
     }
   };
 
-  // 1) RPC primero (si existe versión con p_dry_run)
-  let rpcTried = false;
+  // 1) RPC primero (si existe con p_dry_run)
   try{
-    rpcTried = true;
     const r = await fetch(`${RPC}/admin_delete_user_cascade?${ts}`, {
       method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email, p_dry_run: false })
     });
@@ -499,14 +501,38 @@ async function deleteClient(x){
     await deleteClientManual(x, jh, mustOk);
   }
 
-  // 2) Borrar en Auth (best-effort)
+  // 2) Borrar en Auth (best-effort, ahora resolviendo user_id si falta)
   try{
-    await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
+    let uid = x.user_id;
+    if (!uid && x.email) {
+      const rP = await fetch(`${BASE}/profiles?email=eq.${encodeURIComponent(x.email)}&select=id`, {
+        headers:{ apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
+        cache:"no-store"
+      });
+      if (rP.ok) {
+        const rr = await rP.json();
+        uid = rr?.[0]?.id || null;
+      }
+    }
+
+    const rAuth = await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
       method:"POST",
-      headers:{ "Content-Type":"application/json", apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
-      body: JSON.stringify({ email: x.email })
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization:"Bearer "+(localStorage.token||"")
+      },
+      body: JSON.stringify({ user_id: uid || null, email: x.email || null })
     });
-  }catch{}
+
+    if (!rAuth.ok) {
+      const t = await rAuth.text().catch(()=> "");
+      console.warn("No se pudo eliminar en Auth:", t || rAuth.status);
+      alert("Se eliminó en BD, pero NO en Auth. Revisa la Edge Function/whitelist. Detalle: " + (t || rAuth.status));
+    }
+  }catch(e){
+    console.warn("Auth delete error:", e?.message||e);
+  }
 
   // 3) UI optimista + reconsulta sin caché
   CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
