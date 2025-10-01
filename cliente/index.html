@@ -19,28 +19,41 @@
     font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
     background: radial-gradient(1200px 800px at 12% -25%, #1a1d24 0%, #0b0b0d 55%) fixed;
     display:flex;justify-content:center;align-items:center;
+    min-height:100vh;
   }
-  .wrap{width:min(1100px,94vw);display:grid;grid-template-columns:1.2fr 440px;gap:40px;align-items:center}
+  .wrap{
+    width:min(1100px,94vw);
+    display:grid;grid-template-columns:1.2fr 440px;
+    gap:40px;align-items:center
+  }
   @media(max-width:1000px){.wrap{grid-template-columns:1fr;gap:30px}}
   .brand h1{margin:0;font-weight:800;font-size:clamp(28px,4vw,44px)}
   .sub{color:var(--muted);margin-bottom:16px}
   .cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
   .card{background:var(--card);border:1px solid var(--outline);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
   .card strong{display:block;margin-bottom:4px}
-  .login{background:linear-gradient(180deg,var(--panel) 0%,#0f1116 100%);
-    border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
+  .login{
+    background:linear-gradient(180deg,var(--panel) 0%,#0f1116 100%);
+    border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)
+  }
   .login h2{margin:0 0 16px;font-size:22px;text-align:center}
-  .input{width:100%;background:#0f1116;border:1px solid var(--outline);border-radius:12px;
-    color:var(--txt);padding:12px 14px;outline:none}
+  .input{
+    width:100%;background:#0f1116;border:1px solid var(--outline);border-radius:12px;
+    color:var(--txt);padding:12px 14px;outline:none
+  }
   .input:focus{border-color:#2b7cff}
   .row{display:flex;align-items:center;gap:10px}
-  .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;
-    cursor:pointer;box-shadow:var(--shadow);transition:transform .08s ease}
+  .btn{
+    appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;
+    cursor:pointer;box-shadow:var(--shadow);transition:transform .08s ease
+  }
   .btn.primary{background:#fff;color:#000;width:100%}
   .btn:active{transform:translateY(1px)}
   .muted{color:var(--muted)}
   .eye{cursor:pointer;user-select:none;font-size:22px}
   .footnote{color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
+  a{color:#bcd0ff;text-decoration:none}
+  a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -68,7 +81,7 @@
         <div class="muted" style="margin-bottom:6px">Contraseña</div>
         <div class="row">
           <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
-          <div id="toggleEye" class="eye">👁️</div>
+          <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
         </div>
         <div style="text-align:right;margin-top:6px">
           <a class="muted" href="#" id="forgotLink">¿Olvidó su contraseña?</a>
@@ -80,10 +93,15 @@
 
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
+    // ===== Config =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-    const SUPABASE_ANON_KEY = 'TU_KEY_AQUI';
+    // Tu anon key real (la que me compartiste)
+    const SUPABASE_ANON_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+
     const DASHBOARD_PATH = '/cliente-dashboard.html';
-    const RESET_REDIRECT = location.origin + '/reset.html';
+    // Mejor absoluto para evitar problemas de origen
+    const RESET_REDIRECT = 'https://clientes.fxcapital-gt.com/reset.html';
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
@@ -111,6 +129,11 @@
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').onclick = doLogin;
+
+    // Permitir Enter para enviar
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') doLogin();
+    });
 
     // Olvidó contraseña
     document.getElementById('forgotLink').addEventListener('click', async (e)=>{
