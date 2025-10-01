@@ -8,64 +8,220 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0b0d; --panel:#121316; --card:#17191d; --soft:#21242b;
-    --muted:#9aa1ac; --txt:#f5f7fb; --outline:rgba(255,255,255,.08);
-    --brand:#5ea1ff; --danger:#ff4d4f; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:16px;
+    /* Paleta monocroma y efectos 3D */
+    --bg0:#000;            /* base */
+    --bg1:#0b0c0e;         /* panel base */
+    --bg2:#111317;         /* card base */
+    --bg3:#14171c;         /* elevación */
+    --line:#1f232a;        /* borde neutro */
+    --line-hi:#2c313a;     /* borde alto/brillo leve */
+    --muted:#a8b0bc;       /* texto secundario */
+    --txt:#f7f9fc;         /* texto principal */
+
+    /* Degradados (solo grises/negros) */
+    --grad-app: radial-gradient(1200px 800px at 10% -20%, #12151a 0%, #0b0c0e 45%, #060708 100%);
+    --grad-panel: linear-gradient(180deg, #0f1114 0%, #0b0d10 100%);
+    --grad-card: linear-gradient(180deg, #14171c 0%, #0f1216 100%);
+
+    /* Sombras en capas (3D) */
+    --shadow-1: 0 10px 25px rgba(0,0,0,.45);
+    --shadow-2: 0 18px 40px rgba(0,0,0,.55);
+    --shadow-inset: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.6);
+
+    /* Radios y brillos */
+    --radius:18px;
+    --glow-soft: 0 0 0 1px rgba(255,255,255,.04), 0 30px 80px rgba(0,0,0,.55);
+    --gloss: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
+    --ring: 0 0 0 2px rgba(255,255,255,.08);
+
+    /* Controles */
+    --chip:#15181d;
+    --danger:#ff4d4f;
   }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0;background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;color:var(--txt);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:1100px;margin:36px auto;padding:0 20px}
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--txt);
+    background: var(--grad-app) fixed, var(--bg0);
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+  .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
+
+  /* ====== HEADER ====== */
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
   .brand{display:flex;gap:14px;align-items:center}
-  .brand-logo{width:46px;height:46px;border-radius:12px;background: radial-gradient(120% 120% at 20% 20%, #7fb3ff 0%, #3a6dff 40%, #1b2a57 80%);box-shadow:var(--shadow)}
-  .brand h1{margin:0;font-weight:800;letter-spacing:.5px;font-size:clamp(22px,2.9vw,36px)}
-  .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:600;background:#fff;color:#000;cursor:pointer;box-shadow:var(--shadow)}
-  .btn.secondary{background:var(--soft);color:#fff;border:1px solid var(--outline)}
-  .btn.danger{background:var(--danger);color:#fff}
-  .panel{background:var(--panel);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:var(--shadow)}
-  .card{background:var(--card);border:1px solid var(--outline);border-radius:var(--radius)}
-  .section{padding:22px}
-  .grid{display:grid;gap:14px}
+  .brand-logo{
+    width:46px;height:46px;border-radius:14px;
+    background:
+      var(--gloss),
+      radial-gradient(120% 120% at 20% 20%, #2a2d33 0%, #0e1116 45%, #060708 100%);
+    border:1px solid var(--line);
+    box-shadow: var(--shadow-2), var(--shadow-inset);
+  }
+  .brand h1{
+    margin:0;font-weight:800;letter-spacing:.4px;
+    font-size: clamp(22px, 2.9vw, 36px);
+    text-shadow: 0 1px 0 rgba(255,255,255,.06);
+  }
+
+  /* ====== Botones 3D ====== */
+  .btn{
+    appearance:none;border:0;border-radius:999px;padding:12px 18px;
+    font-weight:700;cursor:pointer;color:#0b0c0e;background:#ffffff;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.6),
+      0 8px 18px rgba(0,0,0,.45),
+      0 2px 0 rgba(255,255,255,.15);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); box-shadow: 0 12px 26px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.55); }
+  .btn:active{ transform: translateY(0); box-shadow: 0 6px 14px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.5); }
+
+  .btn.secondary{
+    color:var(--txt);
+    background:
+      var(--gloss),
+      linear-gradient(180deg, #1a1d23 0%, #0f1216 100%);
+    border:1px solid var(--line);
+    box-shadow: var(--shadow-1), var(--shadow-inset);
+  }
+  .btn.secondary:hover{
+    box-shadow: var(--shadow-2), var(--shadow-inset), var(--ring);
+  }
+  .btn.danger{
+    color:#fff;
+    background:
+      var(--gloss),
+      linear-gradient(180deg, #bb3335 0%, #941f21 100%);
+    border:1px solid #651b1d;
+    box-shadow: 0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  /* ====== Paneles y Cards (3D/gris) ====== */
+  .panel{
+    background: var(--grad-panel);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--glow-soft), var(--shadow-inset);
+  }
+  .card{
+    background: var(--grad-card);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1), var(--shadow-inset);
+  }
+  .section{padding:24px}
+
+  /* ====== Grid ====== */
+  .grid{display:grid;gap:16px}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
   @media (max-width:920px){ .grid.cols-3{grid-template-columns:1fr 1fr} }
   @media (max-width:680px){ .grid.cols-3{grid-template-columns:1fr} header{align-items:flex-start;gap:16px} }
-  .group{padding:18px 20px}
-  .k{display:inline-block;font-size:13px;color:var(--muted);background:#0f1116;border:1px solid var(--outline);padding:6px 10px;border-radius:999px;margin-bottom:8px}
-  .v{display:block;font-size:15px;font-weight:600}
-  .table{width:100%;border-collapse:collapse}
-  .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--outline)}
-  .table th{color:var(--muted);font-weight:600;text-align:left}
-  .sum-row td{font-weight:700}
+
+  /* ====== Key/Value ====== */
+  .group{padding:18px 20px; position:relative; overflow:hidden}
+  .group::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%);
+  }
+  .k{
+    display:inline-block;font-size:13px;color:var(--muted);
+    background:#0f1216;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px
+  }
+  .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
+
+  /* ====== Tablas ====== */
+  .table{width:100%;border-collapse:separate;border-spacing:0}
+  .table th,.table td{
+    padding:14px 16px;border-bottom:1px solid var(--line);
+  }
+  .table th{
+    color:var(--muted);font-weight:700;text-align:left;
+    background: linear-gradient(180deg, #101318, #0c0f13);
+    position:sticky; top:0; z-index:1;
+    box-shadow: inset 0 -1px 0 rgba(255,255,255,.03);
+  }
+  .sum-row td{font-weight:800}
   .note{color:var(--muted);font-size:13px;margin-top:10px}
-  dialog{border:0;border-radius:20px;background:linear-gradient(180deg,#14161b 0%, #0f1116 100%);color:var(--txt);width:min(840px,92vw)}
-  dialog::backdrop{background:rgba(0,0,0,.55)}
-  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--outline)}
+
+  /* ====== Dialog (3D) ====== */
+  dialog{
+    border:0;border-radius:22px;
+    background:
+      var(--gloss),
+      linear-gradient(180deg,#14161b 0%, #0f1116 100%);
+    color:var(--txt);width:min(840px,92vw);
+    box-shadow: 0 24px 64px rgba(0,0,0,.65), var(--shadow-inset);
+  }
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .modal-h{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 22px;border-bottom:1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+  }
   .modal-b{padding:18px 22px}
-  .pill{border:1px solid var(--outline);border-radius:14px;padding:12px 14px;cursor:pointer;user-select:none}
-  .pill.selected{border-color:rgba(94,161,255,.85);box-shadow:0 0 0 2px rgba(94,161,255,.25) inset}
-  .input, textarea{width:100%;border:1px solid var(--outline);background:#0f1116;color:#f5f7fb;border-radius:12px;padding:12px 14px;outline:none}
+
+  /* ====== Pills / Inputs ====== */
+  .pill{
+    border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;user-select:none;
+    background: linear-gradient(180deg,#121419,#0f1116);
+    box-shadow: var(--shadow-inset);
+    transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
+  }
+  .pill:hover{ transform: translateY(-1px); box-shadow: var(--ring), var(--shadow-inset); }
+  .pill.selected{ border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset, var(--shadow-inset); }
+
+  .input, textarea{
+    width:100%;border:1px solid var(--line);background:#0f1116;color:#f5f7fb;
+    border-radius:12px;padding:12px 14px;outline:none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    transition: box-shadow .12s ease, border-color .12s ease;
+  }
+  .input:focus, textarea:focus{
+    border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.07);
+  }
   textarea{min-height:120px;resize:vertical}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){ .row{grid-template-columns:1fr} }
-  /* SWITCH (palanca) */
-  .switch{--w:52px;--h:30px;--knob:24px;inline-size:var(--w);block-size:var(--h);background:#2a2d34;border-radius:999px;border:1px solid var(--outline);position:relative;cursor:pointer;transition:.2s ease;display:inline-block}
-  .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background:#fff;top:50%;left:3px;translate:0 -50%;transition:.2s ease;box-shadow:0 3px 10px rgba(0,0,0,.3)}
-  .switch.on{background:linear-gradient(90deg,#2b7cff,#6ba9ff)}
-  .switch.on::after{left:calc(var(--w) - var(--knob) - 3px)}
-  /* === Forzado de contraseña (mínimo) === */
+
+  /* ====== Switch ====== */
+  .switch{
+    --w:58px; --h:32px; --knob:26px;
+    inline-size:var(--w); block-size:var(--h);
+    background: linear-gradient(180deg,#1b1f26,#0f1216);
+    border-radius:999px;border:1px solid var(--line);position:relative;cursor:pointer;transition:.2s ease;display:inline-block;
+    box-shadow: var(--shadow-inset);
+  }
+  .switch::after{
+    content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;
+    background: linear-gradient(180deg,#ffffff,#d9d9d9);
+    top:50%; left:3px; translate:0 -50%;
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.6);
+    transition:.2s ease;
+  }
+  .switch.on{
+    background: linear-gradient(180deg,#232832,#14171d);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.07) inset, var(--shadow-inset);
+  }
+  .switch.on::after{ left:calc(var(--w) - var(--knob) - 3px) }
+
+  /* ====== Bloqueo y Pwd ====== */
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
-  #forcePwdDlg{border:0;border-radius:20px;background:#0f1116;color:#f5f7fb;width:min(840px,92vw)}
-  #forcePwdDlg::backdrop{background:rgba(0,0,0,.55)}
+  #forcePwdDlg{border:0;border-radius:22px;background: linear-gradient(180deg,#13161b 0%, #0e1014 100%); color:var(--txt); width:min(840px,92vw)}
+  #forcePwdDlg::backdrop{background:rgba(0,0,0,.6)}
 
-  /* Ojos grandes + estados de error */
   .pwd-field{position:relative}
   .pwd-field .input{padding-right:56px}
   .eye-btn{
     position:absolute; right:8px; top:50%; transform:translateY(-50%);
     width:48px; height:48px; border-radius:14px;
-    border:1px solid var(--outline); background:#0f1116; color:#fff;
-    display:grid; place-items:center; cursor:pointer;
+    border:1px solid var(--line);
+    background: linear-gradient(180deg,#121419,#0f1116);
+    color:#fff; display:grid; place-items:center; cursor:pointer;
+    box-shadow: var(--shadow-inset);
   }
   .eye-btn svg{width:28px; height:28px}
   .input.invalid{border-color:var(--danger) !important}
@@ -217,7 +373,7 @@
     </div>
   </dialog>
 
-  <!-- Supabase + Lógica -->
+  <!-- Supabase + Lógica (SIN CAMBIOS DE FUNCIONALIDAD) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
   const BASE_URL = 'https://clientes.fxcapital-gt.com/';
@@ -312,7 +468,7 @@
     sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on;
   }
 
-  // >>> NUEVO: enviar por correo vía Edge Function
+  // Enviar solicitud por Edge Function (Resend)
   async function enviarSolicitudRetiro(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
@@ -355,7 +511,7 @@
     toggleSwitchAll(false);
   }
 
-  // ===== CAMBIO DE CONTRASEÑA FORZADO (MÓDULO)
+  // ===== Cambio de contraseña forzado =====
   const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
   const __fxpwd_blocker  = document.getElementById('panelBlocker');
 
