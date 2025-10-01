@@ -15,6 +15,7 @@ html,body{height:100%}
 body{
   margin:0;background:var(--bg);color:var(--fg);
   font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+  font-size:16px; /* ↑ tamaño base */
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
 .container{max-width:1280px;margin:0 auto;padding:36px 22px}
@@ -23,19 +24,22 @@ body{
 .card{
   background:linear-gradient(180deg,var(--card),#101214);
   border:1px solid var(--border);border-radius:var(--radius);
-  padding:24px 20px;box-shadow:var(--shadow);margin-bottom:22px
+  padding:26px 22px;box-shadow:var(--shadow);margin-bottom:24px
 }
-h1{margin:0 0 18px;font-size:26px;letter-spacing:.2px}
-h2{margin:0 0 14px;font-size:18px;font-weight:700}
-label{display:block;margin:10px 0 6px;color:var(--muted);font-size:13px}
+h1{margin:0 0 18px;font-size:28px;letter-spacing:.2px}
+h2{margin:0 0 14px;font-size:20px;font-weight:700}
+label{display:block;margin:10px 0 6px;color:var(--muted);font-size:14px}
 input,select,textarea{
   width:100%;background:#0b0d0f;color:var(--fg);
-  border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:14px
+  border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:15px
 }
-button{background:#fff;color:#0b0c0e;border:none;padding:10px 16px;border-radius:999px;font-weight:800;cursor:pointer}
+button{
+  background:#fff;color:#0b0c0e;border:none;padding:12px 18px;border-radius:999px;
+  font-weight:800;cursor:pointer;font-size:15px
+}
 button.ghost{background:var(--chip);color:var(--fg);border:1px solid var(--border)}
 button.danger{background:var(--danger);color:#fff}
-.small{font-size:12px;color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
 .nowrap{white-space:nowrap}
 .hidden{display:none}
 
@@ -46,15 +50,18 @@ button.danger{background:var(--danger);color:#fff}
 hr.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
 
 /* Search bar */
-.searchbar{position:relative;max-width:460px}
+.searchbar{position:relative;max-width:500px}
 .searchbar input{padding-left:40px}
 .searchbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.7;pointer-events:none}
 
 /* Tabla con más espacio y scroll responsivo */
 .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
 table{width:100%;border-collapse:separate;border-spacing:0}
-th,td{padding:13px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
-th{text-align:left;color:#d7dce2;font-size:13px;background:#0f1114;position:sticky;top:0}
+th,td{
+  padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle;
+  font-size:15px; /* ↑ celdas más grandes */
+}
+th{text-align:left;color:#d7dce2;background:#0f1114;position:sticky;top:0}
 tbody tr:hover{background:#0e1116}
 
 /* Chips */
@@ -162,6 +169,7 @@ tbody tr:hover{background:#0e1116}
             <tr>
               <th>Nombre</th>
               <th>Email</th>
+              <th class="nowrap">Fecha ingreso</th> <!-- NUEVO -->
               <th>Plan</th>
               <th>Capital</th>
               <th>Banco</th>
@@ -206,6 +214,7 @@ function headersJSON(){
 const $ = (id)=> document.getElementById(id);
 const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
+const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—'; // NUEVO
 
 /*** AUTH ***/
 async function doLogin(e){
@@ -245,12 +254,18 @@ const VIEW_PRIMARY = 'v_admin_users_filtered';
 const VIEW_FALLBACK = 'v_admin_users';
 
 async function listUsers(){
-  // intentamos vista filtrada; si no existe, usamos la original
+  // Intentamos vista filtrada; si no existe, usamos la original
   let view = VIEW_PRIMARY;
-  let r = await fetch(`${BASE}/${view}?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  let url = `${BASE}/${view}`
+          + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
+          + `&order=full_name.asc`;
+  let r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   if (r.status === 404) {
     view = VIEW_FALLBACK;
-    r = await fetch(`${BASE}/${view}?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+    url = `${BASE}/${view}`
+        + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
+        + `&order=full_name.asc`;
+    r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   }
   if (!r.ok) { const t = await r.text(); alert("No se pudo cargar la lista de clientes:\n" + t); return; }
   CACHED = await r.json();
@@ -264,6 +279,7 @@ function renderUsers(rows){
     tr.innerHTML = `
       <td>${x.full_name ?? '—'}</td>
       <td>${x.email ?? '—'}</td>
+      <td class="nowrap">${fmtDate(x.joined_at)}</td> <!-- NUEVO -->
       <td>${x.plan ?? '—'}</td>
       <td>${fmtMoney(x.capital, x.currency)}</td>
       <td>${x.bank_name ?? '—'}</td>
@@ -308,7 +324,7 @@ function editClient(x){
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
-/*** Eliminar cliente ***/
+/*** Eliminar cliente (mantiene tu flujo) ***/
 async function deleteClient(x){
   const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
