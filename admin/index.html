@@ -168,7 +168,7 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
-/*** LISTA — usa SOLO la vista filtrada; fallback hace join accounts→profiles y excluye admins ***/
+/*** LISTA — vista filtrada (sin admins); fallback hace join y excluye admins ***/
 let CACHED = [];
 async function listUsers(){
   const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
@@ -177,8 +177,7 @@ async function listUsers(){
   let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
 
   if (r.ok) {
-    const rows = await r.json();
-    CACHED = rows;
+    CACHED = await r.json();
     renderUsers(CACHED);
     return;
   }
@@ -197,7 +196,6 @@ async function loadUsersViaJoinFallback(h){
     const accounts = aRes.ok ? await aRes.json() : [];
     const profiles = pRes.ok ? await pRes.json() : [];
     const pmap = new Map(profiles.map(p => [p.id, p]));
-    // Solo clientes (con account) y NO admins
     return accounts.map(a=>{
       const p = pmap.get(a.user_id) || {};
       if (p.is_admin) return null;
@@ -300,8 +298,12 @@ async function saveUser(){
     }
     if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
-    // Upsert BD
-    const body = { p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital, p_joined_at: joined, p_plan: plan, p_bank_name: bankName||null, p_bank_account: bankAcct||null, p_invest_months: months, p_interest_pct: rate };
+    // Upsert BD (RPC canónico)
+    const body = {
+      p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
+      p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null,
+      p_invest_months: months, p_interest_pct: rate
+    };
     const r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(body) });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
