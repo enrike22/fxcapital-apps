@@ -20,7 +20,6 @@ body{
 }
 .container{max-width:1280px;margin:0 auto;padding:36px 22px}
 
-/* Cards y tipografía */
 .card{
   background:linear-gradient(180deg,var(--card),#101214);
   border:1px solid var(--border);border-radius:var(--radius);
@@ -43,18 +42,15 @@ button.danger{background:var(--danger);color:#fff}
 .nowrap{white-space:nowrap}
 .hidden{display:none}
 
-/* Layout y respiración */
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .inline{display:flex;gap:10px;align-items:center}
 .row{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 hr.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
 
-/* Search bar */
 .searchbar{position:relative;max-width:500px}
 .searchbar input{padding-left:40px}
 .searchbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.7;pointer-events:none}
 
-/* Tabla con más espacio y scroll responsivo */
 .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
 table{width:100%;border-collapse:separate;border-spacing:0}
 th,td{
@@ -64,10 +60,8 @@ th,td{
 th{text-align:left;color:#d7dce2;background:#0f1114;position:sticky;top:0}
 tbody tr:hover{background:#0e1116}
 
-/* Chips */
 .chip{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--border);font-size:12px}
 
-/* Inputs más anchos en pantallas grandes */
 @media (min-width:1200px){
   .container{max-width:1320px}
 }
@@ -243,78 +237,55 @@ async function doLogin(e){
 }
 function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
 
-/*** Edge Functions auxiliares (opcional) ***/
+/*** Edge Functions auxiliares (crear usuario) ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
   if(!password) return { ok:true, status:204 };
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
   return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
 }
-async function deleteAuthUserIfAvailable(user_id, email){
-  try{
-    const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user";
-    await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ user_id, email }) });
-  }catch{}
-}
 
-/*** LISTA USUARIOS con vista filtrada ***/
+/*** LISTA USUARIOS (vista filtrada con fallback) ***/
 let CACHED = [];
 const VIEW_PRIMARY = 'v_admin_users_filtered';
 const VIEW_FALLBACK = 'v_admin_users';
 
-/* Helper: intenta cargar con/ sin columna phone, y si no viene, hace merge desde profiles */
 async function listUsers(){
   let view = VIEW_PRIMARY;
-  let urlBase = `${BASE}/${view}`;
-  let select = `?select=user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
+  let url = `${BASE}/${view}` + `?select=user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
+  let r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
 
-  // primer intento: con phone en la vista
-  let r = await fetch(urlBase + select, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
-
-  // si la vista no existe, cambia a fallback
   if (r.status === 404) {
     view = VIEW_FALLBACK;
-    urlBase = `${BASE}/${view}`;
-    r = await fetch(urlBase + select, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+    url = `${BASE}/${view}` + `?select=user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
+    r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   }
 
-  // si falla por columna desconocida (phone), reintenta sin pedir phone
   if (!r.ok) {
-    const text = await r.text();
-    const badColumn = /column .* does not exist|unknown column|hint/i.test(text);
-    if (badColumn) {
-      const altSelect = `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
-      r = await fetch(urlBase + altSelect, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
-      if (!r.ok) { alert("No se pudo cargar la lista de clientes:\n" + text); return; }
-      CACHED = await r.json();
-      // merge phones desde profiles usando user_id
+    const t = await r.text();
+    // si la vista no tiene 'phone', reintenta sin phone y luego hidrata desde profiles
+    if (/column .*phone.* does not exist|unknown column/i.test(t)) {
+      const url2 = `${BASE}/${view}` + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
+      const r2 = await fetch(url2, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+      if (!r2.ok) { alert("No se pudo cargar la lista:\n"+(await r2.text())); return; }
+      CACHED = await r2.json();
       await hydratePhonesFromProfiles(CACHED);
       renderUsers(CACHED);
       return;
-    } else {
-      alert("No se pudo cargar la lista de clientes:\n" + text);
-      return;
     }
+    alert("No se pudo cargar la lista:\n"+t);
+    return;
   }
 
   CACHED = await r.json();
-
-  // si vino sin phone (null/undefined en todos), intentar hidratar
   const needsHydrate = !CACHED.some(x => x && typeof x.phone === "string" && x.phone.trim() !== "");
-  if (needsHydrate) {
-    await hydratePhonesFromProfiles(CACHED);
-  }
-
+  if (needsHydrate) await hydratePhonesFromProfiles(CACHED);
   renderUsers(CACHED);
 }
 
-/* Consulta profiles para traer phone por lote y hacer merge por user_id */
 async function hydratePhonesFromProfiles(rows){
   try{
     const ids = rows.map(r=>r.user_id).filter(Boolean);
     if (!ids.length) return;
-
-    // construir filtro in.(...)
-    // escapamos comillas si fuera necesario
     const inList = '(' + ids.map(id => `"${String(id).replace(/"/g,'\\"')}"`).join(',') + ')';
     const r = await fetch(`${BASE}/profiles?id=in.${encodeURIComponent(inList)}&select=id,phone`, {
       headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
@@ -323,9 +294,7 @@ async function hydratePhonesFromProfiles(rows){
     const profs = await r.json();
     const map = new Map(profs.map(p=>[p.id, p.phone]));
     rows.forEach(row=>{
-      if (row && row.user_id && map.has(row.user_id)) {
-        row.phone = map.get(row.user_id) || null;
-      }
+      if (row && row.user_id && map.has(row.user_id)) row.phone = map.get(row.user_id) || null;
     });
   }catch{}
 }
@@ -366,7 +335,7 @@ $("q")?.addEventListener("input", (e)=>{
   renderUsers(filt);
 });
 
-/*** Editar: cargar datos al formulario ***/
+/*** Editar: cargar datos ***/
 async function editClient(x){
   $("u_email").value = x.email || "";
   $("u_name").value  = x.full_name || "";
@@ -381,7 +350,6 @@ async function editClient(x){
   $("u_bank_account_type").value = x.bank_account_type ?? "";
   $("u_pass").value = "";
 
-  // teléfono (si no viene en la vista, intenta traerlo de profiles puntual)
   if (typeof x.phone === "string") {
     $("u_phone").value = x.phone || "";
   } else if (x.user_id) {
@@ -399,28 +367,6 @@ async function editClient(x){
   }
 
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-/*** Eliminar cliente (mantiene tu flujo) ***/
-async function deleteClient(x){
-  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
-  if(!confirm(msg)) return;
-
-  try{
-    if(x.account_id){
-      await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
-      await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
-      await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
-    }
-    if(x.user_id){
-      await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: headersJSON() });
-    }
-    await deleteAuthUserIfAvailable(x.user_id, x.email);
-    await listUsers();
-    alert("Cliente eliminado.");
-  }catch(e){
-    alert("No se pudo eliminar: " + (e.message||e));
-  }
 }
 
 /*** Guardar / Editar ***/
@@ -467,11 +413,9 @@ async function saveUser(){
         p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
         p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null
       };
-
       r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld) });
       if (!r.ok) throw new Error(await r.text() || "Error guardando");
 
-      // completar meses/tasa si la función antigua no los soportaba
       try {
         const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
         if (rV.ok) {
@@ -487,7 +431,7 @@ async function saveUser(){
       } catch {}
     }
 
-    // asegurar tipo de cuenta
+    // asegurar tipo de cuenta y teléfono
     try{
       const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id,user_id`, {headers: headersJSON()});
       const rows = rV.ok ? await rV.json() : [];
@@ -501,7 +445,6 @@ async function saveUser(){
         });
       }
 
-      // guardar teléfono en profiles.phone
       if (uId){
         await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uId)}`, {
           method:"PATCH", headers: headersJSON(),
@@ -518,13 +461,94 @@ async function saveUser(){
   }
 }
 
-function clearForm(){
-  ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"]
-    .forEach(id=>$(id).value="");
-  $("u_currency").value="GTQ";
-  $("u_plan").value="STANDARD";
-  $("u_months").value="12";
-  $("saveMsg").textContent="";
+/*** BORRAR USUARIO: usa RPC (robusto) y luego Edge Function Auth; fallback manual si falta el RPC ***/
+async function deleteClient(x){
+  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
+  if(!confirm(msg)) return;
+
+  const jh = headersJSON();
+
+  const mustOk = async (resp, label) => {
+    if (!resp.ok) {
+      const t = await resp.text().catch(()=> '');
+      // Señales típicas de RLS o permisos
+      if (t.match(/Policies|RLS|permission|not authorized|violates row-level/mi)) {
+        throw new Error(`Bloqueado por RLS/Permisos al ${label}. Usa el RPC SECURITY DEFINER (ver instrucciones). Detalle: ${t || resp.status}`);
+      }
+      throw new Error(`Error al ${label}: ${t || resp.status}`);
+    }
+  };
+
+  // 1) Intentar RPC
+  try{
+    if (!x?.email) throw new Error("No hay email para identificar al usuario.");
+    const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
+      method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email })
+    });
+
+    if (r.status === 404) {
+      // RPC no existe -> fallback manual
+      await deleteClientManual(x, jh, mustOk);
+    } else {
+      await mustOk(r, "RPC admin_delete_user_cascade");
+    }
+  }catch(e){
+    // Si el RPC falló por política/otro, intentamos manual y si también falla, mostramos el error del manual
+    try{
+      await deleteClientManual(x, jh, mustOk);
+    }catch(e2){
+      alert("No se pudo eliminar (RPC y fallback fallaron): " + (e2.message || e2));
+      return;
+    }
+  }
+
+  // 2) Borrar en Auth (mejor esfuerzo)
+  try{
+    const rAuth = await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
+      body: JSON.stringify({ email: x.email })
+    });
+    if (!rAuth.ok) {
+      const t = await rAuth.text().catch(()=> "");
+      console.warn("No se pudo eliminar en Auth:", t || rAuth.status);
+    }
+  }catch(e){ console.warn("Auth delete error:", e?.message||e); }
+
+  await listUsers();
+  alert("Cliente eliminado correctamente.");
+}
+
+async function deleteClientManual(x, jh, mustOk) {
+  // asegurar IDs
+  if (!x?.user_id || !x?.account_id) {
+    const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, {
+      headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token }
+    });
+    await mustOk(r, "consultar v_admin_users");
+    const rows = await r.json();
+    if (rows?.[0]) {
+      x.user_id   = x.user_id   || rows[0].user_id;
+      x.account_id= x.account_id|| rows[0].account_id;
+    }
+  }
+
+  // hijos -> cuenta -> perfil (orden defensivo)
+  if (x.account_id) {
+    const delWr = await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh });
+    await mustOk(delWr, "eliminar withdrawal_requests");
+
+    const delNoti = await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh });
+    await mustOk(delNoti, "eliminar admin_notifications");
+
+    const delAcc = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh });
+    await mustOk(delAcc, "eliminar accounts");
+  }
+
+  if (x.user_id) {
+    const delProf = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: jh });
+    if (!delProf.ok && delProf.status !== 404) await mustOk(delProf, "eliminar profiles");
+  }
 }
 
 /*** NOTIFICACIONES ***/
