@@ -8,83 +8,160 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0b0d; --card:#17191d; --outline:rgba(255,255,255,.08);
-    --txt:#f5f7fb; --muted:#9aa1ac; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --bg:#0b0b0d; --card:#17191d; --panel:#121318;
+    --outline:rgba(255,255,255,.08); --txt:#f5f7fb; --muted:#9aa1ac;
+    --shadow:0 18px 50px rgba(0,0,0,.45);
   }
-  *{box-sizing:border-box} html,body{height:100%}
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
-    margin:0; background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;
-    color:var(--txt); font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    margin:0;
+    color:var(--txt);
+    font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 800px at 12% -25%, #1a1d24 0%, #0b0b0d 55%) fixed;
   }
-  .wrap{max-width:1100px;margin:40px auto;padding:0 20px}
-  .grid{display:grid;grid-template-columns:1fr 420px;gap:34px}
-  @media (max-width:980px){ .grid{grid-template-columns:1fr} }
-  .brand h1{margin:0;font-weight:800;letter-spacing:.5px;font-size:clamp(28px,3.8vw,42px)}
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}
-  .card{background:var(--card);border:1px solid var(--outline);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
-  .muted{color:var(--muted)}
+
+  /* CENTRADO GLOBAL */
+  .page{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:24px;
+  }
+  .wrap{
+    width:min(1200px, 96vw);
+  }
+
+  /* GRID PRINCIPAL */
+  .grid{
+    display:grid;
+    grid-template-columns:1.2fr 480px;
+    gap:36px;
+    align-items:center;
+  }
+  @media (max-width:1100px){
+    .grid{ grid-template-columns:1fr; gap:26px; }
+  }
+
+  /* LADO IZQUIERDO */
+  .brand h1{
+    margin:0 0 6px 0;
+    font-weight:800;
+    letter-spacing:.5px;
+    font-size:clamp(30px,4.2vw,46px);
+  }
+  .sub{ color:var(--muted); font-weight:500 }
+  .cards{
+    display:grid; gap:16px; margin-top:24px;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--outline);
+    border-radius:18px;
+    padding:22px;
+    box-shadow:var(--shadow);
+  }
+  .card strong{display:block;margin-bottom:6px}
+  .card.span2{ grid-column:1 / -1 }
+
+  /* TARJETA LOGIN */
   .login{
-    background:linear-gradient(180deg,#171a21 0%, #121318 100%);
-    border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)
+    background:linear-gradient(180deg, var(--panel) 0%, #0f1116 100%);
+    border:1px solid var(--outline);
+    border-radius:20px;
+    padding:28px 26px;
+    box-shadow:var(--shadow);
   }
+  .login h2{ margin:0 0 16px 0; font-size:22px }
   .input{
-    width:100%;background:#0f1116;border:1px solid var(--outline);border-radius:12px;
-    color:var(--txt);padding:12px 14px;outline:none
+    width:100%;
+    background:#0f1116;
+    border:1px solid var(--outline);
+    border-radius:12px;
+    color:var(--txt);
+    padding:13px 14px;
+    outline:none;
   }
-  .row{display:flex;align-items:center;gap:10px}
-  .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
-  .btn.primary{background:#fff;color:#000;width:100%}
-  .eye{cursor:pointer;user-select:none}
+  .input:focus{ border-color:#2b7cff }
+  .row{ display:flex; align-items:center; gap:10px }
+  .btn{
+    appearance:none; border:0; border-radius:12px; padding:13px 16px;
+    font-weight:700; cursor:pointer; box-shadow:var(--shadow);
+    transition:transform .08s ease;
+  }
+  .btn.primary{ background:#fff; color:#000; width:100% }
+  .btn:active{ transform:translateY(1px) }
+  .muted{ color:var(--muted) }
+
+  /* OJO */
+  .eye{
+    width:44px; height:44px; border-radius:12px;
+    display:grid; place-items:center; cursor:pointer;
+    border:1px solid var(--outline); background:#0f1116; user-select:none;
+  }
+
+  /* PIE NOTA */
+  .footnote{ color:var(--muted); font-size:12px; margin-top:10px }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="grid">
-      <div>
-        <div class="brand">
-          <h1>FX | CAPITAL R.L.</h1>
-          <div class="muted">Asesoría — Confianza — Crecimiento</div>
-        </div>
+  <main class="page">
+    <div class="wrap">
+      <div class="grid">
+        <!-- Lado izquierdo (branding y ventajas) -->
+        <section>
+          <div class="brand">
+            <h1>FX | CAPITAL R.L.</h1>
+            <div class="sub">Asesoría — Confianza — Crecimiento</div>
+          </div>
 
-        <div class="cards">
-          <div class="card">
-            <div style="font-weight:700">Seguridad</div>
-            <div class="muted">Máxima protección</div>
+          <div class="cards">
+            <div class="card">
+              <strong>Seguridad</strong>
+              <span class="muted">Máxima protección</span>
+            </div>
+            <div class="card">
+              <strong>Rentabilidad</strong>
+              <span class="muted">Hasta 25% semestral*</span>
+            </div>
+            <div class="card span2">
+              <strong>Control</strong>
+              <span class="muted">Transparencia total</span>
+            </div>
           </div>
-          <div class="card">
-            <div style="font-weight:700">Rentabilidad</div>
-            <div class="muted">Hasta 25% semestral*</div>
-          </div>
-          <div class="card" style="grid-column:1 / -1">
-            <div style="font-weight:700">Control</div>
-            <div class="muted">Transparencia total</div>
-          </div>
-        </div>
 
-        <div class="muted" style="margin-top:14px;font-size:13px">
-          *El porcentaje final depende de su plan.
-        </div>
-      </div>
+          <div class="footnote">*El porcentaje final depende de su plan.</div>
+        </section>
 
-      <div class="login">
-        <h2 style="margin:0 0 16px 0">Iniciar Sesión</h2>
-        <div style="margin-bottom:12px">
-          <div class="muted" style="margin-bottom:6px">Correo Electrónico</div>
-          <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email">
-        </div>
-        <div style="margin-bottom:16px">
-          <div class="muted" style="margin-bottom:6px">Contraseña</div>
-          <div class="row">
-            <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password">
-            <div id="toggleEye" class="eye">👁️</div>
+        <!-- Tarjeta de Login -->
+        <section class="login" aria-labelledby="loginTitle">
+          <h2 id="loginTitle">Iniciar Sesión</h2>
+
+          <div style="margin-bottom:12px">
+            <div class="muted" style="margin-bottom:6px">Correo Electrónico</div>
+            <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
           </div>
-          <div style="text-align:right;margin-top:6px"><a class="muted" href="#" onclick="alert('Solicítela a soporte');return false;">¿Olvidó su contraseña?</a></div>
-        </div>
-        <button id="btnLogin" class="btn primary">Iniciar Sesión</button>
+
+          <div style="margin-bottom:16px">
+            <div class="muted" style="margin-bottom:6px">Contraseña</div>
+            <div class="row">
+              <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
+              <button id="toggleEye" class="eye" type="button" aria-label="Mostrar u ocultar contraseña">👁️</button>
+            </div>
+            <div style="text-align:right;margin-top:6px">
+              <a class="muted" href="#" id="forgotLink">¿Olvidó su contraseña?</a>
+            </div>
+          </div>
+
+          <button id="btnLogin" class="btn primary">Iniciar Sesión</button>
+        </section>
       </div>
     </div>
-  </div>
+  </main>
 
+  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
@@ -94,25 +171,42 @@
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
-    // si ya hay sesión, ir al dashboard
+    // Si ya hay sesión, redirigir
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
       if (session) window.location.replace(DASHBOARD_PATH);
     })();
 
+    // Mostrar / ocultar password
     document.getElementById('toggleEye').onclick = () => {
       const p = document.getElementById('password');
       p.type = p.type === 'password' ? 'text' : 'password';
     };
 
-    document.getElementById('btnLogin').onclick = async () => {
+    // Login
+    async function doLogin(){
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       if (!email || !password) { alert('Complete correo y contraseña'); return; }
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) { alert('No se pudo iniciar sesión: ' + error.message); return; }
       window.location.replace(DASHBOARD_PATH);
-    };
+    }
+    document.getElementById('btnLogin').addEventListener('click', doLogin);
+
+    // Enter para enviar
+    document.getElementById('password').addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') doLogin();
+    });
+    document.getElementById('email').addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') doLogin();
+    });
+
+    // Enlace "¿Olvidó su contraseña?" (abre mail app para pedir soporte, simple)
+    document.getElementById('forgotLink').addEventListener('click', (e)=>{
+      e.preventDefault();
+      alert('Si olvidó su contraseña, contáctenos para restablecerla.');
+    });
   </script>
 </body>
 </html>
