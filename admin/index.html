@@ -120,7 +120,7 @@ tbody tr:hover{background:#0e1116}
             <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no cambia)">
             <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
           </div>
-          <div class="small">Si dejas en blanco, <b>no</b> se cambia/crea en Auth.</div>
+          <div class="small">Si dejas en blanco, <b>no</b> se crea en Auth (solo si ya existe).</div>
         </div>
 
         <div><label>Moneda</label>
@@ -220,6 +220,7 @@ const $ = (id)=> document.getElementById(id);
 const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
+const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 
 /*** AUTH ***/
 async function doLogin(e){
@@ -240,11 +241,32 @@ async function doLogin(e){
 }
 function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
 
-/*** Edge Functions auxiliares (crear usuario) ***/
+/*** Edge Function: crear usuario en Auth (usa Service Role del backend) ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
-  if(!password) return { ok:true, status:204 };
+  if(!password) return { ok:true, status:204, json: async()=>({}) };
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
-  return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
+  const r = await fetch(url, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      apikey:ANON_KEY,
+      Authorization:"Bearer "+(localStorage.token||"")
+    },
+    body: JSON.stringify({ email, password, full_name: fullName })
+  });
+  return r;
+}
+
+/*** Helpers: comprobar si el usuario existe en Auth (vía función SQL) ***/
+async function getAuthUserIdByEmail(email){
+  try{
+    const r = await fetch(`${RPC}/get_user_id_by_email`, {
+      method:"POST", headers: headersJSON(), body: JSON.stringify({ p_email: email })
+    });
+    if(!r.ok) return null;
+    const id = await r.json(); // devuelve uuid o null
+    return id || null;
+  }catch{ return null; }
 }
 
 /*** LISTA USUARIOS (vista filtrada con fallback) — NO CACHE ***/
@@ -287,14 +309,12 @@ async function listUsers(){
   renderUsers(CACHED);
 }
 
-/*** Hidratar teléfonos — usa or=(id.eq....) en grupos para evitar PGRST100 ***/
+/*** Hidratar teléfonos — or=(id.eq....) en grupos ***/
 async function hydratePhonesFromProfiles(rows){
   try{
     const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const ids = rows.map(r=>r.user_id).filter(id => typeof id === "string" && uuidRe.test(id));
     if (!ids.length) return;
-
-    // chankear para URLs cortas
     const chunk = (arr,n)=> arr.reduce((a,_,i)=> (i%n? a[a.length-1].push(arr[i]):a.push([arr[i]]),a),[]);
     const groups = chunk(ids, 15);
 
@@ -310,7 +330,6 @@ async function hydratePhonesFromProfiles(rows){
       const profs = await r.json();
       profs.forEach(p => map.set(p.id, p.phone));
     }
-
     rows.forEach(row=>{
       if (row && row.user_id && map.has(row.user_id)) row.phone = map.get(row.user_id) || null;
     });
@@ -413,9 +432,35 @@ async function saveUser(){
     if (!fullName) throw new Error("Nombre requerido");
     if (isNaN(capital) || capital < 0) throw new Error("Capital inválido");
 
-    const authRes = await createAuthUserIfNeeded(email, password, fullName);
-    if(!authRes.ok && authRes.status !== 400){ throw new Error("No se pudo crear usuario Auth"); }
+    // 1) Asegurar existencia en Auth
+    let uid = await getAuthUserIdByEmail(email);
 
+    if (!uid && password) {
+      // Crear en Auth vía Edge Function
+      const rCreate = await createAuthUserIfNeeded(email, password, fullName);
+      if (!rCreate.ok) {
+        const t = await rCreate.text().catch(()=> "");
+        throw new Error("No se pudo crear el usuario en Auth. Revisa whitelist/secrets de la función. Detalle: " + (t || rCreate.status));
+      }
+      // Intentar leer el id devuelto
+      let created = {};
+      try{ created = await rCreate.json(); }catch{}
+      uid = created?.id || null;
+
+      // Si no vino el id, consultarlo (hasta 5 intentos breves)
+      if (!uid) {
+        for (let i=0;i<5 && !uid;i++){
+          await sleep(400);
+          uid = await getAuthUserIdByEmail(email);
+        }
+      }
+    }
+
+    if (!uid && !password) {
+      throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo desde aquí.");
+    }
+
+    // 2) Upsert en BD (RPC principal)
     const bodyNew = {
       p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
       p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null,
@@ -427,15 +472,17 @@ async function saveUser(){
     if (!r.ok) {
       const txt = await r.text();
       const isNoMatch = txt.includes("PGRST202") || txt.includes("Could not find the function");
-      if (!isNoMatch) throw new Error(txt || "Error guardando");
+      if (!isNoMatch) throw new Error(txt || "Error guardando (RPC).");
 
+      // Fallback a firma antigua sin meses/tasa
       const bodyOld = {
         p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
         p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null
       };
       r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld) });
-      if (!r.ok) throw new Error(await r.text() || "Error guardando");
+      if (!r.ok) throw new Error(await r.text() || "Error guardando (RPC fallback).");
 
+      // Completar meses/tasa si la firma antigua no los soportaba
       try {
         const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
         if (rV.ok) {
@@ -451,7 +498,7 @@ async function saveUser(){
       } catch {}
     }
 
-    // asegurar tipo de cuenta y teléfono
+    // 3) Asegurar tipo de cuenta y teléfono
     try{
       const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id,user_id`, {headers: headersJSON()});
       const rows = rV.ok ? await rV.json() : [];
@@ -468,7 +515,7 @@ async function saveUser(){
       if (uId){
         await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uId)}`, {
           method:"PATCH", headers: headersJSON(),
-          body: JSON.stringify({ phone: phone || null })
+          body: JSON.stringify({ phone: phone || null, full_name: fullName || null, email })
         });
       }
     }catch{}
@@ -497,7 +544,7 @@ async function deleteClient(x){
     }
   };
 
-  // 1) RPC primero (si existe con p_dry_run)
+  // 1) RPC primero
   try{
     const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
       method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email, p_dry_run: false })
@@ -509,20 +556,9 @@ async function deleteClient(x){
     await deleteClientManual(x, jh, mustOk);
   }
 
-  // 2) Borrar en Auth (best-effort, resolviendo user_id si falta)
+  // 2) Borrar en Auth (best-effort)
   try{
-    let uid = x.user_id;
-    if (!uid && x.email) {
-      const rP = await fetch(`${BASE}/profiles?email=eq.${encodeURIComponent(x.email)}&select=id`, {
-        headers:{ apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
-        cache:"no-store"
-      });
-      if (rP.ok) {
-        const rr = await rP.json();
-        uid = rr?.[0]?.id || null;
-      }
-    }
-
+    let uid = x.user_id || await getAuthUserIdByEmail(x.email);
     const rAuth = await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
       method:"POST",
       headers:{
@@ -532,7 +568,6 @@ async function deleteClient(x){
       },
       body: JSON.stringify({ user_id: uid || null, email: x.email || null })
     });
-
     if (!rAuth.ok) {
       const t = await rAuth.text().catch(()=> "");
       console.warn("No se pudo eliminar en Auth:", t || rAuth.status);
@@ -551,7 +586,6 @@ async function deleteClient(x){
 }
 
 async function deleteClientManual(x, jh, mustOk) {
-  // asegurar IDs
   if (!x?.user_id || !x?.account_id) {
     const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, {
       headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache" },
@@ -564,8 +598,6 @@ async function deleteClientManual(x, jh, mustOk) {
       x.account_id= x.account_id|| rows[0].account_id;
     }
   }
-
-  // hijos -> cuenta -> perfil
   if (x.account_id) {
     const delWr = await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     await mustOk(delWr, "eliminar withdrawal_requests");
@@ -576,7 +608,6 @@ async function deleteClientManual(x, jh, mustOk) {
     const delAcc = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     await mustOk(delAcc, "eliminar accounts");
   }
-
   if (x.user_id) {
     const delProf = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     if (!delProf.ok && delProf.status !== 404) await mustOk(delProf, "eliminar profiles");
