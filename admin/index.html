@@ -1,686 +1,491 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FX | CAPITAL R.L. — Panel del Cliente</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FX | CAPITAL R.L. — Admin</title>
 <style>
-  :root{
-    /* Paleta monocroma y efectos 3D */
-    --bg0:#000;            /* base */
-    --bg1:#0b0c0e;         /* panel base */
-    --bg2:#111317;         /* card base */
-    --bg3:#14171c;         /* elevación */
-    --line:#1f232a;        /* borde neutro */
-    --line-hi:#2c313a;     /* borde alto/brillo leve */
-    --muted:#a8b0bc;       /* texto secundario */
-    --txt:#f7f9fc;         /* texto principal */
+:root{
+  --bg:#0a0a0a; --fg:#f5f7fa; --muted:#cdd3da;
+  --card:#0f1012; --border:#21262c; --shadow:0 14px 40px rgba(0,0,0,.5);
+  --radius:18px; --chip:#15181d; --danger:#ff4d4f;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+  font-size:16px; /* ↑ tamaño base */
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+.container{max-width:1280px;margin:0 auto;padding:36px 22px}
 
-    /* Degradados (solo grises/negros) */
-    --grad-app: radial-gradient(1200px 800px at 10% -20%, #12151a 0%, #0b0c0e 45%, #060708 100%);
-    --grad-panel: linear-gradient(180deg, #0f1114 0%, #0b0d10 100%);
-    --grad-card: linear-gradient(180deg, #14171c 0%, #0f1216 100%);
+/* Cards y tipografía */
+.card{
+  background:linear-gradient(180deg,var(--card),#101214);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:26px 22px;box-shadow:var(--shadow);margin-bottom:24px
+}
+h1{margin:0 0 18px;font-size:28px;letter-spacing:.2px}
+h2{margin:0 0 14px;font-size:20px;font-weight:700}
+label{display:block;margin:10px 0 6px;color:var(--muted);font-size:14px}
+input,select,textarea{
+  width:100%;background:#0b0d0f;color:var(--fg);
+  border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:15px
+}
+button{
+  background:#fff;color:#0b0c0e;border:none;padding:12px 18px;border-radius:999px;
+  font-weight:800;cursor:pointer;font-size:15px
+}
+button.ghost{background:var(--chip);color:var(--fg);border:1px solid var(--border)}
+button.danger{background:var(--danger);color:#fff}
+.small{font-size:13px;color:var(--muted)}
+.nowrap{white-space:nowrap}
+.hidden{display:none}
 
-    /* Sombras en capas (3D) */
-    --shadow-1: 0 10px 25px rgba(0,0,0,.45);
-    --shadow-2: 0 18px 40px rgba(0,0,0,.55);
-    --shadow-inset: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.6);
+/* Layout y respiración */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.inline{display:flex;gap:10px;align-items:center}
+.row{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+hr.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
 
-    /* Radios y brillos */
-    --radius:18px;
-    --glow-soft: 0 0 0 1px rgba(255,255,255,.04), 0 30px 80px rgba(0,0,0,.55);
-    --gloss: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
-    --ring: 0 0 0 2px rgba(255,255,255,.08);
+/* Search bar */
+.searchbar{position:relative;max-width:500px}
+.searchbar input{padding-left:40px}
+.searchbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.7;pointer-events:none}
 
-    /* Controles */
-    --chip:#15181d;
-    --danger:#ff4d4f;
-  }
+/* Tabla con más espacio y scroll responsivo */
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th,td{
+  padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle;
+  font-size:15px; /* ↑ celdas más grandes */
+}
+th{text-align:left;color:#d7dce2;background:#0f1114;position:sticky;top:0}
+tbody tr:hover{background:#0e1116}
 
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; color:var(--txt);
-    background: var(--grad-app) fixed, var(--bg0);
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-  }
-  .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
+/* Chips */
+.chip{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--border);font-size:12px}
 
-  /* ====== HEADER ====== */
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-  .brand{display:flex;gap:14px;align-items:center}
-  .brand-logo{
-    width:46px;height:46px;border-radius:14px;
-    background:
-      var(--gloss),
-      radial-gradient(120% 120% at 20% 20%, #2a2d33 0%, #0e1116 45%, #060708 100%);
-    border:1px solid var(--line);
-    box-shadow: var(--shadow-2), var(--shadow-inset);
-  }
-  .brand h1{
-    margin:0;font-weight:800;letter-spacing:.4px;
-    font-size: clamp(22px, 2.9vw, 36px);
-    text-shadow: 0 1px 0 rgba(255,255,255,.06);
-  }
-
-  /* ====== Botones 3D ====== */
-  .btn{
-    appearance:none;border:0;border-radius:999px;padding:12px 18px;
-    font-weight:700;cursor:pointer;color:#0b0c0e;background:#ffffff;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.6),
-      0 8px 18px rgba(0,0,0,.45),
-      0 2px 0 rgba(255,255,255,.15);
-    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
-  }
-  .btn:hover{ transform: translateY(-1px); box-shadow: 0 12px 26px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.55); }
-  .btn:active{ transform: translateY(0); box-shadow: 0 6px 14px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.5); }
-
-  .btn.secondary{
-    color:var(--txt);
-    background:
-      var(--gloss),
-      linear-gradient(180deg, #1a1d23 0%, #0f1216 100%);
-    border:1px solid var(--line);
-    box-shadow: var(--shadow-1), var(--shadow-inset);
-  }
-  .btn.secondary:hover{
-    box-shadow: var(--shadow-2), var(--shadow-inset), var(--ring);
-  }
-  .btn.danger{
-    color:#fff;
-    background:
-      var(--gloss),
-      linear-gradient(180deg, #bb3335 0%, #941f21 100%);
-    border:1px solid #651b1d;
-    box-shadow: 0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05);
-  }
-
-  /* ====== Paneles y Cards (3D/gris) ====== */
-  .panel{
-    background: var(--grad-panel);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--glow-soft), var(--shadow-inset);
-  }
-  .card{
-    background: var(--grad-card);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-1), var(--shadow-inset);
-  }
-  .section{padding:24px}
-
-  /* ====== Grid ====== */
-  .grid{display:grid;gap:16px}
-  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  @media (max-width:920px){ .grid.cols-3{grid-template-columns:1fr 1fr} }
-  @media (max-width:680px){ .grid.cols-3{grid-template-columns:1fr} header{align-items:flex-start;gap:16px} }
-
-  /* ====== Key/Value ====== */
-  .group{padding:18px 20px; position:relative; overflow:hidden}
-  .group::before{
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%);
-  }
-  .k{
-    display:inline-block;font-size:13px;color:var(--muted);
-    background:#0f1216;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px
-  }
-  .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
-
-  /* ====== Tablas ====== */
-  .table{width:100%;border-collapse:separate;border-spacing:0}
-  .table th,.table td{
-    padding:14px 16px;border-bottom:1px solid var(--line);
-  }
-  .table th{
-    color:var(--muted);font-weight:700;text-align:left;
-    background: linear-gradient(180deg, #101318, #0c0f13);
-    position:sticky; top:0; z-index:1;
-    box-shadow: inset 0 -1px 0 rgba(255,255,255,.03);
-  }
-  .sum-row td{font-weight:800}
-  .note{color:var(--muted);font-size:13px;margin-top:10px}
-
-  /* ====== Dialog (3D) ====== */
-  dialog{
-    border:0;border-radius:22px;
-    background:
-      var(--gloss),
-      linear-gradient(180deg,#14161b 0%, #0f1116 100%);
-    color:var(--txt);width:min(840px,92vw);
-    box-shadow: 0 24px 64px rgba(0,0,0,.65), var(--shadow-inset);
-  }
-  dialog::backdrop{background:rgba(0,0,0,.6)}
-  .modal-h{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:18px 22px;border-bottom:1px solid var(--line);
-    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
-  }
-  .modal-b{padding:18px 22px}
-
-  /* ====== Pills / Inputs ====== */
-  .pill{
-    border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;user-select:none;
-    background: linear-gradient(180deg,#121419,#0f1116);
-    box-shadow: var(--shadow-inset);
-    transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
-  }
-  .pill:hover{ transform: translateY(-1px); box-shadow: var(--ring), var(--shadow-inset); }
-  .pill.selected{ border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset, var(--shadow-inset); }
-
-  .input, textarea{
-    width:100%;border:1px solid var(--line);background:#0f1116;color:#f5f7fb;
-    border-radius:12px;padding:12px 14px;outline:none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-    transition: box-shadow .12s ease, border-color .12s ease;
-  }
-  .input:focus, textarea:focus{
-    border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.07);
-  }
-  textarea{min-height:120px;resize:vertical}
-  .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
-  @media (max-width:720px){ .row{grid-template-columns:1fr} }
-
-  /* ====== Switch ====== */
-  .switch{
-    --w:58px; --h:32px; --knob:26px;
-    inline-size:var(--w); block-size:var(--h);
-    background: linear-gradient(180deg,#1b1f26,#0f1216);
-    border-radius:999px;border:1px solid var(--line);position:relative;cursor:pointer;transition:.2s ease;display:inline-block;
-    box-shadow: var(--shadow-inset);
-  }
-  .switch::after{
-    content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;
-    background: linear-gradient(180deg,#ffffff,#d9d9d9);
-    top:50%; left:3px; translate:0 -50%;
-    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.6);
-    transition:.2s ease;
-  }
-  .switch.on{
-    background: linear-gradient(180deg,#232832,#14171d);
-    box-shadow: 0 0 0 2px rgba(255,255,255,.07) inset, var(--shadow-inset);
-  }
-  .switch.on::after{ left:calc(var(--w) - var(--knob) - 3px) }
-
-  /* ====== Bloqueo y Pwd ====== */
-  .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
-  .blocker.on{display:block}
-  #forcePwdDlg{border:0;border-radius:22px;background: linear-gradient(180deg,#13161b 0%, #0e1014 100%); color:var(--txt); width:min(840px,92vw)}
-  #forcePwdDlg::backdrop{background:rgba(0,0,0,.6)}
-
-  .pwd-field{position:relative}
-  .pwd-field .input{padding-right:56px}
-  .eye-btn{
-    position:absolute; right:8px; top:50%; transform:translateY(-50%);
-    width:48px; height:48px; border-radius:14px;
-    border:1px solid var(--line);
-    background: linear-gradient(180deg,#121419,#0f1116);
-    color:#fff; display:grid; place-items:center; cursor:pointer;
-    box-shadow: var(--shadow-inset);
-  }
-  .eye-btn svg{width:28px; height:28px}
-  .input.invalid{border-color:var(--danger) !important}
-  .err{color:var(--danger); font-size:12px; margin-top:6px}
+/* Inputs más anchos en pantallas grandes */
+@media (min-width:1200px){
+  .container{max-width:1320px}
+}
 </style>
 </head>
 <body>
-  <div class="wrap" id="appWrap">
-    <header>
-      <div class="brand">
-        <div class="brand-logo" title="FX Capital"></div>
-        <h1>FX | CAPITAL R.L. — Panel del Cliente</h1>
-      </div>
-      <button class="btn" id="btnSignOut">Cerrar sesión</button>
-    </header>
+<div class="container">
 
-    <!-- MI CUENTA -->
-    <section class="panel section">
-      <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
-      <div class="grid cols-3">
-        <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
-        <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
-        <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
-        <div class="card group"><span class="k">Cuenta (ID)</span><span id="valAccountId" class="v">—</span></div>
-        <div class="card group"><span class="k">Período (meses)</span><span id="valMonths" class="v">—</span></div>
-        <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
-        <div class="card group" style="grid-column:1 / -1">
-          <span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span>
-        </div>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>FX | CAPITAL R.L. — Panel Admin</h1>
+    <div class="inline">
+      <div class="searchbar">
+        <input id="q" type="search" placeholder="Buscar (nombre, email, plan, banco, cuenta…)" aria-label="Buscar cliente">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
-      <div style="margin-top:16px">
-        <button class="btn secondary" id="btnOpenWithdraw">Solicitar retiro</button>
-      </div>
-    </section>
-
-    <!-- RESULTADOS DEL MES -->
-    <section class="panel section" style="margin-top:18px">
-      <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
-      <div class="muted" id="monthRange">—</div>
-      <div style="overflow:auto;margin-top:8px">
-        <table class="table">
-          <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
-          <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
-          <tfoot><tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr></tfoot>
-        </table>
-      </div>
-      <div id="monthNote" class="note">El período cierra el —.</div>
-    </section>
-
-    <!-- SIMULADOR -->
-    <section class="panel section" style="margin-top:18px">
-      <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
-      <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
-      <div class="grid cols-3">
-        <div class="group card"><span class="k">Capital a simular (Q)</span>
-          <!-- mínimo Q 2000 -->
-          <input id="simCapital" class="input" type="number" min="2000" placeholder="Ej. 40,000" />
-        </div>
-        <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
-        <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
-        <button class="btn" id="btnCalc">Calcular</button>
-        <span id="simNote" class="note"></span>
-      </div>
-      <div style="overflow:auto;margin-top:12px">
-        <table class="table" id="simTable">
-          <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
-          <tbody id="simBody"><tr><td>1</td><td>Q 0.00</td></tr></tbody>
-          <tfoot><tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr></tfoot>
-        </table>
-      </div>
-    </section>
+      <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
+    </div>
   </div>
 
-  <!-- BLOQUEO (cuando se exige cambio de contraseña) -->
-  <div class="blocker" id="panelBlocker"></div>
+  <!-- LOGIN -->
+  <div id="unauth" class="card">
+    <h2>Admin — Iniciar sesión</h2>
+    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
+      <div><label>Email</label><input id="email" type="email" required></div>
+      <div><label>Contraseña</label><input id="password" type="password" required></div>
+      <div style="align-self:end"><button type="submit">Entrar</button></div>
+      <div style="grid-column:1/-1"><p id="loginMsg" class="small" style="margin-top:4px"></p></div>
+    </form>
+  </div>
 
-  <!-- MODAL RETIRO -->
-  <dialog id="wdlg">
-    <div class="modal-h">
-      <div style="font-weight:800">Solicitud de retiro</div>
-      <button class="btn secondary" style="padding:8px 12px" id="xClose">✕</button>
-    </div>
-    <div class="modal-b">
-      <div class="row">
-        <div class="pill" id="optEarly" tabindex="0" role="button" aria-pressed="true">
-          <div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div>
-          <div class="muted">Aplicará una penalización del 10%.</div>
-        </div>
-        <div class="pill" id="optHealth" tabindex="0" role="button" aria-pressed="false">
-          <div style="font-weight:700;margin-bottom:6px">Causas de salud</div>
-          <div class="muted">Exento de penalización.</div>
-        </div>
-      </div>
-      <div class="row" style="margin-top:14px">
-        <div>
-          <div class="k">Monto a retirar (Q)</div>
-          <input id="wAmount" class="input" type="number" min="0" placeholder="Ej. 5,000">
-          <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
-        </div>
-        <div>
-          <div class="k">Motivo</div>
-          <textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea>
-        </div>
-      </div>
+  <!-- APP -->
+  <div id="app" class="hidden">
 
-      <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
-        <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0" title="Retirar todo mi capital"></div>
-        <div>Retirar todo mi capital</div>
-      </div>
-
-      <div class="actions">
-        <button class="btn secondary" id="wCancel">Cancelar</button>
-        <button class="btn" id="wSend">Enviar solicitud</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
-  <dialog id="forcePwdDlg">
-    <div class="modal-h"><div style="font-weight:800">BIENVENIDO A FX|CAPITAL R.L.</div></div>
-    <div class="modal-b">
-      <p class="muted" style="margin-top:0">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
-
+    <!-- Crear/Editar -->
+    <div class="card" id="formCard">
+      <h2>Crear / Editar usuario</h2>
       <div class="row">
         <div>
-          <div class="k">Nueva contraseña</div>
-          <div class="pwd-field">
-            <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres" aria-describedby="errNew">
-            <button type="button" id="eyeNew" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar contraseña"></button>
-          </div>
-          <div id="errNew" class="err" role="alert" aria-live="polite" style="display:none"></div>
+          <label>Email</label>
+          <input id="u_email" placeholder="cliente@demo.com">
+          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
         </div>
+        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+
         <div>
-          <div class="k">Confirmar contraseña</div>
-          <div class="pwd-field">
-            <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña" aria-describedby="errNew2">
-            <button type="button" id="eyeNew2" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar confirmación"></button>
+          <label>Contraseña (para el cliente)</label>
+          <div class="inline">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no cambia)">
+            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
           </div>
-          <div id="errNew2" class="err" role="alert" aria-live="polite" style="display:none"></div>
+          <div class="small">Si dejas en blanco, <b>no</b> se cambia/crea en Auth.</div>
         </div>
+
+        <div><label>Moneda</label>
+          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
+        </div>
+        <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01"></div>
+        <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
+        <div><label>Plan</label>
+          <select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select>
+        </div>
+
+        <div>
+          <label>Meses de inversión</label>
+          <select id="u_months">
+            <option>6</option><option selected>12</option><option>18</option><option>24</option>
+            <option>30</option><option>36</option><option>42</option><option>48</option>
+            <option>54</option><option>60</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tasa semestral (%)</label>
+          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25">
+          <div class="small">Se aplica cada 6 meses. Vacío usa la del plan (15/20/25).</div>
+        </div>
+
+        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
+        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
+        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …"></div>
       </div>
 
-      <div class="actions" style="margin-top:28px">
-        <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
-        <button class="btn" id="savePwd">Guardar y continuar</button>
+      <hr class="sep">
+
+      <div class="inline" style="gap:12px">
+        <button id="saveBtn" type="button">Guardar</button>
+        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
+        <span id="saveMsg" class="small" style="margin-left:8px"></span>
       </div>
     </div>
-  </dialog>
 
-  <!-- Supabase + Lógica (SIN CAMBIOS DE FUNCIONALIDAD) -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <script>
-  const BASE_URL = 'https://clientes.fxcapital-gt.com/';
-  const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
+    <!-- Lista -->
+    <div class="card">
+      <h2>Clientes</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th class="nowrap">Fecha ingreso</th> <!-- NUEVO -->
+              <th>Plan</th>
+              <th>Capital</th>
+              <th>Banco</th>
+              <th class="nowrap">No. cuenta</th>
+              <th class="nowrap">Tipo de cuenta</th>
+              <th>Meses</th>
+              <th class="nowrap">Tasa %/6m</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
+    </div>
 
-  const $ = s=>document.querySelector(s);
-  const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
-  const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
+    <!-- Solicitudes -->
+    <div class="card">
+      <h2>Solicitudes</h2>
+      <div style="margin-bottom:10px"><button id="btnRefreshNotifs" class="ghost">Refrescar</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
+          <tbody id="notifs"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
-  function nextMonthSameDay(d){
-    const x=clampDate(d);
-    const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
-    while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); }
-    t.setHours(0,0,0,0); return t;
-  }
-  function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
-  function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
-  function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
+<script>
+/*** SUPABASE CONFIG ***/
+const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const BASE = PROJECT_URL + "/rest/v1";
+const RPC  = BASE + "/rpc";
 
-  function paintWeeks(acc){
-    const today=clampDate(new Date());
-    const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
-    const {start,end}=currentWindow(joined,today);
-    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    $('#monthNote').textContent  = `El período cierra el ${end.toLocaleDateString('es-GT')}.`;
+function headersJSON(){
+  return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json", "Prefer":"return=representation" };
+}
 
-    const cap=Number(acc.capital||0);
-    const semRate=Number(acc.interest_pct||0)/100;
-    const monthly=cap*(semRate/6);
+/*** HELPERS UI ***/
+const $ = (id)=> document.getElementById(id);
+const show = (el, v)=> el.classList.toggle('hidden', !v);
+const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
+const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—'; // NUEVO
 
-    const allFridays = fridaysInRange(start,end);
-    const weekly = allFridays.length? (monthly/allFridays.length) : 0;
-
-    const tbody=$('#weekBody'); tbody.innerHTML='';
-    const cutoff = today < end ? today : end;
-    const shown = allFridays.filter(f => f < cutoff);
-
-    if(shown.length===0){
-      tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
-    }else{
-      shown.forEach(f=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
-    $('#weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
-  }
-
-  async function loadHeader(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.href = BASE_URL; return; }
-    const uid=session.user.id;
-
-    const [{ data: prof }, { data: acc }] = await Promise.all([
-      sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
-      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
-    ]);
-
-    if (prof?.must_change_password === true) __fxpwd_enforce();
-
-    $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
-    if(!acc){ ['valAccountId','valPlan','valCurrency','valMonths'].forEach(id=>$('#'+id).textContent='—'); $('#valCapital').textContent=fmtQ(0); $('#valPeriodInterest').textContent=fmtQ(0); return; }
-
-    $('#valAccountId').textContent = acc.id||'—';
-    $('#valPlan').textContent = acc.plan||'—';
-    $('#valCurrency').textContent = acc.currency||'—';
-    $('#valMonths').textContent = acc.invest_months ?? '—';
-    $('#valCapital').textContent = fmtQ(acc.capital||0);
-
-    const semPct = (acc.interest_pct||0)/100;
-    const totalPeriodInterest = (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
-    $('#valPeriodInterest').textContent = fmtQ(totalPeriodInterest);
-
-    paintWeeks(acc);
-  }
-
-  // ===== RETIROS =====
-  const dlg = document.getElementById('wdlg');
-  let withdrawType='early';
-  function markPill(){
-    $('#optEarly').classList.toggle('selected', withdrawType==='early');
-    $('#optEarly').setAttribute('aria-pressed', String(withdrawType==='early'));
-    $('#optHealth').classList.toggle('selected', withdrawType==='health');
-    $('#optHealth').setAttribute('aria-pressed', String(withdrawType==='health'));
-  }
-  function selectType(t){ withdrawType=t; markPill(); }
-  function toggleSwitchAll(force){
-    const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
-    sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on;
-  }
-
-  // Enviar solicitud por Edge Function (Resend)
-  async function enviarSolicitudRetiro(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.href = BASE_URL; return; }
-
-    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
-    if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
-
-    const capital=Number(acc?.capital||0);
-    const all=$('#switchAll').classList.contains('on');
-    const amount=all? capital : Number($('#wAmount').value||0);
-    const reason=($('#wReason').value||'').trim();
-
-    if(!all){
-      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
-      if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 de capital (a menos que retire todo).'); return; }
-    }
-    if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
-
-    const { data, error } = await sb.functions.invoke('send-withdrawal-email', {
-      body: {
-        amount,
-        reason,
-        full_withdrawal: all,
-        account_id: acc?.id || null,
-        user_email: session.user.email,
-        user_name: $('#valName')?.textContent || ''
-      }
+/*** AUTH ***/
+async function doLogin(e){
+  e.preventDefault();
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  $("loginMsg").textContent = "";
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+      method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
+      body: JSON.stringify({ email, password })
     });
+    const data = await r.json();
+    if(!r.ok){ $("loginMsg").textContent = data?.error_description || "Login inválido"; return; }
+    localStorage.token = data.access_token; localStorage.uid = data.user.id;
+    await initApp();
+  }catch{ $("loginMsg").textContent = "Error de red"; }
+}
+function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
 
-    if(error){
-      alert('No se pudo enviar la solicitud.\n' + (error.message || JSON.stringify(error)));
-      return;
-    }
+/*** Edge Functions auxiliares (opcional) ***/
+async function createAuthUserIfNeeded(email, password, fullName) {
+  if(!password) return { ok:true, status:204 };
+  const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
+  return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
+}
+async function deleteAuthUserIfAvailable(user_id, email){
+  try{
+    const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user";
+    await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ user_id, email }) });
+  }catch{}
+}
 
-    alert('Solicitud enviada. Te escribiremos pronto.');
-    dlg.close();
-    $('#wAmount').value = '';
-    $('#wReason').value = '';
-    toggleSwitchAll(false);
+/*** LISTA USUARIOS con vista filtrada ***/
+let CACHED = [];
+const VIEW_PRIMARY = 'v_admin_users_filtered';
+const VIEW_FALLBACK = 'v_admin_users';
+
+async function listUsers(){
+  // Intentamos vista filtrada; si no existe, usamos la original
+  let view = VIEW_PRIMARY;
+  let url = `${BASE}/${view}`
+          + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
+          + `&order=full_name.asc`;
+  let r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  if (r.status === 404) {
+    view = VIEW_FALLBACK;
+    url = `${BASE}/${view}`
+        + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
+        + `&order=full_name.asc`;
+    r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   }
+  if (!r.ok) { const t = await r.text(); alert("No se pudo cargar la lista de clientes:\n" + t); return; }
+  CACHED = await r.json();
+  renderUsers(CACHED);
+}
 
-  // ===== Cambio de contraseña forzado =====
-  const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
-  const __fxpwd_blocker  = document.getElementById('panelBlocker');
-
-  function __fxpwd_lockPanel(lock){
-    if(!__fxpwd_blocker) return;
-    __fxpwd_blocker.classList.toggle('on', !!lock);
-    document.querySelectorAll('button,input,textarea,select').forEach(el=>{
-      if(__fxpwd_forceDlg && el.closest('#forcePwdDlg')) return;
-      el.disabled = !!lock;
-    });
-  }
-  function __fxpwd_enforce(){
-    __fxpwd_lockPanel(true);
-    if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
-  }
-
-  const __eyeSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
-  <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-  const __eyeOffSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-  function __bindPwdEye(inputId, btnId){
-    const inp = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
-    if(!inp || !btn) return;
-    btn.innerHTML = __eyeSVG;
-    btn.addEventListener('click', ()=>{
-      const show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      btn.setAttribute('aria-pressed', String(show));
-      btn.innerHTML = show ? __eyeOffSVG : __eyeSVG;
-    });
-  }
-
-  function __fxpwd_setError(inputEl, errEl, msg){
-    if(!inputEl || !errEl) return;
-    if(msg){
-      inputEl.classList.add('invalid');
-      errEl.textContent = msg;
-      errEl.style.display = 'block';
-    }else{
-      inputEl.classList.remove('invalid');
-      errEl.textContent = '';
-      errEl.style.display = 'none';
-    }
-  }
-  function __fxpwd_validate(){
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
-    const p2 = (document.getElementById('newPwd2')?.value || '').trim();
-    const in1 = document.getElementById('newPwd');
-    const in2 = document.getElementById('newPwd2');
-    const e1  = document.getElementById('errNew');
-    const e2  = document.getElementById('errNew2');
-
-    let ok = true;
-    if(p1.length < 8){
-      __fxpwd_setError(in1,e1,'La contraseña debe tener al menos 8 caracteres.');
-      ok = false;
-    }else{
-      __fxpwd_setError(in1,e1,'');
-    }
-    if(p2.length === 0){
-      __fxpwd_setError(in2,e2,'Confirme su contraseña.');
-      ok = false;
-    }else if(p1 !== p2){
-      __fxpwd_setError(in2,e2,'Las contraseñas no coinciden.');
-      ok = false;
-    }else{
-      __fxpwd_setError(in2,e2,'');
-    }
-    return ok;
-  }
-
-  async function __fxpwd_save(){
-    if(!__fxpwd_validate()) return;
-
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.href = BASE_URL; return; }
-
-    const up = await sb.auth.updateUser({ password:p1 });
-    if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
-
-    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
-    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
-
-    __fxpwd_forceDlg?.close();
-    __fxpwd_lockPanel(false);
-    alert('¡Contraseña actualizada! Bienvenido al panel.');
-  }
-
-  async function __fxpwd_logout(){
-    await sb.auth.signOut();
-    window.location.href = BASE_URL;
-  }
-
-  /* ======= SIMULADOR (Q2000 mínimo) ======= */
-  function autoPlanAndRate(capital){
-    if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
-    if(capital >= 250000)                     return { name:'PLATINUM (20% semestral)', rate:0.20 };
-    return { name:'NO ELEGIBLE', rate:0 };
-  }
-  function simulate(){
-    const cap = Number(document.getElementById('simCapital').value || 0);
-    if(cap < 2000){
-      alert('El capital mínimo para simular es Q 2,000.');
-      return;
-    }
-    const {name, rate} = autoPlanAndRate(cap);
-    document.getElementById('simPlan').textContent = name;
-
-    const months = 6;
-    const monthlyInterest = cap * (rate/6);
-    const total = monthlyInterest * months;
-
-    document.getElementById('simFinal').textContent = fmtQ(cap + total);
-    document.getElementById('simSum').textContent   = fmtQ(total);
-    document.getElementById('simNote').textContent  = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-
-    const body = document.getElementById('simBody');
-    body.innerHTML = '';
-    for(let m=1;m<=months;m++){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`;
-      body.appendChild(tr);
-    }
-  }
-
-  // ===== INIT =====
-  document.addEventListener('DOMContentLoaded', ()=>{
-    document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
-
-    document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
-    document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
-
-    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
-    document.getElementById('switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
-
-    document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
-    document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
-    ['optEarly','optHealth'].forEach(id=>{
-      document.getElementById(id).addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); document.getElementById(id).click(); } });
-    });
-    selectType('early');
-
-    document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
-    document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
-
-    ['newPwd','newPwd2'].forEach(id=>{
-      document.getElementById(id)?.addEventListener('input', __fxpwd_validate);
-      document.getElementById(id)?.addEventListener('blur', __fxpwd_validate);
-    });
-
-    __bindPwdEye('newPwd','eyeNew');
-    __bindPwdEye('newPwd2','eyeNew2');
-
-    /* Listener del botón Calcular */
-    document.getElementById('btnCalc').addEventListener('click', simulate);
-
-    loadHeader();
+function renderUsers(rows){
+  const tb = $("users"); tb.innerHTML = "";
+  rows.forEach(x=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${x.full_name ?? '—'}</td>
+      <td>${x.email ?? '—'}</td>
+      <td class="nowrap">${fmtDate(x.joined_at)}</td> <!-- NUEVO -->
+      <td>${x.plan ?? '—'}</td>
+      <td>${fmtMoney(x.capital, x.currency)}</td>
+      <td>${x.bank_name ?? '—'}</td>
+      <td class="nowrap">${x.bank_account ?? '—'}</td>
+      <td class="nowrap">${x.bank_account_type ?? '—'}</td>
+      <td>${x.invest_months ?? '—'}</td>
+      <td>${x.interest_pct ?? '—'}</td>
+      <td class="nowrap">
+        <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
+        <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
+      </td>`;
+    tb.appendChild(tr);
   });
-  </script>
+}
+
+/*** BUSCAR ***/
+$("q")?.addEventListener("input", (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderUsers(CACHED); return; }
+  const filt = CACHED.filter(x=>{
+    return [x.full_name, x.email, x.plan, x.bank_name, x.bank_account, x.bank_account_type]
+      .filter(Boolean)
+      .some(v => String(v).toLowerCase().includes(q));
+  });
+  renderUsers(filt);
+});
+
+/*** Editar: cargar datos al formulario ***/
+function editClient(x){
+  $("u_email").value = x.email || "";
+  $("u_name").value  = x.full_name || "";
+  $("u_currency").value = x.currency || "GTQ";
+  $("u_capital").value  = x.capital ?? "";
+  $("u_joined").value   = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
+  $("u_plan").value     = x.plan || "STANDARD";
+  $("u_months").value   = x.invest_months ?? "12";
+  $("u_rate").value     = (x.interest_pct ?? "") === null ? "" : (x.interest_pct ?? "");
+  $("u_bank_name").value   = x.bank_name ?? "";
+  $("u_bank_account").value= x.bank_account ?? "";
+  $("u_bank_account_type").value = x.bank_account_type ?? "";
+  $("u_pass").value = "";
+  document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/*** Eliminar cliente (mantiene tu flujo) ***/
+async function deleteClient(x){
+  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
+  if(!confirm(msg)) return;
+
+  try{
+    if(x.account_id){
+      await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
+      await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
+      await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: headersJSON() });
+    }
+    if(x.user_id){
+      await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: headersJSON() });
+    }
+    await deleteAuthUserIfAvailable(x.user_id, x.email);
+    await listUsers();
+    alert("Cliente eliminado.");
+  }catch(e){
+    alert("No se pudo eliminar: " + (e.message||e));
+  }
+}
+
+/*** Guardar / Editar ***/
+async function saveUser(){
+  const email    = $("u_email").value.trim();
+  const fullName = $("u_name").value.trim();
+  const password = $("u_pass").value;
+  const currency = $("u_currency").value;
+  const capital  = Number($("u_capital").value || 0);
+  const joined   = $("u_joined").value || null;
+  const plan     = $("u_plan").value;
+  const months   = parseInt($("u_months").value, 10);
+  const rateStr  = $("u_rate").value;
+  const rate     = rateStr === "" ? null : Number(rateStr);
+  const bankName = $("u_bank_name").value.trim();
+  const bankAcct = $("u_bank_account").value.trim();
+  const bankType = $("u_bank_account_type").value.trim();
+  const msgEl    = $("saveMsg");
+  if (msgEl) msgEl.textContent = "…";
+
+  try {
+    if (!email) throw new Error("Email requerido");
+    if (!fullName) throw new Error("Nombre requerido");
+    if (isNaN(capital) || capital < 0) throw new Error("Capital inválido");
+
+    const authRes = await createAuthUserIfNeeded(email, password, fullName);
+    if(!authRes.ok && authRes.status !== 400){ throw new Error("No se pudo crear usuario Auth"); }
+
+    const bodyNew = {
+      p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
+      p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null,
+      p_invest_months: months, p_interest_pct: rate
+    };
+
+    let r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyNew) });
+
+    if (!r.ok) {
+      const txt = await r.text();
+      const isNoMatch = txt.includes("PGRST202") || txt.includes("Could not find the function");
+      if (!isNoMatch) throw new Error(txt || "Error guardando");
+
+      const bodyOld = {
+        p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
+        p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null
+      };
+
+      r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld) });
+      if (!r.ok) throw new Error(await r.text() || "Error guardando");
+
+      // completar meses/tasa si la firma antigua no los soportaba
+      try {
+        const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
+        if (rV.ok) {
+          const rows = await rV.json();
+          const accId = rows?.[0]?.account_id;
+          if (accId) {
+            await fetch(`${BASE}/accounts?id=eq.${accId}`, {
+              method:"PATCH", headers: headersJSON(),
+              body: JSON.stringify({ invest_months: months, interest_pct: rate })
+            });
+          }
+        }
+      } catch {}
+    }
+
+    // asegurar tipo de cuenta
+    try{
+      const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
+      const rows = rV.ok ? await rV.json() : [];
+      const accId = rows?.[0]?.account_id;
+      if (accId){
+        await fetch(`${BASE}/accounts?id=eq.${accId}`, {
+          method:"PATCH", headers: headersJSON(),
+          body: JSON.stringify({ bank_account_type: bankType || null })
+        });
+      }
+    }catch{}
+
+    if (msgEl) msgEl.textContent = "Guardado";
+    await listUsers();
+  } catch (e) {
+    if (msgEl) msgEl.textContent = "Error";
+    alert("No se pudo guardar: " + (e.message || e));
+  }
+}
+
+function clearForm(){
+  ["u_email","u_name","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"]
+    .forEach(id=>$(id).value="");
+  $("u_currency").value="GTQ";
+  $("u_plan").value="STANDARD";
+  $("u_months").value="12";
+  $("saveMsg").textContent="";
+}
+
+/*** NOTIFICACIONES ***/
+async function loadNotifs(){
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
+    headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }
+  });
+  const rows = await r.json();
+  const tb = $("notifs"); tb.innerHTML="";
+  rows.forEach(x=>{
+    const p = x.payload || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${new Date(x.created_at).toLocaleString()}</td>
+      <td>${p.account_id||'—'}</td>
+      <td>${p.kind||'—'}</td>
+      <td>${(p.penalty_pct??0)}%</td>
+      <td><span class="chip">—</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/*** INIT ***/
+async function initApp(){
+  if(localStorage.token){
+    show($("unauth"), false);
+    show($("app"), true);
+    show($("logoutBtn"), true);
+    await listUsers();
+    await loadNotifs();
+  }else{
+    show($("app"), false);
+    show($("logoutBtn"), false);
+    show($("unauth"), true);
+  }
+}
+
+/*** BINDINGS ***/
+document.addEventListener("DOMContentLoaded", ()=>{
+  $("loginForm").addEventListener("submit", doLogin);
+  $("logoutBtn").addEventListener("click", logout);
+  $("togglePass").addEventListener("click", ()=> {
+    const inp = $("u_pass"); inp.type = (inp.type === "password") ? "text" : "password";
+  });
+  $("saveBtn").addEventListener("click", saveUser);
+  $("clearBtn").addEventListener("click", clearForm);
+  $("btnRefreshNotifs").addEventListener("click", loadNotifs);
+  initApp();
+});
+</script>
 </body>
 </html>
