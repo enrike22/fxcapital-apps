@@ -5,32 +5,65 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Admin</title>
 <style>
-:root{--bg:#0a0a0a;--fg:#f5f7fa;--muted:#cdd3da;--card:#0f1012;--border:#21262c;--shadow:0 14px 40px rgba(0,0,0,.5);--radius:18px;--chip:#15181d;--danger:#ff4d4f}
+:root{
+  --bg:#0a0a0a; --fg:#f5f7fa; --muted:#cdd3da;
+  --card:#0f1012; --border:#21262c; --shadow:0 14px 40px rgba(0,0,0,.5);
+  --radius:18px; --chip:#15181d; --danger:#ff4d4f;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-.container{max-width:1200px;margin:0 auto;padding:28px 20px}
-.card{background:linear-gradient(180deg,var(--card),#101214);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow);margin-bottom:16px}
-h1,h2{margin:0 0 12px}
-label{display:block;margin:8px 0 6px;color:var(--muted);font-size:13px}
-input,select,textarea{width:100%;background:#0b0d0f;color:var(--fg);border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:14px}
-button{background:#fff;color:#0b0c0e;border:none;padding:10px 14px;border-radius:999px;font-weight:800;cursor:pointer}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+.container{max-width:1280px;margin:0 auto;padding:36px 22px}
+
+/* Cards y tipografía */
+.card{
+  background:linear-gradient(180deg,var(--card),#101214);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px 20px;box-shadow:var(--shadow);margin-bottom:22px
+}
+h1{margin:0 0 18px;font-size:26px;letter-spacing:.2px}
+h2{margin:0 0 14px;font-size:18px;font-weight:700}
+label{display:block;margin:10px 0 6px;color:var(--muted);font-size:13px}
+input,select,textarea{
+  width:100%;background:#0b0d0f;color:var(--fg);
+  border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:14px
+}
+button{background:#fff;color:#0b0c0e;border:none;padding:10px 16px;border-radius:999px;font-weight:800;cursor:pointer}
 button.ghost{background:var(--chip);color:var(--fg);border:1px solid var(--border)}
 button.danger{background:var(--danger);color:#fff}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid var(--border)}
-th{text-align:left;color:#d7dce2}
-.row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.inline{display:flex;gap:8px;align-items:center}
 .small{font-size:12px;color:var(--muted)}
 .nowrap{white-space:nowrap}
 .hidden{display:none}
 
+/* Layout y respiración */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.inline{display:flex;gap:10px;align-items:center}
+.row{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+hr.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
+
 /* Search bar */
-.searchbar{position:relative;max-width:420px}
+.searchbar{position:relative;max-width:460px}
 .searchbar input{padding-left:40px}
 .searchbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.7;pointer-events:none}
+
+/* Tabla con más espacio y scroll responsivo */
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th,td{padding:13px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{text-align:left;color:#d7dce2;font-size:13px;background:#0f1114;position:sticky;top:0}
+tbody tr:hover{background:#0e1116}
+
+/* Chips */
 .chip{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--border);font-size:12px}
+
+/* Inputs más anchos en pantallas grandes */
+@media (min-width:1200px){
+  .container{max-width:1320px}
+}
 </style>
 </head>
 <body>
@@ -42,9 +75,7 @@ th{text-align:left;color:#d7dce2}
     <div class="inline">
       <div class="searchbar">
         <input id="q" type="search" placeholder="Buscar (nombre, email, plan, banco, cuenta…)" aria-label="Buscar cliente">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
       <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
     </div>
@@ -53,11 +84,11 @@ th{text-align:left;color:#d7dce2}
   <!-- LOGIN -->
   <div id="unauth" class="card">
     <h2>Admin — Iniciar sesión</h2>
-    <form id="loginForm">
-      <label>Email</label><input id="email" type="email" required>
-      <label>Contraseña</label><input id="password" type="password" required>
-      <div style="margin-top:12px"><button type="submit">Entrar</button></div>
-      <p id="loginMsg" class="small" style="margin-top:8px"></p>
+    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
+      <div><label>Email</label><input id="email" type="email" required></div>
+      <div><label>Contraseña</label><input id="password" type="password" required></div>
+      <div style="align-self:end"><button type="submit">Entrar</button></div>
+      <div style="grid-column:1/-1"><p id="loginMsg" class="small" style="margin-top:4px"></p></div>
     </form>
   </div>
 
@@ -71,14 +102,14 @@ th{text-align:left;color:#d7dce2}
         <div>
           <label>Email</label>
           <input id="u_email" placeholder="cliente@demo.com">
-          <div class="small">Para editar, escribe el email del cliente o usa el botón <b>Editar</b> en la lista.</div>
+          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
         </div>
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
 
         <div>
           <label>Contraseña (para el cliente)</label>
           <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (déjalo vacío si no cambias)">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no cambia)">
             <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
           </div>
           <div class="small">Si dejas en blanco, <b>no</b> se cambia/crea en Auth.</div>
@@ -105,7 +136,7 @@ th{text-align:left;color:#d7dce2}
         <div>
           <label>Tasa semestral (%)</label>
           <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25">
-          <div class="small">Porcentaje aplicado cada 6 meses. Si se deja vacío se usará el del plan (15/20/25).</div>
+          <div class="small">Se aplica cada 6 meses. Vacío usa la del plan (15/20/25).</div>
         </div>
 
         <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
@@ -113,7 +144,9 @@ th{text-align:left;color:#d7dce2}
         <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …"></div>
       </div>
 
-      <div style="margin-top:10px" class="inline">
+      <hr class="sep">
+
+      <div class="inline" style="gap:12px">
         <button id="saveBtn" type="button">Guardar</button>
         <button id="clearBtn" type="button" class="ghost">Limpiar</button>
         <span id="saveMsg" class="small" style="margin-left:8px"></span>
@@ -123,34 +156,37 @@ th{text-align:left;color:#d7dce2}
     <!-- Lista -->
     <div class="card">
       <h2>Clientes</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Capital</th>
-            <th>Banco</th>
-            <th class="nowrap">No. cuenta</th>
-            <th class="nowrap">Tipo de cuenta</th>
-            <!-- Cuenta (ID) oculto en UI -->
-            <th>Meses</th>
-            <th class="nowrap">Tasa %/6m</th>
-            <th class="nowrap">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="users"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Capital</th>
+              <th>Banco</th>
+              <th class="nowrap">No. cuenta</th>
+              <th class="nowrap">Tipo de cuenta</th>
+              <th>Meses</th>
+              <th class="nowrap">Tasa %/6m</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Solicitudes -->
     <div class="card">
       <h2>Solicitudes</h2>
-      <div style="margin-bottom:8px"><button id="btnRefreshNotifs" class="ghost">Refrescar</button></div>
-      <table>
-        <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
-        <tbody id="notifs"></tbody>
-      </table>
+      <div style="margin-bottom:10px"><button id="btnRefreshNotifs" class="ghost">Refrescar</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
+          <tbody id="notifs"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -167,9 +203,9 @@ function headersJSON(){
 }
 
 /*** HELPERS UI ***/
-function $(id){ return document.getElementById(id); }
-function show(el, visible){ el.classList.toggle('hidden', !visible); }
-function fmtMoney(n, ccy){ try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } }
+const $ = (id)=> document.getElementById(id);
+const show = (el, v)=> el.classList.toggle('hidden', !v);
+const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 
 /*** AUTH ***/
 async function doLogin(e){
@@ -203,14 +239,19 @@ async function deleteAuthUserIfAvailable(user_id, email){
   }catch{}
 }
 
-/*** LISTA USUARIOS (vista v_admin_users) ***/
+/*** LISTA USUARIOS con vista filtrada ***/
 let CACHED = [];
+const VIEW_PRIMARY = 'v_admin_users_filtered';
+const VIEW_FALLBACK = 'v_admin_users';
 
 async function listUsers(){
-  const url = `${BASE}/v_admin_users`
-            + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
-            + `&order=full_name.asc`;
-  const r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  // intentamos vista filtrada; si no existe, usamos la original
+  let view = VIEW_PRIMARY;
+  let r = await fetch(`${BASE}/${view}?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  if (r.status === 404) {
+    view = VIEW_FALLBACK;
+    r = await fetch(`${BASE}/${view}?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  }
   if (!r.ok) { const t = await r.text(); alert("No se pudo cargar la lista de clientes:\n" + t); return; }
   CACHED = await r.json();
   renderUsers(CACHED);
@@ -228,7 +269,6 @@ function renderUsers(rows){
       <td>${x.bank_name ?? '—'}</td>
       <td class="nowrap">${x.bank_account ?? '—'}</td>
       <td class="nowrap">${x.bank_account_type ?? '—'}</td>
-      <!-- Cuenta (ID) omitida en UI pero disponible en x.account_id -->
       <td>${x.invest_months ?? '—'}</td>
       <td>${x.interest_pct ?? '—'}</td>
       <td class="nowrap">
@@ -239,12 +279,12 @@ function renderUsers(rows){
   });
 }
 
-/*** BUSCAR (lupa) ***/
+/*** BUSCAR ***/
 $("q")?.addEventListener("input", (e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
   const filt = CACHED.filter(x=>{
-    return [x.full_name, x.email, x.plan, x.bank_name, x.bank_account, x.bank_account_type /*, x.account_id*/]
+    return [x.full_name, x.email, x.plan, x.bank_name, x.bank_account, x.bank_account_type]
       .filter(Boolean)
       .some(v => String(v).toLowerCase().includes(q));
   });
@@ -268,7 +308,7 @@ function editClient(x){
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
-/*** Eliminar cliente (borra solicitudes -> cuenta -> perfil + Auth si está la Edge) ***/
+/*** Eliminar cliente ***/
 async function deleteClient(x){
   const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
@@ -317,21 +357,12 @@ async function saveUser(){
     if(!authRes.ok && authRes.status !== 400){ throw new Error("No se pudo crear usuario Auth"); }
 
     const bodyNew = {
-      p_email: email,
-      p_full_name: fullName,
-      p_currency: currency,
-      p_capital: capital,
-      p_joined_at: joined,
-      p_plan: plan,
-      p_bank_name: bankName || null,
-      p_bank_account: bankAcct || null,
-      p_invest_months: months,
-      p_interest_pct: rate
+      p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
+      p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null,
+      p_invest_months: months, p_interest_pct: rate
     };
 
-    let r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST", headers: headersJSON(), body: JSON.stringify(bodyNew)
-    });
+    let r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyNew) });
 
     if (!r.ok) {
       const txt = await r.text();
@@ -339,19 +370,11 @@ async function saveUser(){
       if (!isNoMatch) throw new Error(txt || "Error guardando");
 
       const bodyOld = {
-        p_email: email,
-        p_full_name: fullName,
-        p_currency: currency,
-        p_capital: capital,
-        p_joined_at: joined,
-        p_plan: plan,
-        p_bank_name: bankName || null,
-        p_bank_account: bankAcct || null
+        p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
+        p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null
       };
 
-      r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-        method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld)
-      });
+      r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld) });
       if (!r.ok) throw new Error(await r.text() || "Error guardando");
 
       // completar meses/tasa si la firma antigua no los soportaba
@@ -400,7 +423,7 @@ function clearForm(){
   $("saveMsg").textContent="";
 }
 
-/*** NOTIFICACIONES (solo lectura) ***/
+/*** NOTIFICACIONES ***/
 async function loadNotifs(){
   const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
     headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }
