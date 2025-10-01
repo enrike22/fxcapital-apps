@@ -15,7 +15,7 @@ html,body{height:100%}
 body{
   margin:0;background:var(--bg);color:var(--fg);
   font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
-  font-size:16px; /* ↑ tamaño base */
+  font-size:16px;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
 .container{max-width:1280px;margin:0 auto;padding:36px 22px}
@@ -59,7 +59,7 @@ hr.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
 table{width:100%;border-collapse:separate;border-spacing:0}
 th,td{
   padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle;
-  font-size:15px; /* ↑ celdas más grandes */
+  font-size:15px;
 }
 th{text-align:left;color:#d7dce2;background:#0f1114;position:sticky;top:0}
 tbody tr:hover{background:#0e1116}
@@ -81,7 +81,7 @@ tbody tr:hover{background:#0e1116}
     <h1>FX | CAPITAL R.L. — Panel Admin</h1>
     <div class="inline">
       <div class="searchbar">
-        <input id="q" type="search" placeholder="Buscar (nombre, email, plan, banco, cuenta…)" aria-label="Buscar cliente">
+        <input id="q" type="search" placeholder="Buscar (nombre, email, teléfono, plan, banco…)" aria-label="Buscar cliente">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
       <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
@@ -111,7 +111,14 @@ tbody tr:hover{background:#0e1116}
           <input id="u_email" placeholder="cliente@demo.com">
           <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
         </div>
+
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+
+        <div>
+          <label>Teléfono (celular)</label>
+          <input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555">
+          <div class="small">Formato libre. Ej.: +502 5555 5555</div>
+        </div>
 
         <div>
           <label>Contraseña (para el cliente)</label>
@@ -169,7 +176,8 @@ tbody tr:hover{background:#0e1116}
             <tr>
               <th>Nombre</th>
               <th>Email</th>
-              <th class="nowrap">Fecha ingreso</th> <!-- NUEVO -->
+              <th>Teléfono</th>
+              <th class="nowrap">Fecha ingreso</th>
               <th>Plan</th>
               <th>Capital</th>
               <th>Banco</th>
@@ -214,7 +222,7 @@ function headersJSON(){
 const $ = (id)=> document.getElementById(id);
 const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
-const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—'; // NUEVO
+const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 
 /*** AUTH ***/
 async function doLogin(e){
@@ -253,23 +261,73 @@ let CACHED = [];
 const VIEW_PRIMARY = 'v_admin_users_filtered';
 const VIEW_FALLBACK = 'v_admin_users';
 
+/* Helper: intenta cargar con/ sin columna phone, y si no viene, hace merge desde profiles */
 async function listUsers(){
-  // Intentamos vista filtrada; si no existe, usamos la original
   let view = VIEW_PRIMARY;
-  let url = `${BASE}/${view}`
-          + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
-          + `&order=full_name.asc`;
-  let r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  let urlBase = `${BASE}/${view}`;
+  let select = `?select=user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
+
+  // primer intento: con phone en la vista
+  let r = await fetch(urlBase + select, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+
+  // si la vista no existe, cambia a fallback
   if (r.status === 404) {
     view = VIEW_FALLBACK;
-    url = `${BASE}/${view}`
-        + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`
-        + `&order=full_name.asc`;
-    r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+    urlBase = `${BASE}/${view}`;
+    r = await fetch(urlBase + select, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
   }
-  if (!r.ok) { const t = await r.text(); alert("No se pudo cargar la lista de clientes:\n" + t); return; }
+
+  // si falla por columna desconocida (phone), reintenta sin pedir phone
+  if (!r.ok) {
+    const text = await r.text();
+    const badColumn = /column .* does not exist|unknown column|hint/i.test(text);
+    if (badColumn) {
+      const altSelect = `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
+      r = await fetch(urlBase + altSelect, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+      if (!r.ok) { alert("No se pudo cargar la lista de clientes:\n" + text); return; }
+      CACHED = await r.json();
+      // merge phones desde profiles usando user_id
+      await hydratePhonesFromProfiles(CACHED);
+      renderUsers(CACHED);
+      return;
+    } else {
+      alert("No se pudo cargar la lista de clientes:\n" + text);
+      return;
+    }
+  }
+
   CACHED = await r.json();
+
+  // si vino sin phone (null/undefined en todos), intentar hidratar
+  const needsHydrate = !CACHED.some(x => x && typeof x.phone === "string" && x.phone.trim() !== "");
+  if (needsHydrate) {
+    await hydratePhonesFromProfiles(CACHED);
+  }
+
   renderUsers(CACHED);
+}
+
+/* Consulta profiles para traer phone por lote y hacer merge por user_id */
+async function hydratePhonesFromProfiles(rows){
+  try{
+    const ids = rows.map(r=>r.user_id).filter(Boolean);
+    if (!ids.length) return;
+
+    // construir filtro in.(...)
+    // escapamos comillas si fuera necesario
+    const inList = '(' + ids.map(id => `"${String(id).replace(/"/g,'\\"')}"`).join(',') + ')';
+    const r = await fetch(`${BASE}/profiles?id=in.${encodeURIComponent(inList)}&select=id,phone`, {
+      headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
+    });
+    if (!r.ok) return;
+    const profs = await r.json();
+    const map = new Map(profs.map(p=>[p.id, p.phone]));
+    rows.forEach(row=>{
+      if (row && row.user_id && map.has(row.user_id)) {
+        row.phone = map.get(row.user_id) || null;
+      }
+    });
+  }catch{}
 }
 
 function renderUsers(rows){
@@ -279,7 +337,8 @@ function renderUsers(rows){
     tr.innerHTML = `
       <td>${x.full_name ?? '—'}</td>
       <td>${x.email ?? '—'}</td>
-      <td class="nowrap">${fmtDate(x.joined_at)}</td> <!-- NUEVO -->
+      <td>${x.phone ? x.phone : '—'}</td>
+      <td class="nowrap">${fmtDate(x.joined_at)}</td>
       <td>${x.plan ?? '—'}</td>
       <td>${fmtMoney(x.capital, x.currency)}</td>
       <td>${x.bank_name ?? '—'}</td>
@@ -300,7 +359,7 @@ $("q")?.addEventListener("input", (e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
   const filt = CACHED.filter(x=>{
-    return [x.full_name, x.email, x.plan, x.bank_name, x.bank_account, x.bank_account_type]
+    return [x.full_name, x.email, x.phone, x.plan, x.bank_name, x.bank_account, x.bank_account_type]
       .filter(Boolean)
       .some(v => String(v).toLowerCase().includes(q));
   });
@@ -308,7 +367,7 @@ $("q")?.addEventListener("input", (e)=>{
 });
 
 /*** Editar: cargar datos al formulario ***/
-function editClient(x){
+async function editClient(x){
   $("u_email").value = x.email || "";
   $("u_name").value  = x.full_name || "";
   $("u_currency").value = x.currency || "GTQ";
@@ -321,6 +380,24 @@ function editClient(x){
   $("u_bank_account").value= x.bank_account ?? "";
   $("u_bank_account_type").value = x.bank_account_type ?? "";
   $("u_pass").value = "";
+
+  // teléfono (si no viene en la vista, intenta traerlo de profiles puntual)
+  if (typeof x.phone === "string") {
+    $("u_phone").value = x.phone || "";
+  } else if (x.user_id) {
+    try{
+      const r = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}&select=phone`, {
+        headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
+      });
+      if (r.ok) {
+        const rows = await r.json();
+        $("u_phone").value = rows?.[0]?.phone || "";
+      }
+    }catch{ $("u_phone").value = ""; }
+  } else {
+    $("u_phone").value = "";
+  }
+
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -350,6 +427,7 @@ async function deleteClient(x){
 async function saveUser(){
   const email    = $("u_email").value.trim();
   const fullName = $("u_name").value.trim();
+  const phone    = $("u_phone").value.trim();
   const password = $("u_pass").value;
   const currency = $("u_currency").value;
   const capital  = Number($("u_capital").value || 0);
@@ -393,7 +471,7 @@ async function saveUser(){
       r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(bodyOld) });
       if (!r.ok) throw new Error(await r.text() || "Error guardando");
 
-      // completar meses/tasa si la firma antigua no los soportaba
+      // completar meses/tasa si la función antigua no los soportaba
       try {
         const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
         if (rV.ok) {
@@ -411,13 +489,23 @@ async function saveUser(){
 
     // asegurar tipo de cuenta
     try{
-      const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id`, {headers: headersJSON()});
+      const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id,user_id`, {headers: headersJSON()});
       const rows = rV.ok ? await rV.json() : [];
       const accId = rows?.[0]?.account_id;
+      const uId   = rows?.[0]?.user_id;
+
       if (accId){
         await fetch(`${BASE}/accounts?id=eq.${accId}`, {
           method:"PATCH", headers: headersJSON(),
           body: JSON.stringify({ bank_account_type: bankType || null })
+        });
+      }
+
+      // guardar teléfono en profiles.phone
+      if (uId){
+        await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uId)}`, {
+          method:"PATCH", headers: headersJSON(),
+          body: JSON.stringify({ phone: phone || null })
         });
       }
     }catch{}
@@ -431,7 +519,7 @@ async function saveUser(){
 }
 
 function clearForm(){
-  ["u_email","u_name","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"]
+  ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"]
     .forEach(id=>$(id).value="");
   $("u_currency").value="GTQ";
   $("u_plan").value="STANDARD";
@@ -442,7 +530,7 @@ function clearForm(){
 /*** NOTIFICACIONES ***/
 async function loadNotifs(){
   const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
-    headers:{ apikey:ANON_KEY, Authorization:"Bearer "+localStorage.token }
+    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
   });
   const rows = await r.json();
   const tb = $("notifs"); tb.innerHTML="";
