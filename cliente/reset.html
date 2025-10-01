@@ -8,133 +8,170 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0b0d; --panel:#121318; --card:#17191d; --outline:rgba(255,255,255,.1);
-    --txt:#f5f7fb; --muted:#9aa1ac; --danger:#ff5252; --shadow:0 18px 50px rgba(0,0,0,.45);
+    --bg:#0b0b0d; --card:#17191d; --outline:rgba(255,255,255,.08);
+    --txt:#f5f7fb; --muted:#9aa1ac; --danger:#ff4d4f; --ok:#5ee17a;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box} html,body{height:100%}
   body{
-    margin:0; color:var(--txt); font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    background: radial-gradient(1200px 800px at 12% -25%, #1a1d24 0%, #0b0b0d 55%) fixed;
-    display:flex; align-items:center; justify-content:center; padding:24px;
+    margin:0; background:radial-gradient(1200px 800px at 10% -20%, #1a1d24 0%, #0b0b0d 55%) fixed;
+    color:var(--txt); font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    display:grid; place-items:center; padding:24px;
   }
-  .box{width:min(520px,96vw); background:linear-gradient(180deg,var(--panel) 0%, #0f1116 100%);
-    border:1px solid var(--outline); border-radius:18px; padding:26px; box-shadow:var(--shadow)}
-  h1{margin:0 0 6px 0; font-size:clamp(22px,4.5vw,26px)}
-  .sub{color:var(--muted); margin-bottom:14px}
-  .row{display:grid; gap:14px; grid-template-columns:1fr}
-  .k{color:var(--muted); font-size:13px; margin-bottom:6px}
+  .wrap{width:min(520px,94vw)}
+  .panel{background:linear-gradient(180deg,#171a21 0%, #121318 100%);
+         border:1px solid var(--outline); border-radius:20px; padding:28px; box-shadow:var(--shadow)}
+  h1{margin:0 0 4px 0; font-size:clamp(24px,4.5vw,30px); font-weight:800}
+  .muted{color:var(--muted)}
+  .k{display:block; margin:14px 0 6px; color:var(--muted); font-size:14px}
+  .row{display:flex; gap:12px}
+  .input{
+    width:100%; background:#0f1116; border:1px solid var(--outline); border-radius:12px;
+    color:var(--txt); padding:12px 14px; outline:none;
+  }
   .pwd-field{position:relative}
-  .input{width:100%; background:#0f1116; border:1px solid var(--outline); color:var(--txt);
-    padding:12px 14px; border-radius:12px; outline:none}
-  .input:focus{border-color:#2b7cff}
+  .pwd-field .input{padding-right:56px}
   .eye-btn{
     position:absolute; right:8px; top:50%; transform:translateY(-50%);
-    width:48px; height:48px; border-radius:14px; border:1px solid var(--outline);
-    background:#0f1116; color:#fff; display:grid; place-items:center; cursor:pointer;
+    width:48px; height:48px; border-radius:14px;
+    border:1px solid var(--outline); background:#0f1116; color:#fff;
+    display:grid; place-items:center; cursor:pointer;
   }
   .eye-btn svg{width:28px; height:28px}
-  .err{color:var(--danger); font-size:12px; margin-top:6px; display:none}
-  .actions{display:flex; gap:10px; margin-top:18px}
-  .btn{appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer}
-  .btn.primary{background:#fff; color:#000; flex:1}
-  .btn.secondary{background:#1f232b; color:#fff; border:1px solid var(--outline)}
-  .note{color:var(--muted); font-size:12px; margin-top:10px; text-align:center}
-  .ok{color:#86efac}
+  .btn{appearance:none; border:0; border-radius:14px; padding:12px 16px; font-weight:700; cursor:pointer; box-shadow:var(--shadow)}
+  .btn.primary{background:#fff; color:#000; width:100%}
+  .btn.link{background:transparent; color:#fff; border:1px solid var(--outline)}
+  .msg{margin-top:12px; font-size:14px}
+  .err{color:var(--danger)} .ok{color:var(--ok)}
+  .input.invalid{border-color:var(--danger) !important}
+  .footer{text-align:center; margin-top:12px}
 </style>
 </head>
 <body>
-  <div class="box">
-    <h1>Restablecer contraseña</h1>
-    <div class="sub">Ingresa tu nueva contraseña y confírmala.</div>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Restablecer contraseña</h1>
+      <div class="muted">Elija una nueva contraseña para su cuenta.</div>
 
-    <div class="row">
-      <div>
-        <div class="k">Nueva contraseña</div>
-        <div class="pwd-field">
-          <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres" aria-describedby="err1">
-          <button type="button" id="eye1" class="eye-btn" aria-pressed="false" aria-label="Mostrar/ocultar"></button>
-        </div>
-        <div id="err1" class="err"></div>
+      <label class="k">Nueva contraseña</label>
+      <div class="pwd-field">
+        <input id="pwd1" type="password" class="input" placeholder="Mínimo 8 caracteres" minlength="8" autocomplete="new-password">
+        <button id="eye1" class="eye-btn" type="button" aria-pressed="false" aria-label="Mostrar u ocultar contraseña"></button>
       </div>
-      <div>
-        <div class="k">Confirmar contraseña</div>
-        <div class="pwd-field">
-          <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña" aria-describedby="err2">
-          <button type="button" id="eye2" class="eye-btn" aria-pressed="false" aria-label="Mostrar/ocultar"></button>
-        </div>
-        <div id="err2" class="err"></div>
+
+      <label class="k">Confirmar contraseña</label>
+      <div class="pwd-field">
+        <input id="pwd2" type="password" class="input" placeholder="Repita la contraseña" minlength="8" autocomplete="new-password">
+        <button id="eye2" class="eye-btn" type="button" aria-pressed="false" aria-label="Mostrar u ocultar confirmación"></button>
+      </div>
+
+      <div id="msg" class="msg muted"></div>
+
+      <div class="row" style="margin-top:18px">
+        <button id="btnSave" class="btn primary">Guardar contraseña</button>
+        <button id="btnBack" class="btn link" type="button">Volver al inicio</button>
       </div>
     </div>
-
-    <div class="actions">
-      <button class="btn secondary" id="backLogin">Volver al login</button>
-      <button class="btn primary" id="saveBtn">Guardar nueva contraseña</button>
-    </div>
-
-    <div id="msg" class="note"></div>
+    <div class="footer muted" style="font-size:12px">FX | CAPITAL R.L.</div>
   </div>
 
+  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
+    // === Ajusta sólo si cambian tus credenciales o ruta de login ===
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY;
-    const LOGIN_URL = location.origin + '/index.html'; // ajusta si tu login es otro archivo (p.ej. /login.html)
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+    const LOGIN_URL = '/index.html'; // o la ruta de tu login (ej. '/')
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
-    // Ojos
-    const eyeOn = `<svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/></svg>`;
-    const eyeOff= `<svg viewBox="0 0 24 24" fill="none"><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/><path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/><path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/></svg>`;
-    function bindEye(inpId, btnId){
-      const i = document.getElementById(inpId), b = document.getElementById(btnId);
-      b.innerHTML = eyeOn;
-      b.onclick = () => {
-        const show = i.type === 'password';
-        i.type = show ? 'text' : 'password';
-        b.innerHTML = show ? eyeOff : eyeOn;
-      };
-    }
-    bindEye('newPwd','eye1'); bindEye('newPwd2','eye2');
+    const $ = s=>document.querySelector(s);
+    const msg = (t, type='')=>{
+      const el = $('#msg'); el.textContent = t || '';
+      el.classList.remove('err','ok','muted'); if(type) el.classList.add(type); else el.classList.add('muted');
+    };
 
-    function setErr(id, msg){ const el = document.getElementById(id); el.textContent = msg||''; el.style.display = msg ? 'block' : 'none'; }
+    // ===== Soporte a ambos formatos de enlace =====
+    async function ensureSessionFromLink(){
+      const url = new URL(window.location.href);
+
+      // 1) Nuevo formato: ?code=... (PKCE)
+      const code = url.searchParams.get('code');
+      if (code) {
+        const { data, error } = await sb.auth.exchangeCodeForSession(code);
+        if (error) { msg('Enlace inválido o vencido. Solicite otro correo.', 'err'); return false; }
+        return true;
+      }
+
+      // 2) Formato antiguo: #access_token=...&refresh_token=...&type=recovery
+      if (location.hash.includes('access_token=')) {
+        const params = new URLSearchParams(location.hash.substring(1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token && refresh_token) {
+          const { error } = await sb.auth.setSession({ access_token, refresh_token });
+          if (error) { msg('No se pudo abrir la sesión del enlace. Solicite otro correo.', 'err'); return false; }
+          return true;
+        }
+      }
+
+      msg('Abra este enlace desde el correo de recuperación o solicite uno nuevo.', 'err');
+      return false;
+    }
+
+    // ===== UI helpers (ojos grandes) =====
+    const eyeSVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/></svg>`;
+    const eyeOffSVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/><path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/><path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/></svg>`;
+    function bindEye(inputId, btnId){
+      const inp = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      btn.innerHTML = eyeSVG;
+      btn.addEventListener('click', ()=>{
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', String(show));
+        btn.innerHTML = show ? eyeOffSVG : eyeSVG;
+      });
+    }
+
     function validate(){
-      const p1 = document.getElementById('newPwd').value.trim();
-      const p2 = document.getElementById('newPwd2').value.trim();
-      let ok = true;
-      if(p1.length < 8){ setErr('err1','Mínimo 8 caracteres.'); ok=false; } else setErr('err1','');
-      if(p2.length === 0){ setErr('err2','Confirme su contraseña.'); ok=false; }
-      else if(p1 !== p2){ setErr('err2','Las contraseñas no coinciden.'); ok=false; } else setErr('err2','');
-      return ok;
+      const p1 = $('#pwd1').value.trim();
+      const p2 = $('#pwd2').value.trim();
+      $('#pwd1').classList.toggle('invalid', p1.length < 8);
+      $('#pwd2').classList.toggle('invalid', p1 !== p2 || p2.length < 8);
+      if (p1.length < 8) { msg('La contraseña debe tener al menos 8 caracteres.', 'err'); return false; }
+      if (p1 !== p2)     { msg('Las contraseñas no coinciden.', 'err'); return false; }
+      msg(''); return true;
     }
 
-    async function ensureRecoverySession(){
-      // Cuando el usuario llega desde el email, Supabase coloca tokens en el hash (#access_token=...)
-      // Con detectSessionInUrl:true, supabase-js intenta crear la sesión automáticamente.
+    async function save(){
+      if (!validate()) return;
+      const p1 = $('#pwd1').value.trim();
+      msg('Guardando…');
+
       const { data:{ session } } = await sb.auth.getSession();
-      return !!session;
+      if (!session) { msg('Sesión no válida. Abra el enlace de recuperación nuevamente.', 'err'); return; }
+
+      const { error } = await sb.auth.updateUser({ password: p1 });
+      if (error) { msg('No se pudo actualizar la contraseña: ' + error.message, 'err'); return; }
+
+      msg('¡Contraseña actualizada correctamente!', 'ok');
+      setTimeout(()=> window.location.replace(LOGIN_URL), 900);
     }
 
-    async function saveNewPassword(){
-      if(!validate()) return;
-      const ok = await ensureRecoverySession();
-      if(!ok){
-        document.getElementById('msg').innerHTML = 'El enlace no es válido o expiró. Vuelve a solicitar el correo de recuperación.';
-        return;
-      }
-      const newPwd = document.getElementById('newPwd').value.trim();
-      const { error } = await sb.auth.updateUser({ password: newPwd });
-      if(error){
-        document.getElementById('msg').innerHTML = 'Error: ' + error.message;
-        return;
-      }
-      document.getElementById('msg').innerHTML = '<span class="ok">¡Contraseña actualizada!</span> Redirigiendo al login…';
-      setTimeout(()=>{ window.location.href = LOGIN_URL; }, 1200);
-    }
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      bindEye('pwd1','eye1'); bindEye('pwd2','eye2');
+      $('#pwd1').addEventListener('input', validate);
+      $('#pwd2').addEventListener('input', validate);
+      $('#btnSave').addEventListener('click', save);
+      $('#btnBack').addEventListener('click', ()=> window.location.replace(LOGIN_URL));
 
-    document.getElementById('saveBtn').addEventListener('click', saveNewPassword);
-    document.getElementById('backLogin').addEventListener('click', ()=> window.location.href = LOGIN_URL);
+      msg('Verificando enlace…');
+      await ensureSessionFromLink(); // establece la sesión desde el link
+      msg('Ingrese su nueva contraseña.');
+    });
   </script>
 </body>
 </html>
