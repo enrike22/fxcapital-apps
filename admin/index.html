@@ -163,7 +163,10 @@ tbody tr:hover{background:#0e1116}
 
     <!-- Lista -->
     <div class="card">
-      <h2>Clientes</h2>
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Clientes</h2>
+        <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -244,28 +247,31 @@ async function createAuthUserIfNeeded(email, password, fullName) {
   return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
 }
 
-/*** LISTA USUARIOS (vista filtrada con fallback) ***/
+/*** LISTA USUARIOS (vista filtrada con fallback) - NO CACHE ***/
 let CACHED = [];
 const VIEW_PRIMARY = 'v_admin_users_filtered';
 const VIEW_FALLBACK = 'v_admin_users';
 
 async function listUsers(){
   let view = VIEW_PRIMARY;
-  let url = `${BASE}/${view}` + `?select=user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
-  let r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+  const ts = `_ts=${Date.now()}`;
+  const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`;
+  let url = `${BASE}/${view}?select=${encodeURIComponent(sel)}&order=full_name.asc&${ts}`;
+
+  const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache" };
+  let r = await fetch(url, { headers: h, cache: "no-store" });
 
   if (r.status === 404) {
     view = VIEW_FALLBACK;
-    url = `${BASE}/${view}` + `?select=user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
-    r = await fetch(url, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+    url = `${BASE}/${view}?select=${encodeURIComponent(sel)}&order=full_name.asc&${ts}`;
+    r = await fetch(url, { headers: h, cache: "no-store" });
   }
 
   if (!r.ok) {
     const t = await r.text();
-    // si la vista no tiene 'phone', reintenta sin phone y luego hidrata desde profiles
     if (/column .*phone.* does not exist|unknown column/i.test(t)) {
-      const url2 = `${BASE}/${view}` + `?select=user_id,full_name,email,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at&order=full_name.asc`;
-      const r2 = await fetch(url2, { headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token } });
+      const url2 = `${BASE}/${view}?select=${encodeURIComponent(sel.replace("email,phone","email"))}&order=full_name.asc&${ts}`;
+      const r2 = await fetch(url2, { headers: h, cache: "no-store" });
       if (!r2.ok) { alert("No se pudo cargar la lista:\n"+(await r2.text())); return; }
       CACHED = await r2.json();
       await hydratePhonesFromProfiles(CACHED);
@@ -288,7 +294,8 @@ async function hydratePhonesFromProfiles(rows){
     if (!ids.length) return;
     const inList = '(' + ids.map(id => `"${String(id).replace(/"/g,'\\"')}"`).join(',') + ')';
     const r = await fetch(`${BASE}/profiles?id=in.${encodeURIComponent(inList)}&select=id,phone`, {
-      headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
+      headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token },
+      cache: "no-store"
     });
     if (!r.ok) return;
     const profs = await r.json();
@@ -461,69 +468,61 @@ async function saveUser(){
   }
 }
 
-/*** BORRAR USUARIO: usa RPC (robusto) y luego Edge Function Auth; fallback manual si falta el RPC ***/
+/*** BORRAR USUARIO: RPC -> Auth -> fallback manual, no-cache y UI optimista ***/
 async function deleteClient(x){
   const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
 
   const jh = headersJSON();
-
+  const ts = `_ts=${Date.now()}`;
   const mustOk = async (resp, label) => {
     if (!resp.ok) {
       const t = await resp.text().catch(()=> '');
-      // Señales típicas de RLS o permisos
       if (t.match(/Policies|RLS|permission|not authorized|violates row-level/mi)) {
-        throw new Error(`Bloqueado por RLS/Permisos al ${label}. Usa el RPC SECURITY DEFINER (ver instrucciones). Detalle: ${t || resp.status}`);
+        throw new Error(`Bloqueado por RLS/Permisos al ${label}. Asegura el RPC SECURITY DEFINER.`);
       }
       throw new Error(`Error al ${label}: ${t || resp.status}`);
     }
   };
 
-  // 1) Intentar RPC
+  // 1) RPC primero (si existe versión con p_dry_run)
+  let rpcTried = false;
   try{
-    if (!x?.email) throw new Error("No hay email para identificar al usuario.");
-    const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
-      method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email })
+    rpcTried = true;
+    const r = await fetch(`${RPC}/admin_delete_user_cascade?${ts}`, {
+      method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email, p_dry_run: false })
     });
-
-    if (r.status === 404) {
-      // RPC no existe -> fallback manual
-      await deleteClientManual(x, jh, mustOk);
-    } else {
-      await mustOk(r, "RPC admin_delete_user_cascade");
-    }
+    if (r.status === 404) throw new Error("RPC no existe");
+    await mustOk(r, "RPC admin_delete_user_cascade");
   }catch(e){
-    // Si el RPC falló por política/otro, intentamos manual y si también falla, mostramos el error del manual
-    try{
-      await deleteClientManual(x, jh, mustOk);
-    }catch(e2){
-      alert("No se pudo eliminar (RPC y fallback fallaron): " + (e2.message || e2));
-      return;
-    }
+    // fallback manual
+    await deleteClientManual(x, jh, mustOk);
   }
 
-  // 2) Borrar en Auth (mejor esfuerzo)
+  // 2) Borrar en Auth (best-effort)
   try{
-    const rAuth = await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
+    await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
       method:"POST",
       headers:{ "Content-Type":"application/json", apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
       body: JSON.stringify({ email: x.email })
     });
-    if (!rAuth.ok) {
-      const t = await rAuth.text().catch(()=> "");
-      console.warn("No se pudo eliminar en Auth:", t || rAuth.status);
-    }
-  }catch(e){ console.warn("Auth delete error:", e?.message||e); }
+  }catch{}
 
+  // 3) UI optimista + reconsulta sin caché
+  CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
+  renderUsers(CACHED);
   await listUsers();
+
   alert("Cliente eliminado correctamente.");
 }
 
 async function deleteClientManual(x, jh, mustOk) {
   // asegurar IDs
   if (!x?.user_id || !x?.account_id) {
-    const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, {
-      headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token }
+    const ts = `_ts=${Date.now()}`;
+    const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id&${ts}`, {
+      headers: { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache" },
+      cache: "no-store"
     });
     await mustOk(r, "consultar v_admin_users");
     const rows = await r.json();
@@ -533,28 +532,30 @@ async function deleteClientManual(x, jh, mustOk) {
     }
   }
 
-  // hijos -> cuenta -> perfil (orden defensivo)
+  // hijos -> cuenta -> perfil
   if (x.account_id) {
-    const delWr = await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh });
+    const delWr = await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     await mustOk(delWr, "eliminar withdrawal_requests");
 
-    const delNoti = await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh });
+    const delNoti = await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     await mustOk(delNoti, "eliminar admin_notifications");
 
-    const delAcc = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh });
+    const delAcc = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     await mustOk(delAcc, "eliminar accounts");
   }
 
   if (x.user_id) {
-    const delProf = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: jh });
+    const delProf = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: jh, cache:"no-store" });
     if (!delProf.ok && delProf.status !== 404) await mustOk(delProf, "eliminar profiles");
   }
 }
 
 /*** NOTIFICACIONES ***/
 async function loadNotifs(){
-  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
-    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }
+  const ts = `_ts=${Date.now()}`;
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc&${ts}`, {
+    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token, "Cache-Control":"no-cache" },
+    cache:"no-store"
   });
   const rows = await r.json();
   const tb = $("notifs"); tb.innerHTML="";
@@ -596,6 +597,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("saveBtn").addEventListener("click", saveUser);
   $("clearBtn").addEventListener("click", clearForm);
   $("btnRefreshNotifs").addEventListener("click", loadNotifs);
+  $("btnRefreshUsers").addEventListener("click", listUsers);
   initApp();
 });
 </script>
