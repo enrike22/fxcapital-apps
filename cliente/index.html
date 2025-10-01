@@ -84,7 +84,8 @@
           <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
         </div>
         <div style="text-align:right;margin-top:6px">
-          <a class="muted" href="#" id="forgotLink">¿Olvidó su contraseña?</a>
+          <!-- Sin reset.html: solo aviso -->
+          <a class="muted" href="#" onclick="alert('Solicite el restablecimiento a soporte.');return false;">¿Olvidó su contraseña?</a>
         </div>
       </div>
       <button id="btnLogin" class="btn primary">Iniciar Sesión</button>
@@ -95,13 +96,9 @@
   <script>
     // ===== Config =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-    // Tu anon key real (la que me compartiste)
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-
     const DASHBOARD_PATH = '/cliente-dashboard.html';
-    // Mejor absoluto para evitar problemas de origen
-    const RESET_REDIRECT = 'https://clientes.fxcapital-gt.com/reset.html';
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
@@ -133,16 +130,6 @@
     // Permitir Enter para enviar
     document.addEventListener('keydown', (e)=>{
       if(e.key === 'Enter') doLogin();
-    });
-
-    // Olvidó contraseña
-    document.getElementById('forgotLink').addEventListener('click', async (e)=>{
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      if(!email){ alert('Escriba su correo y luego haga clic en "¿Olvidó su contraseña?"'); return; }
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: RESET_REDIRECT });
-      if (error) { alert('Error: ' + error.message); return; }
-      alert('Revisa tu bandeja. Te enviamos un enlace para restablecer tu contraseña.');
     });
   </script>
 </body>
