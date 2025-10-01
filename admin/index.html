@@ -5,11 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Admin</title>
 <style>
-:root{
-  --bg:#0a0a0a; --fg:#f5f7fa; --muted:#cdd3da;
-  --card:#0f1012; --border:#21262c; --shadow:0 14px 40px rgba(0,0,0,.5);
-  --radius:18px; --chip:#15181d; --danger:#ff4d4f;
-}
+:root{--bg:#0a0a0a;--fg:#f5f7fa;--muted:#cdd3da;--card:#0f1012;--border:#21262c;--shadow:0 14px 40px rgba(0,0,0,.5);--radius:18px;--chip:#15181d;--danger:#ff4d4f}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;font-size:16px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -65,31 +61,18 @@ tbody tr:hover{background:#0e1116}
   </div>
 
   <div id="app" class="hidden">
-
     <div class="card" id="formCard">
       <h2>Crear / Editar usuario</h2>
       <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="u_email" placeholder="cliente@demo.com">
-          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
-        </div>
+        <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"><div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div></div>
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
         <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555"></div>
-        <div>
-          <label>Contraseña (para el cliente)</label>
-          <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)">
-            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
-          </div>
-        </div>
+        <div><label>Contraseña (para el cliente)</label><div class="inline"><input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)"><button type="button" id="togglePass" class="ghost">👁</button></div></div>
         <div><label>Moneda</label><select id="u_currency"><option>GTQ</option><option>USD</option></select></div>
         <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01"></div>
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
         <div><label>Plan</label><select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select></div>
-        <div><label>Meses de inversión</label>
-          <select id="u_months"><option>6</option><option selected>12</option><option>18</option><option>24</option><option>30</option><option>36</option><option>42</option><option>48</option><option>54</option><option>60</option></select>
-        </div>
+        <div><label>Meses de inversión</label><select id="u_months"><option>6</option><option selected>12</option><option>18</option><option>24</option><option>30</option><option>36</option><option>42</option><option>48</option><option>54</option><option>60</option></select></div>
         <div><label>Tasa semestral (%)</label><input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25"></div>
         <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
         <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
@@ -170,12 +153,11 @@ function logout(){ localStorage.removeItem("token"); localStorage.removeItem("ui
 async function createAuthUserIfNeeded(email, password, fullName) {
   if(!password) return { ok:true, status:204, json: async()=>({}) };
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
-  const r = await fetch(url, {
+  return fetch(url, {
     method:"POST",
     headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
     body: JSON.stringify({ email, password, full_name: fullName })
   });
-  return r;
 }
 async function getAuthUserIdByEmail(email){
   try{
@@ -186,54 +168,50 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
-/*** LISTA (con fallback join si la vista viene “vacía”) ***/
+/*** LISTA — usa SOLO la vista filtrada; fallback hace join accounts→profiles y excluye admins ***/
 let CACHED = [];
 async function listUsers(){
   const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
   const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`;
 
-  // 1) intentar vista filtrada
   let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
-  if (r.status === 404) {
-    // 2) fallback a vista base
-    r = await fetch(`${BASE}/v_admin_users?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
-  }
 
   if (r.ok) {
-    let rows = await r.json();
-    const looksEmpty = rows.length && rows.every(x => !x.account_id && !x.plan && !x.capital && !x.bank_name);
-    if (looksEmpty) {
-      rows = await loadUsersViaJoinFallback(h);
-    }
+    const rows = await r.json();
     CACHED = rows;
     renderUsers(CACHED);
     return;
   }
 
-  // 3) si la vista falla, usa join cliente
+  // Fallback: join manual (accounts -> profiles), excluyendo admins
   CACHED = await loadUsersViaJoinFallback(h);
   renderUsers(CACHED);
 }
 
 async function loadUsersViaJoinFallback(h){
   try{
-    const [pRes, aRes] = await Promise.all([
-      fetch(`${BASE}/profiles?select=id,full_name,email,phone&order=full_name.asc`, { headers:h, cache:"no-store" }),
-      fetch(`${BASE}/accounts?select=id,user_id,currency,capital,plan,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`, { headers:h, cache:"no-store" })
+    const [aRes, pRes] = await Promise.all([
+      fetch(`${BASE}/accounts?select=id,user_id,currency,capital,plan,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`, { headers:h, cache:"no-store" }),
+      fetch(`${BASE}/profiles?select=id,full_name,email,phone,is_admin`, { headers:h, cache:"no-store" }),
     ]);
-    const profiles = pRes.ok ? await pRes.json() : [];
     const accounts = aRes.ok ? await aRes.json() : [];
-    const amap = new Map(accounts.map(a=>[a.user_id, a]));
-    return profiles.map(p=>{
-      const a = amap.get(p.id) || {};
+    const profiles = pRes.ok ? await pRes.json() : [];
+    const pmap = new Map(profiles.map(p => [p.id, p]));
+    // Solo clientes (con account) y NO admins
+    return accounts.map(a=>{
+      const p = pmap.get(a.user_id) || {};
+      if (p.is_admin) return null;
       return {
-        user_id: p.id, full_name: p.full_name, email: p.email, phone: p.phone,
-        account_id: a.id || null, currency: a.currency || 'GTQ', capital: a.capital || 0,
-        plan: a.plan || null, bank_name: a.bank_name || null, bank_account: a.bank_account || null,
-        bank_account_type: a.bank_account_type || null, invest_months: a.invest_months || null,
-        interest_pct: a.interest_pct || null, joined_at: a.joined_at || null
+        user_id: p.id || a.user_id,
+        full_name: p.full_name || null,
+        email: p.email || null,
+        phone: p.phone || null,
+        account_id: a.id,
+        currency: a.currency, capital: a.capital, plan: a.plan,
+        bank_name: a.bank_name, bank_account: a.bank_account, bank_account_type: a.bank_account_type,
+        invest_months: a.invest_months, interest_pct: a.interest_pct, joined_at: a.joined_at
       };
-    });
+    }).filter(Boolean).sort((x,y)=> (x.full_name||'').localeCompare(y.full_name||''));
   }catch{ return []; }
 }
 
@@ -262,18 +240,16 @@ function renderUsers(rows){
 }
 
 /*** BUSCAR ***/
-$("q")?.addEventListener("input", (e)=>{
+$("q")?.addEventListener("input",(e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
-  const filt = CACHED.filter(x=>{
-    return [x.full_name, x.email, x.phone, x.plan, x.bank_name, x.bank_account, x.bank_account_type]
-      .filter(Boolean).some(v => String(v).toLowerCase().includes(q));
-  });
+  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
+    .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   renderUsers(filt);
 });
 
 /*** EDITAR ***/
-async function editClient(x){
+function editClient(x){
   $("u_email").value = x.email || "";
   $("u_name").value  = x.full_name || "";
   $("u_phone").value = x.phone || "";
@@ -310,9 +286,9 @@ async function saveUser(){
   msgEl.textContent = "…";
 
   try{
-    if (!email) throw new Error("Email requerido");
-    if (!fullName) throw new Error("Nombre requerido");
-    if (isNaN(capital) || capital < 0) throw new Error("Capital inválido");
+    if(!email) throw new Error("Email requerido");
+    if(!fullName) throw new Error("Nombre requerido");
+    if(isNaN(capital)||capital<0) throw new Error("Capital inválido");
 
     // Auth: crear si hace falta y hay contraseña
     let uid = await getAuthUserIdByEmail(email);
@@ -322,20 +298,16 @@ async function saveUser(){
       try{ uid = (await rCreate.json()).id || null; }catch{}
       if(!uid){ for(let i=0;i<5 && !uid;i++){ await sleep(400); uid = await getAuthUserIdByEmail(email); } }
     }
-    if (!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
+    if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
-    // Upsert en BD (RPC robusto)
-    const body = {
-      p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
-      p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null,
-      p_invest_months: months, p_interest_pct: rate
-    };
+    // Upsert BD
+    const body = { p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital, p_joined_at: joined, p_plan: plan, p_bank_name: bankName||null, p_bank_account: bankAcct||null, p_invest_months: months, p_interest_pct: rate };
     const r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(body) });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
-    // Asegurar extras
+    // Extras: tipo de cuenta y teléfono
     try{
-      const rV = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(email)}&select=account_id,user_id`, { headers: headersJSON(), cache:"no-store" });
+      const rV = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(email)}&select=account_id,user_id`, { headers: headersJSON(), cache:"no-store" });
       const rows = rV.ok ? await rV.json() : [];
       const accId = rows?.[0]?.account_id;
       const uId   = rows?.[0]?.user_id;
@@ -363,9 +335,9 @@ async function deleteClient(x){
   const jh = headersJSON();
   const mustOk = async (resp, label) => { if (!resp.ok) throw new Error(`Error al ${label}: ${(await resp.text().catch(()=>'')) || resp.status}`); };
 
-  // IDs de respaldo si vienen nulos en la vista
+  // IDs de respaldo
   if (!x.user_id || !x.account_id){
-    const r = await fetch(`${BASE}/v_admin_users?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, { headers: jh, cache:"no-store" });
+    const r = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, { headers: jh, cache:"no-store" });
     if (r.ok){ const rows = await r.json(); x.user_id = x.user_id || rows?.[0]?.user_id; x.account_id = x.account_id || rows?.[0]?.account_id; }
   }
 
@@ -390,11 +362,10 @@ async function deleteClient(x){
   // Auth (best effort)
   try{
     let uid = x.user_id || await getAuthUserIdByEmail(x.email);
-    const rAuth = await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
+    await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
       method:"POST", headers:{ "Content-Type":"application/json", apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
       body: JSON.stringify({ user_id: uid || null, email: x.email || null })
     });
-    if (!rAuth.ok) console.warn("No se pudo eliminar en Auth:", await rAuth.text().catch(()=>""), rAuth.status);
   }catch{}
 
   // UI
@@ -429,7 +400,7 @@ async function initApp(){
 document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
-  $("togglePass").addEventListener("click", ()=> { const inp = $("u_pass"); inp.type = (inp.type === "password") ? "text" : "password"; });
+  $("togglePass").addEventListener("click", ()=>{ const inp=$("u_pass"); inp.type = (inp.type === "password") ? "text" : "password"; });
   $("saveBtn").addEventListener("click", saveUser);
   $("clearBtn").addEventListener("click", ()=>{ ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value=""); $("u_currency").value="GTQ"; $("u_plan").value="STANDARD"; $("u_months").value="12"; $("saveMsg").textContent=""; });
   $("btnRefreshNotifs").addEventListener("click", loadNotifs);
