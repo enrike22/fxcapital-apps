@@ -25,18 +25,33 @@
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
   /* Header */
-  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
-  .brand-wrap{display:flex;flex-direction:column;gap:6px}
+  header{
+    display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;
+    perspective:1200px; /* <-- para efecto 3D */
+  }
+  .brand-wrap{
+    display:flex;flex-direction:column;gap:6px;
+    transform-style:preserve-3d;           /* <-- 3D real */
+    will-change:transform;                 /* perf */
+    transition:transform .18s ease-out, filter .18s ease-out;
+  }
   .brand-row{display:flex;align-items:center;gap:18px}
   .brand-logo{
     width:112px;height:112px;border-radius:16px;object-fit:contain;
-    background:#fff;               /* <- Fondo blanco para contraste del logo */
-    padding:8px;                   /* <- Respiración interna */
+    background:#fff;               /* Fondo blanco para contraste del logo */
+    padding:8px;                   /* Respiración interna */
     border:1px solid var(--line);
     box-shadow: var(--shadow-2), var(--shadow-inset);
+    transform:translateZ(12px);    /* leve relieve */
   }
-  .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
-  .brand-sub{margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
+  .brand-title{
+    margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1;
+    transform:translateZ(8px);     /* título un poco al frente */
+  }
+  .brand-sub{
+    margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9;
+    transform:translateZ(4px);
+  }
 
   .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;color:#0b0c0e;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45)}
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
@@ -82,8 +97,8 @@
 </head>
 <body>
   <div class="wrap" id="appWrap">
-    <header>
-      <div class="brand-wrap">
+    <header id="brandArea">
+      <div class="brand-wrap" id="brand3D">
         <div class="brand-row">
           <!-- Opción B: logo en /logo.png con fallback a GitHub raw -->
           <img
@@ -228,6 +243,7 @@
 
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
+  /* ======= LÓGICA ORIGINAL ======= */
   const BASE_URL = 'https://clientes.fxcapital-gt.com/';
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
@@ -336,6 +352,36 @@
     document.getElementById('btnCalc').addEventListener('click', simulate);
     selectType('early'); toggleSwitchAll(false); loadHeader();
   });
+
+  /* ======= EFECTO 3D INTERACTIVO (logo + título) ======= */
+  (function(){
+    const area = document.getElementById('brandArea');
+    const card = document.getElementById('brand3D');
+    if(!area || !card) return;
+
+    const maxTilt = 8;      // grados máximos
+    const depthScale = 1.04; // leve zoom
+
+    function handleMove(e){
+      const r = area.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;   // 0..1
+      const py = (e.clientY - r.top)  / r.height;  // 0..1
+      const rotY = (px - 0.5) * (maxTilt*2);       // -max..max
+      const rotX = (0.5 - py) * (maxTilt*2);
+      card.style.transform =
+        `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) scale(${depthScale})`;
+      card.style.filter = 'brightness(1.03)';
+    }
+    function reset(){
+      card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+      card.style.filter = 'none';
+    }
+
+    area.addEventListener('mousemove', handleMove);
+    area.addEventListener('mouseleave', reset);
+    area.addEventListener('touchmove', (e)=>{ if(e.touches[0]) handleMove(e.touches[0]); }, {passive:true});
+    area.addEventListener('touchend', reset);
+  })();
   </script>
 </body>
 </html>
