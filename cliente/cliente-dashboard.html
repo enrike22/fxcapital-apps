@@ -52,11 +52,11 @@
   /* ====== HEADER ====== */
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
   .brand{display:flex;gap:14px;align-items:center}
+  /* Logo como imagen */
   .brand-logo{
-    width:46px;height:46px;border-radius:14px;
-    background:
-      var(--gloss),
-      radial-gradient(120% 120% at 20% 20%, #2a2d33 0%, #0e1116 45%, #060708 100%);
+    width:46px;height:46px;border-radius:14px; display:block;
+    object-fit:contain; object-position:center;
+    background:#0b0c0e; /* fallback si el PNG tiene transparencia */
     border:1px solid var(--line);
     box-shadow: var(--shadow-2), var(--shadow-inset);
   }
@@ -232,7 +232,8 @@
   <div class="wrap" id="appWrap">
     <header>
       <div class="brand">
-        <div class="brand-logo" title="FX Capital"></div>
+        <!-- ⬇️ Coloca aquí tu archivo (logo.png, logo.svg, .ico, etc.) -->
+        <img class="brand-logo" src="logo.png" alt="FX Capital Logo">
         <h1>FX | CAPITAL R.L. — Panel del Cliente</h1>
       </div>
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
@@ -373,7 +374,7 @@
     </div>
   </dialog>
 
-  <!-- Supabase + Lógica (SIN CAMBIOS DE FUNCIONALIDAD) -->
+  <!-- Supabase + Lógica -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
   const BASE_URL = 'https://clientes.fxcapital-gt.com/';
