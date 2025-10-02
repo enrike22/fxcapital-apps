@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Colores INVERTIDOS (claro) */
+    /* Tema claro (colores ya invertidos) */
     --bg:#f5f7fb;
     --card:#ffffff;
     --panel:#f9fafb;
@@ -16,9 +16,20 @@
     --txt:#0b0b0d;
     --muted:#4b5563;
     --accent:#111827;
-    --shadow:0 18px 50px rgba(0,0,0,.10);
+
+    /* 3D depth */
+    --shadow-sm:0 8px 18px rgba(0,0,0,.10);
+    --shadow-md:0 18px 40px rgba(0,0,0,.14);
+    --shadow-lg:0 40px 90px rgba(0,0,0,.18);
+
+    /* Marca */
+    --brand:#2563eb;       /* azul */
+    --brand-deep:#1e40af;  /* azul profundo para sombra */
+    --brand-soft:#dbeafe;  /* pill clara */
   }
-  *{box-sizing:border-box} html,body{height:100%}
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0;
     color:var(--txt);
@@ -26,67 +37,151 @@
     background: radial-gradient(1200px 800px at 12% -25%, #ffffff 0%, #eef2f7 55%) fixed;
     display:flex;justify-content:center;align-items:center;
     min-height:100vh;
+    perspective:1200px; /* <- base 3D */
   }
+
   .wrap{
-    width:min(1100px,94vw);
-    display:grid;grid-template-columns:1.2fr 440px;
-    gap:40px;align-items:center
+    width:min(1200px,94vw);
+    display:grid;grid-template-columns:1.25fr 480px;
+    gap:48px;align-items:center;
   }
-  @media(max-width:1000px){.wrap{grid-template-columns:1fr;gap:30px}}
+  @media(max-width:1100px){.wrap{grid-template-columns:1fr;gap:32px}}
 
-  .brand{display:flex;align-items:center;gap:16px}
+  /* ===== HERO (doble tamaño) ===== */
+  .brand{
+    display:flex;align-items:flex-start;gap:18px;transform-style:preserve-3d;
+  }
   .brand img{
-    height:72px; width:auto; object-fit:contain;
-    image-rendering:auto;
+    height:140px; /* <- antes ~72px: ahora ~2x */
+    width:auto; object-fit:contain; filter:drop-shadow(0 10px 18px rgba(0,0,0,.18));
+    transform:translateZ(40px);
   }
-  .brand h1{margin:0;font-weight:800;font-size:clamp(28px,4vw,44px)}
-  .sub{color:var(--muted);margin-bottom:16px}
+  .hero{transform-style:preserve-3d}
 
-  .cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
-  .card{background:var(--card);border:1px solid var(--outline);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  .brand-banner{
+    display:inline-block;
+    background:linear-gradient(180deg, var(--brand) 0%, #1f58d6 100%);
+    color:#fff;
+    border-radius:18px;
+    padding:18px 26px;
+    box-shadow:
+      0 14px 24px rgba(37,99,235,.35),
+      0 2px 0 0 rgba(255,255,255,.2) inset,
+      0 -2px 0 0 rgba(0,0,0,.05) inset,
+      0 28px 60px rgba(0,0,0,.25);
+    font-weight:800;
+    /* Doble tamaño del texto: */
+    font-size:clamp(42px, 7vw, 88px);
+    letter-spacing:.5px;
+    transform:translateZ(55px) rotateX(0.8deg);
+    position:relative;
+  }
+  .brand-banner::after{
+    content:"";
+    position:absolute; inset:0;
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.25) 0%, transparent 50%);
+    pointer-events:none;
+    mix-blend-mode:soft-light;
+  }
+
+  .brand-sub{
+    display:inline-block;
+    margin-top:10px;
+    background:var(--brand-soft);
+    color:#0b2b7a;
+    font-weight:700;
+    border-radius:12px;
+    padding:8px 14px;
+    box-shadow:
+      0 10px 16px rgba(37,99,235,.15),
+      0 1px 0 0 rgba(255,255,255,.7) inset;
+    transform:translateZ(35px);
+    font-size:clamp(14px, 2.2vw, 18px);
+  }
+
+  /* ===== Tarjetas ===== */
+  .cards{
+    display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    margin-top:16px;transform-style:preserve-3d;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--outline);
+    border-radius:16px;
+    padding:18px;
+    box-shadow:var(--shadow-sm), 0 1px 0 rgba(255,255,255,.7) inset;
+    transform:translateZ(22px);
+  }
   .card strong{display:block;margin-bottom:4px}
+  .footnote{color:var(--muted);font-size:12px;margin-top:12px}
 
+  /* ===== Panel de login (3D con tilt) ===== */
+  .tilt{transform-style:preserve-3d; will-change:transform; transition:transform .12s ease}
   .login{
     background:linear-gradient(180deg,var(--panel) 0%,#ffffff 100%);
-    border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)
+    border:1px solid var(--outline);
+    border-radius:22px;
+    padding:28px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.8) inset,
+      var(--shadow-md),
+      0 60px 120px rgba(0,0,0,.10);
+    transform:translateZ(35px); /* leve elevación por defecto */
   }
-  .login h2{margin:0 0 16px;font-size:22px;text-align:center}
+  .login h2{margin:0 0 18px;font-size:24px;text-align:center;transform:translateZ(10px)}
 
   .input{
-    width:100%;background:#f3f4f6;border:1px solid var(--outline);border-radius:12px;
-    color:var(--txt);padding:12px 14px;outline:none
+    width:100%;
+    background:#f3f4f6;
+    border:1px solid var(--outline);
+    border-radius:12px;
+    color:var(--txt);
+    padding:12px 14px;
+    outline:none;
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset;
+    transform:translateZ(6px);
   }
   .input:focus{border-color:#000}
   .row{display:flex;align-items:center;gap:10px}
 
   .btn{
-    appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;
-    cursor:pointer;box-shadow:var(--shadow);transition:transform .08s ease
+    appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:800;
+    cursor:pointer;transition:transform .08s ease, box-shadow .12s ease;
+    transform:translateZ(8px);
   }
-  /* Botón INVERTIDO: negro con texto blanco */
-  .btn.primary{background:#000;color:#fff;width:100%}
-  .btn:active{transform:translateY(1px)}
+  .btn.primary{
+    background:#000;color:#fff;width:100%;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.3) inset,
+      0 12px 26px rgba(0,0,0,.25),
+      0 30px 60px rgba(0,0,0,.15);
+  }
+  .btn.primary:hover{transform:translateZ(14px); box-shadow:
+      0 1px 0 rgba(255,255,255,.35) inset,
+      0 16px 34px rgba(0,0,0,.28),
+      0 40px 85px rgba(0,0,0,.18);}
+  .btn:active{transform:translateZ(4px)}
 
   .muted{color:var(--muted)}
-  .eye{cursor:pointer;user-select:none;font-size:22px}
-  .footnote{color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
+  .eye{cursor:pointer;user-select:none;font-size:22px;transform:translateZ(8px)}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
   <div class="wrap">
+    <!-- Lado izquierdo: HERO 3D -->
     <section>
-      <div class="brand">
-        <!-- Usa el PNG que subiste al repo -->
+      <div class="brand tilt" data-tilt>
         <img src="logologin.png" alt="FX | CAPITAL R.L.">
-        <div>
-          <h1>FX | CAPITAL R.L.</h1>
-          <div class="sub">Asesoría — Confianza — Crecimiento</div>
+        <div class="hero">
+          <div class="brand-banner">FX | CAPITAL R.L.</div>
+          <div class="brand-sub">Asesoría — Confianza — Crecimiento</div>
         </div>
       </div>
 
-      <div class="cards">
+      <div class="cards tilt" data-tilt>
         <div class="card"><strong>Seguridad</strong><span class="muted">Máxima protección</span></div>
         <div class="card"><strong>Rentabilidad</strong><span class="muted">Hasta 25% semestral*</span></div>
         <div class="card"><strong>Control</strong><span class="muted">Transparencia total</span></div>
@@ -94,13 +189,14 @@
       <div class="footnote">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <section class="login">
+    <!-- Panel de login con tilt 3D -->
+    <section class="login tilt" data-tilt>
       <h2>Iniciar Sesión</h2>
-      <div style="margin-bottom:12px">
+      <div style="margin-bottom:12px; transform:translateZ(10px)">
         <div class="muted" style="margin-bottom:6px">Correo Electrónico</div>
         <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
       </div>
-      <div style="margin-bottom:16px">
+      <div style="margin-bottom:16px; transform:translateZ(10px)">
         <div class="muted" style="margin-bottom:6px">Contraseña</div>
         <div class="row">
           <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
@@ -114,9 +210,38 @@
     </section>
   </div>
 
+  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
   <script>
-    // ===== Config =====
+    /* ===== Tilt 3D sin librerías =====
+       Aplica a cualquier elemento con data-tilt y clase .tilt */
+    const MAX_DEG = 6;  // inclinación máxima
+    const Z_LIFT = 35;  // elevación base (coherente con CSS)
+
+    function bindTilt(el){
+      let rect = null;
+      function updateRect(){ rect = el.getBoundingClientRect(); }
+      updateRect();
+      window.addEventListener('resize', updateRect);
+
+      el.addEventListener('mousemove', (e)=>{
+        const x = (e.clientX - rect.left) / rect.width;   // 0..1
+        const y = (e.clientY - rect.top) / rect.height;   // 0..1
+        const rx = (y - 0.5) * -2 * MAX_DEG;              // rotación X
+        const ry = (x - 0.5) *  2 * MAX_DEG;              // rotación Y
+        el.style.transform = `translateZ(${Z_LIFT}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+      el.addEventListener('mouseleave', ()=>{
+        el.style.transform = `translateZ(${Z_LIFT}px) rotateX(0deg) rotateY(0deg)`;
+      });
+      el.addEventListener('mouseenter', ()=>{
+        el.style.transform = `translateZ(${Z_LIFT}px)`;
+      });
+    }
+    document.querySelectorAll('[data-tilt]').forEach(bindTilt);
+
+    // ===== Config Supabase =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
@@ -126,19 +251,16 @@
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
-    // Autologin si ya hay sesión
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
       if (session) window.location.replace(DASHBOARD_PATH);
     })();
 
-    // Mostrar/Ocultar contraseña
     document.getElementById('toggleEye').onclick = () => {
       const p = document.getElementById('password');
       p.type = p.type === 'password' ? 'text' : 'password';
     };
 
-    // Login
     async function doLogin(){
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
@@ -148,11 +270,7 @@
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').onclick = doLogin;
-
-    // Permitir Enter para enviar
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter') doLogin();
-    });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
   </script>
 </body>
 </html>
