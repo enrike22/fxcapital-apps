@@ -17,7 +17,7 @@
     --muted:#4b5563;
     --accent:#111827;
 
-    /* 3D */
+    /* Sombras 3D */
     --shadow-sm:0 8px 18px rgba(0,0,0,.10);
     --shadow-md:0 18px 40px rgba(0,0,0,.14);
     --shadow-lg:0 40px 90px rgba(0,0,0,.18);
@@ -43,19 +43,28 @@
   @media(max-width:1100px){.wrap{grid-template-columns:1fr;gap:32px}}
 
   /* ===== HERO ===== */
-  .brand{display:flex;align-items:flex-start;gap:18px;transform-style:preserve-3d}
-  .brand img{
-    height:110px; /* ↓ un poco más pequeño para evitar distorsión */
-    width:auto; object-fit:contain;
-    filter:drop-shadow(0 10px 18px rgba(0,0,0,.18));
-    transform:translateZ(40px);
+  .brand{
+    display:flex;
+    flex-direction:column;      /* logo arriba */
+    align-items:center;         /* centrado */
+    gap:16px;
+    transform-style:preserve-3d;
   }
-  .hero{transform-style:preserve-3d}
+  .brand img{
+    height:170px;               /* logo MÁS GRANDE */
+    width:auto; object-fit:contain;
+    filter:drop-shadow(0 14px 22px rgba(0,0,0,.22));
+    transform:translateZ(55px);
+  }
+  @media(max-width:900px){
+    .brand img{ height:140px; }
+  }
+
+  .hero{transform-style:preserve-3d; text-align:center;}
 
   .brand-banner{
     display:inline-block;
-    /* FONDO NEGRO */
-    background:linear-gradient(180deg, #000 0%, #111 100%);
+    background:linear-gradient(180deg, #000 0%, #111 100%); /* fondo NEGRO */
     color:#fff;
     border-radius:18px;
     padding:16px 22px;
@@ -65,11 +74,10 @@
       0 -2px 0 0 rgba(0,0,0,.06) inset,
       0 28px 60px rgba(0,0,0,.25);
     font-weight:800;
-    /* Más compacto + una sola línea */
-    font-size:clamp(36px, 5.6vw, 64px);
+    font-size:clamp(34px, 5.2vw, 60px);  /* tamaño controlado para 1 línea */
     letter-spacing:.4px;
-    white-space:nowrap;           /* <- en una sola línea */
-    transform:translateZ(55px) rotateX(.6deg);
+    white-space:nowrap;                   /* una sola línea */
+    transform:translateZ(55px) rotateX(.5deg);
     position:relative;
   }
   .brand-banner::after{
@@ -81,15 +89,15 @@
     mix-blend-mode:soft-light;
   }
 
-  /* Slogan en NEGRO y un poquito más grande */
+  /* Slogan en NEGRO y un poco más grande */
   .brand-sub{
     display:inline-block;
-    margin-top:12px;
-    background:transparent;   /* sin pill azul */
-    color:#000;               /* texto negro */
+    margin-top:10px;
+    background:transparent;
+    color:#000;                   /* negro */
     font-weight:700;
-    transform:translateZ(35px);
-    font-size:clamp(16px, 2.0vw, 20px);  /* un poco más grande */
+    transform:translateZ(40px);
+    font-size:clamp(16px, 2.0vw, 20px);
   }
 
   .cards{
@@ -162,7 +170,7 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- HERO -->
+    <!-- HERO con Logo ARRIBA y CENTRADO -->
     <section>
       <div class="brand tilt" data-tilt>
         <img src="logologin.png" alt="FX | CAPITAL R.L.">
