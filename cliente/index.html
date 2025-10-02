@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Tema claro (colores ya invertidos) */
+    /* Tema claro */
     --bg:#f5f7fb;
     --card:#ffffff;
     --panel:#f9fafb;
@@ -17,15 +17,10 @@
     --muted:#4b5563;
     --accent:#111827;
 
-    /* 3D depth */
+    /* 3D */
     --shadow-sm:0 8px 18px rgba(0,0,0,.10);
     --shadow-md:0 18px 40px rgba(0,0,0,.14);
     --shadow-lg:0 40px 90px rgba(0,0,0,.18);
-
-    /* Marca */
-    --brand:#2563eb;       /* azul */
-    --brand-deep:#1e40af;  /* azul profundo para sombra */
-    --brand-soft:#dbeafe;  /* pill clara */
   }
 
   *{box-sizing:border-box}
@@ -37,7 +32,7 @@
     background: radial-gradient(1200px 800px at 12% -25%, #ffffff 0%, #eef2f7 55%) fixed;
     display:flex;justify-content:center;align-items:center;
     min-height:100vh;
-    perspective:1200px; /* <- base 3D */
+    perspective:1200px;
   }
 
   .wrap{
@@ -47,60 +42,56 @@
   }
   @media(max-width:1100px){.wrap{grid-template-columns:1fr;gap:32px}}
 
-  /* ===== HERO (doble tamaño) ===== */
-  .brand{
-    display:flex;align-items:flex-start;gap:18px;transform-style:preserve-3d;
-  }
+  /* ===== HERO ===== */
+  .brand{display:flex;align-items:flex-start;gap:18px;transform-style:preserve-3d}
   .brand img{
-    height:140px; /* <- antes ~72px: ahora ~2x */
-    width:auto; object-fit:contain; filter:drop-shadow(0 10px 18px rgba(0,0,0,.18));
+    height:110px; /* ↓ un poco más pequeño para evitar distorsión */
+    width:auto; object-fit:contain;
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.18));
     transform:translateZ(40px);
   }
   .hero{transform-style:preserve-3d}
 
   .brand-banner{
     display:inline-block;
-    background:linear-gradient(180deg, var(--brand) 0%, #1f58d6 100%);
+    /* FONDO NEGRO */
+    background:linear-gradient(180deg, #000 0%, #111 100%);
     color:#fff;
     border-radius:18px;
-    padding:18px 26px;
+    padding:16px 22px;
     box-shadow:
-      0 14px 24px rgba(37,99,235,.35),
-      0 2px 0 0 rgba(255,255,255,.2) inset,
-      0 -2px 0 0 rgba(0,0,0,.05) inset,
+      0 14px 24px rgba(0,0,0,.30),
+      0 2px 0 0 rgba(255,255,255,.18) inset,
+      0 -2px 0 0 rgba(0,0,0,.06) inset,
       0 28px 60px rgba(0,0,0,.25);
     font-weight:800;
-    /* Doble tamaño del texto: */
-    font-size:clamp(42px, 7vw, 88px);
-    letter-spacing:.5px;
-    transform:translateZ(55px) rotateX(0.8deg);
+    /* Más compacto + una sola línea */
+    font-size:clamp(36px, 5.6vw, 64px);
+    letter-spacing:.4px;
+    white-space:nowrap;           /* <- en una sola línea */
+    transform:translateZ(55px) rotateX(.6deg);
     position:relative;
   }
   .brand-banner::after{
     content:"";
     position:absolute; inset:0;
     border-radius:18px;
-    background:linear-gradient(180deg, rgba(255,255,255,.25) 0%, transparent 50%);
+    background:linear-gradient(180deg, rgba(255,255,255,.18) 0%, transparent 55%);
     pointer-events:none;
     mix-blend-mode:soft-light;
   }
 
+  /* Slogan en NEGRO y un poquito más grande */
   .brand-sub{
     display:inline-block;
-    margin-top:10px;
-    background:var(--brand-soft);
-    color:#0b2b7a;
+    margin-top:12px;
+    background:transparent;   /* sin pill azul */
+    color:#000;               /* texto negro */
     font-weight:700;
-    border-radius:12px;
-    padding:8px 14px;
-    box-shadow:
-      0 10px 16px rgba(37,99,235,.15),
-      0 1px 0 0 rgba(255,255,255,.7) inset;
     transform:translateZ(35px);
-    font-size:clamp(14px, 2.2vw, 18px);
+    font-size:clamp(16px, 2.0vw, 20px);  /* un poco más grande */
   }
 
-  /* ===== Tarjetas ===== */
   .cards{
     display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     margin-top:16px;transform-style:preserve-3d;
@@ -116,7 +107,7 @@
   .card strong{display:block;margin-bottom:4px}
   .footnote{color:var(--muted);font-size:12px;margin-top:12px}
 
-  /* ===== Panel de login (3D con tilt) ===== */
+  /* ===== Login 3D ===== */
   .tilt{transform-style:preserve-3d; will-change:transform; transition:transform .12s ease}
   .login{
     background:linear-gradient(180deg,var(--panel) 0%,#ffffff 100%);
@@ -127,7 +118,7 @@
       0 1px 0 rgba(255,255,255,.8) inset,
       var(--shadow-md),
       0 60px 120px rgba(0,0,0,.10);
-    transform:translateZ(35px); /* leve elevación por defecto */
+    transform:translateZ(35px);
   }
   .login h2{margin:0 0 18px;font-size:24px;text-align:center;transform:translateZ(10px)}
 
@@ -171,7 +162,7 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- Lado izquierdo: HERO 3D -->
+    <!-- HERO -->
     <section>
       <div class="brand tilt" data-tilt>
         <img src="logologin.png" alt="FX | CAPITAL R.L.">
@@ -189,7 +180,7 @@
       <div class="footnote">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <!-- Panel de login con tilt 3D -->
+    <!-- LOGIN -->
     <section class="login tilt" data-tilt>
       <h2>Iniciar Sesión</h2>
       <div style="margin-bottom:12px; transform:translateZ(10px)">
@@ -214,34 +205,26 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
   <script>
-    /* ===== Tilt 3D sin librerías =====
-       Aplica a cualquier elemento con data-tilt y clase .tilt */
-    const MAX_DEG = 6;  // inclinación máxima
-    const Z_LIFT = 35;  // elevación base (coherente con CSS)
-
+    /* Tilt 3D sin librerías */
+    const MAX_DEG = 6;
+    const Z_LIFT = 35;
     function bindTilt(el){
       let rect = null;
-      function updateRect(){ rect = el.getBoundingClientRect(); }
-      updateRect();
-      window.addEventListener('resize', updateRect);
-
+      const updateRect = () => rect = el.getBoundingClientRect();
+      updateRect(); window.addEventListener('resize', updateRect);
       el.addEventListener('mousemove', (e)=>{
-        const x = (e.clientX - rect.left) / rect.width;   // 0..1
-        const y = (e.clientY - rect.top) / rect.height;   // 0..1
-        const rx = (y - 0.5) * -2 * MAX_DEG;              // rotación X
-        const ry = (x - 0.5) *  2 * MAX_DEG;              // rotación Y
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        const rx = (y - 0.5) * -2 * MAX_DEG;
+        const ry = (x - 0.5) *  2 * MAX_DEG;
         el.style.transform = `translateZ(${Z_LIFT}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
       });
-      el.addEventListener('mouseleave', ()=>{
-        el.style.transform = `translateZ(${Z_LIFT}px) rotateX(0deg) rotateY(0deg)`;
-      });
-      el.addEventListener('mouseenter', ()=>{
-        el.style.transform = `translateZ(${Z_LIFT}px)`;
-      });
+      el.addEventListener('mouseleave', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px) rotateX(0) rotateY(0)`; });
+      el.addEventListener('mouseenter', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px)`; });
     }
     document.querySelectorAll('[data-tilt]').forEach(bindTilt);
 
-    // ===== Config Supabase =====
+    // Supabase
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
