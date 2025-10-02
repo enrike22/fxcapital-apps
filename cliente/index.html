@@ -9,51 +9,38 @@
 <style>
   :root{
     --bg:#0b0b0d; --card:#17191d; --panel:#121318;
-    --outline:rgba(255,255,255,.08); --txt:#f5f7fb; --muted:#9aa1ac;
-    --shadow:0 18px 50px rgba(0,0,0,.45);
+    --outline:rgba(255,255,255,.08); --txt:#f5f7fb; --muted:#9aa1ac; --accent:#bcd0ff;
+    --shadow:0 18px 50px rgba(0,0,0,.45); --ok:#38d39f; --err:#ff4d4f;
   }
   *{box-sizing:border-box} html,body{height:100%}
   body{
-    margin:0;
-    color:var(--txt);
-    font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    margin:0;color:var(--txt);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
     background: radial-gradient(1200px 800px at 12% -25%, #1a1d24 0%, #0b0b0d 55%) fixed;
-    display:flex;justify-content:center;align-items:center;
-    min-height:100vh;
+    display:flex;justify-content:center;align-items:center;min-height:100vh;
   }
-  .wrap{
-    width:min(1100px,94vw);
-    display:grid;grid-template-columns:1.2fr 440px;
-    gap:40px;align-items:center
-  }
+  .wrap{width:min(1100px,94vw);display:grid;grid-template-columns:1.2fr 440px;gap:40px;align-items:center}
   @media(max-width:1000px){.wrap{grid-template-columns:1fr;gap:30px}}
   .brand h1{margin:0;font-weight:800;font-size:clamp(28px,4vw,44px)}
   .sub{color:var(--muted);margin-bottom:16px}
   .cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
   .card{background:var(--card);border:1px solid var(--outline);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
   .card strong{display:block;margin-bottom:4px}
-  .login{
-    background:linear-gradient(180deg,var(--panel) 0%,#0f1116 100%);
-    border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)
-  }
+  .login{background:linear-gradient(180deg,var(--panel) 0%,#0f1116 100%);border:1px solid var(--outline);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
   .login h2{margin:0 0 16px;font-size:22px;text-align:center}
-  .input{
-    width:100%;background:#0f1116;border:1px solid var(--outline);border-radius:12px;
-    color:var(--txt);padding:12px 14px;outline:none
-  }
+  .input{width:100%;background:#0f1116;border:1px solid var(--outline);border-radius:12px;color:var(--txt);padding:12px 14px;outline:none}
   .input:focus{border-color:#2b7cff}
   .row{display:flex;align-items:center;gap:10px}
-  .btn{
-    appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;
-    cursor:pointer;box-shadow:var(--shadow);transition:transform .08s ease
-  }
+  .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:transform .08s ease}
   .btn.primary{background:#fff;color:#000;width:100%}
   .btn:active{transform:translateY(1px)}
   .muted{color:var(--muted)}
   .eye{cursor:pointer;user-select:none;font-size:22px}
   .footnote{color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
-  a{color:#bcd0ff;text-decoration:none}
+  a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
+  .msg{font-size:12px;margin-top:8px}
+  .msg.ok{color:var(--ok)}
+  .msg.err{color:var(--err)}
 </style>
 </head>
 <body>
@@ -84,8 +71,8 @@
           <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
         </div>
         <div style="text-align:right;margin-top:6px">
-          <!-- Sin reset.html: solo aviso -->
-          <a class="muted" href="#" onclick="alert('Solicite el restablecimiento a soporte.');return false;">¿Olvidó su contraseña?</a>
+          <a class="muted" href="#" id="forgotLink">¿Olvidó su contraseña?</a>
+          <div id="forgotMsg" class="msg"></div>
         </div>
       </div>
       <button id="btnLogin" class="btn primary">Iniciar Sesión</button>
@@ -126,6 +113,32 @@
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').onclick = doLogin;
+
+    // Enviar solicitud de restablecimiento a Admin (RPC request_password_reset)
+    async function sendResetRequest(){
+      const msgEl = document.getElementById('forgotMsg');
+      msgEl.className = 'msg'; msgEl.textContent = '';
+      const email = document.getElementById('email').value.trim();
+      if (!email){ msgEl.classList.add('err'); msgEl.textContent = 'Escribe tu correo y vuelve a intentarlo.'; return; }
+
+      try{
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/request_password_reset`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
+          body: JSON.stringify({ p_email: email })
+        });
+        if(!r.ok){
+          const t = await r.text();
+          throw new Error(t || 'No se pudo enviar la solicitud.');
+        }
+        msgEl.classList.add('ok');
+        msgEl.textContent = 'Solicitud enviada. Un administrador te contactará para cambiar tu contraseña.';
+      }catch(e){
+        msgEl.classList.add('err');
+        msgEl.textContent = 'No se pudo enviar la solicitud. Intenta de nuevo.';
+      }
+    }
+    document.getElementById('forgotLink').addEventListener('click', (e)=>{ e.preventDefault(); sendResetRequest(); });
 
     // Permitir Enter para enviar
     document.addEventListener('keydown', (e)=>{
