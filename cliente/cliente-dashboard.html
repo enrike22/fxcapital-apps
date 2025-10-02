@@ -29,11 +29,15 @@
   .brand-wrap{display:flex;flex-direction:column;gap:6px}
   .brand-row{display:flex;align-items:center;gap:18px}
   .brand-logo{
-    width:112px;height:112px;border-radius:16px;object-fit:contain;background:#0c0f13;border:1px solid var(--line);
+    width:112px;height:112px;border-radius:16px;object-fit:contain;
+    background:#fff;               /* <- Fondo blanco para contraste del logo */
+    padding:8px;                   /* <- Respiración interna */
+    border:1px solid var(--line);
     box-shadow: var(--shadow-2), var(--shadow-inset);
   }
   .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
   .brand-sub{margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
+
   .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;color:#0b0c0e;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45)}
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
 
@@ -81,9 +85,9 @@
     <header>
       <div class="brand-wrap">
         <div class="brand-row">
-          <!-- OPCIÓN B: logo en la raíz del sitio -->
+          <!-- Opción B: logo en /logo.png con fallback a GitHub raw -->
           <img
-            src="/logo.png?v=4"
+            src="/logo.png?v=5"
             alt="FX Capital"
             class="brand-logo"
             loading="eager"
@@ -315,7 +319,7 @@
     const months=6, monthly=cap*(rate/6), total=monthly*months;
     document.getElementById('simFinal').textContent=fmtQ(cap+total); document.getElementById('simSum').textContent=fmtQ(total);
     document.getElementById('simNote').textContent=`Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-    const body=document.getElementById('simBody'); body.innerHTML=''; for(let m=1;m<=months;m++){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${m}</td><td>${fmtQ(monthly)}</td>`; body.appendChild(tr); }
+    const body=document.getElementById('simBody'); body.innerHTML=''; for(let m=1;m<=months;m++){ const tr = document.createElement('tr'); tr.innerHTML=`<td>${m}</td><td>${fmtQ(monthly)}</td>`; body.appendChild(tr); }
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
