@@ -19,6 +19,7 @@ button{background:#fff;color:#0b0c0e;border:none;padding:12px 18px;border-radius
 button.ghost{background:#15181d;color:var(--fg);border:1px solid var(--border)}
 button.danger{background:#ff4d4f;color:#fff}
 .small{font-size:13px;color:var(--muted)}
+.error{font-size:13px;color:var(--danger)}
 .nowrap{white-space:nowrap}
 .hidden{display:none}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -50,6 +51,7 @@ tbody tr:hover{background:#0e1116}
     </div>
   </div>
 
+  <!-- LOGIN -->
   <div id="unauth" class="card">
     <h2>Admin — Iniciar sesión</h2>
     <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
@@ -60,25 +62,66 @@ tbody tr:hover{background:#0e1116}
     </form>
   </div>
 
+  <!-- APP -->
   <div id="app" class="hidden">
+
+    <!-- Crear/Editar -->
     <div class="card" id="formCard">
       <h2>Crear / Editar usuario</h2>
       <div class="row">
-        <div><label>Email</label><input id="u_email" placeholder="cliente@demo.com"><div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div></div>
+        <div>
+          <label>Email</label>
+          <input id="u_email" placeholder="cliente@demo.com">
+          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
+        </div>
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
         <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555"></div>
-        <div><label>Contraseña (para el cliente)</label><div class="inline"><input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)"><button type="button" id="togglePass" class="ghost">👁</button></div></div>
-        <div><label>Moneda</label><select id="u_currency"><option>GTQ</option><option>USD</option></select></div>
+
+        <div>
+          <label>Contraseña (para el cliente)</label>
+          <div class="inline">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)">
+            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
+          </div>
+        </div>
+
+        <div><label>Moneda</label>
+          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
+        </div>
         <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01"></div>
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
-        <div><label>Plan</label><select id="u_plan"><option>STANDARD</option><option>PLATINUM</option><option>BLACK</option></select></div>
-        <div><label>Meses de inversión</label><select id="u_months"><option>6</option><option selected>12</option><option>18</option><option>24</option><option>30</option><option>36</option><option>42</option><option>48</option><option>54</option><option>60</option></select></div>
-        <div><label>Tasa semestral (%)</label><input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20, 25"></div>
+
+        <div><label>Plan</label>
+          <select id="u_plan">
+            <option value="STANDARD">Estandar-15%</option>
+            <option value="PLATINUM">Platinum-20%</option>
+            <option value="BLACK">Black-Tasa preferencial</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Meses de inversión</label>
+          <select id="u_months">
+            <option>6</option><option selected>12</option><option>18</option><option>24</option>
+            <option>30</option><option>36</option><option>42</option><option>48</option>
+            <option>54</option><option>60</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tasa semestral (%)</label>
+          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20">
+          <div id="rateError" class="error hidden">la tasa de interés indicada con el plan indicado no coinciden</div>
+          <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
+        </div>
+
         <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
         <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
         <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …"></div>
       </div>
+
       <hr class="sep">
+
       <div class="inline" style="gap:12px">
         <button id="saveBtn" type="button">Guardar</button>
         <button id="clearBtn" type="button" class="ghost">Limpiar</button>
@@ -86,6 +129,7 @@ tbody tr:hover{background:#0e1116}
       </div>
     </div>
 
+    <!-- Lista -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Clientes</h2>
@@ -95,9 +139,18 @@ tbody tr:hover{background:#0e1116}
         <table>
           <thead>
             <tr>
-              <th>Nombre</th><th>Email</th><th>Teléfono</th><th class="nowrap">Fecha ingreso</th>
-              <th>Plan</th><th>Capital</th><th>Banco</th><th class="nowrap">No. cuenta</th>
-              <th class="nowrap">Tipo de cuenta</th><th>Meses</th><th class="nowrap">Tasa %/6m</th><th class="nowrap">Acciones</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th class="nowrap">Fecha ingreso</th>
+              <th>Plan</th>
+              <th>Capital</th>
+              <th>Banco</th>
+              <th class="nowrap">No. cuenta</th>
+              <th class="nowrap">Tipo de cuenta</th>
+              <th>Meses</th>
+              <th class="nowrap">Tasa %/6m</th>
+              <th class="nowrap">Acciones</th>
             </tr>
           </thead>
           <tbody id="users"></tbody>
@@ -105,12 +158,15 @@ tbody tr:hover{background:#0e1116}
       </div>
     </div>
 
+    <!-- Solicitudes -->
     <div class="card">
-      <h2>Solicitudes</h2>
-      <div style="margin-bottom:10px"><button id="btnRefreshNotifs" class="ghost">Refrescar</button></div>
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Solicitudes</h2>
+        <button id="btnRefreshNotifs" class="ghost">Refrescar</button>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Penalización</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Correo</th><th>Tipo</th><th>Acciones</th></tr></thead>
           <tbody id="notifs"></tbody>
         </table>
       </div>
@@ -119,16 +175,22 @@ tbody tr:hover{background:#0e1116}
 </div>
 
 <script>
+/*** SUPABASE CONFIG ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
+
+function headersJSON(){
+  return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json", "Prefer":"return=representation" };
+}
+
+/*** HELPERS UI ***/
 const $ = (id)=> document.getElementById(id);
 const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
-function headersJSON(){ return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json", "Prefer":"return=representation" }; }
 
 /*** LOGIN ***/
 async function doLogin(e){
@@ -149,15 +211,11 @@ async function doLogin(e){
 }
 function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
 
-/*** EDGE: crear Auth ***/
+/*** Edge Functions auxiliares ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
   if(!password) return { ok:true, status:204, json: async()=>({}) };
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
-  return fetch(url, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
-    body: JSON.stringify({ email, password, full_name: fullName })
-  });
+  return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
 }
 async function getAuthUserIdByEmail(email){
   try{
@@ -168,7 +226,7 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
-/*** LISTA — vista filtrada (sin admins); fallback hace join y excluye admins ***/
+/*** LISTA (usa vista filtrada; fallback si no existe) ***/
 let CACHED = [];
 async function listUsers(){
   const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
@@ -177,14 +235,11 @@ async function listUsers(){
   let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
 
   if (r.ok) {
-    CACHED = await r.json();
-    renderUsers(CACHED);
-    return;
+    CACHED = await r.json(); renderUsers(CACHED); return;
   }
 
-  // Fallback: join manual (accounts -> profiles), excluyendo admins
-  CACHED = await loadUsersViaJoinFallback(h);
-  renderUsers(CACHED);
+  // Fallback join manual (sin admins)
+  CACHED = await loadUsersViaJoinFallback(h); renderUsers(CACHED);
 }
 
 async function loadUsersViaJoinFallback(h){
@@ -246,7 +301,7 @@ $("q")?.addEventListener("input",(e)=>{
   renderUsers(filt);
 });
 
-/*** EDITAR ***/
+/*** Editar ***/
 function editClient(x){
   $("u_email").value = x.email || "";
   $("u_name").value  = x.full_name || "";
@@ -261,10 +316,36 @@ function editClient(x){
   $("u_bank_account").value= x.bank_account ?? "";
   $("u_bank_account_type").value = x.bank_account_type ?? "";
   $("u_pass").value = "";
+  validateRatePlan(); // recalcula error visual
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
-/*** GUARDAR ***/
+/*** Validación Plan vs Tasa ***/
+function validateRatePlan(){
+  const plan = $("u_plan").value;
+  const rateStr = $("u_rate").value;
+  const rate = rateStr === "" ? null : Number(rateStr);
+  const err = $("rateError");
+
+  // autocompletar por plan si vacío
+  if(rate === null){
+    if(plan === "STANDARD") $("u_rate").value = 15;
+    if(plan === "PLATINUM") $("u_rate").value = 20;
+  }
+
+  const finalRate = Number($("u_rate").value || NaN);
+  let isValid = true;
+  if(plan === "STANDARD") isValid = (finalRate === 15);
+  else if(plan === "PLATINUM") isValid = (finalRate === 20);
+  else if(plan === "BLACK") isValid = true; // sin restricción
+
+  show(err, !isValid);
+  return isValid;
+}
+$("u_plan").addEventListener("change", validateRatePlan);
+$("u_rate").addEventListener("input", validateRatePlan);
+
+/*** Guardar ***/
 async function saveUser(){
   const email    = $("u_email").value.trim();
   const fullName = $("u_name").value.trim();
@@ -287,6 +368,7 @@ async function saveUser(){
     if(!email) throw new Error("Email requerido");
     if(!fullName) throw new Error("Nombre requerido");
     if(isNaN(capital)||capital<0) throw new Error("Capital inválido");
+    if(!validateRatePlan()) throw new Error("La tasa no coincide con el plan.");
 
     // Auth: crear si hace falta y hay contraseña
     let uid = await getAuthUserIdByEmail(email);
@@ -298,28 +380,26 @@ async function saveUser(){
     }
     if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
-    // Upsert BD (RPC canónico)
+    // RPC canónico (12 parámetros) — evita PGRST202
     const body = {
-      p_email: email, p_full_name: fullName, p_currency: currency, p_capital: capital,
-      p_joined_at: joined, p_plan: plan, p_bank_name: bankName || null, p_bank_account: bankAcct || null,
-      p_invest_months: months, p_interest_pct: rate
+      p_email: email,
+      p_full_name: fullName,
+      p_currency: currency,
+      p_capital: capital,
+      p_joined_at: joined,
+      p_plan: plan,
+      p_bank_name: bankName || null,
+      p_bank_account: bankAcct || null,
+      p_invest_months: months,
+      p_interest_pct: rate,
+      p_phone: phone || null,
+      p_bank_account_type: bankType || null
     };
-    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, { method:"POST", headers: headersJSON(), body: JSON.stringify(body) });
-    if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
-    // Extras: tipo de cuenta y teléfono
-    try{
-      const rV = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(email)}&select=account_id,user_id`, { headers: headersJSON(), cache:"no-store" });
-      const rows = rV.ok ? await rV.json() : [];
-      const accId = rows?.[0]?.account_id;
-      const uId   = rows?.[0]?.user_id;
-      if (accId){
-        await fetch(`${BASE}/accounts?id=eq.${accId}`, { method:"PATCH", headers: headersJSON(), body: JSON.stringify({ bank_account_type: bankType || null }) });
-      }
-      if (uId){
-        await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uId)}`, { method:"PATCH", headers: headersJSON(), body: JSON.stringify({ phone: phone || null, full_name: fullName || null }) });
-      }
-    }catch{}
+    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+      method:"POST", headers: headersJSON(), body: JSON.stringify(body)
+    });
+    if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
     msgEl.textContent = "Guardado";
     await listUsers();
@@ -329,7 +409,7 @@ async function saveUser(){
   }
 }
 
-/*** ELIMINAR ***/
+/*** Eliminar ***/
 async function deleteClient(x){
   const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
@@ -337,19 +417,16 @@ async function deleteClient(x){
   const jh = headersJSON();
   const mustOk = async (resp, label) => { if (!resp.ok) throw new Error(`Error al ${label}: ${(await resp.text().catch(()=>'')) || resp.status}`); };
 
-  // IDs de respaldo
   if (!x.user_id || !x.account_id){
     const r = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, { headers: jh, cache:"no-store" });
     if (r.ok){ const rows = await r.json(); x.user_id = x.user_id || rows?.[0]?.user_id; x.account_id = x.account_id || rows?.[0]?.account_id; }
   }
 
-  // RPC cascada (si existe)
   try{
     const r = await fetch(`${RPC}/admin_delete_user_cascade`, { method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email, p_dry_run: false }) });
     if (r.status !== 404) await mustOk(r, "RPC admin_delete_user_cascade");
     else throw new Error("sin RPC");
   }catch{
-    // fallback manual
     if (x.account_id) {
       await mustOk(await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar withdrawal_requests");
       await mustOk(await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar admin_notifications");
@@ -361,7 +438,6 @@ async function deleteClient(x){
     }
   }
 
-  // Auth (best effort)
   try{
     let uid = x.user_id || await getAuthUserIdByEmail(x.email);
     await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
@@ -370,22 +446,29 @@ async function deleteClient(x){
     });
   }catch{}
 
-  // UI
   CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
   renderUsers(CACHED);
   await listUsers();
   alert("Cliente eliminado correctamente.");
 }
 
-/*** NOTIFICACIONES ***/
+/*** Solicitudes (incluye reset de contraseña) ***/
 async function loadNotifs(){
-  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, { headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }, cache:"no-store" });
+  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
+    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }, cache:"no-store"
+  });
   const rows = await r.json();
   const tb = $("notifs"); tb.innerHTML="";
   rows.forEach(x=>{
     const p = x.payload || {};
+    const kind = p.kind || '—';
+    const email = p.email || p.user_email || '—';
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${new Date(x.created_at).toLocaleString()}</td><td>${p.account_id||'—'}</td><td>${p.kind||'—'}</td><td>${(p.penalty_pct??0)}%</td><td><span class="chip">—</span></td>`;
+    tr.innerHTML = `
+      <td>${new Date(x.created_at).toLocaleString()}</td>
+      <td>${email}</td>
+      <td>${kind}</td>
+      <td><span class="chip">—</span></td>`;
     tb.appendChild(tr);
   });
 }
@@ -399,12 +482,19 @@ async function initApp(){
     show($("app"), false); show($("logoutBtn"), false); show($("unauth"), true);
   }
 }
+
+/*** BINDINGS ***/
 document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
-  $("togglePass").addEventListener("click", ()=>{ const inp=$("u_pass"); inp.type = (inp.type === "password") ? "text" : "password"; });
+  $("togglePass").addEventListener("click", ()=> {
+    const inp = $("u_pass"); inp.type = (inp.type === "password") ? "text" : "password";
+  });
   $("saveBtn").addEventListener("click", saveUser);
-  $("clearBtn").addEventListener("click", ()=>{ ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value=""); $("u_currency").value="GTQ"; $("u_plan").value="STANDARD"; $("u_months").value="12"; $("saveMsg").textContent=""; });
+  $("clearBtn").addEventListener("click", ()=>{
+    ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value="");
+    $("u_currency").value="GTQ"; $("u_plan").value="STANDARD"; $("u_months").value="12"; $("saveMsg").textContent="";
+    validateRatePlan(); });
   $("btnRefreshNotifs").addEventListener("click", loadNotifs);
   $("btnRefreshUsers").addEventListener("click", listUsers);
   initApp();
