@@ -8,37 +8,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Paleta monocroma y efectos 3D */
-    --bg0:#000;            /* base */
-    --bg1:#0b0c0e;         /* panel base */
-    --bg2:#111317;         /* card base */
-    --bg3:#14171c;         /* elevación */
-    --line:#1f232a;        /* borde neutro */
-    --line-hi:#2c313a;     /* borde alto/brillo leve */
-    --muted:#a8b0bc;       /* texto secundario */
-    --txt:#f7f9fc;         /* texto principal */
-
-    /* Degradados (solo grises/negros) */
+    --bg0:#000; --bg1:#0b0c0e; --bg2:#111317; --bg3:#14171c;
+    --line:#1f232a; --line-hi:#2c313a; --muted:#a8b0bc; --txt:#f7f9fc;
     --grad-app: radial-gradient(1200px 800px at 10% -20%, #12151a 0%, #0b0c0e 45%, #060708 100%);
     --grad-panel: linear-gradient(180deg, #0f1114 0%, #0b0d10 100%);
     --grad-card: linear-gradient(180deg, #14171c 0%, #0f1216 100%);
-
-    /* Sombras en capas (3D) */
     --shadow-1: 0 10px 25px rgba(0,0,0,.45);
     --shadow-2: 0 18px 40px rgba(0,0,0,.55);
     --shadow-inset: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.6);
-
-    /* Radios y brillos */
-    --radius:18px;
-    --glow-soft: 0 0 0 1px rgba(255,255,255,.04), 0 30px 80px rgba(0,0,0,.55);
+    --radius:18px; --glow-soft: 0 0 0 1px rgba(255,255,255,.04), 0 30px 80px rgba(0,0,0,.55);
     --gloss: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
     --ring: 0 0 0 2px rgba(255,255,255,.08);
-
-    /* Controles */
-    --chip:#15181d;
-    --danger:#ff4d4f;
+    --chip:#15181d; --danger:#ff4d4f;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
@@ -49,178 +31,94 @@
   }
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
-  /* ====== HEADER (logo + títulos) ====== */
+  /* ====== HEADER ====== */
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-  .brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;gap:10px}
+  .brand-line{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 
-  /* Logo al doble de tamaño, sin deformación */
   .brand-logo{
-    width:92px;            /* antes ~46px -> ahora el doble */
-    height:92px;
-    object-fit:contain;    /* evita distorsión */
-    border-radius:16px;
-    background:none;
+    width:92px; height:92px; object-fit:contain;
+    border-radius:16px; background:none;
     border:1px solid var(--line);
     box-shadow: var(--shadow-2), var(--shadow-inset);
   }
-
-  .brand-title{
-    margin:0; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
-  }
-  /* “FX | CAPITAL R.L.” al doble */
   .brand-name{
-    font-weight:800; letter-spacing:.4px;
-    font-size:clamp(34px, 5.8vw, 72px);  /* x2 del anterior */
+    margin:0; font-weight:800; letter-spacing:.4px;
+    font-size:clamp(34px, 5.8vw, 72px);
     text-shadow:0 1px 0 rgba(255,255,255,.06);
   }
-  /* “— Panel del Cliente” mantiene tamaño similar al previo */
   .brand-sub{
-    font-weight:700; color:var(--muted);
+    margin:0; font-weight:700; color:var(--muted);
     font-size:clamp(18px, 2.2vw, 28px);
+    padding-left:108px;   /* para alinearlo visualmente con el texto, dejando espacio del logo */
   }
   @media (max-width:640px){
     .brand-logo{width:72px;height:72px}
     .brand-name{font-size:clamp(28px, 6vw, 52px)}
-    .brand-sub{font-size:clamp(16px, 3.4vw, 22px)}
+    .brand-sub{font-size:clamp(16px, 3.4vw, 22px); padding-left:0}
   }
 
   /* ====== Botones 3D ====== */
   .btn{
     appearance:none;border:0;border-radius:999px;padding:12px 18px;
     font-weight:700;cursor:pointer;color:#0b0c0e;background:#ffffff;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.6),
-      0 8px 18px rgba(0,0,0,.45),
-      0 2px 0 rgba(255,255,255,.15);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 8px 18px rgba(0,0,0,.45), 0 2px 0 rgba(255,255,255,.15);
     transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
   }
   .btn:hover{ transform: translateY(-1px); box-shadow: 0 12px 26px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.55); }
   .btn:active{ transform: translateY(0); box-shadow: 0 6px 14px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.5); }
-
   .btn.secondary{
     color:var(--txt);
-    background:
-      var(--gloss),
-      linear-gradient(180deg, #1a1d23 0%, #0f1216 100%);
-    border:1px solid var(--line);
-    box-shadow: var(--shadow-1), var(--shadow-inset);
+    background: var(--gloss), linear-gradient(180deg, #1a1d23 0%, #0f1216 100%);
+    border:1px solid var(--line); box-shadow: var(--shadow-1), var(--shadow-inset);
   }
   .btn.secondary:hover{ box-shadow: var(--shadow-2), var(--shadow-inset), var(--ring) }
   .btn.danger{
-    color:#fff;
-    background:
-      var(--gloss),
-      linear-gradient(180deg, #bb3335 0%, #941f21 100%);
-    border:1px solid #651b1d;
-    box-shadow: 0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05);
+    color:#fff; background: var(--gloss), linear-gradient(180deg, #bb3335 0%, #941f21 100%);
+    border:1px solid #651b1d; box-shadow: 0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05);
   }
 
-  /* ====== Paneles y Cards (3D/gris) ====== */
-  .panel{
-    background: var(--grad-panel);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--glow-soft), var(--shadow-inset);
-  }
-  .card{
-    background: var(--grad-card);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-1), var(--shadow-inset);
-  }
+  /* ====== Paneles / Cards ====== */
+  .panel{ background: var(--grad-panel); border:1px solid var(--line); border-radius: var(--radius); box-shadow: var(--glow-soft), var(--shadow-inset) }
+  .card{ background: var(--grad-card); border:1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-1), var(--shadow-inset) }
   .section{padding:24px}
 
-  /* ====== Grid ====== */
   .grid{display:grid;gap:16px}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
   @media (max-width:920px){ .grid.cols-3{grid-template-columns:1fr 1fr} }
   @media (max-width:680px){ .grid.cols-3{grid-template-columns:1fr} header{align-items:flex-start;gap:16px} }
 
-  /* ====== Key/Value ====== */
   .group{padding:18px 20px; position:relative; overflow:hidden}
-  .group::before{content:""; position:absolute; inset:0; pointer-events:none;
-    background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%);
-  }
-  .k{
-    display:inline-block;font-size:13px;color:var(--muted);
-    background:#0f1216;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px
-  }
+  .group::before{content:""; position:absolute; inset:0; pointer-events:none; background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%)}
+  .k{display:inline-block;font-size:13px;color:var(--muted);background:#0f1216;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
   .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
 
-  /* ====== Tablas ====== */
   .table{width:100%;border-collapse:separate;border-spacing:0}
   .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
-  .table th{
-    color:var(--muted);font-weight:700;text-align:left;
-    background: linear-gradient(180deg, #101318, #0c0f13);
-    position:sticky; top:0; z-index:1;
-    box-shadow: inset 0 -1px 0 rgba(255,255,255,.03);
-  }
+  .table th{color:var(--muted);font-weight:700;text-align:left;background: linear-gradient(180deg, #101318, #0c0f13); position:sticky; top:0; z-index:1; box-shadow: inset 0 -1px 0 rgba(255,255,255,.03)}
   .sum-row td{font-weight:800}
   .note{color:var(--muted);font-size:13px;margin-top:10px}
 
-  /* ====== Dialog (3D) ====== */
-  dialog{
-    border:0;border-radius:22px;
-    background:
-      var(--gloss),
-      linear-gradient(180deg,#14161b 0%, #0f1116 100%);
-    color:var(--txt);width:min(840px,92vw);
-    box-shadow: 0 24px 64px rgba(0,0,0,.65), var(--shadow-inset);
-  }
+  dialog{border:0;border-radius:22px;background: var(--gloss), linear-gradient(180deg,#14161b 0%, #0f1116 100%); color:var(--txt); width:min(840px,92vw); box-shadow: 0 24px 64px rgba(0,0,0,.65), var(--shadow-inset)}
   dialog::backdrop{background:rgba(0,0,0,.6)}
-  .modal-h{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:18px 22px;border-bottom:1px solid var(--line);
-    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
-  }
+  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0))}
   .modal-b{padding:18px 22px}
 
-  /* ====== Pills / Inputs ====== */
-  .pill{
-    border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;user-select:none;
-    background: linear-gradient(180deg,#121419,#0f1116);
-    box-shadow: var(--shadow-inset);
-    transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
-  }
+  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;user-select:none;background: linear-gradient(180deg,#121419,#0f1116);box-shadow: var(--shadow-inset);transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease}
   .pill:hover{ transform: translateY(-1px); box-shadow: var(--ring), var(--shadow-inset) }
   .pill.selected{ border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset, var(--shadow-inset) }
 
-  .input, textarea{
-    width:100%;border:1px solid var(--line);background:#0f1116;color:#f5f7fb;
-    border-radius:12px;padding:12px 14px;outline:none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-    transition: box-shadow .12s ease, border-color .12s ease;
-  }
-  .input:focus, textarea:focus{
-    border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.07);
-  }
+  .input, textarea{width:100%;border:1px solid var(--line);background:#0f1116;color:#f5f7fb;border-radius:12px;padding:12px 14px;outline:none;box-shadow: inset 0 1px 0 rgba(255,255,255,.03);transition: box-shadow .12s ease, border-color .12s ease}
+  .input:focus, textarea:focus{border-color:#3a3f48; box-shadow: 0 0 0 2px rgba(255,255,255,.07)}
   textarea{min-height:120px;resize:vertical}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){ .row{grid-template-columns:1fr} }
 
-  /* ====== Switch ====== */
-  .switch{
-    --w:58px; --h:32px; --knob:26px;
-    inline-size:var(--w); block-size:var(--h);
-    background: linear-gradient(180deg,#1b1f26,#0f1216);
-    border-radius:999px;border:1px solid var(--line);position:relative;cursor:pointer;transition:.2s ease;display:inline-block;
-    box-shadow: var(--shadow-inset);
-  }
-  .switch::after{
-    content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;
-    background: linear-gradient(180deg,#ffffff,#d9d9d9);
-    top:50%; left:3px; translate:0 -50%;
-    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.6);
-    transition:.2s ease;
-  }
-  .switch.on{
-    background: linear-gradient(180deg,#232832,#14171d);
-    box-shadow: 0 0 0 2px rgba(255,255,255,.07) inset, var(--shadow-inset);
-  }
+  .switch{--w:58px; --h:32px; --knob:26px; inline-size:var(--w); block-size:var(--h); background: linear-gradient(180deg,#1b1f26,#0f1216); border-radius:999px;border:1px solid var(--line);position:relative;cursor:pointer;transition:.2s ease;display:inline-block;box-shadow: var(--shadow-inset)}
+  .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background: linear-gradient(180deg,#ffffff,#d9d9d9); top:50%; left:3px; translate:0 -50%; box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.6); transition:.2s ease}
+  .switch.on{background: linear-gradient(180deg,#232832,#14171d); box-shadow: 0 0 0 2px rgba(255,255,255,.07) inset, var(--shadow-inset)}
   .switch.on::after{ left:calc(var(--w) - var(--knob) - 3px) }
 
-  /* ====== Bloqueo y Pwd ====== */
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
   #forcePwdDlg{border:0;border-radius:22px;background: linear-gradient(180deg,#13161b 0%, #0e1014 100%); color:var(--txt); width:min(840px,92vw)}
@@ -228,14 +126,7 @@
 
   .pwd-field{position:relative}
   .pwd-field .input{padding-right:56px}
-  .eye-btn{
-    position:absolute; right:8px; top:50%; transform:translateY(-50%);
-    width:48px; height:48px; border-radius:14px;
-    border:1px solid var(--line);
-    background: linear-gradient(180deg,#121419,#0f1116);
-    color:#fff; display:grid; place-items:center; cursor:pointer;
-    box-shadow: var(--shadow-inset);
-  }
+  .eye-btn{position:absolute; right:8px; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:14px;border:1px solid var(--line); background: linear-gradient(180deg,#121419,#0f1116); color:#fff; display:grid; place-items:center; cursor:pointer; box-shadow: var(--shadow-inset)}
   .eye-btn svg{width:28px; height:28px}
   .input.invalid{border-color:var(--danger) !important}
   .err{color:var(--danger); font-size:12px; margin-top:6px}
@@ -245,12 +136,14 @@
   <div class="wrap" id="appWrap">
     <header>
       <div class="brand">
-        <!-- Ajusta la ruta del logo si está en otro lugar -->
-        <img class="brand-logo" src="cliente/logo_centered_256px.png" alt="FX Capital" />
-        <h1 class="brand-title">
-          <span class="brand-name">FX | CAPITAL R.L.</span>
-          <span class="brand-sub">— Panel del Cliente</span>
-        </h1>
+        <div class="brand-line">
+          <!-- Ruta ABSOLUTA; si falla, cambia a relativa automáticamente -->
+          <img class="brand-logo" src="/cliente/logo.png"
+               alt="FX Capital"
+               onerror="this.onerror=null; this.src='./cliente/logo.png';" />
+          <h1 class="brand-name">FX | CAPITAL R.L.</h1>
+        </div>
+        <h2 class="brand-sub">— Panel del Cliente</h2>
       </div>
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
     </header>
@@ -294,7 +187,6 @@
       <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
         <div class="group card"><span class="k">Capital a simular (Q)</span>
-          <!-- mínimo Q 2000 -->
           <input id="simCapital" class="input" type="number" min="2000" placeholder="Ej. 40,000" />
         </div>
         <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
@@ -314,10 +206,9 @@
     </section>
   </div>
 
-  <!-- BLOQUEO (cuando se exige cambio de contraseña) -->
   <div class="blocker" id="panelBlocker"></div>
 
-  <!-- MODAL RETIRO -->
+  <!-- MODALES (sin cambios funcionales) -->
   <dialog id="wdlg">
     <div class="modal-h">
       <div style="font-weight:800">Solicitud de retiro</div>
@@ -345,12 +236,10 @@
           <textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea>
         </div>
       </div>
-
       <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
         <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0" title="Retirar todo mi capital"></div>
         <div>Retirar todo mi capital</div>
       </div>
-
       <div class="actions">
         <button class="btn secondary" id="wCancel">Cancelar</button>
         <button class="btn" id="wSend">Enviar solicitud</button>
@@ -358,12 +247,10 @@
     </div>
   </dialog>
 
-  <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
   <dialog id="forcePwdDlg">
     <div class="modal-h"><div style="font-weight:800">BIENVENIDO A FX|CAPITAL R.L.</div></div>
     <div class="modal-b">
       <p class="muted" style="margin-top:0">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
-
       <div class="row">
         <div>
           <div class="k">Nueva contraseña</div>
@@ -382,7 +269,6 @@
           <div id="errNew2" class="err" role="alert" aria-live="polite" style="display:none"></div>
         </div>
       </div>
-
       <div class="actions" style="margin-top:28px">
         <button class="btn danger" id="logoutNow">Salir sin cambiar</button>
         <button class="btn" id="savePwd">Guardar y continuar</button>
@@ -402,12 +288,7 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  function nextMonthSameDay(d){
-    const x=clampDate(d);
-    const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
-    while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); }
-    t.setHours(0,0,0,0); return t;
-  }
+  function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); } t.setHours(0,0,0,0); return t; }
   function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
   function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
   function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
@@ -470,26 +351,15 @@
     paintWeeks(acc);
   }
 
-  // ===== RETIROS =====
   const dlg = document.getElementById('wdlg');
   let withdrawType='early';
-  function markPill(){
-    $('#optEarly').classList.toggle('selected', withdrawType==='early');
-    $('#optEarly').setAttribute('aria-pressed', String(withdrawType==='early'));
-    $('#optHealth').classList.toggle('selected', withdrawType==='health');
-    $('#optHealth').setAttribute('aria-pressed', String(withdrawType==='health'));
-  }
+  function markPill(){ $('#optEarly').classList.toggle('selected', withdrawType==='early'); $('#optEarly').setAttribute('aria-pressed', String(withdrawType==='early')); $('#optHealth').classList.toggle('selected', withdrawType==='health'); $('#optHealth').setAttribute('aria-pressed', String(withdrawType==='health')); }
   function selectType(t){ withdrawType=t; markPill(); }
-  function toggleSwitchAll(force){
-    const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on');
-    sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on;
-  }
+  function toggleSwitchAll(force){ const sw=$('#switchAll'); const on=(typeof force==='boolean')? force : !sw.classList.contains('on'); sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on)); $('#wAmount').disabled=on; }
 
-  // Enviar solicitud por Edge Function (Resend)
   async function enviarSolicitudRetiro(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
-
     const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
     if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
 
@@ -506,196 +376,46 @@
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
 
     const { data, error } = await sb.functions.invoke('send-withdrawal-email', {
-      body: {
-        amount,
-        reason,
-        full_withdrawal: all,
-        account_id: acc?.id || null,
-        user_email: session.user.email,
-        user_name: $('#valName')?.textContent || ''
-      }
+      body: { amount, reason, full_withdrawal: all, account_id: acc?.id || null, user_email: session.user.email, user_name: $('#valName')?.textContent || '' }
     });
 
-    if(error){
-      alert('No se pudo enviar la solicitud.\n' + (error.message || JSON.stringify(error)));
-      return;
-    }
-
+    if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message || JSON.stringify(error))); return; }
     alert('Solicitud enviada. Te escribiremos pronto.');
-    dlg.close();
-    $('#wAmount').value = '';
-    $('#wReason').value = '';
-    toggleSwitchAll(false);
+    dlg.close(); $('#wAmount').value = ''; $('#wReason').value = ''; toggleSwitchAll(false);
   }
 
-  // ===== Cambio de contraseña forzado =====
   const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
   const __fxpwd_blocker  = document.getElementById('panelBlocker');
+  function __fxpwd_lockPanel(lock){ if(!__fxpwd_blocker) return; __fxpwd_blocker.classList.toggle('on', !!lock); document.querySelectorAll('button,input,textarea,select').forEach(el=>{ if(__fxpwd_forceDlg && el.closest('#forcePwdDlg')) return; el.disabled = !!lock; }); }
+  function __fxpwd_enforce(){ __fxpwd_lockPanel(true); if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal(); }
 
-  function __fxpwd_lockPanel(lock){
-    if(!__fxpwd_blocker) return;
-    __fxpwd_blocker.classList.toggle('on', !!lock);
-    document.querySelectorAll('button,input,textarea,select').forEach(el=>{
-      if(__fxpwd_forceDlg && el.closest('#forcePwdDlg')) return;
-      el.disabled = !!lock;
-    });
-  }
-  function __fxpwd_enforce(){
-    __fxpwd_lockPanel(true);
-    if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
-  }
+  const __eyeSVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/></svg>`;
+  const __eyeOffSVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/><path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/><path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/></svg>`;
+  function __bindPwdEye(inputId, btnId){ const inp = document.getElementById(inputId); const btn = document.getElementById(btnId); if(!inp || !btn) return; btn.innerHTML = __eyeSVG; btn.addEventListener('click', ()=>{ const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; btn.setAttribute('aria-pressed', String(show)); btn.innerHTML = show ? __eyeOffSVG : __eyeSVG; }); }
+  function __fxpwd_setError(inputEl, errEl, msg){ if(!inputEl || !errEl) return; if(msg){ inputEl.classList.add('invalid'); errEl.textContent = msg; errEl.style.display = 'block'; }else{ inputEl.classList.remove('invalid'); errEl.textContent = ''; errEl.style.display = 'none'; } }
+  function __fxpwd_validate(){ const p1 = (document.getElementById('newPwd')?.value || '').trim(); const p2 = (document.getElementById('newPwd2')?.value || '').trim(); const in1 = document.getElementById('newPwd'); const in2 = document.getElementById('newPwd2'); const e1  = document.getElementById('errNew'); const e2  = document.getElementById('errNew2'); let ok = true; if(p1.length < 8){ __fxpwd_setError(in1,e1,'La contraseña debe tener al menos 8 caracteres.'); ok = false; }else{ __fxpwd_setError(in1,e1,''); } if(p2.length === 0){ __fxpwd_setError(in2,e2,'Confirme su contraseña.'); ok = false; }else if(p1 !== p2){ __fxpwd_setError(in2,e2,'Las contraseñas no coinciden.'); ok = false; }else{ __fxpwd_setError(in2,e2,''); } return ok; }
+  async function __fxpwd_save(){ if(!__fxpwd_validate()) return; const p1 = (document.getElementById('newPwd')?.value || '').trim(); const { data:{ session } } = await sb.auth.getSession(); if(!session){ window.location.href = BASE_URL; return; } const up = await sb.auth.updateUser({ password:p1 }); if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; } const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id); if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); } __fxpwd_forceDlg?.close(); __fxpwd_lockPanel(false); alert('¡Contraseña actualizada! Bienvenido al panel.'); }
+  async function __fxpwd_logout(){ await sb.auth.signOut(); window.location.href = BASE_URL; }
 
-  const __eyeSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
-  <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-  const __eyeOffSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-  function __bindPwdEye(inputId, btnId){
-    const inp = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
-    if(!inp || !btn) return;
-    btn.innerHTML = __eyeSVG;
-    btn.addEventListener('click', ()=>{
-      const show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      btn.setAttribute('aria-pressed', String(show));
-      btn.innerHTML = show ? __eyeOffSVG : __eyeSVG;
-    });
-  }
+  function autoPlanAndRate(capital){ if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 }; if(capital >= 250000) return { name:'PLATINUM (20% semestral)', rate:0.20 }; return { name:'NO ELEGIBLE', rate:0 }; }
+  function simulate(){ const cap = Number(document.getElementById('simCapital').value || 0); if(cap < 2000){ alert('El capital mínimo para simular es Q 2,000.'); return; } const {name, rate} = autoPlanAndRate(cap); document.getElementById('simPlan').textContent = name; const months = 6; const monthlyInterest = cap * (rate/6); const total = monthlyInterest * months; document.getElementById('simFinal').textContent = fmtQ(cap + total); document.getElementById('simSum').textContent   = fmtQ(total); document.getElementById('simNote').textContent  = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`; const body = document.getElementById('simBody'); body.innerHTML = ''; for(let m=1;m<=months;m++){ const tr = document.createElement('tr'); tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`; body.appendChild(tr); } }
 
-  function __fxpwd_setError(inputEl, errEl, msg){
-    if(!inputEl || !errEl) return;
-    if(msg){
-      inputEl.classList.add('invalid');
-      errEl.textContent = msg;
-      errEl.style.display = 'block';
-    }else{
-      inputEl.classList.remove('invalid');
-      errEl.textContent = '';
-      errEl.style.display = 'none';
-    }
-  }
-  function __fxpwd_validate(){
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
-    const p2 = (document.getElementById('newPwd2')?.value || '').trim();
-    const in1 = document.getElementById('newPwd');
-    const in2 = document.getElementById('newPwd2');
-    const e1  = document.getElementById('errNew');
-    const e2  = document.getElementById('errNew2');
-
-    let ok = true;
-    if(p1.length < 8){
-      __fxpwd_setError(in1,e1,'La contraseña debe tener al menos 8 caracteres.');
-      ok = false;
-    }else{
-      __fxpwd_setError(in1,e1,'');
-    }
-    if(p2.length === 0){
-      __fxpwd_setError(in2,e2,'Confirme su contraseña.');
-      ok = false;
-    }else if(p1 !== p2){
-      __fxpwd_setError(in2,e2,'Las contraseñas no coinciden.');
-      ok = false;
-    }else{
-      __fxpwd_setError(in2,e2,'');
-    }
-    return ok;
-  }
-
-  async function __fxpwd_save(){
-    if(!__fxpwd_validate()) return;
-
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.href = BASE_URL; return; }
-
-    const up = await sb.auth.updateUser({ password:p1 });
-    if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
-
-    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
-    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
-
-    __fxpwd_forceDlg?.close();
-    __fxpwd_lockPanel(false);
-    alert('¡Contraseña actualizada! Bienvenido al panel.');
-  }
-
-  async function __fxpwd_logout(){
-    await sb.auth.signOut();
-    window.location.href = BASE_URL;
-  }
-
-  /* ======= SIMULADOR (Q2000 mínimo) ======= */
-  function autoPlanAndRate(capital){
-    if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
-    if(capital >= 250000)                     return { name:'PLATINUM (20% semestral)', rate:0.20 };
-    return { name:'NO ELEGIBLE', rate:0 };
-  }
-  function simulate(){
-    const cap = Number(document.getElementById('simCapital').value || 0);
-    if(cap < 2000){
-      alert('El capital mínimo para simular es Q 2,000.');
-      return;
-    }
-    const {name, rate} = autoPlanAndRate(cap);
-    document.getElementById('simPlan').textContent = name;
-
-    const months = 6;
-    const monthlyInterest = cap * (rate/6);
-    const total = monthlyInterest * months;
-
-    document.getElementById('simFinal').textContent = fmtQ(cap + total);
-    document.getElementById('simSum').textContent   = fmtQ(total);
-    document.getElementById('simNote').textContent  = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-
-    const body = document.getElementById('simBody');
-    body.innerHTML = '';
-    for(let m=1;m<=months;m++){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`;
-      body.appendChild(tr);
-    }
-  }
-
-  // ===== INIT =====
   document.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
-
     document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
     document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
     document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
-
     document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
     document.getElementById('switchAll').addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSwitchAll(); } });
-
     document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
     document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
-    ['optEarly','optHealth'].forEach(id=>{
-      document.getElementById(id).addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); document.getElementById(id).click(); } });
-    });
-    selectType('early');
-
+    ['optEarly','optHealth'].forEach(id=>{ document.getElementById(id).addEventListener('keydown', e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); document.getElementById(id).click(); } }); });
     document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
     document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
-
-    ['newPwd','newPwd2'].forEach(id=>{
-      document.getElementById(id)?.addEventListener('input', __fxpwd_validate);
-      document.getElementById(id)?.addEventListener('blur', __fxpwd_validate);
-    });
-
-    __bindPwdEye('newPwd','eyeNew');
-    __bindPwdEye('newPwd2','eyeNew2');
-
-    /* Listener del botón Calcular */
+    ['newPwd','newPwd2'].forEach(id=>{ document.getElementById(id)?.addEventListener('input', __fxpwd_validate); document.getElementById(id)?.addEventListener('blur', __fxpwd_validate); });
+    __bindPwdEye('newPwd','eyeNew'); __bindPwdEye('newPwd2','eyeNew2');
     document.getElementById('btnCalc').addEventListener('click', simulate);
-
     loadHeader();
   });
   </script>
