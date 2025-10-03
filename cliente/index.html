@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -55,16 +55,7 @@
   .forgot{ display:block; margin:10px 0 0; text-align:right; color:#3d67ff; text-decoration:none; font-size:14px; }
   .btn{ width:100%; margin-top:14px; appearance:none; border:0; background:#0b0b0b; color:#fff; font-weight:800;
         padding:13px 16px; border-radius:12px; cursor:pointer; box-shadow:0 10px 28px rgba(0,0,0,.35); }
-  .btn[disabled]{ opacity:.7; cursor:not-allowed; }
   .hint{ font-size:13px; color:#9aa1ac; margin-top:6px; text-align:center; } .err{ color:#c1121f; }
-
-  /* Modal */
-  dialog{ border:0; border-radius:16px; width:min(520px, 92vw); padding:0; overflow:hidden; box-shadow: 0 40px 120px rgba(0,0,0,.35); }
-  dialog::backdrop{ background:rgba(0,0,0,.35); }
-  .modal-head{ padding:18px 22px; border-bottom:1px solid #eceff5; font-weight:800; }
-  .modal-body{ padding:18px 22px; }
-  .modal-actions{ padding:16px 22px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #eceff5; }
-  .btn.ghost{ background:#fff; color:#111; border:1px solid #e6e8ee; box-shadow:none; }
 
   @media (max-width:980px){
     .wrap{ grid-template-columns:1fr; row-gap:28px; padding:28px 16px 40px; }
@@ -112,39 +103,7 @@
     </section>
   </div>
 
-  <!-- Modal de recuperación -->
-  <dialog id="forgotDlg">
-    <div class="modal-head">Recuperación de contraseña</div>
-    <div class="modal-body">
-      <p style="margin-top:0;color:#444">
-        Entre en contacto con la empresa para solicitar su cambio de contraseña.
-        Complete el siguiente formulario y nos pondremos en contacto.
-      </p>
-
-      <div class="field">
-        <div class="label">Correo</div>
-        <input id="fp_email" class="input" type="email" placeholder="tu@email.com" autocomplete="email" required />
-      </div>
-      <div class="field">
-        <div class="label">Nombre (opcional)</div>
-        <input id="fp_name" class="input" type="text" placeholder="Tu nombre" />
-      </div>
-      <div class="field">
-        <div class="label">Teléfono (opcional)</div>
-        <input id="fp_phone" class="input" type="tel" placeholder="+502 5555 5555" />
-      </div>
-      <div class="field">
-        <div class="label">Mensaje (opcional)</div>
-        <textarea id="fp_msg" class="input" rows="4" placeholder="Comentarios adicionales"></textarea>
-      </div>
-      <div id="fp_status" class="hint" aria-live="polite"></div>
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn ghost" id="fp_cancel">Cancelar</button>
-      <button type="button" class="btn" id="fp_send">Enviar solicitud</button>
-    </div>
-  </dialog>
-
+  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
     // ===== Config =====
@@ -152,105 +111,54 @@
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
     const DASHBOARD_PATH = '/cliente-dashboard.html';
 
-    // Edge Function para notificar recuperación (asegúrate que exista con ese nombre)
-    const FORGOT_ENDPOINT = 'https://czvpehbubfrinutztnwh.functions.supabase.co/support-forgot';
-
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
+    // Autologin si ya hay sesión
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
       if (session) window.location.replace(DASHBOARD_PATH);
     })();
 
-    const $ = (id) => document.getElementById(id);
-    const setMsg = (t, err=false) => { const el = $('msg'); el.textContent = t || ''; el.className = 'hint' + (err ? ' err' : ''); };
+    // Utilidades
+    const $ = (id)=> document.getElementById(id);
+    const setMsg = (t, err=false) => { const el=$('msg'); el.textContent=t||''; el.className='hint'+(err?' err':''); };
 
-    $('toggleEye').addEventListener('click', () => {
-      const p = $('password'); const show = p.type === 'password'; p.type = show ? 'text' : 'password';
+    // Mostrar/Ocultar contraseña
+    $('toggleEye').addEventListener('click', ()=>{
+      const p=$('password'); const show=p.type==='password'; p.type=show?'text':'password';
       $('toggleEye').setAttribute('aria-pressed', String(show));
     });
 
-    // Login con mensajes en español + bloqueo del botón durante el envío
+    // Login con mensajes en español
     async function doLogin(){
-      const btn = $('btnLogin');
-      btn.disabled = true;
-      try{
-        const email = $('email').value.trim();
-        const password = $('password').value;
-        if(!email || !password){ setMsg('Complete correo y contraseña', true); return; }
-        setMsg('Procesando…');
+      const email = $('email').value.trim();
+      const password = $('password').value;
+      if (!email || !password){ setMsg('Complete correo y contraseña', true); return; }
+      setMsg('Procesando…');
 
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) {
-          const msg = (error.message || '').toLowerCase();
-          if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
-            setMsg('Correo o contraseña incorrectos.', true);
-          } else if (msg.includes('email not confirmed')) {
-            setMsg('Debe confirmar su correo antes de ingresar.', true);
-          } else {
-            setMsg('No se pudo iniciar sesión. Intente de nuevo.', true);
-          }
-          return;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error){
+        const msg = (error.message||'').toLowerCase();
+        if (msg.includes('invalid login') || msg.includes('invalid credentials')){
+          setMsg('Correo o contraseña incorrectos.', true);
+        } else if (msg.includes('email not confirmed')){
+          setMsg('Debe confirmar su correo antes de ingresar.', true);
+        } else {
+          setMsg('No se pudo iniciar sesión. Intente de nuevo.', true);
         }
-        window.location.replace(DASHBOARD_PATH);
-      } finally {
-        btn.disabled = false;
+        return;
       }
+      window.location.replace(DASHBOARD_PATH);
     }
     $('btnLogin').addEventListener('click', doLogin);
-    document.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
 
-    // ===== Modal forgot =====
-    const dlg = $('forgotDlg');
-    $('forgotLink').addEventListener('click', (e)=> {
+    // "¿Olvidó su contraseña?" -> sólo mostrar aviso
+    $('forgotLink').addEventListener('click', (e)=>{
       e.preventDefault();
-      $('fp_email').value = $('email').value.trim();
-      $('fp_name').value = '';
-      $('fp_phone').value = '';
-      $('fp_msg').value = '';
-      $('fp_status').textContent = '';
-      dlg.showModal();
-    });
-    $('fp_cancel').addEventListener('click', ()=> dlg.close());
-
-    $('fp_send').addEventListener('click', async ()=>{
-      const sendBtn = $('fp_send'); sendBtn.disabled = true;
-      const email = $('fp_email').value.trim();
-      const name  = $('fp_name').value.trim();
-      const phone = $('fp_phone').value.trim();
-      const message = $('fp_msg').value.trim();
-      const statusEl = $('fp_status');
-
-      if (!email) { statusEl.textContent = 'Escribe tu correo.'; statusEl.className = 'hint err'; sendBtn.disabled=false; return; }
-      statusEl.textContent = 'Enviando…'; statusEl.className = 'hint';
-
-      try{
-        const r = await fetch(FORGOT_ENDPOINT, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ email, name, phone, message })
-        });
-        const data = await r.json().catch(()=>({}));
-
-        if (!r.ok) {
-          // Mensajes útiles por status
-          if (r.status === 403) statusEl.textContent = 'No autorizado desde este origen.';
-          else if (r.status === 404) statusEl.textContent = 'Servicio no disponible (404).';
-          else if (r.status === 429) statusEl.textContent = 'Demasiadas solicitudes. Intente más tarde.';
-          else statusEl.textContent = data?.error || 'No se pudo enviar la solicitud.';
-          statusEl.className = 'hint err';
-          return;
-        }
-        statusEl.textContent = 'Solicitud enviada. En breve nos pondremos en contacto.';
-        setTimeout(()=> dlg.close(), 900);
-      } catch(err){
-        statusEl.textContent = 'No se pudo enviar la solicitud. Intente más tarde.';
-        statusEl.className = 'hint err';
-      } finally {
-        sendBtn.disabled = false;
-      }
+      alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
   </script>
 </body>
