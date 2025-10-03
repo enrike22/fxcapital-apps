@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -55,6 +55,7 @@
   .forgot{ display:block; margin:10px 0 0; text-align:right; color:#3d67ff; text-decoration:none; font-size:14px; }
   .btn{ width:100%; margin-top:14px; appearance:none; border:0; background:#0b0b0b; color:#fff; font-weight:800;
         padding:13px 16px; border-radius:12px; cursor:pointer; box-shadow:0 10px 28px rgba(0,0,0,.35); }
+  .btn[disabled]{ opacity:.7; cursor:not-allowed; }
   .hint{ font-size:13px; color:#9aa1ac; margin-top:6px; text-align:center; } .err{ color:#c1121f; }
 
   /* Modal */
@@ -116,13 +117,13 @@
     <div class="modal-head">Recuperación de contraseña</div>
     <div class="modal-body">
       <p style="margin-top:0;color:#444">
-        Entre en contacto con la empresa para solicitar su cambio de contraseña.  
+        Entre en contacto con la empresa para solicitar su cambio de contraseña.
         Complete el siguiente formulario y nos pondremos en contacto.
       </p>
 
       <div class="field">
         <div class="label">Correo</div>
-        <input id="fp_email" class="input" type="email" placeholder="tu@email.com" />
+        <input id="fp_email" class="input" type="email" placeholder="tu@email.com" autocomplete="email" required />
       </div>
       <div class="field">
         <div class="label">Nombre (opcional)</div>
@@ -151,7 +152,7 @@
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
     const DASHBOARD_PATH = '/cliente-dashboard.html';
 
-    // NUEVA edge function (con secrets distintos)
+    // Edge Function para notificar recuperación (asegúrate que exista con ese nombre)
     const FORGOT_ENDPOINT = 'https://czvpehbubfrinutztnwh.functions.supabase.co/support-forgot';
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
@@ -171,27 +172,32 @@
       $('toggleEye').setAttribute('aria-pressed', String(show));
     });
 
-    // Login con mensajes en español
+    // Login con mensajes en español + bloqueo del botón durante el envío
     async function doLogin(){
-      const email = $('email').value.trim();
-      const password = $('password').value;
-      if(!email || !password){ setMsg('Complete correo y contraseña', true); return; }
-      setMsg('Procesando…');
+      const btn = $('btnLogin');
+      btn.disabled = true;
+      try{
+        const email = $('email').value.trim();
+        const password = $('password').value;
+        if(!email || !password){ setMsg('Complete correo y contraseña', true); return; }
+        setMsg('Procesando…');
 
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) {
-        // Normaliza a español
-        const msg = (error.message || '').toLowerCase();
-        if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
-          setMsg('Correo o contraseña incorrectos.', true);
-        } else if (msg.includes('email not confirmed')) {
-          setMsg('Debe confirmar su correo antes de ingresar.', true);
-        } else {
-          setMsg('No se pudo iniciar sesión. Intente de nuevo.', true);
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+          const msg = (error.message || '').toLowerCase();
+          if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
+            setMsg('Correo o contraseña incorrectos.', true);
+          } else if (msg.includes('email not confirmed')) {
+            setMsg('Debe confirmar su correo antes de ingresar.', true);
+          } else {
+            setMsg('No se pudo iniciar sesión. Intente de nuevo.', true);
+          }
+          return;
         }
-        return;
+        window.location.replace(DASHBOARD_PATH);
+      } finally {
+        btn.disabled = false;
       }
-      window.location.replace(DASHBOARD_PATH);
     }
     $('btnLogin').addEventListener('click', doLogin);
     document.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
@@ -207,17 +213,17 @@
       $('fp_status').textContent = '';
       dlg.showModal();
     });
-
     $('fp_cancel').addEventListener('click', ()=> dlg.close());
 
     $('fp_send').addEventListener('click', async ()=>{
+      const sendBtn = $('fp_send'); sendBtn.disabled = true;
       const email = $('fp_email').value.trim();
       const name  = $('fp_name').value.trim();
       const phone = $('fp_phone').value.trim();
       const message = $('fp_msg').value.trim();
-
       const statusEl = $('fp_status');
-      if (!email) { statusEl.textContent = 'Escribe tu correo.'; statusEl.className = 'hint err'; return; }
+
+      if (!email) { statusEl.textContent = 'Escribe tu correo.'; statusEl.className = 'hint err'; sendBtn.disabled=false; return; }
       statusEl.textContent = 'Enviando…'; statusEl.className = 'hint';
 
       try{
@@ -227,13 +233,23 @@
           body: JSON.stringify({ email, name, phone, message })
         });
         const data = await r.json().catch(()=>({}));
-        if (!r.ok) throw new Error(data?.error || 'Error');
 
+        if (!r.ok) {
+          // Mensajes útiles por status
+          if (r.status === 403) statusEl.textContent = 'No autorizado desde este origen.';
+          else if (r.status === 404) statusEl.textContent = 'Servicio no disponible (404).';
+          else if (r.status === 429) statusEl.textContent = 'Demasiadas solicitudes. Intente más tarde.';
+          else statusEl.textContent = data?.error || 'No se pudo enviar la solicitud.';
+          statusEl.className = 'hint err';
+          return;
+        }
         statusEl.textContent = 'Solicitud enviada. En breve nos pondremos en contacto.';
         setTimeout(()=> dlg.close(), 900);
-      }catch(err){
+      } catch(err){
         statusEl.textContent = 'No se pudo enviar la solicitud. Intente más tarde.';
         statusEl.className = 'hint err';
+      } finally {
+        sendBtn.disabled = false;
       }
     });
   </script>
