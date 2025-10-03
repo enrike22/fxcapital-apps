@@ -88,7 +88,10 @@ tbody tr:hover{background:#0e1116}
         <div><label>Moneda</label>
           <select id="u_currency"><option>GTQ</option><option>USD</option></select>
         </div>
-        <div><label>Capital inicial</label><input id="u_capital" type="number" min="0" step="0.01"></div>
+        <div><label>Capital inicial</label>
+          <!-- CAMBIO: text + inputmode decimal para permitir comas -->
+          <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00">
+        </div>
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
 
         <div><label>Plan</label>
@@ -192,6 +195,48 @@ const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 
+/*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
+function formatCapitalString(raw){
+  raw = String(raw ?? "").replace(/[^\d.]/g, "");
+  const firstDot = raw.indexOf(".");
+  if (firstDot !== -1){
+    const head = raw.slice(0, firstDot+1);
+    const tail = raw.slice(firstDot+1).replace(/\./g, "");
+    raw = head + tail;
+  }
+  let [intPart, decPart] = raw.split(".");
+  intPart = intPart ? intPart.replace(/^0+(?=\d)/, "") : "";
+  if (intPart){
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  if (decPart !== undefined) decPart = decPart.slice(0, 2);
+  return decPart !== undefined ? `${intPart || "0"}.${decPart}` : (intPart || "");
+}
+function parseCapitalFromInput(val){
+  if (!val) return 0;
+  const clean = String(val).replace(/,/g, "");
+  const n = Number(clean);
+  return Number.isFinite(n) ? n : 0;
+}
+function bindCapitalFormatter(inputEl){
+  inputEl.addEventListener("input", () => {
+    const pos = inputEl.selectionStart ?? inputEl.value.length;
+    const before = inputEl.value;
+    const rawNoCommas = before.replace(/,/g, "");
+    inputEl.value = formatCapitalString(rawNoCommas);
+    const diff = inputEl.value.length - before.length;
+    const newPos = Math.max(0, pos + diff);
+    inputEl.setSelectionRange?.(newPos, newPos);
+  });
+  inputEl.addEventListener("blur", () => {
+    if (!inputEl.value.replace(/[^\d]/g, "")) inputEl.value = "0";
+  });
+}
+function setCapitalInputValue(n){
+  const val = (n === null || n === undefined) ? "" : String(n);
+  $("u_capital").value = formatCapitalString(val);
+}
+
 /*** LOGIN ***/
 async function doLogin(e){
   e.preventDefault();
@@ -264,7 +309,7 @@ async function loadUsersViaJoinFallback(h){
         bank_name: a.bank_name, bank_account: a.bank_account, bank_account_type: a.bank_account_type,
         invest_months: a.invest_months, interest_pct: a.interest_pct, joined_at: a.joined_at
       };
-    }).filter(Boolean).sort((x,y)=> (x.full_name||'').localeCompare(y.full_name||''));
+    }).filter(Boolean).sort((x,y)=> (x.full_name||'').localeCompare(y.full_name||'' ));
   }catch{ return []; }
 }
 
@@ -307,7 +352,7 @@ function editClient(x){
   $("u_name").value  = x.full_name || "";
   $("u_phone").value = x.phone || "";
   $("u_currency").value = x.currency || "GTQ";
-  $("u_capital").value  = x.capital ?? "";
+  setCapitalInputValue(x.capital); // <-- formateado
   $("u_joined").value   = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
   $("u_plan").value     = x.plan || "STANDARD";
   $("u_months").value   = x.invest_months ?? "12";
@@ -352,7 +397,7 @@ async function saveUser(){
   const phone    = $("u_phone").value.trim();
   const password = $("u_pass").value;
   const currency = $("u_currency").value;
-  const capital  = Number($("u_capital").value || 0);
+  const capital  = parseCapitalFromInput($("u_capital").value); // <-- limpio sin comas
   const joined   = $("u_joined").value || null;
   const plan     = $("u_plan").value;
   const months   = parseInt($("u_months").value, 10);
@@ -494,9 +539,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("clearBtn").addEventListener("click", ()=>{
     ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value="");
     $("u_currency").value="GTQ"; $("u_plan").value="STANDARD"; $("u_months").value="12"; $("saveMsg").textContent="";
-    validateRatePlan(); });
+    validateRatePlan();
+  });
   $("btnRefreshNotifs").addEventListener("click", loadNotifs);
   $("btnRefreshUsers").addEventListener("click", listUsers);
+
+  // Enlazar formateo de Capital inicial
+  bindCapitalFormatter($("u_capital"));
+
   initApp();
 });
 </script>
