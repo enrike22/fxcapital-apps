@@ -89,6 +89,7 @@ tbody tr:hover{background:#0e1116}
           <select id="u_currency"><option>GTQ</option><option>USD</option></select>
         </div>
         <div><label>Capital inicial</label>
+          <!-- text + inputmode decimal para permitir comas -->
           <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00">
         </div>
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
@@ -160,19 +161,6 @@ tbody tr:hover{background:#0e1116}
       </div>
     </div>
 
-    <!-- Solicitudes -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Solicitudes</h2>
-        <button id="btnRefreshNotifs" class="ghost">Refrescar</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Fecha</th><th>Correo</th><th>Tipo</th><th>Detalles</th></tr></thead>
-          <tbody id="notifs"></tbody>
-        </table>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -340,7 +328,7 @@ function renderUsers(rows){
 $("q")?.addEventListener("input",(e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
-  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
+  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x_bank_account_type]
     .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   renderUsers(filt);
 });
@@ -351,7 +339,7 @@ function editClient(x){
   $("u_name").value  = x.full_name || "";
   $("u_phone").value = x.phone || "";
   $("u_currency").value = x.currency || "GTQ";
-  setCapitalInputValue(x.capital);
+  setCapitalInputValue(x.capital); // <-- formateado
   $("u_joined").value   = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
   $("u_plan").value     = x.plan || "STANDARD";
   $("u_months").value   = x.invest_months ?? "12";
@@ -360,7 +348,7 @@ function editClient(x){
   $("u_bank_account").value= x.bank_account ?? "";
   $("u_bank_account_type").value = x.bank_account_type ?? "";
   $("u_pass").value = "";
-  validateRatePlan();
+  validateRatePlan(); // recalcula error visual
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -371,6 +359,7 @@ function validateRatePlan(){
   const rate = rateStr === "" ? null : Number(rateStr);
   const err = $("rateError");
 
+  // autocompletar por plan si vacío
   if(rate === null){
     if(plan === "STANDARD") $("u_rate").value = 15;
     if(plan === "PLATINUM") $("u_rate").value = 20;
@@ -380,7 +369,7 @@ function validateRatePlan(){
   let isValid = true;
   if(plan === "STANDARD") isValid = (finalRate === 15);
   else if(plan === "PLATINUM") isValid = (finalRate === 20);
-  else if(plan === "BLACK") isValid = true;
+  else if(plan === "BLACK") isValid = true; // sin restricción
 
   show(err, !isValid);
   return isValid;
@@ -395,7 +384,7 @@ async function saveUser(){
   const phone    = $("u_phone").value.trim();
   const password = $("u_pass").value;
   const currency = $("u_currency").value;
-  const capital  = parseCapitalFromInput($("u_capital").value);
+  const capital  = parseCapitalFromInput($("u_capital").value); // <-- limpio sin comas
   const joined   = $("u_joined").value || null;
   const plan     = $("u_plan").value;
   const months   = parseInt($("u_months").value, 10);
@@ -423,6 +412,7 @@ async function saveUser(){
     }
     if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
+    // RPC canónico (12 parámetros) — evita PGRST202
     const body = {
       p_email: email,
       p_full_name: fullName,
@@ -494,54 +484,11 @@ async function deleteClient(x){
   alert("Cliente eliminado correctamente.");
 }
 
-/*** Solicitudes (lee admin_requests; fallback a admin_notifications) ***/
-async function loadNotifs(){
-  const h = { apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token };
-  const tb = $("notifs"); tb.innerHTML="";
-
-  // 1) Intentar admin_requests (donde registra el login: kind, email, meta, created_at)
-  let r = await fetch(`${BASE}/admin_requests?select=*&order=created_at.desc`, { headers:h, cache:"no-store" });
-  if (r.ok) {
-    const rows = await r.json();
-    rows.forEach(x=>{
-      const meta = x.meta || {};
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${new Date(x.created_at).toLocaleString()}</td>
-        <td>${x.email || meta.email || '—'}</td>
-        <td>${x.kind || meta.kind || '—'}</td>
-        <td class="small">${meta.ua ? meta.ua.slice(0,80) : '—'}</td>`;
-      tb.appendChild(tr);
-    });
-    return;
-  }
-
-  // 2) Fallback: admin_notifications (payload con {kind,email,...})
-  r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, { headers:h, cache:"no-store" });
-  if (r.ok){
-    const rows = await r.json();
-    rows.forEach(x=>{
-      const p = x.payload || {};
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${new Date(x.created_at).toLocaleString()}</td>
-        <td>${p.email || p.user_email || '—'}</td>
-        <td>${p.kind || '—'}</td>
-        <td class="small">${p.account_id ? ('account_id: '+p.account_id) : '—'}</td>`;
-      tb.appendChild(tr);
-    });
-  } else {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="4">No se pudo cargar ninguna tabla de solicitudes.</td>`;
-    tb.appendChild(tr);
-  }
-}
-
 /*** INIT ***/
 async function initApp(){
   if(localStorage.token){
     show($("unauth"), false); show($("app"), true); show($("logoutBtn"), true);
-    await listUsers(); await loadNotifs();
+    await listUsers(); // sin Solicitudes
   }else{
     show($("app"), false); show($("logoutBtn"), false); show($("unauth"), true);
   }
@@ -560,10 +507,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
     $("u_currency").value="GTQ"; $("u_plan").value="STANDARD"; $("u_months").value="12"; $("saveMsg").textContent="";
     validateRatePlan();
   });
-  $("btnRefreshNotifs").addEventListener("click", loadNotifs);
   $("btnRefreshUsers").addEventListener("click", listUsers);
 
+  // Enlazar formateo de Capital inicial
   bindCapitalFormatter($("u_capital"));
+
   initApp();
 });
 </script>
