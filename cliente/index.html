@@ -6,262 +6,287 @@
 <title>FX | CAPITAL R.L. — Iniciar sesión</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
 <style>
   :root{
-    /* Tema claro */
-    --bg:#f5f7fb;
-    --card:#ffffff;
-    --panel:#f9fafb;
-    --outline:rgba(0,0,0,.10);
-    --txt:#0b0b0d;
-    --muted:#4b5563;
-    --accent:#111827;
-
-    /* Sombras 3D */
-    --shadow-sm:0 8px 18px rgba(0,0,0,.10);
-    --shadow-md:0 18px 40px rgba(0,0,0,.14);
-    --shadow-lg:0 40px 90px rgba(0,0,0,.18);
+    --bg:#eef2f7;            /* fondo suave */
+    --panel:#ffffff;         /* tarjetas */
+    --text:#0c0e10;
+    --muted:#8a93a3;
+    --outline:rgba(10,12,14,.08);
+    --shadow-heavy:0 35px 90px rgba(0,0,0,.25);
+    --shadow-med:0 18px 50px rgba(0,0,0,.18);
+    --shadow-soft:0 10px 30px rgba(0,0,0,.10);
+    --accent:#000;           /* negro (botón/wordmark) */
+    --radius-xl:26px;
+    --radius-lg:18px;
   }
 
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0;
-    color:var(--txt);
+    color:var(--text);
     font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    background: radial-gradient(1200px 800px at 12% -25%, #ffffff 0%, #eef2f7 55%) fixed;
-    display:flex;justify-content:center;align-items:center;
-    min-height:100vh;
-    perspective:1200px;
+    background:
+      radial-gradient(1200px 800px at 12% -25%, #dfe6f1 0%, var(--bg) 55%) fixed;
   }
 
+  /* ====== LAYOUT ====== */
   .wrap{
-    width:min(1200px,94vw);
-    display:grid;grid-template-columns:1.25fr 480px;
-    gap:48px;align-items:center;
+    width:min(1240px,94vw);
+    margin:0 auto;
+    min-height:100dvh;
+    display:grid;
+    align-items:center;                 /* centra verticalmente en desktop */
+    gap:48px;
   }
-  @media(max-width:1100px){.wrap{grid-template-columns:1fr;gap:32px}}
 
-  /* ===== HERO ===== */
+  /* Desktop: 2 columnas cómodas */
+  @media (min-width:1024px){
+    .wrap{
+      grid-template-columns: 1fr 520px;
+      gap:64px;
+    }
+  }
+
+  /* ====== BRAND AREA (izquierda) ====== */
   .brand{
-    display:flex;
-    flex-direction:column;      /* logo arriba */
-    align-items:center;         /* centrado */
-    gap:16px;
-    transform-style:preserve-3d;
-  }
-  .brand img{
-    height:170px;               /* logo MÁS GRANDE */
-    width:auto; object-fit:contain;
-    filter:drop-shadow(0 14px 22px rgba(0,0,0,.22));
-    transform:translateZ(55px);
-  }
-  @media(max-width:900px){
-    .brand img{ height:140px; }
+    perspective:1000px;
   }
 
-  .hero{transform-style:preserve-3d; text-align:center;}
+  /* LOGO centrado y nunca recortado */
+  .brand-logo{
+    display:block;
+    margin:0 auto 12px auto;
+    filter: drop-shadow(0 18px 30px rgba(0,0,0,.25));
+  }
+  /* tamaños responsivos del logo (mejora móvil + no empuja en desktop) */
+  .brand-logo{ width: clamp(90px, 12vw, 140px); }
 
-  .brand-banner{
-    display:inline-block;
-    background:linear-gradient(180deg, #000 0%, #111 100%); /* fondo NEGRO */
+  /* Wordmark tipo “píldora” negro, 3D */
+  .wordmark{
+    margin:0 auto;
+    background:var(--accent);
     color:#fff;
-    border-radius:18px;
-    padding:16px 22px;
-    box-shadow:
-      0 14px 24px rgba(0,0,0,.30),
-      0 2px 0 0 rgba(255,255,255,.18) inset,
-      0 -2px 0 0 rgba(0,0,0,.06) inset,
-      0 28px 60px rgba(0,0,0,.25);
+    border-radius:999px;
+    padding:16px 26px;
     font-weight:800;
-    font-size:clamp(34px, 5.2vw, 60px);  /* tamaño controlado para 1 línea */
-    letter-spacing:.4px;
-    white-space:nowrap;                   /* una sola línea */
-    transform:translateZ(55px) rotateX(.5deg);
-    position:relative;
+    letter-spacing:.5px;
+    box-shadow: 0 18px 36px rgba(0,0,0,.35), inset 0 -2px 0 rgba(255,255,255,.08);
+    transform: translateZ(0); /* habilita aceleración */
+    display:inline-flex;
+    align-items:center;
+    gap:14px;
+    font-size: clamp(22px, 2.8vw + 8px, 36px); /* ↓ ligeramente vs versión anterior para no “romper” */
   }
-  .brand-banner::after{
-    content:"";
-    position:absolute; inset:0;
-    border-radius:18px;
-    background:linear-gradient(180deg, rgba(255,255,255,.18) 0%, transparent 55%);
-    pointer-events:none;
-    mix-blend-mode:soft-light;
+  .divider{
+    width:2px; height:1.1em; background:rgba(255,255,255,.9); display:inline-block;
   }
 
-  /* Slogan en NEGRO y un poco más grande */
-  .brand-sub{
-    display:inline-block;
-    margin-top:10px;
-    background:transparent;
-    color:#000;                   /* negro */
+  .tagline{
+    margin:16px auto 22px auto;
+    text-align:center;
+    color:#000;
     font-weight:700;
-    transform:translateZ(40px);
-    font-size:clamp(16px, 2.0vw, 20px);
+    font-size: clamp(13px, 1.15vw + 8px, 18px);
+    text-shadow: 0 1px 0 #fff7;
   }
 
-  .cards{
-    display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    margin-top:16px;transform-style:preserve-3d;
+  /* Tarjetas de beneficios */
+  .benefits{
+    display:grid; gap:16px;
+    grid-template-columns: 1fr;
   }
+  @media (min-width:720px){
+    .benefits{ grid-template-columns: repeat(3, 1fr); }
+  }
+
   .card{
-    background:var(--card);
+    background:var(--panel);
     border:1px solid var(--outline);
-    border-radius:16px;
-    padding:18px;
-    box-shadow:var(--shadow-sm), 0 1px 0 rgba(255,255,255,.7) inset;
-    transform:translateZ(22px);
+    border-radius:var(--radius-lg);
+    padding:18px 18px 16px 18px;
+    box-shadow: var(--shadow-soft);
+    transform: translateZ(0);
   }
-  .card strong{display:block;margin-bottom:4px}
-  .footnote{color:var(--muted);font-size:12px;margin-top:12px}
+  .card strong{ display:block; margin-bottom:6px; }
+  .smallnote{ color:var(--muted); font-size:12px; margin-top:10px }
 
-  /* ===== Login 3D ===== */
-  .tilt{transform-style:preserve-3d; will-change:transform; transition:transform .12s ease}
+  /* ====== LOGIN (derecha) ====== */
   .login{
-    background:linear-gradient(180deg,var(--panel) 0%,#ffffff 100%);
+    background:linear-gradient(180deg,#fff 0%, #f9fafc 100%);
     border:1px solid var(--outline);
-    border-radius:22px;
-    padding:28px;
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.8) inset,
-      var(--shadow-md),
-      0 60px 120px rgba(0,0,0,.10);
-    transform:translateZ(35px);
+    border-radius:var(--radius-xl);
+    padding:26px 22px 22px;
+    box-shadow: var(--shadow-med);
   }
-  .login h2{margin:0 0 18px;font-size:24px;text-align:center;transform:translateZ(10px)}
+  .login h2{
+    margin:2px 0 18px 0;
+    font-size: clamp(22px, 2.5vw, 30px);
+    text-align:center;
+  }
 
   .input{
     width:100%;
-    background:#f3f4f6;
+    background:#fff;
     border:1px solid var(--outline);
-    border-radius:12px;
-    color:var(--txt);
+    border-radius:14px;
+    color:var(--text);
     padding:12px 14px;
     outline:none;
-    box-shadow:0 1px 0 rgba(255,255,255,.7) inset;
-    transform:translateZ(6px);
+    font-size:16px;
+    box-shadow: inset 0 1px 0 rgba(0,0,0,.02);
   }
-  .input:focus{border-color:#000}
-  .row{display:flex;align-items:center;gap:10px}
+  .input:focus{ border-color:#2b7cff }
+
+  .row{ display:flex; align-items:center; gap:10px }
+  .eye{ cursor:pointer; user-select:none; font-size:20px }
+
+  .muted{ color:var(--muted) }
+  .right{ text-align:right }
 
   .btn{
-    appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:800;
-    cursor:pointer;transition:transform .08s ease, box-shadow .12s ease;
-    transform:translateZ(8px);
+    appearance:none; border:0; border-radius:14px;
+    padding:12px 16px; font-weight:800; cursor:pointer;
+    width:100%;
+    background:var(--accent); color:#fff;
+    box-shadow: 0 14px 30px rgba(0,0,0,.25), inset 0 -2px 0 rgba(255,255,255,.10);
+    transition: transform .08s ease;
   }
-  .btn.primary{
-    background:#000;color:#fff;width:100%;
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.3) inset,
-      0 12px 26px rgba(0,0,0,.25),
-      0 30px 60px rgba(0,0,0,.15);
-  }
-  .btn.primary:hover{transform:translateZ(14px); box-shadow:
-      0 1px 0 rgba(255,255,255,.35) inset,
-      0 16px 34px rgba(0,0,0,.28),
-      0 40px 85px rgba(0,0,0,.18);}
-  .btn:active{transform:translateZ(4px)}
+  .btn:active{ transform: translateY(1px) }
 
-  .muted{color:var(--muted)}
-  .eye{cursor:pointer;user-select:none;font-size:22px;transform:translateZ(8px)}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
+  .error{
+    color:#b91c1c; font-size:13px; margin-top:6px; text-align:center;
+    min-height: 1.2em;
+  }
+
+  /* ===== MOBILE STACK ===== */
+  @media (max-width:1023.98px){
+    .wrap{
+      grid-template-columns: 1fr;           /* una columna en móvil */
+      align-items:start;
+      padding: 22px 0 28px;
+    }
+    .brand{ padding-inline: 16px; }
+    .login{ width:min(560px, 92vw); margin: 10px auto 28px; }
+    .brand-logo{ width: clamp(110px, 24vw, 170px); } /* grande en móvil pero sin recorte */
+  }
 </style>
 </head>
 <body>
+
   <div class="wrap">
-    <!-- HERO con Logo ARRIBA y CENTRADO -->
-    <section>
-      <div class="brand tilt" data-tilt>
-        <img src="logologin.png" alt="FX | CAPITAL R.L.">
-        <div class="hero">
-          <div class="brand-banner">FX | CAPITAL R.L.</div>
-          <div class="brand-sub">Asesoría — Confianza — Crecimiento</div>
+    <!-- ====== Columna izquierda: Marca ====== -->
+    <section class="brand">
+      <!-- Logo centrado arriba (PNG con fondo transparente) -->
+      <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="brand-logo" />
+
+      <!-- Wordmark negro en una sola línea -->
+      <div class="wordmark" aria-label="FX | CAPITAL R.L.">
+        <span>FX</span>
+        <span class="divider" aria-hidden="true"></span>
+        <span>CAPITAL R.L.</span>
+      </div>
+
+      <div class="tagline">Asesoría — Confianza — Crecimiento</div>
+
+      <div class="benefits">
+        <div class="card">
+          <strong>Seguridad</strong>
+          <span class="muted">Máxima protección</span>
+        </div>
+        <div class="card">
+          <strong>Rentabilidad</strong>
+          <span class="muted">Hasta 25% semestral*</span>
+        </div>
+        <div class="card">
+          <strong>Control</strong>
+          <span class="muted">Transparencia total</span>
         </div>
       </div>
 
-      <div class="cards tilt" data-tilt>
-        <div class="card"><strong>Seguridad</strong><span class="muted">Máxima protección</span></div>
-        <div class="card"><strong>Rentabilidad</strong><span class="muted">Hasta 25% semestral*</span></div>
-        <div class="card"><strong>Control</strong><span class="muted">Transparencia total</span></div>
-      </div>
-      <div class="footnote">*El porcentaje final depende de su plan.</div>
+      <div class="smallnote">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <!-- LOGIN -->
-    <section class="login tilt" data-tilt>
+    <!-- ====== Columna derecha: Login ====== -->
+    <section class="login">
       <h2>Iniciar Sesión</h2>
-      <div style="margin-bottom:12px; transform:translateZ(10px)">
+
+      <div style="margin-bottom:12px">
         <div class="muted" style="margin-bottom:6px">Correo Electrónico</div>
         <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
       </div>
-      <div style="margin-bottom:16px; transform:translateZ(10px)">
+
+      <div style="margin-bottom:10px">
         <div class="muted" style="margin-bottom:6px">Contraseña</div>
         <div class="row">
           <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
           <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
         </div>
-        <div style="text-align:right;margin-top:6px">
-          <a class="muted" href="#" onclick="alert('Solicite el restablecimiento a soporte.');return false;">¿Olvidó su contraseña?</a>
-        </div>
       </div>
-      <button id="btnLogin" class="btn primary">Iniciar Sesión</button>
+
+      <div class="right" style="margin:6px 2px 14px">
+        <a id="forgotLink" class="muted" href="#">¿Olvidó su contraseña?</a>
+      </div>
+
+      <button id="btnLogin" class="btn">Iniciar Sesión</button>
+      <div id="msg" class="error"></div>
     </section>
   </div>
 
-  <!-- Supabase -->
+  <!-- Supabase (login) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-
   <script>
-    /* Tilt 3D sin librerías */
-    const MAX_DEG = 6;
-    const Z_LIFT = 35;
-    function bindTilt(el){
-      let rect = null;
-      const updateRect = () => rect = el.getBoundingClientRect();
-      updateRect(); window.addEventListener('resize', updateRect);
-      el.addEventListener('mousemove', (e)=>{
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
-        const rx = (y - 0.5) * -2 * MAX_DEG;
-        const ry = (x - 0.5) *  2 * MAX_DEG;
-        el.style.transform = `translateZ(${Z_LIFT}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-      });
-      el.addEventListener('mouseleave', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px) rotateX(0) rotateY(0)`; });
-      el.addEventListener('mouseenter', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px)`; });
-    }
-    document.querySelectorAll('[data-tilt]').forEach(bindTilt);
-
-    // Supabase
+    // ===== Config =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-    const DASHBOARD_PATH = '/cliente-dashboard.html';
 
+    const DASHBOARD_PATH = '/cliente-dashboard.html';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
+    // Autologin si ya hay sesión
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
       if (session) window.location.replace(DASHBOARD_PATH);
     })();
 
+    // Mostrar/Ocultar contraseña
     document.getElementById('toggleEye').onclick = () => {
       const p = document.getElementById('password');
       p.type = p.type === 'password' ? 'text' : 'password';
     };
 
+    const msg = document.getElementById('msg');
+
+    // Login
     async function doLogin(){
+      msg.textContent = '';
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      if (!email || !password) { alert('Complete correo y contraseña'); return; }
+      if (!email || !password) { msg.textContent = 'Complete correo y contraseña.'; return; }
+
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { alert('No se pudo iniciar sesión: ' + error.message); return; }
+      if (error) { msg.textContent = 'No se pudo iniciar sesión: ' + error.message; return; }
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').onclick = doLogin;
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
+
+    // ¿Olvidó su contraseña?
+    document.getElementById('forgotLink').addEventListener('click', async (e)=>{
+      e.preventDefault();
+      alert('Para restablecer su contraseña, contacte a soporte o admin.');
+      // Si quieres enviar una notificación al panel admin, te paso el snippet:
+      // fetch(`${SUPABASE_URL}/rest/v1/admin_notifications`, {
+      //   method:'POST',
+      //   headers:{ apikey: SUPABASE_ANON_KEY, 'Content-Type':'application/json', Prefer:'return=representation' },
+      //   body: JSON.stringify([{ kind:'password_reset_request', payload:{ email: document.getElementById('email').value.trim() || null } }])
+      // });
+    });
   </script>
 </body>
 </html>
