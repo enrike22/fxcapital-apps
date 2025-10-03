@@ -119,29 +119,20 @@
     <section class="panel section">
       <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
       <div class="grid cols-3">
-        <!-- 1 -->
+        <!-- fila 1 -->
         <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
-        <!-- 2: Nueva -->
         <div class="card group"><span class="k">Apertura de cuenta</span><span id="valJoinDate" class="v">—</span></div>
-        <!-- 3 -->
         <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
-
-        <!-- 4 -->
+        <!-- fila 2 -->
         <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
-        <!-- 5 -->
         <div class="card group"><span class="k">Cuenta (ID)</span><span id="valAccountId" class="v">—</span></div>
-        <!-- 6 -->
         <div class="card group"><span class="k">Período (meses)</span><span id="valMonths" class="v">—</span></div>
-
-        <!-- 7 -->
+        <!-- fila 3 -->
         <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
-        <!-- 8: Nueva -->
         <div class="card group"><span class="k">Finalización de apertura de cuenta</span><span id="valEndDate" class="v">—</span></div>
-        <!-- 9 (full) -->
-        <div class="card group" style="grid-column:1 / -1">
-          <span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span>
-        </div>
+        <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
       </div>
+
       <div style="margin-top:16px">
         <button class="btn secondary" id="btnOpenWithdraw">Solicitar retiro</button>
       </div>
@@ -186,7 +177,7 @@
     </section>
   </div>
 
-  <!-- BLOQUEO (cuando se exige cambio de contraseña) -->
+  <!-- BLOQUEO -->
   <div class="blocker" id="panelBlocker"></div>
 
   <!-- MODAL RETIRO -->
@@ -230,7 +221,7 @@
     </div>
   </dialog>
 
-  <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
+  <!-- MODAL CONTRASEÑA -->
   <dialog id="forcePwdDlg">
     <div class="modal-h"><div style="font-weight:800">BIENVENIDO A FX|CAPITAL R.L.</div></div>
     <div class="modal-b">
@@ -275,7 +266,6 @@
   function addMonthsSameDay(d, months){
     const x = clampDate(d);
     const t = new Date(x.getFullYear(), x.getMonth() + months, x.getDate());
-    // si “se pasa” al siguiente mes (31->30 etc.), retrocede hasta coincidir
     while (t.getMonth() !== (x.getMonth() + months) % 12) { t.setDate(t.getDate() - 1); }
     t.setHours(0,0,0,0); return t;
   }
@@ -344,7 +334,7 @@
     paintWeeks(acc);
   }
 
-  // ===== RETIROS =====
+  // ===== Retiros =====
   const dlg = document.getElementById('wdlg');
   function selectType(t){
     document.getElementById('optEarly').classList.toggle('selected',t==='early');
@@ -385,7 +375,7 @@
     dlg.close(); document.getElementById('wAmount').value=''; document.getElementById('wReason').value=''; toggleSwitchAll(false);
   }
 
-  // ===== Cambio de contraseña forzado =====
+  // ===== Contraseña forzada =====
   const __fxpwd_forceDlg=document.getElementById('forcePwdDlg');
   const __fxpwd_blocker=document.getElementById('panelBlocker');
 
@@ -493,7 +483,7 @@
     document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
     document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
 
-    // Cambio de contraseña
+    // Contraseña
     document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
     document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
     ['newPwd','newPwd2'].forEach(id=>{
