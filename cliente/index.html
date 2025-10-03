@@ -8,105 +8,77 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0c0d10;
-    --panel:#ffffff;
-    --pill:#0b0b0b;
-    --txt:#0c0d10;
-    --muted:#7a818d;
-    --outline:rgba(0,0,0,.08);
-    --glow:0 45px 100px rgba(0,0,0,.35);
-    --soft:0 14px 35px rgba(0,0,0,.18);
-    --radius:18px;
+    --panel:#ffffff; --pill:#0b0b0b; --txt:#0c0d10; --muted:#7a818d;
+    --outline:rgba(0,0,0,.08); --glow:0 45px 100px rgba(0,0,0,.35);
+    --soft:0 14px 35px rgba(0,0,0,.18); --radius:18px;
+    --bg1:#eef2f7; --bg2:#e9eef5; --bg3:#e7edf5; --bg4:#e6ecf4;
+    --brand-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
-    margin:0;
-    font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    color:var(--txt);
-    background:
-      radial-gradient(1100px 700px at 25% -20%, #eef2f7 0%, #e9eef5 55%, #e7edf5 70%, #e6ecf4 100%)
-      fixed;
+    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--txt);
+    background: radial-gradient(1100px 700px at 25% -20%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 70%, var(--bg4) 100%) fixed;
   }
 
   .wrap{
-    max-width:1280px;
-    margin:0 auto;
-    padding:40px 20px 64px;
-    display:grid;
-    grid-template-columns: minmax(320px, 640px) minmax(360px, 520px);
-    column-gap:64px;
-    align-items:center;
-    justify-content:center;
+    max-width:1280px; margin:0 auto; padding:40px 20px 64px;
+    display:grid; grid-template-columns:minmax(320px,640px) minmax(360px,520px);
+    column-gap:64px; align-items:center; justify-content:center;
   }
-  .left{display:flex;flex-direction:column;align-items:center}
-
-  .logo{
-    width:min(220px, 40vw);
-    height:auto;
-    display:block;
-    filter: drop-shadow(0 20px 60px rgba(0,0,0,.25));
-    margin:8px auto 18px;
-  }
+  .left{ display:flex; flex-direction:column; align-items:center; }
+  .logo{ width:min(220px, 40vw); display:block; margin:8px auto 18px;
+         height:auto; filter:drop-shadow(0 20px 60px rgba(0,0,0,.25)); }
   .brand-pill{
-    display:inline-flex;align-items:center;justify-content:center;gap:18px;
-    padding:18px 26px;background:var(--pill);color:#fff;border-radius:999px;
-    box-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
-    font-weight:800;font-size:clamp(22px, 2.6vw, 34px);letter-spacing:.8px;line-height:1;margin:0 auto 14px;
+    display:inline-flex; align-items:center; justify-content:center; gap:18px;
+    padding:18px 26px; background:var(--pill); color:#fff; border-radius:999px;
+    box-shadow:var(--brand-shadow); font-weight:800; font-size:clamp(22px, 2.6vw, 34px);
+    letter-spacing:.8px; line-height:1; margin:0 auto 14px;
   }
-  .brand-pill .bar{width:2px;height:1.1em;background:#fff;opacity:.9;border-radius:2px}
-  .tagline{
-    margin:6px auto 18px;color:#111;font-weight:800;letter-spacing:.2px;
-    font-size:clamp(16px,1.4vw,20px);text-align:center;text-wrap:balance;
-    text-shadow:0 8px 30px rgba(0,0,0,.12);
-  }
+  .brand-pill .bar{ width:2px; height:1.1em; background:#fff; opacity:.9; border-radius:2px; }
+  .tagline{ margin:6px auto 18px; color:#111; font-weight:800; letter-spacing:.2px;
+            font-size:clamp(16px,1.4vw,20px); text-align:center; text-wrap:balance; text-shadow:0 8px 30px rgba(0,0,0,.12); }
 
-  .cards{
-    width:100%;max-width:640px;display:grid;grid-template-columns: repeat(3, 1fr);
-    gap:18px;margin:8px auto 6px;
-  }
-  .card{background:#fff;border-radius:14px;border:1px solid var(--outline);padding:16px 16px 18px;box-shadow:var(--soft)}
-  .card strong{display:block;margin-bottom:6px}
-  .fine{color:var(--muted);font-size:13px;margin:12px 0 0}
+  .cards{ width:100%; max-width:640px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:8px auto 6px; }
+  .card{ background:#fff; border-radius:14px; border:1px solid var(--outline); padding:16px 16px 18px; box-shadow:var(--soft); }
+  .card strong{ display:block; margin-bottom:6px; }
+  .fine{ color:var(--muted); font-size:13px; margin:12px 0 0; }
 
-  .panel{
-    background:linear-gradient(180deg,#fff 0%, #fafbff 100%);
-    border:1px solid var(--outline);border-radius:var(--radius);padding:26px;box-shadow:var(--glow);
-  }
-  .panel h2{margin:0 0 18px;font-size:28px;text-align:center}
-  .field{margin:12px 0}
-  .label{color:#3b3f46;margin:0 0 6px;font-size:14px}
-  .input{
-    width:100%;padding:12px 14px;border-radius:12px;border:1px solid #dde1ea;background:#fff;outline:none;font-size:15px;
-  }
-  .input:focus{border-color:#9fb7ff; box-shadow:0 0 0 3px rgba(60,120,255,.12)}
-  .row{display:flex;align-items:center;gap:10px}
-  .eye{cursor:pointer;user-select:none;font-size:20px;opacity:.75;width:42px;height:42px;display:grid;place-items:center;border-radius:10px;border:1px solid #e7eaf2;background:#fff}
-  .forgot{display:block;margin:10px 0 0;text-align:right;color:#3d67ff;text-decoration:none;font-size:14px}
-  .btn{
-    width:100%;margin-top:14px;appearance:none;border:0;background:#0b0b0b;color:#fff;
-    font-weight:800;padding:13px 16px;border-radius:12px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);
-  }
-  .hint{font-size:13px;color:#9aa1ac;margin-top:6px;text-align:center}
-  .err { color:#c1121f; }
+  .panel{ background:linear-gradient(180deg,#fff 0%, #fafbff 100%); border:1px solid var(--outline);
+          border-radius:var(--radius); padding:26px; box-shadow:var(--glow); }
+  .panel h2{ margin:0 0 18px; font-size:28px; text-align:center; }
+  .field{ margin:12px 0; } .label{ color:#3b3f46; margin:0 0 6px; font-size:14px; }
+  .input{ width:100%; padding:12px 14px; border-radius:12px; border:1px solid #dde1ea; background:#fff; outline:none; font-size:15px; }
+  .input:focus{ border-color:#9fb7ff; box-shadow:0 0 0 3px rgba(60,120,255,.12) }
+  .row{ display:flex; align-items:center; gap:10px; }
+  .eye{ cursor:pointer; user-select:none; font-size:20px; opacity:.75; width:42px; height:42px;
+        display:grid; place-items:center; border-radius:10px; border:1px solid #e7eaf2; background:#fff; }
+  .forgot{ display:block; margin:10px 0 0; text-align:right; color:#3d67ff; text-decoration:none; font-size:14px; }
+  .btn{ width:100%; margin-top:14px; appearance:none; border:0; background:#0b0b0b; color:#fff; font-weight:800;
+        padding:13px 16px; border-radius:12px; cursor:pointer; box-shadow:0 10px 28px rgba(0,0,0,.35); }
+  .hint{ font-size:13px; color:#9aa1ac; margin-top:6px; text-align:center; } .err{ color:#c1121f; }
 
-  @media (max-width: 980px){
-    .wrap{grid-template-columns: 1fr;row-gap:28px;padding:28px 16px 40px}
-    .logo{ width: min(300px, 60vw); margin-bottom:14px }
-    .brand-pill{ font-size: clamp(22px, 6vw, 32px) }
-    .cards{ grid-template-columns: 1fr; max-width: 560px }
-    .panel{ max-width: 680px; margin: 6px auto 0 }
+  /* Modal */
+  dialog{ border:0; border-radius:16px; width:min(520px, 92vw); padding:0; overflow:hidden; box-shadow: 0 40px 120px rgba(0,0,0,.35); }
+  dialog::backdrop{ background:rgba(0,0,0,.35); }
+  .modal-head{ padding:18px 22px; border-bottom:1px solid #eceff5; font-weight:800; }
+  .modal-body{ padding:18px 22px; }
+  .modal-actions{ padding:16px 22px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #eceff5; }
+  .btn.ghost{ background:#fff; color:#111; border:1px solid #e6e8ee; box-shadow:none; }
+
+  @media (max-width:980px){
+    .wrap{ grid-template-columns:1fr; row-gap:28px; padding:28px 16px 40px; }
+    .logo{ width:min(300px, 60vw); margin-bottom:14px; }
+    .brand-pill{ font-size:clamp(22px, 6vw, 32px); }
+    .cards{ grid-template-columns:1fr; max-width:560px; }
+    .panel{ max-width:680px; margin:6px auto 0; }
   }
 </style>
 </head>
 <body>
-
   <div class="wrap">
     <section class="left">
       <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo" />
-      <div class="brand-pill">
-        <span>FX</span><span class="bar" aria-hidden="true"></span><span>CAPITAL R.L.</span>
-      </div>
+      <div class="brand-pill"><span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span></div>
       <div class="tagline">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
@@ -114,7 +86,6 @@
         <div class="card"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
         <div class="card"><strong>Control</strong><div class="muted">Transparencia total</div></div>
       </div>
-
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
@@ -140,15 +111,50 @@
     </section>
   </div>
 
+  <!-- Modal de recuperación -->
+  <dialog id="forgotDlg">
+    <div class="modal-head">Recuperación de contraseña</div>
+    <div class="modal-body">
+      <p style="margin-top:0;color:#444">
+        Entre en contacto con la empresa para solicitar su cambio de contraseña.  
+        Complete el siguiente formulario y nos pondremos en contacto.
+      </p>
+
+      <div class="field">
+        <div class="label">Correo</div>
+        <input id="fp_email" class="input" type="email" placeholder="tu@email.com" />
+      </div>
+      <div class="field">
+        <div class="label">Nombre (opcional)</div>
+        <input id="fp_name" class="input" type="text" placeholder="Tu nombre" />
+      </div>
+      <div class="field">
+        <div class="label">Teléfono (opcional)</div>
+        <input id="fp_phone" class="input" type="tel" placeholder="+502 5555 5555" />
+      </div>
+      <div class="field">
+        <div class="label">Mensaje (opcional)</div>
+        <textarea id="fp_msg" class="input" rows="4" placeholder="Comentarios adicionales"></textarea>
+      </div>
+      <div id="fp_status" class="hint" aria-live="polite"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="fp_cancel">Cancelar</button>
+      <button type="button" class="btn" id="fp_send">Enviar solicitud</button>
+    </div>
+  </dialog>
+
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
     // ===== Config =====
-    const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-    const SUPABASE_ANON_KEY =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+    const SUPABASE_URL  = 'https://czvpehbubfrinutztnwh.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
     const DASHBOARD_PATH = '/cliente-dashboard.html';
 
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    // NUEVA edge function (con secrets distintos)
+    const FORGOT_ENDPOINT = 'https://czvpehbubfrinutztnwh.functions.supabase.co/support-forgot';
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
@@ -157,54 +163,78 @@
       if (session) window.location.replace(DASHBOARD_PATH);
     })();
 
-    // Mostrar/Ocultar contraseña
-    document.getElementById('toggleEye').addEventListener('click', () => {
-      const p = document.getElementById('password');
-      const show = p.type === 'password';
-      p.type = show ? 'text' : 'password';
-      document.getElementById('toggleEye').setAttribute('aria-pressed', String(show));
+    const $ = (id) => document.getElementById(id);
+    const setMsg = (t, err=false) => { const el = $('msg'); el.textContent = t || ''; el.className = 'hint' + (err ? ' err' : ''); };
+
+    $('toggleEye').addEventListener('click', () => {
+      const p = $('password'); const show = p.type === 'password'; p.type = show ? 'text' : 'password';
+      $('toggleEye').setAttribute('aria-pressed', String(show));
     });
 
-    const $msg = (t,err)=> {
-      const el = document.getElementById('msg');
-      el.textContent = t || '';
-      el.className = 'hint' + (err ? ' err' : '');
-    };
-
-    // Traducción de errores comunes de Supabase
-    function traducirErrorAuth(error){
-      const raw = (error?.message || '').toLowerCase();
-      const status = error?.status || 0;
-
-      if (raw.includes('invalid login') || status === 400)
-        return 'Correo o contraseña incorrectos.';
-      if (raw.includes('email not confirmed') || raw.includes('not confirmed'))
-        return 'Tu correo aún no está confirmado. Revisa tu bandeja o solicita confirmación.';
-      if (raw.includes('rate limit') || status === 429)
-        return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
-      if (raw.includes('network') || raw.includes('fetch') || status === 0)
-        return 'Problema de conexión. Verifica tu internet e inténtalo de nuevo.';
-
-      return 'No se pudo iniciar sesión. Inténtalo nuevamente.';
-    }
-
-    // Login
+    // Login con mensajes en español
     async function doLogin(){
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      if (!email || !password) { $msg('Complete correo y contraseña', true); return; }
-      $msg('Procesando…');
+      const email = $('email').value.trim();
+      const password = $('password').value;
+      if(!email || !password){ setMsg('Complete correo y contraseña', true); return; }
+      setMsg('Procesando…');
+
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { $msg(traducirErrorAuth(error), true); return; }
+      if (error) {
+        // Normaliza a español
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
+          setMsg('Correo o contraseña incorrectos.', true);
+        } else if (msg.includes('email not confirmed')) {
+          setMsg('Debe confirmar su correo antes de ingresar.', true);
+        } else {
+          setMsg('No se pudo iniciar sesión. Intente de nuevo.', true);
+        }
+        return;
+      }
       window.location.replace(DASHBOARD_PATH);
     }
-    document.getElementById('btnLogin').addEventListener('click', doLogin);
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
+    $('btnLogin').addEventListener('click', doLogin);
+    document.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
 
-    // ¿Olvidó su contraseña? -> solo mostrar aviso solicitado
-    document.getElementById('forgotLink').addEventListener('click', (e)=>{
+    // ===== Modal forgot =====
+    const dlg = $('forgotDlg');
+    $('forgotLink').addEventListener('click', (e)=> {
       e.preventDefault();
-      $msg('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
+      $('fp_email').value = $('email').value.trim();
+      $('fp_name').value = '';
+      $('fp_phone').value = '';
+      $('fp_msg').value = '';
+      $('fp_status').textContent = '';
+      dlg.showModal();
+    });
+
+    $('fp_cancel').addEventListener('click', ()=> dlg.close());
+
+    $('fp_send').addEventListener('click', async ()=>{
+      const email = $('fp_email').value.trim();
+      const name  = $('fp_name').value.trim();
+      const phone = $('fp_phone').value.trim();
+      const message = $('fp_msg').value.trim();
+
+      const statusEl = $('fp_status');
+      if (!email) { statusEl.textContent = 'Escribe tu correo.'; statusEl.className = 'hint err'; return; }
+      statusEl.textContent = 'Enviando…'; statusEl.className = 'hint';
+
+      try{
+        const r = await fetch(FORGOT_ENDPOINT, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ email, name, phone, message })
+        });
+        const data = await r.json().catch(()=>({}));
+        if (!r.ok) throw new Error(data?.error || 'Error');
+
+        statusEl.textContent = 'Solicitud enviada. En breve nos pondremos en contacto.';
+        setTimeout(()=> dlg.close(), 900);
+      }catch(err){
+        statusEl.textContent = 'No se pudo enviar la solicitud. Intente más tarde.';
+        statusEl.className = 'hint err';
+      }
     });
   </script>
 </body>
