@@ -2,13 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>FX | CAPITAL R.L. — Iniciar sesión</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Tema claro */
     --bg:#f5f7fb;
     --card:#ffffff;
     --panel:#f9fafb;
@@ -17,7 +16,6 @@
     --muted:#4b5563;
     --accent:#111827;
 
-    /* Sombras 3D */
     --shadow-sm:0 8px 18px rgba(0,0,0,.10);
     --shadow-md:0 18px 40px rgba(0,0,0,.14);
     --shadow-lg:0 40px 90px rgba(0,0,0,.18);
@@ -30,34 +28,44 @@
     color:var(--txt);
     font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
     background: radial-gradient(1200px 800px at 12% -25%, #ffffff 0%, #eef2f7 55%) fixed;
-    display:flex;justify-content:center;align-items:center;
+
+    /* Safe area iOS para que el logo no se recorte */
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+
+    display:flex;justify-content:center;align-items:flex-start;
     min-height:100vh;
     perspective:1200px;
   }
 
+  /* Layout: 1 columna en móvil, 2 en desktop */
   .wrap{
-    width:min(1200px,94vw);
-    display:grid;grid-template-columns:1.25fr 480px;
-    gap:48px;align-items:center;
+    width:min(1200px, 96vw);
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;               /* gap pequeño en móvil: login más alto */
+    align-items:start;
   }
-  @media(max-width:1100px){.wrap{grid-template-columns:1fr;gap:32px}}
+  @media(min-width:1000px){
+    .wrap{ grid-template-columns:1.25fr 480px; gap:48px; }
+  }
 
   /* ===== HERO ===== */
   .brand{
     display:flex;
-    flex-direction:column;      /* logo arriba */
-    align-items:center;         /* centrado */
-    gap:16px;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
     transform-style:preserve-3d;
   }
   .brand img{
-    height:170px;               /* logo MÁS GRANDE */
+    /* Escala segura para móviles sin recortes ni distorsión */
+    height: clamp(110px, 18vh, 170px);
     width:auto; object-fit:contain;
     filter:drop-shadow(0 14px 22px rgba(0,0,0,.22));
-    transform:translateZ(55px);
-  }
-  @media(max-width:900px){
-    .brand img{ height:140px; }
+    transform:translateZ(40px);
   }
 
   .hero{transform-style:preserve-3d; text-align:center;}
@@ -66,43 +74,43 @@
     display:inline-block;
     background:linear-gradient(180deg, #000 0%, #111 100%); /* fondo NEGRO */
     color:#fff;
-    border-radius:18px;
-    padding:16px 22px;
+    border-radius:16px;
+    padding:12px 18px;
     box-shadow:
       0 14px 24px rgba(0,0,0,.30),
-      0 2px 0 0 rgba(255,255,255,.18) inset,
-      0 -2px 0 0 rgba(0,0,0,.06) inset,
+      0 2px 0 rgba(255,255,255,.18) inset,
+      0 -2px 0 rgba(0,0,0,.06) inset,
       0 28px 60px rgba(0,0,0,.25);
     font-weight:800;
-    font-size:clamp(34px, 5.2vw, 60px);  /* tamaño controlado para 1 línea */
-    letter-spacing:.4px;
-    white-space:nowrap;                   /* una sola línea */
-    transform:translateZ(55px) rotateX(.5deg);
+    font-size:clamp(26px, 6.2vw, 56px);  /* 1 línea y responsivo */
+    letter-spacing:.3px;
+    white-space:nowrap;
+    transform:translateZ(45px);
     position:relative;
   }
   .brand-banner::after{
-    content:"";
-    position:absolute; inset:0;
-    border-radius:18px;
+    content:"";position:absolute;inset:0;border-radius:16px;
     background:linear-gradient(180deg, rgba(255,255,255,.18) 0%, transparent 55%);
-    pointer-events:none;
-    mix-blend-mode:soft-light;
+    pointer-events:none;mix-blend-mode:soft-light;
   }
 
-  /* Slogan en NEGRO y un poco más grande */
+  /* Slogan: negro y un poco más grande */
   .brand-sub{
     display:inline-block;
-    margin-top:10px;
-    background:transparent;
-    color:#000;                   /* negro */
+    margin-top:8px;
+    color:#000;
     font-weight:700;
-    transform:translateZ(40px);
-    font-size:clamp(16px, 2.0vw, 20px);
+    transform:translateZ(30px);
+    font-size:clamp(15px, 3.6vw, 19px);
   }
 
   .cards{
-    display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    margin-top:16px;transform-style:preserve-3d;
+    display:grid;gap:12px;
+    grid-template-columns:1fr;       /* 1 col en móvil */
+    transform-style:preserve-3d;
+  }
+  @media(min-width:680px){
+    .cards{ grid-template-columns:repeat(3,minmax(200px,1fr)); gap:18px; }
   }
   .card{
     background:var(--card);
@@ -110,10 +118,10 @@
     border-radius:16px;
     padding:18px;
     box-shadow:var(--shadow-sm), 0 1px 0 rgba(255,255,255,.7) inset;
-    transform:translateZ(22px);
+    transform:translateZ(18px);
   }
   .card strong{display:block;margin-bottom:4px}
-  .footnote{color:var(--muted);font-size:12px;margin-top:12px}
+  .footnote{color:var(--muted);font-size:12px;margin-top:10px}
 
   /* ===== Login 3D ===== */
   .tilt{transform-style:preserve-3d; will-change:transform; transition:transform .12s ease}
@@ -121,14 +129,14 @@
     background:linear-gradient(180deg,var(--panel) 0%,#ffffff 100%);
     border:1px solid var(--outline);
     border-radius:22px;
-    padding:28px;
+    padding:24px;
     box-shadow:
       0 1px 0 rgba(255,255,255,.8) inset,
       var(--shadow-md),
       0 60px 120px rgba(0,0,0,.10);
-    transform:translateZ(35px);
+    transform:translateZ(24px);
   }
-  .login h2{margin:0 0 18px;font-size:24px;text-align:center;transform:translateZ(10px)}
+  .login h2{margin:0 0 16px;font-size:clamp(22px, 4.6vw, 26px);text-align:center;transform:translateZ(10px)}
 
   .input{
     width:100%;
@@ -156,7 +164,7 @@
       0 12px 26px rgba(0,0,0,.25),
       0 30px 60px rgba(0,0,0,.15);
   }
-  .btn.primary:hover{transform:translateZ(14px); box-shadow:
+  .btn.primary:hover{transform:translateZ(12px); box-shadow:
       0 1px 0 rgba(255,255,255,.35) inset,
       0 16px 34px rgba(0,0,0,.28),
       0 40px 85px rgba(0,0,0,.18);}
@@ -166,11 +174,16 @@
   .eye{cursor:pointer;user-select:none;font-size:22px;transform:translateZ(8px)}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
+
+  /* Menos tilt en móviles para estabilidad */
+  @media(max-width:768px){
+    .tilt{transition:transform .10s ease}
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- HERO con Logo ARRIBA y CENTRADO -->
+    <!-- HERO -->
     <section>
       <div class="brand tilt" data-tilt>
         <img src="logologin.png" alt="FX | CAPITAL R.L.">
@@ -213,13 +226,16 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
   <script>
-    /* Tilt 3D sin librerías */
-    const MAX_DEG = 6;
-    const Z_LIFT = 35;
+    /* Tilt 3D sin librerías (con suavizado móvil) */
     function bindTilt(el){
-      let rect = null;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const MAX_DEG = isMobile ? 3 : 6;
+      const Z_LIFT = isMobile ? 18 : 35;
+      let rect = el.getBoundingClientRect();
+
       const updateRect = () => rect = el.getBoundingClientRect();
-      updateRect(); window.addEventListener('resize', updateRect);
+      window.addEventListener('resize', updateRect);
+
       el.addEventListener('mousemove', (e)=>{
         const x = (e.clientX - rect.left) / rect.width;
         const y = (e.clientY - rect.top) / rect.height;
@@ -227,7 +243,7 @@
         const ry = (x - 0.5) *  2 * MAX_DEG;
         el.style.transform = `translateZ(${Z_LIFT}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
       });
-      el.addEventListener('mouseleave', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px) rotateX(0) rotateY(0)`; });
+      el.addEventListener('mouseleave', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px)`; });
       el.addEventListener('mouseenter', ()=>{ el.style.transform = `translateZ(${Z_LIFT}px)`; });
     }
     document.querySelectorAll('[data-tilt]').forEach(bindTilt);
