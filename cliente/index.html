@@ -8,16 +8,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#e9eef4;            /* fondo suave */
-    --panel:#ffffff;         /* panel claro */
-    --chip:#0b0b0b;          /* placa negra */
-    --txt:#0e1116;           /* texto principal */
-    --muted:#778195;         /* texto secundario */
-    --outline:rgba(15,18,23,.08);
-    --shadow-3d:0 34px 80px rgba(0,0,0,.25), 0 10px 24px rgba(0,0,0,.14);
-    --shadow-soft:0 20px 45px rgba(0,0,0,.18);
-    --radius-xl:24px;
-    --radius-lg:18px;
+    --bg:#0c0d10;
+    --panel:#ffffff;
+    --pill:#0b0b0b;
+    --txt:#0c0d10;
+    --muted:#7a818d;
+    --outline:rgba(0,0,0,.08);
+    --glow:0 45px 100px rgba(0,0,0,.35);
+    --soft:0 14px 35px rgba(0,0,0,.18);
+    --radius:18px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -26,187 +25,212 @@
     font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
     color:var(--txt);
     background:
-      radial-gradient(1200px 800px at 12% -25%, #f2f5f9 0%, var(--bg) 55%) fixed;
+      radial-gradient(1100px 700px at 25% -20%, #eef2f7 0%, #e9eef5 55%, #e7edf5 70%, #e6ecf4 100%)
+      fixed;
   }
 
-  /* ===== Layout base (MÓVIL first) ===== */
+  /* ---------- layout ---------- */
   .wrap{
-    width:min(1180px,94vw);
+    max-width:1280px;
     margin:0 auto;
-    padding:28px 0 54px;
+    padding:40px 20px 64px;
     display:grid;
-    grid-template-columns:1fr;
-    gap:28px;
+    grid-template-columns: minmax(320px, 640px) minmax(360px, 520px);
+    column-gap:64px;
+    align-items:center;
+    justify-content:center;       /* centra el grid en desktop */
   }
-
-  /* Columna marca (izquierda en desktop) */
-  .brand{
+  .left{
     display:flex;
     flex-direction:column;
-    align-items:center;
-    text-align:center;
+    align-items:center;           /* contenido centrado en su columna */
   }
+
+  /* ---------- hero ---------- */
   .logo{
-    width:min(230px,56vw);
+    width:min(220px, 40vw);
     height:auto;
     display:block;
-    margin:6px auto 10px;
-    filter: drop-shadow(0 14px 30px rgba(0,0,0,.18));
+    filter: drop-shadow(0 20px 60px rgba(0,0,0,.25));
+    margin:8px auto 18px;
   }
-
-  .badge{
+  .brand-pill{
     display:inline-flex;
     align-items:center;
-    gap:10px;
-    padding:16px 22px;
-    border-radius:999px;
+    justify-content:center;
+    gap:18px;
+    padding:18px 26px;
+    background:var(--pill);
     color:#fff;
-    background:linear-gradient(180deg,#0d0d0d 0%, #000 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.08),
-      0 10px 30px rgba(0,0,0,.35);
+    border-radius:999px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
     font-weight:800;
-    letter-spacing:.6px;
-    font-size:clamp(20px,6vw,32px);
+    font-size: clamp(22px, 2.6vw, 34px);
+    letter-spacing:.8px;
     line-height:1;
+    margin:0 auto 14px;
   }
-  .divider{opacity:.5;margin:0 8px}
-
+  .brand-pill .bar{
+    width:2px;height:1.1em;background:#fff;opacity:.9;border-radius:2px;
+  }
   .tagline{
-    margin-top:14px;
-    font-weight:700;
-    font-size:clamp(16px,4.8vw,20px);
+    margin:6px auto 18px;
     color:#111;
-    text-shadow:0 1px 0 rgba(255,255,255,.65);
+    font-weight:800;
+    letter-spacing:.2px;
+    font-size:clamp(16px,1.4vw,20px);
+    text-align:center;
+    text-wrap:balance;
+    text-shadow:0 8px 30px rgba(0,0,0,.12);
   }
 
+  /* ---------- cards ---------- */
   .cards{
-    margin-top:18px;
+    width:100%;
+    max-width:640px;
     display:grid;
-    gap:14px;
+    grid-template-columns: repeat(3, 1fr);
+    gap:18px;
+    margin:8px auto 6px;
   }
   .card{
-    background:var(--panel);
+    background:#fff;
+    border-radius:14px;
     border:1px solid var(--outline);
-    border-radius:18px;
-    box-shadow:var(--shadow-soft);
-    padding:18px 18px 16px;
-    text-align:left;
+    padding:16px 16px 18px;
+    box-shadow:var(--soft);
   }
-  .card b{display:block;margin-bottom:6px;font-size:18px}
-  .foot{color:var(--muted);font-size:13px;margin-top:12px;text-align:left}
+  .card strong{display:block;margin-bottom:6px}
+  .fine{color:var(--muted);font-size:13px;margin:12px 0 0}
 
-  /* Panel login (debajo en móvil) */
-  .login{
-    background:linear-gradient(180deg,#fff 0%,#f9fafc 100%);
+  /* ---------- login panel ---------- */
+  .panel{
+    background:linear-gradient(180deg,#fff 0%, #fafbff 100%);
     border:1px solid var(--outline);
-    border-radius:var(--radius-xl);
-    box-shadow:var(--shadow-3d);
-    padding:22px 20px 20px;
+    border-radius:var(--radius);
+    padding:26px;
+    box-shadow:var(--glow);
   }
-  .login h2{margin:4px 0 14px;text-align:center;font-size:28px}
+  .panel h2{
+    margin:0 0 18px;
+    font-size:28px;
+    text-align:center;
+  }
+  .field{margin:12px 0}
+  .label{color:#3b3f46;margin:0 0 6px;font-size:14px}
   .input{
-    width:100%;background:#f7f8fb;border:1px solid var(--outline);
-    border-radius:12px;color:#0f1116;padding:12px 14px;outline:none
+    width:100%;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid #dde1ea;
+    background:#fff;
+    outline:none;
+    font-size:15px;
   }
-  .input:focus{border-color:#2b7cff}
+  .input:focus{border-color:#9fb7ff; box-shadow:0 0 0 3px rgba(60,120,255,.12)}
   .row{display:flex;align-items:center;gap:10px}
-  .eye{cursor:pointer;user-select:none;font-size:22px}
-  .minor{color:var(--muted);font-size:14px}
-  .link{color:#1d4ed8;cursor:pointer}
+  .eye{cursor:pointer;user-select:none;font-size:20px;opacity:.75}
+  .forgot{
+    display:block;
+    margin:10px 0 0;
+    text-align:right;
+    color:#3d67ff;
+    text-decoration:none;
+    font-size:14px;
+  }
   .btn{
     width:100%;
-    appearance:none;border:0;border-radius:12px;
-    padding:14px 16px;font-weight:800;cursor:pointer;
-    background:#000;color:#fff;box-shadow:0 14px 30px rgba(0,0,0,.35);
+    margin-top:14px;
+    appearance:none;
+    border:0;
+    background:#0b0b0b;
+    color:#fff;
+    font-weight:800;
+    padding:13px 16px;
+    border-radius:12px;
+    cursor:pointer;
+    box-shadow:0 10px 28px rgba(0,0,0,.35);
   }
+  .hint{font-size:13px;color:#9aa1ac;margin-top:6px;text-align:center}
+  .err { color:#c1121f; }
 
-  /* ===== Desktop ≥1100px ===== */
-  @media (min-width:1100px){
+  /* ---------- responsive (móvil) ---------- */
+  @media (max-width: 980px){
     .wrap{
-      grid-template-columns:1.15fr 540px;   /* izquierda / panel login */
-      gap:46px;
-      padding:44px 0 70px;
+      grid-template-columns: 1fr;
+      row-gap:28px;
+      padding:28px 16px 40px;
     }
-    .brand{align-items:flex-start;text-align:left}
-    .logo{width:200px;margin:0 0 8px 8px}
-    .badge{
-      font-size:40px;
-      padding:16px 28px;
-      border-radius:34px;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.06),
-        0 24px 56px rgba(0,0,0,.35);
-    }
-    .tagline{font-size:22px;margin-left:6px}
-    .cards{
-      grid-template-columns:repeat(3, minmax(220px, 1fr));
-      gap:18px;
-      margin-top:18px;
-      padding-left:4px;
-    }
-    .card{padding:18px 20px}
-    .login{
-      padding:24px 24px 22px;
-    }
-  }
-
-  /* ===== Tablet (intermedio) ===== */
-  @media (min-width:720px) and (max-width:1099px){
-    .cards{grid-template-columns:repeat(2,1fr)}
+    .logo{ width: min(300px, 60vw); margin-bottom:14px; }
+    .brand-pill{ font-size: clamp(22px, 6vw, 32px); }
+    .cards{ grid-template-columns: 1fr; max-width: 560px; }
+    .panel{ max-width: 680px; margin: 6px auto 0; }
   }
 </style>
 </head>
 <body>
+
   <div class="wrap">
-
-    <!-- Columna Marca -->
-    <section class="brand">
-      <img src="logologin.png" alt="FX CAPITAL R.L. — logo" class="logo" />
-
-      <div class="badge">
-        <span>FX</span><span class="divider">|</span><span>CAPITAL R.L.</span>
+    <!-- Columna izquierda (centrada) -->
+    <section class="left">
+      <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo" />
+      <div class="brand-pill">
+        <span>FX</span>
+        <span class="bar" aria-hidden="true"></span>
+        <span>CAPITAL R.L.</span>
       </div>
-
       <div class="tagline">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
-        <div class="card"><b>Seguridad</b><div class="minor">Máxima protección</div></div>
-        <div class="card"><b>Rentabilidad</b><div class="minor">Hasta 25% semestral*</div></div>
-        <div class="card"><b>Control</b><div class="minor">Transparencia total</div></div>
+        <div class="card">
+          <strong>Seguridad</strong>
+          <div class="muted">Máxima protección</div>
+        </div>
+        <div class="card">
+          <strong>Rentabilidad</strong>
+          <div class="muted">Hasta 25% semestral*</div>
+        </div>
+        <div class="card">
+          <strong>Control</strong>
+          <div class="muted">Transparencia total</div>
+        </div>
       </div>
-      <div class="foot">*El porcentaje final depende de su plan.</div>
+
+      <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <!-- Panel Login -->
-    <section class="login">
+    <!-- Panel de login (derecha) -->
+    <section class="panel">
       <h2>Iniciar Sesión</h2>
 
-      <div class="minor" style="margin:0 0 6px 2px">Correo Electrónico</div>
-      <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
-
-      <div class="minor" style="margin:12px 0 6px 2px">Contraseña</div>
-      <div class="row" style="margin-bottom:10px">
-        <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
-        <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
+      <div class="field">
+        <div class="label">Correo Electrónico</div>
+        <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
       </div>
 
-      <div style="text-align:right;margin-bottom:14px">
-        <a class="minor link" href="#" onclick="alert('Solicite el restablecimiento a soporte.');return false;">¿Olvidó su contraseña?</a>
+      <div class="field">
+        <div class="label">Contraseña</div>
+        <div class="row">
+          <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
+          <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
+        </div>
+        <a id="forgot" class="forgot" href="#">¿Olvidó su contraseña?</a>
+        <div id="msg" class="hint"></div>
       </div>
 
       <button id="btnLogin" class="btn">Iniciar Sesión</button>
     </section>
-
   </div>
 
-  <!-- Supabase Auth (igual que antes) -->
+  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
+    // ===== Config =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
     const DASHBOARD_PATH = '/cliente-dashboard.html';
+    const RESET_REDIRECT = location.origin + '/cliente-dashboard.html'; // cámbialo si tienes una página dedicada
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
@@ -224,16 +248,36 @@
       p.type = p.type === 'password' ? 'text' : 'password';
     };
 
+    const $msg = (t,err)=> {
+      const el = document.getElementById('msg');
+      el.textContent = t || '';
+      el.className = 'hint' + (err ? ' err' : '');
+    };
+
     // Login
     async function doLogin(){
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      if (!email || !password) { alert('Complete correo y contraseña'); return; }
+      if (!email || !password) { $msg('Complete correo y contraseña', true); return; }
+      $msg('Procesando…');
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { alert('No se pudo iniciar sesión: ' + error.message); return; }
+      if (error) { $msg('No se pudo iniciar sesión: ' + error.message, true); return; }
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').onclick = doLogin;
+
+    // Forgot password -> envía email de reset
+    document.getElementById('forgot').onclick = async (e)=>{
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      if (!email) { $msg('Escribe tu correo y vuelve a intentar.', true); return; }
+      $msg('Enviando solicitud…');
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: RESET_REDIRECT });
+      if (error) { $msg('No se pudo enviar la solicitud. Intenta de nuevo.', true); return; }
+      $msg('Te enviamos un correo con instrucciones para restablecer tu contraseña.');
+    };
+
+    // Enter para enviar
     document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
   </script>
 </body>
