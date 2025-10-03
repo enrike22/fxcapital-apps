@@ -89,7 +89,6 @@ tbody tr:hover{background:#0e1116}
           <select id="u_currency"><option>GTQ</option><option>USD</option></select>
         </div>
         <div><label>Capital inicial</label>
-          <!-- CAMBIO: text + inputmode decimal para permitir comas -->
           <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00">
         </div>
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
@@ -169,7 +168,7 @@ tbody tr:hover{background:#0e1116}
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Fecha</th><th>Correo</th><th>Tipo</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Correo</th><th>Tipo</th><th>Detalles</th></tr></thead>
           <tbody id="notifs"></tbody>
         </table>
       </div>
@@ -352,7 +351,7 @@ function editClient(x){
   $("u_name").value  = x.full_name || "";
   $("u_phone").value = x.phone || "";
   $("u_currency").value = x.currency || "GTQ";
-  setCapitalInputValue(x.capital); // <-- formateado
+  setCapitalInputValue(x.capital);
   $("u_joined").value   = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
   $("u_plan").value     = x.plan || "STANDARD";
   $("u_months").value   = x.invest_months ?? "12";
@@ -361,7 +360,7 @@ function editClient(x){
   $("u_bank_account").value= x.bank_account ?? "";
   $("u_bank_account_type").value = x.bank_account_type ?? "";
   $("u_pass").value = "";
-  validateRatePlan(); // recalcula error visual
+  validateRatePlan();
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -372,7 +371,6 @@ function validateRatePlan(){
   const rate = rateStr === "" ? null : Number(rateStr);
   const err = $("rateError");
 
-  // autocompletar por plan si vacío
   if(rate === null){
     if(plan === "STANDARD") $("u_rate").value = 15;
     if(plan === "PLATINUM") $("u_rate").value = 20;
@@ -382,7 +380,7 @@ function validateRatePlan(){
   let isValid = true;
   if(plan === "STANDARD") isValid = (finalRate === 15);
   else if(plan === "PLATINUM") isValid = (finalRate === 20);
-  else if(plan === "BLACK") isValid = true; // sin restricción
+  else if(plan === "BLACK") isValid = true;
 
   show(err, !isValid);
   return isValid;
@@ -397,7 +395,7 @@ async function saveUser(){
   const phone    = $("u_phone").value.trim();
   const password = $("u_pass").value;
   const currency = $("u_currency").value;
-  const capital  = parseCapitalFromInput($("u_capital").value); // <-- limpio sin comas
+  const capital  = parseCapitalFromInput($("u_capital").value);
   const joined   = $("u_joined").value || null;
   const plan     = $("u_plan").value;
   const months   = parseInt($("u_months").value, 10);
@@ -425,7 +423,6 @@ async function saveUser(){
     }
     if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
-    // RPC canónico (12 parámetros) — evita PGRST202
     const body = {
       p_email: email,
       p_full_name: fullName,
@@ -497,25 +494,47 @@ async function deleteClient(x){
   alert("Cliente eliminado correctamente.");
 }
 
-/*** Solicitudes (incluye reset de contraseña) ***/
+/*** Solicitudes (lee admin_requests; fallback a admin_notifications) ***/
 async function loadNotifs(){
-  const r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, {
-    headers:{ apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token }, cache:"no-store"
-  });
-  const rows = await r.json();
+  const h = { apikey: ANON_KEY, Authorization:"Bearer "+localStorage.token };
   const tb = $("notifs"); tb.innerHTML="";
-  rows.forEach(x=>{
-    const p = x.payload || {};
-    const kind = p.kind || '—';
-    const email = p.email || p.user_email || '—';
+
+  // 1) Intentar admin_requests (donde registra el login: kind, email, meta, created_at)
+  let r = await fetch(`${BASE}/admin_requests?select=*&order=created_at.desc`, { headers:h, cache:"no-store" });
+  if (r.ok) {
+    const rows = await r.json();
+    rows.forEach(x=>{
+      const meta = x.meta || {};
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${new Date(x.created_at).toLocaleString()}</td>
+        <td>${x.email || meta.email || '—'}</td>
+        <td>${x.kind || meta.kind || '—'}</td>
+        <td class="small">${meta.ua ? meta.ua.slice(0,80) : '—'}</td>`;
+      tb.appendChild(tr);
+    });
+    return;
+  }
+
+  // 2) Fallback: admin_notifications (payload con {kind,email,...})
+  r = await fetch(`${BASE}/admin_notifications?select=*&order=created_at.desc`, { headers:h, cache:"no-store" });
+  if (r.ok){
+    const rows = await r.json();
+    rows.forEach(x=>{
+      const p = x.payload || {};
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${new Date(x.created_at).toLocaleString()}</td>
+        <td>${p.email || p.user_email || '—'}</td>
+        <td>${p.kind || '—'}</td>
+        <td class="small">${p.account_id ? ('account_id: '+p.account_id) : '—'}</td>`;
+      tb.appendChild(tr);
+    });
+  } else {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${new Date(x.created_at).toLocaleString()}</td>
-      <td>${email}</td>
-      <td>${kind}</td>
-      <td><span class="chip">—</span></td>`;
+    tr.innerHTML = `<td colspan="4">No se pudo cargar ninguna tabla de solicitudes.</td>`;
     tb.appendChild(tr);
-  });
+  }
 }
 
 /*** INIT ***/
@@ -544,9 +563,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnRefreshNotifs").addEventListener("click", loadNotifs);
   $("btnRefreshUsers").addEventListener("click", listUsers);
 
-  // Enlazar formateo de Capital inicial
   bindCapitalFormatter($("u_capital"));
-
   initApp();
 });
 </script>
