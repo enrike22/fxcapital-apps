@@ -38,12 +38,12 @@
     grid-template-columns: minmax(320px, 640px) minmax(360px, 520px);
     column-gap:64px;
     align-items:center;
-    justify-content:center;       /* centra el grid en desktop */
+    justify-content:center;
   }
   .left{
     display:flex;
     flex-direction:column;
-    align-items:center;           /* contenido centrado en su columna */
+    align-items:center;
   }
 
   /* ---------- hero ---------- */
@@ -129,7 +129,11 @@
   }
   .input:focus{border-color:#9fb7ff; box-shadow:0 0 0 3px rgba(60,120,255,.12)}
   .row{display:flex;align-items:center;gap:10px}
-  .eye{cursor:pointer;user-select:none;font-size:20px;opacity:.75}
+  .eye{
+    cursor:pointer;user-select:none;font-size:20px;opacity:.75;
+    width:42px;height:42px;display:grid;place-items:center;border-radius:10px;
+    border:1px solid #e7eaf2;background:#fff;
+  }
   .forgot{
     display:block;
     margin:10px 0 0;
@@ -173,6 +177,7 @@
   <div class="wrap">
     <!-- Columna izquierda (centrada) -->
     <section class="left">
+      <!-- Usa tu archivo subido (p. ej. /logologin.png) -->
       <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo" />
       <div class="brand-pill">
         <span>FX</span>
@@ -200,8 +205,8 @@
     </section>
 
     <!-- Panel de login (derecha) -->
-    <section class="panel">
-      <h2>Iniciar Sesión</h2>
+    <section class="panel" aria-labelledby="loginTitle">
+      <h2 id="loginTitle">Iniciar Sesión</h2>
 
       <div class="field">
         <div class="label">Correo Electrónico</div>
@@ -212,10 +217,10 @@
         <div class="label">Contraseña</div>
         <div class="row">
           <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
-          <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
+          <button id="toggleEye" type="button" class="eye" title="Mostrar u ocultar contraseña" aria-pressed="false">👁️</button>
         </div>
-        <a id="forgot" class="forgot" href="#">¿Olvidó su contraseña?</a>
-        <div id="msg" class="hint"></div>
+        <a id="forgotLink" class="forgot" href="#">¿Olvidó su contraseña?</a>
+        <div id="msg" class="hint" aria-live="polite"></div>
       </div>
 
       <button id="btnLogin" class="btn">Iniciar Sesión</button>
@@ -229,8 +234,12 @@
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+
+    // A dónde mandas al usuario después de login (tu dashboard)
     const DASHBOARD_PATH = '/cliente-dashboard.html';
-    const RESET_REDIRECT = location.origin + '/cliente-dashboard.html'; // cámbialo si tienes una página dedicada
+
+    // A dónde redirige el email de reset (puede ser tu dashboard donde ya manejas el flujo)
+    const RESET_REDIRECT = location.origin + '/cliente-dashboard.html';
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
@@ -243,10 +252,13 @@
     })();
 
     // Mostrar/Ocultar contraseña
-    document.getElementById('toggleEye').onclick = () => {
+    document.getElementById('toggleEye').addEventListener('click', () => {
       const p = document.getElementById('password');
-      p.type = p.type === 'password' ? 'text' : 'password';
-    };
+      const show = p.type === 'password';
+      p.type = show ? 'text' : 'password';
+      const btn = document.getElementById('toggleEye');
+      btn.setAttribute('aria-pressed', String(show));
+    });
 
     const $msg = (t,err)=> {
       const el = document.getElementById('msg');
@@ -264,21 +276,38 @@
       if (error) { $msg('No se pudo iniciar sesión: ' + error.message, true); return; }
       window.location.replace(DASHBOARD_PATH);
     }
-    document.getElementById('btnLogin').onclick = doLogin;
+    document.getElementById('btnLogin').addEventListener('click', doLogin);
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
 
-    // Forgot password -> envía email de reset
-    document.getElementById('forgot').onclick = async (e)=>{
+    // Forgot password -> envía email de reset y registra solicitud para Admin
+    document.getElementById('forgotLink').addEventListener('click', async (e)=>{
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
       if (!email) { $msg('Escribe tu correo y vuelve a intentar.', true); return; }
       $msg('Enviando solicitud…');
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: RESET_REDIRECT });
-      if (error) { $msg('No se pudo enviar la solicitud. Intenta de nuevo.', true); return; }
-      $msg('Te enviamos un correo con instrucciones para restablecer tu contraseña.');
-    };
 
-    // Enter para enviar
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
+      try {
+        // 1) Correo de recuperación (Supabase)
+        const { error: resetErr } = await sb.auth.resetPasswordForEmail(email, { redirectTo: RESET_REDIRECT });
+        if (resetErr) throw resetErr;
+
+        // 2) Registrar solicitud en tabla admin_requests (para que salga en Admin > Solicitudes)
+        // Requiere:
+        //   - Tabla public.admin_requests
+        //   - Policy INSERT para rol anon (como te pasé)
+        await sb.from('admin_requests').insert({
+          kind: 'forgot_password',
+          email,
+          meta: { ua: navigator.userAgent, ts: new Date().toISOString() }
+        });
+
+        $msg('Si el correo existe, te enviamos instrucciones para restablecer la contraseña. Nuestro equipo ya fue notificado.');
+      } catch(err){
+        console.error(err);
+        // Aunque falle el registro en la tabla (por policies), intenta dar feedback neutro
+        $msg('Si el correo existe, te enviamos instrucciones para restablecer la contraseña.');
+      }
+    });
   </script>
 </body>
 </html>
