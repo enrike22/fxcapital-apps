@@ -6,244 +6,208 @@
 <title>FX | CAPITAL R.L. — Iniciar sesión</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
 <style>
   :root{
-    --bg:#eef2f7;            /* fondo suave */
-    --panel:#ffffff;         /* tarjetas */
-    --text:#0c0e10;
-    --muted:#8a93a3;
-    --outline:rgba(10,12,14,.08);
-    --shadow-heavy:0 35px 90px rgba(0,0,0,.25);
-    --shadow-med:0 18px 50px rgba(0,0,0,.18);
-    --shadow-soft:0 10px 30px rgba(0,0,0,.10);
-    --accent:#000;           /* negro (botón/wordmark) */
-    --radius-xl:26px;
+    --bg:#e9eef4;            /* fondo suave */
+    --panel:#ffffff;         /* panel claro */
+    --chip:#0b0b0b;          /* placa negra */
+    --txt:#0e1116;           /* texto principal */
+    --muted:#778195;         /* texto secundario */
+    --outline:rgba(15,18,23,.08);
+    --shadow-3d:0 34px 80px rgba(0,0,0,.25), 0 10px 24px rgba(0,0,0,.14);
+    --shadow-soft:0 20px 45px rgba(0,0,0,.18);
+    --radius-xl:24px;
     --radius-lg:18px;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0;
-    color:var(--text);
     font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    color:var(--txt);
     background:
-      radial-gradient(1200px 800px at 12% -25%, #dfe6f1 0%, var(--bg) 55%) fixed;
+      radial-gradient(1200px 800px at 12% -25%, #f2f5f9 0%, var(--bg) 55%) fixed;
   }
 
-  /* ====== LAYOUT ====== */
+  /* ===== Layout base (MÓVIL first) ===== */
   .wrap{
-    width:min(1240px,94vw);
+    width:min(1180px,94vw);
     margin:0 auto;
-    min-height:100dvh;
+    padding:28px 0 54px;
     display:grid;
-    align-items:center;                 /* centra verticalmente en desktop */
-    gap:48px;
+    grid-template-columns:1fr;
+    gap:28px;
   }
 
-  /* Desktop: 2 columnas cómodas */
-  @media (min-width:1024px){
-    .wrap{
-      grid-template-columns: 1fr 520px;
-      gap:64px;
-    }
-  }
-
-  /* ====== BRAND AREA (izquierda) ====== */
+  /* Columna marca (izquierda en desktop) */
   .brand{
-    perspective:1000px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
   }
-
-  /* LOGO centrado y nunca recortado */
-  .brand-logo{
+  .logo{
+    width:min(230px,56vw);
+    height:auto;
     display:block;
-    margin:0 auto 12px auto;
-    filter: drop-shadow(0 18px 30px rgba(0,0,0,.25));
+    margin:6px auto 10px;
+    filter: drop-shadow(0 14px 30px rgba(0,0,0,.18));
   }
-  /* tamaños responsivos del logo (mejora móvil + no empuja en desktop) */
-  .brand-logo{ width: clamp(90px, 12vw, 140px); }
 
-  /* Wordmark tipo “píldora” negro, 3D */
-  .wordmark{
-    margin:0 auto;
-    background:var(--accent);
-    color:#fff;
-    border-radius:999px;
-    padding:16px 26px;
-    font-weight:800;
-    letter-spacing:.5px;
-    box-shadow: 0 18px 36px rgba(0,0,0,.35), inset 0 -2px 0 rgba(255,255,255,.08);
-    transform: translateZ(0); /* habilita aceleración */
+  .badge{
     display:inline-flex;
     align-items:center;
-    gap:14px;
-    font-size: clamp(22px, 2.8vw + 8px, 36px); /* ↓ ligeramente vs versión anterior para no “romper” */
+    gap:10px;
+    padding:16px 22px;
+    border-radius:999px;
+    color:#fff;
+    background:linear-gradient(180deg,#0d0d0d 0%, #000 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.08),
+      0 10px 30px rgba(0,0,0,.35);
+    font-weight:800;
+    letter-spacing:.6px;
+    font-size:clamp(20px,6vw,32px);
+    line-height:1;
   }
-  .divider{
-    width:2px; height:1.1em; background:rgba(255,255,255,.9); display:inline-block;
-  }
+  .divider{opacity:.5;margin:0 8px}
 
   .tagline{
-    margin:16px auto 22px auto;
-    text-align:center;
-    color:#000;
+    margin-top:14px;
     font-weight:700;
-    font-size: clamp(13px, 1.15vw + 8px, 18px);
-    text-shadow: 0 1px 0 #fff7;
+    font-size:clamp(16px,4.8vw,20px);
+    color:#111;
+    text-shadow:0 1px 0 rgba(255,255,255,.65);
   }
 
-  /* Tarjetas de beneficios */
-  .benefits{
-    display:grid; gap:16px;
-    grid-template-columns: 1fr;
+  .cards{
+    margin-top:18px;
+    display:grid;
+    gap:14px;
   }
-  @media (min-width:720px){
-    .benefits{ grid-template-columns: repeat(3, 1fr); }
-  }
-
   .card{
     background:var(--panel);
     border:1px solid var(--outline);
-    border-radius:var(--radius-lg);
-    padding:18px 18px 16px 18px;
-    box-shadow: var(--shadow-soft);
-    transform: translateZ(0);
+    border-radius:18px;
+    box-shadow:var(--shadow-soft);
+    padding:18px 18px 16px;
+    text-align:left;
   }
-  .card strong{ display:block; margin-bottom:6px; }
-  .smallnote{ color:var(--muted); font-size:12px; margin-top:10px }
+  .card b{display:block;margin-bottom:6px;font-size:18px}
+  .foot{color:var(--muted);font-size:13px;margin-top:12px;text-align:left}
 
-  /* ====== LOGIN (derecha) ====== */
+  /* Panel login (debajo en móvil) */
   .login{
-    background:linear-gradient(180deg,#fff 0%, #f9fafc 100%);
+    background:linear-gradient(180deg,#fff 0%,#f9fafc 100%);
     border:1px solid var(--outline);
     border-radius:var(--radius-xl);
-    padding:26px 22px 22px;
-    box-shadow: var(--shadow-med);
+    box-shadow:var(--shadow-3d);
+    padding:22px 20px 20px;
   }
-  .login h2{
-    margin:2px 0 18px 0;
-    font-size: clamp(22px, 2.5vw, 30px);
-    text-align:center;
-  }
-
+  .login h2{margin:4px 0 14px;text-align:center;font-size:28px}
   .input{
-    width:100%;
-    background:#fff;
-    border:1px solid var(--outline);
-    border-radius:14px;
-    color:var(--text);
-    padding:12px 14px;
-    outline:none;
-    font-size:16px;
-    box-shadow: inset 0 1px 0 rgba(0,0,0,.02);
+    width:100%;background:#f7f8fb;border:1px solid var(--outline);
+    border-radius:12px;color:#0f1116;padding:12px 14px;outline:none
   }
-  .input:focus{ border-color:#2b7cff }
-
-  .row{ display:flex; align-items:center; gap:10px }
-  .eye{ cursor:pointer; user-select:none; font-size:20px }
-
-  .muted{ color:var(--muted) }
-  .right{ text-align:right }
-
+  .input:focus{border-color:#2b7cff}
+  .row{display:flex;align-items:center;gap:10px}
+  .eye{cursor:pointer;user-select:none;font-size:22px}
+  .minor{color:var(--muted);font-size:14px}
+  .link{color:#1d4ed8;cursor:pointer}
   .btn{
-    appearance:none; border:0; border-radius:14px;
-    padding:12px 16px; font-weight:800; cursor:pointer;
     width:100%;
-    background:var(--accent); color:#fff;
-    box-shadow: 0 14px 30px rgba(0,0,0,.25), inset 0 -2px 0 rgba(255,255,255,.10);
-    transition: transform .08s ease;
-  }
-  .btn:active{ transform: translateY(1px) }
-
-  .error{
-    color:#b91c1c; font-size:13px; margin-top:6px; text-align:center;
-    min-height: 1.2em;
+    appearance:none;border:0;border-radius:12px;
+    padding:14px 16px;font-weight:800;cursor:pointer;
+    background:#000;color:#fff;box-shadow:0 14px 30px rgba(0,0,0,.35);
   }
 
-  /* ===== MOBILE STACK ===== */
-  @media (max-width:1023.98px){
+  /* ===== Desktop ≥1100px ===== */
+  @media (min-width:1100px){
     .wrap{
-      grid-template-columns: 1fr;           /* una columna en móvil */
-      align-items:start;
-      padding: 22px 0 28px;
+      grid-template-columns:1.15fr 540px;   /* izquierda / panel login */
+      gap:46px;
+      padding:44px 0 70px;
     }
-    .brand{ padding-inline: 16px; }
-    .login{ width:min(560px, 92vw); margin: 10px auto 28px; }
-    .brand-logo{ width: clamp(110px, 24vw, 170px); } /* grande en móvil pero sin recorte */
+    .brand{align-items:flex-start;text-align:left}
+    .logo{width:200px;margin:0 0 8px 8px}
+    .badge{
+      font-size:40px;
+      padding:16px 28px;
+      border-radius:34px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 24px 56px rgba(0,0,0,.35);
+    }
+    .tagline{font-size:22px;margin-left:6px}
+    .cards{
+      grid-template-columns:repeat(3, minmax(220px, 1fr));
+      gap:18px;
+      margin-top:18px;
+      padding-left:4px;
+    }
+    .card{padding:18px 20px}
+    .login{
+      padding:24px 24px 22px;
+    }
+  }
+
+  /* ===== Tablet (intermedio) ===== */
+  @media (min-width:720px) and (max-width:1099px){
+    .cards{grid-template-columns:repeat(2,1fr)}
   }
 </style>
 </head>
 <body>
-
   <div class="wrap">
-    <!-- ====== Columna izquierda: Marca ====== -->
-    <section class="brand">
-      <!-- Logo centrado arriba (PNG con fondo transparente) -->
-      <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="brand-logo" />
 
-      <!-- Wordmark negro en una sola línea -->
-      <div class="wordmark" aria-label="FX | CAPITAL R.L.">
-        <span>FX</span>
-        <span class="divider" aria-hidden="true"></span>
-        <span>CAPITAL R.L.</span>
+    <!-- Columna Marca -->
+    <section class="brand">
+      <img src="logologin.png" alt="FX CAPITAL R.L. — logo" class="logo" />
+
+      <div class="badge">
+        <span>FX</span><span class="divider">|</span><span>CAPITAL R.L.</span>
       </div>
 
       <div class="tagline">Asesoría — Confianza — Crecimiento</div>
 
-      <div class="benefits">
-        <div class="card">
-          <strong>Seguridad</strong>
-          <span class="muted">Máxima protección</span>
-        </div>
-        <div class="card">
-          <strong>Rentabilidad</strong>
-          <span class="muted">Hasta 25% semestral*</span>
-        </div>
-        <div class="card">
-          <strong>Control</strong>
-          <span class="muted">Transparencia total</span>
-        </div>
+      <div class="cards">
+        <div class="card"><b>Seguridad</b><div class="minor">Máxima protección</div></div>
+        <div class="card"><b>Rentabilidad</b><div class="minor">Hasta 25% semestral*</div></div>
+        <div class="card"><b>Control</b><div class="minor">Transparencia total</div></div>
       </div>
-
-      <div class="smallnote">*El porcentaje final depende de su plan.</div>
+      <div class="foot">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <!-- ====== Columna derecha: Login ====== -->
+    <!-- Panel Login -->
     <section class="login">
       <h2>Iniciar Sesión</h2>
 
-      <div style="margin-bottom:12px">
-        <div class="muted" style="margin-bottom:6px">Correo Electrónico</div>
-        <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
+      <div class="minor" style="margin:0 0 6px 2px">Correo Electrónico</div>
+      <input id="email" type="email" class="input" placeholder="tu@email.com" autocomplete="email" />
+
+      <div class="minor" style="margin:12px 0 6px 2px">Contraseña</div>
+      <div class="row" style="margin-bottom:10px">
+        <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
+        <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
       </div>
 
-      <div style="margin-bottom:10px">
-        <div class="muted" style="margin-bottom:6px">Contraseña</div>
-        <div class="row">
-          <input id="password" type="password" class="input" style="flex:1" placeholder="••••••••" autocomplete="current-password" />
-          <div id="toggleEye" class="eye" title="Mostrar/Ocultar">👁️</div>
-        </div>
-      </div>
-
-      <div class="right" style="margin:6px 2px 14px">
-        <a id="forgotLink" class="muted" href="#">¿Olvidó su contraseña?</a>
+      <div style="text-align:right;margin-bottom:14px">
+        <a class="minor link" href="#" onclick="alert('Solicite el restablecimiento a soporte.');return false;">¿Olvidó su contraseña?</a>
       </div>
 
       <button id="btnLogin" class="btn">Iniciar Sesión</button>
-      <div id="msg" class="error"></div>
     </section>
+
   </div>
 
-  <!-- Supabase (login) -->
+  <!-- Supabase Auth (igual que antes) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-    // ===== Config =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-
     const DASHBOARD_PATH = '/cliente-dashboard.html';
+
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
@@ -260,33 +224,17 @@
       p.type = p.type === 'password' ? 'text' : 'password';
     };
 
-    const msg = document.getElementById('msg');
-
     // Login
     async function doLogin(){
-      msg.textContent = '';
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      if (!email || !password) { msg.textContent = 'Complete correo y contraseña.'; return; }
-
+      if (!email || !password) { alert('Complete correo y contraseña'); return; }
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { msg.textContent = 'No se pudo iniciar sesión: ' + error.message; return; }
+      if (error) { alert('No se pudo iniciar sesión: ' + error.message); return; }
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').onclick = doLogin;
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
-
-    // ¿Olvidó su contraseña?
-    document.getElementById('forgotLink').addEventListener('click', async (e)=>{
-      e.preventDefault();
-      alert('Para restablecer su contraseña, contacte a soporte o admin.');
-      // Si quieres enviar una notificación al panel admin, te paso el snippet:
-      // fetch(`${SUPABASE_URL}/rest/v1/admin_notifications`, {
-      //   method:'POST',
-      //   headers:{ apikey: SUPABASE_ANON_KEY, 'Content-Type':'application/json', Prefer:'return=representation' },
-      //   body: JSON.stringify([{ kind:'password_reset_request', payload:{ email: document.getElementById('email').value.trim() || null } }])
-      // });
-    });
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
   </script>
 </body>
 </html>
