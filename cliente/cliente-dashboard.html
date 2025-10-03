@@ -30,7 +30,8 @@
   .brand-row{display:flex;align-items:center;gap:18px}
   .brand-logo{
     width:112px;height:112px;border-radius:16px;object-fit:contain;
-    background:#fff; padding:8px;
+    background:#fff;               /* fondo blanco para el logo */
+    padding:8px;
     border:1px solid var(--line);
     box-shadow: var(--shadow-2), var(--shadow-inset);
   }
@@ -39,7 +40,7 @@
 
   .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;color:#0b0c0e;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45)}
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
-  .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d}
+  .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d;box-shadow:0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05)}
 
   /* Panels & cards */
   .panel{background:var(--grad-panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55),var(--shadow-inset)}
@@ -62,13 +63,11 @@
 
   .note{color:var(--muted);font-size:13px;margin-top:10px}
 
-  /* Dialog */
   dialog{border:0;border-radius:22px;background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);color:var(--txt);width:min(840px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.65),var(--shadow-inset)}
   dialog::backdrop{background:rgba(0,0,0,.6)}
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
   .modal-b{padding:18px 22px}
 
-  /* Pills / Inputs */
   .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#121419,#0f1116);box-shadow:var(--shadow-inset)}
   .pill.selected{border-color:#3a3f48;box-shadow:0 0 0 2px rgba(255,255,255,.08) inset,var(--shadow-inset)}
 
@@ -82,9 +81,9 @@
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
 
-  /* Eyes (mostrar/ocultar pwd) */
+  /* Ojo grande para password */
   .pwd-field{position:relative}
-  .pwd-field .input{padding-right:60px}
+  .pwd-field .input{padding-right:56px}
   .eye-btn{
     position:absolute; right:8px; top:50%; transform:translateY(-50%);
     width:48px; height:48px; border-radius:14px;
@@ -94,6 +93,8 @@
     box-shadow:var(--shadow-inset);
   }
   .eye-btn svg{width:28px;height:28px}
+  .input.invalid{border-color:var(--danger)!important}
+  .err{color:var(--danger); font-size:12px; margin-top:6px}
 </style>
 </head>
 <body>
@@ -101,8 +102,9 @@
     <header>
       <div class="brand-wrap">
         <div class="brand-row">
+          <!-- Logo en /logo.png con fallback a GitHub raw -->
           <img
-            src="/logo.png?v=5"
+            src="/logo.png?v=6"
             alt="FX Capital"
             class="brand-logo"
             loading="eager"
@@ -119,20 +121,18 @@
     <section class="panel section">
       <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
       <div class="grid cols-3">
-        <!-- fila 1 -->
         <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
-        <div class="card group"><span class="k">Apertura de cuenta</span><span id="valJoinDate" class="v">—</span></div>
+        <div class="card group"><span class="k">Apertura de cuenta</span><span id="valOpenDate" class="v">—</span></div>
         <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
-        <!-- fila 2 -->
+
         <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
         <div class="card group"><span class="k">Cuenta (ID)</span><span id="valAccountId" class="v">—</span></div>
         <div class="card group"><span class="k">Período (meses)</span><span id="valMonths" class="v">—</span></div>
-        <!-- fila 3 -->
+
         <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
-        <div class="card group"><span class="k">Finalización de apertura de cuenta</span><span id="valEndDate" class="v">—</span></div>
+        <div class="card group"><span class="k">Finalización de apertura de cuenta</span><span id="valCloseDate" class="v">—</span></div>
         <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
       </div>
-
       <div style="margin-top:16px">
         <button class="btn secondary" id="btnOpenWithdraw">Solicitar retiro</button>
       </div>
@@ -149,7 +149,7 @@
           <tfoot><tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr></tfoot>
         </table>
       </div>
-      <div id="monthNote" class="note">Periodo de cierre fin de mes: —.</div>
+      <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
     </section>
 
     <!-- SIMULADOR -->
@@ -158,7 +158,7 @@
       <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
         <div class="group card"><span class="k">Capital a simular (Q)</span>
-          <input id="simCapital" class="input" type="number" min="2000" placeholder="Ej. 40,000" />
+          <input id="simCapital" class="input" type="text" inputmode="decimal" placeholder="Ej. 40,000" />
         </div>
         <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
         <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
@@ -177,7 +177,7 @@
     </section>
   </div>
 
-  <!-- BLOQUEO -->
+  <!-- BLOQUEO (cuando se exige cambio de contraseña) -->
   <div class="blocker" id="panelBlocker"></div>
 
   <!-- MODAL RETIRO -->
@@ -200,7 +200,7 @@
       <div class="row" style="margin-top:14px">
         <div>
           <div class="k">Monto a retirar (Q)</div>
-          <input id="wAmount" class="input" type="number" min="0" placeholder="Ej. 5,000">
+          <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
           <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
         </div>
         <div>
@@ -221,7 +221,7 @@
     </div>
   </dialog>
 
-  <!-- MODAL CONTRASEÑA -->
+  <!-- MODAL CAMBIO DE CONTRASEÑA FORZADO -->
   <dialog id="forcePwdDlg">
     <div class="modal-h"><div style="font-weight:800">BIENVENIDO A FX|CAPITAL R.L.</div></div>
     <div class="modal-b">
@@ -234,7 +234,7 @@
             <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres" aria-describedby="errNew">
             <button type="button" id="eyeNew" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar contraseña"></button>
           </div>
-          <div id="errNew" class="note" role="alert" style="color:#ff4d4f;display:none"></div>
+          <div id="errNew" class="err" role="alert" aria-live="polite" style="display:none"></div>
         </div>
         <div>
           <div class="k">Confirmar contraseña</div>
@@ -242,7 +242,7 @@
             <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña" aria-describedby="errNew2">
             <button type="button" id="eyeNew2" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar confirmación"></button>
           </div>
-          <div id="errNew2" class="note" role="alert" style="color:#ff4d4f;display:none"></div>
+          <div id="errNew2" class="err" role="alert" aria-live="polite" style="display:none"></div>
         </div>
       </div>
 
@@ -263,16 +263,34 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  function addMonthsSameDay(d, months){
-    const x = clampDate(d);
-    const t = new Date(x.getFullYear(), x.getMonth() + months, x.getDate());
-    while (t.getMonth() !== (x.getMonth() + months) % 12) { t.setDate(t.getDate() - 1); }
-    t.setHours(0,0,0,0); return t;
-  }
-  function nextMonthSameDay(d){ return addMonthsSameDay(d, 1); }
+  // ==== utilidades de fechas ====
+  function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);} t.setHours(0,0,0,0); return t; }
   function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
   function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
   function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
+
+  // ==== formato de dinero con comas (en vivo) ====
+  function cleanMoney(s){ return (s||'').toString().replace(/[,\s]/g,''); }
+  function formatNumberString(val){
+    val = cleanMoney(val);
+    if(val === '') return '';
+    const parts = val.split('.');
+    parts[0] = parts[0].replace(/^0+(?=\d)/,'');
+    const withCommas = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.length > 1 ? withCommas + '.' + parts[1].slice(0, 2) : withCommas;
+  }
+  function bindMoneyInput(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.inputMode = 'decimal';
+    el.autocomplete = 'off';
+    el.addEventListener('input', ()=>{
+      el.value = formatNumberString(el.value);
+      el.selectionStart = el.selectionEnd = el.value.length;
+    });
+    el.addEventListener('blur', ()=>{ el.value = formatNumberString(el.value); });
+    el.addEventListener('focus', ()=> el.select());
+  }
 
   function paintWeeks(acc){
     const today=clampDate(new Date());
@@ -287,6 +305,7 @@
     const tbody=$('#weekBody'); tbody.innerHTML='';
     const cutoff = today < end ? today : end;
     const shown = allFridays.filter(f => f < cutoff);
+
     if(shown.length===0){ tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`; }
     else{ shown.forEach(f=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`; tbody.appendChild(tr); }); }
     $('#weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
@@ -305,12 +324,9 @@
     if (prof?.must_change_password === true) __fxpwd_enforce();
 
     $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
-
     if(!acc){
-      ['valAccountId','valPlan','valCurrency','valMonths','valJoinDate','valEndDate']
-        .forEach(id=>$('#'+id).textContent='—');
-      $('#valCapital').textContent=fmtQ(0);
-      $('#valPeriodInterest').textContent=fmtQ(0);
+      ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>$('#'+id).textContent='—');
+      $('#valCapital').textContent=fmtQ(0); $('#valPeriodInterest').textContent=fmtQ(0);
       return;
     }
 
@@ -320,73 +336,80 @@
     $('#valMonths').textContent = acc.invest_months ?? '—';
     $('#valCapital').textContent = fmtQ(acc.capital||0);
 
-    const joined = acc.joined_at ? clampDate(new Date(acc.joined_at)) : null;
-    const months = Number(acc.invest_months ?? 6) || 6;
-    const endOpen = joined ? addMonthsSameDay(joined, months) : null;
-
-    $('#valJoinDate').textContent = joined ? joined.toLocaleDateString('es-GT') : '—';
-    $('#valEndDate').textContent  = endOpen ? endOpen.toLocaleDateString('es-GT') : '—';
+    const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
+    const close  = new Date(joined.getFullYear(), joined.getMonth() + (acc.invest_months||0), joined.getDate());
+    $('#valOpenDate').textContent  = joined.toLocaleDateString('es-GT');
+    $('#valCloseDate').textContent = close.toLocaleDateString('es-GT');
 
     const semPct=(acc.interest_pct||0)/100;
-    const total= (acc.capital||0) * semPct * (months/6);
+    const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
     $('#valPeriodInterest').textContent = fmtQ(total);
 
     paintWeeks(acc);
   }
 
-  // ===== Retiros =====
+  // ===== RETIROS =====
   const dlg = document.getElementById('wdlg');
+  let withdrawType='early';
   function selectType(t){
+    withdrawType=t;
     document.getElementById('optEarly').classList.toggle('selected',t==='early');
     document.getElementById('optHealth').classList.toggle('selected',t==='health');
   }
   function toggleSwitchAll(force){
     const sw=document.getElementById('switchAll');
     const on=(typeof force==='boolean')?force:!sw.classList.contains('on');
-    sw.classList.toggle('on',on);
-    sw.setAttribute('aria-checked',String(on));
+    sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on));
     document.getElementById('wAmount').disabled=on;
   }
 
   async function enviarSolicitudRetiro(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
+
     const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
     if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
 
     const capital=Number(acc?.capital||0);
     const all=document.getElementById('switchAll').classList.contains('on');
-    const amount=all? capital : Number(document.getElementById('wAmount').value||0);
+    const amount=all? capital : Number(cleanMoney(document.getElementById('wAmount').value) || 0);
     const reason=(document.getElementById('wReason').value||'').trim();
 
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-      const rest=capital-amount; if(rest<2000){ alert('Debe permanecer al menos Q 2,000 (salvo retiro total).'); return; }
+      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
     }
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
 
     const { error } = await sb.functions.invoke('send-withdrawal-email', {
       body:{ amount, reason, full_withdrawal:all, account_id:acc?.id||null, user_email:session.user.email, user_name: $('#valName')?.textContent || '' }
     });
+
     if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
 
     alert('Solicitud enviada. Te escribiremos pronto.');
-    dlg.close(); document.getElementById('wAmount').value=''; document.getElementById('wReason').value=''; toggleSwitchAll(false);
+    dlg.close();
+    document.getElementById('wAmount').value=''; document.getElementById('wReason').value='';
+    toggleSwitchAll(false);
   }
 
-  // ===== Contraseña forzada =====
-  const __fxpwd_forceDlg=document.getElementById('forcePwdDlg');
-  const __fxpwd_blocker=document.getElementById('panelBlocker');
+  // ===== Cambio de contraseña forzado =====
+  const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
+  const __fxpwd_blocker  = document.getElementById('panelBlocker');
 
   function __fxpwd_lockPanel(lock){
+    if(!__fxpwd_blocker) return;
     __fxpwd_blocker.classList.toggle('on', !!lock);
     document.querySelectorAll('button,input,textarea,select').forEach(el=>{
       if(__fxpwd_forceDlg && el.closest('#forcePwdDlg')) return;
       el.disabled = !!lock;
     });
   }
-  function __fxpwd_enforce(){ __fxpwd_lockPanel(true); if(!__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal(); }
+  function __fxpwd_enforce(){
+    __fxpwd_lockPanel(true);
+    if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
+  }
 
   const __eyeSVG = `
 <svg viewBox="0 0 24 24" fill="none">
@@ -412,21 +435,36 @@
     });
   }
 
+  function __fxpwd_setError(inputEl, errEl, msg){
+    if(!inputEl || !errEl) return;
+    if(msg){
+      inputEl.classList.add('invalid');
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }else{
+      inputEl.classList.remove('invalid');
+      errEl.textContent = '';
+      errEl.style.display = 'none';
+    }
+  }
   function __fxpwd_validate(){
     const p1 = (document.getElementById('newPwd')?.value || '').trim();
     const p2 = (document.getElementById('newPwd2')?.value || '').trim();
+    const in1 = document.getElementById('newPwd');
+    const in2 = document.getElementById('newPwd2');
     const e1  = document.getElementById('errNew');
     const e2  = document.getElementById('errNew2');
 
     let ok = true;
-    e1.style.display=e2.style.display='none';
-    if(p1.length < 8){ e1.textContent = 'La contraseña debe tener al menos 8 caracteres.'; e1.style.display='block'; ok=false; }
-    if(p1 !== p2){ e2.textContent = 'Las contraseñas no coinciden.'; e2.style.display='block'; ok=false; }
+    if(p1.length < 8){ __fxpwd_setError(in1,e1,'La contraseña debe tener al menos 8 caracteres.'); ok = false; } else { __fxpwd_setError(in1,e1,''); }
+    if(p2.length === 0){ __fxpwd_setError(in2,e2,'Confirme su contraseña.'); ok = false; }
+    else if(p1 !== p2){ __fxpwd_setError(in2,e2,'Las contraseñas no coinciden.'); ok = false; } else { __fxpwd_setError(in2,e2,''); }
     return ok;
   }
 
   async function __fxpwd_save(){
     if(!__fxpwd_validate()) return;
+
     const p1 = (document.getElementById('newPwd')?.value || '').trim();
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.href = BASE_URL; return; }
@@ -434,28 +472,37 @@
     const up = await sb.auth.updateUser({ password:p1 });
     if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
 
-    await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
+    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
+    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
+
     __fxpwd_forceDlg?.close();
     __fxpwd_lockPanel(false);
     alert('¡Contraseña actualizada! Bienvenido al panel.');
   }
-  async function __fxpwd_logout(){ await sb.auth.signOut(); window.location.href = BASE_URL; }
 
-  // ===== Simulador =====
+  async function __fxpwd_logout(){
+    await sb.auth.signOut();
+    window.location.href = BASE_URL;
+  }
+
+  // ======= SIMULADOR =======
   function autoPlanAndRate(capital){
     if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
-    if(capital >= 250000)              return { name:'PLATINUM (20% semestral)',  rate:0.20 };
+    if(capital >= 250000)                     return { name:'PLATINUM (20% semestral)', rate:0.20 };
     return { name:'NO ELEGIBLE', rate:0 };
   }
   function simulate(){
-    const cap = Number(document.getElementById('simCapital').value || 0);
-    if(cap < 2000){ alert('El capital mínimo para simular es Q 2,000.'); return; }
+    const cap = Number(cleanMoney(document.getElementById('simCapital').value) || 0);
+    if(cap < 2000){
+      alert('El capital mínimo para simular es Q 2,000.');
+      return;
+    }
     const {name, rate} = autoPlanAndRate(cap);
     document.getElementById('simPlan').textContent = name;
 
     const months = 6;
-    const monthly = cap * (rate/6);
-    const total = monthly * months;
+    const monthlyInterest = cap * (rate/6);
+    const total = monthlyInterest * months;
 
     document.getElementById('simFinal').textContent = fmtQ(cap + total);
     document.getElementById('simSum').textContent   = fmtQ(total);
@@ -465,7 +512,7 @@
     body.innerHTML = '';
     for(let m=1;m<=months;m++){
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthly)}</td>`;
+      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`;
       body.appendChild(tr);
     }
   }
@@ -474,29 +521,33 @@
   document.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
-    // Retiros
+    // Retiro
     document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wCancel').addEventListener('click', ()=> dlg.close());
+    document.getElementById('wCancel')?.addEventListener('click', ()=> dlg.close());
     document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
     document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
     document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
     document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
+    selectType('early'); toggleSwitchAll(false);
 
-    // Contraseña
-    document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
-    document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
+    // Ojos y validación pwd
+    __bindPwdEye('newPwd','eyeNew');
+    __bindPwdEye('newPwd2','eyeNew2');
     ['newPwd','newPwd2'].forEach(id=>{
       document.getElementById(id)?.addEventListener('input', __fxpwd_validate);
       document.getElementById(id)?.addEventListener('blur', __fxpwd_validate);
     });
-    __bindPwdEye('newPwd','eyeNew');
-    __bindPwdEye('newPwd2','eyeNew2');
+    document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
+    document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
+
+    // Formato dinero en vivo
+    bindMoneyInput('wAmount');
+    bindMoneyInput('simCapital');
 
     // Simulador
     document.getElementById('btnCalc').addEventListener('click', simulate);
 
-    selectType('early'); toggleSwitchAll(false);
     loadHeader();
   });
   </script>
