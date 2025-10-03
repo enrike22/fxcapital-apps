@@ -29,7 +29,6 @@
       fixed;
   }
 
-  /* ---------- layout ---------- */
   .wrap{
     max-width:1280px;
     margin:0 auto;
@@ -40,13 +39,8 @@
     align-items:center;
     justify-content:center;
   }
-  .left{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
+  .left{display:flex;flex-direction:column;align-items:center}
 
-  /* ---------- hero ---------- */
   .logo{
     width:min(220px, 40vw);
     height:auto;
@@ -55,156 +49,75 @@
     margin:8px auto 18px;
   }
   .brand-pill{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:18px;
-    padding:18px 26px;
-    background:var(--pill);
-    color:#fff;
-    border-radius:999px;
-    box-shadow: 0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
-    font-weight:800;
-    font-size: clamp(22px, 2.6vw, 34px);
-    letter-spacing:.8px;
-    line-height:1;
-    margin:0 auto 14px;
+    display:inline-flex;align-items:center;justify-content:center;gap:18px;
+    padding:18px 26px;background:var(--pill);color:#fff;border-radius:999px;
+    box-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
+    font-weight:800;font-size:clamp(22px, 2.6vw, 34px);letter-spacing:.8px;line-height:1;margin:0 auto 14px;
   }
-  .brand-pill .bar{
-    width:2px;height:1.1em;background:#fff;opacity:.9;border-radius:2px;
-  }
+  .brand-pill .bar{width:2px;height:1.1em;background:#fff;opacity:.9;border-radius:2px}
   .tagline{
-    margin:6px auto 18px;
-    color:#111;
-    font-weight:800;
-    letter-spacing:.2px;
-    font-size:clamp(16px,1.4vw,20px);
-    text-align:center;
-    text-wrap:balance;
+    margin:6px auto 18px;color:#111;font-weight:800;letter-spacing:.2px;
+    font-size:clamp(16px,1.4vw,20px);text-align:center;text-wrap:balance;
     text-shadow:0 8px 30px rgba(0,0,0,.12);
   }
 
-  /* ---------- cards ---------- */
   .cards{
-    width:100%;
-    max-width:640px;
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap:18px;
-    margin:8px auto 6px;
+    width:100%;max-width:640px;display:grid;grid-template-columns: repeat(3, 1fr);
+    gap:18px;margin:8px auto 6px;
   }
-  .card{
-    background:#fff;
-    border-radius:14px;
-    border:1px solid var(--outline);
-    padding:16px 16px 18px;
-    box-shadow:var(--soft);
-  }
+  .card{background:#fff;border-radius:14px;border:1px solid var(--outline);padding:16px 16px 18px;box-shadow:var(--soft)}
   .card strong{display:block;margin-bottom:6px}
   .fine{color:var(--muted);font-size:13px;margin:12px 0 0}
 
-  /* ---------- login panel ---------- */
   .panel{
     background:linear-gradient(180deg,#fff 0%, #fafbff 100%);
-    border:1px solid var(--outline);
-    border-radius:var(--radius);
-    padding:26px;
-    box-shadow:var(--glow);
+    border:1px solid var(--outline);border-radius:var(--radius);padding:26px;box-shadow:var(--glow);
   }
-  .panel h2{
-    margin:0 0 18px;
-    font-size:28px;
-    text-align:center;
-  }
+  .panel h2{margin:0 0 18px;font-size:28px;text-align:center}
   .field{margin:12px 0}
   .label{color:#3b3f46;margin:0 0 6px;font-size:14px}
   .input{
-    width:100%;
-    padding:12px 14px;
-    border-radius:12px;
-    border:1px solid #dde1ea;
-    background:#fff;
-    outline:none;
-    font-size:15px;
+    width:100%;padding:12px 14px;border-radius:12px;border:1px solid #dde1ea;background:#fff;outline:none;font-size:15px;
   }
   .input:focus{border-color:#9fb7ff; box-shadow:0 0 0 3px rgba(60,120,255,.12)}
   .row{display:flex;align-items:center;gap:10px}
-  .eye{
-    cursor:pointer;user-select:none;font-size:20px;opacity:.75;
-    width:42px;height:42px;display:grid;place-items:center;border-radius:10px;
-    border:1px solid #e7eaf2;background:#fff;
-  }
-  .forgot{
-    display:block;
-    margin:10px 0 0;
-    text-align:right;
-    color:#3d67ff;
-    text-decoration:none;
-    font-size:14px;
-  }
+  .eye{cursor:pointer;user-select:none;font-size:20px;opacity:.75;width:42px;height:42px;display:grid;place-items:center;border-radius:10px;border:1px solid #e7eaf2;background:#fff}
+  .forgot{display:block;margin:10px 0 0;text-align:right;color:#3d67ff;text-decoration:none;font-size:14px}
   .btn{
-    width:100%;
-    margin-top:14px;
-    appearance:none;
-    border:0;
-    background:#0b0b0b;
-    color:#fff;
-    font-weight:800;
-    padding:13px 16px;
-    border-radius:12px;
-    cursor:pointer;
-    box-shadow:0 10px 28px rgba(0,0,0,.35);
+    width:100%;margin-top:14px;appearance:none;border:0;background:#0b0b0b;color:#fff;
+    font-weight:800;padding:13px 16px;border-radius:12px;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.35);
   }
   .hint{font-size:13px;color:#9aa1ac;margin-top:6px;text-align:center}
   .err { color:#c1121f; }
 
-  /* ---------- responsive (móvil) ---------- */
   @media (max-width: 980px){
-    .wrap{
-      grid-template-columns: 1fr;
-      row-gap:28px;
-      padding:28px 16px 40px;
-    }
-    .logo{ width: min(300px, 60vw); margin-bottom:14px; }
-    .brand-pill{ font-size: clamp(22px, 6vw, 32px); }
-    .cards{ grid-template-columns: 1fr; max-width: 560px; }
-    .panel{ max-width: 680px; margin: 6px auto 0; }
+    .wrap{grid-template-columns: 1fr;row-gap:28px;padding:28px 16px 40px}
+    .logo{ width: min(300px, 60vw); margin-bottom:14px }
+    .brand-pill{ font-size: clamp(22px, 6vw, 32px) }
+    .cards{ grid-template-columns: 1fr; max-width: 560px }
+    .panel{ max-width: 680px; margin: 6px auto 0 }
   }
 </style>
 </head>
 <body>
 
   <div class="wrap">
-    <!-- Columna izquierda (centrada) -->
     <section class="left">
-      <!-- Usa tu archivo subido (p. ej. /logologin.png) -->
       <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo" />
       <div class="brand-pill">
-        <span>FX</span>
-        <span class="bar" aria-hidden="true"></span>
-        <span>CAPITAL R.L.</span>
+        <span>FX</span><span class="bar" aria-hidden="true"></span><span>CAPITAL R.L.</span>
       </div>
       <div class="tagline">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
-        <div class="card">
-          <strong>Seguridad</strong>
-          <div class="muted">Máxima protección</div>
-        </div>
-        <div class="card">
-          <strong>Rentabilidad</strong>
-          <div class="muted">Hasta 25% semestral*</div>
-        </div>
-        <div class="card">
-          <strong>Control</strong>
-          <div class="muted">Transparencia total</div>
-        </div>
+        <div class="card"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
+        <div class="card"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
+        <div class="card"><strong>Control</strong><div class="muted">Transparencia total</div></div>
       </div>
 
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <!-- Panel de login (derecha) -->
     <section class="panel" aria-labelledby="loginTitle">
       <h2 id="loginTitle">Iniciar Sesión</h2>
 
@@ -227,25 +140,18 @@
     </section>
   </div>
 
-  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
     // ===== Config =====
     const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
     const SUPABASE_ANON_KEY =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-
-    // A dónde mandas al usuario después de login (tu dashboard)
     const DASHBOARD_PATH = '/cliente-dashboard.html';
-
-    // A dónde redirige el email de reset (puede ser tu dashboard donde ya manejas el flujo)
-    const RESET_REDIRECT = location.origin + '/cliente-dashboard.html';
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
-    // Autologin si ya hay sesión
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
       if (session) window.location.replace(DASHBOARD_PATH);
@@ -256,8 +162,7 @@
       const p = document.getElementById('password');
       const show = p.type === 'password';
       p.type = show ? 'text' : 'password';
-      const btn = document.getElementById('toggleEye');
-      btn.setAttribute('aria-pressed', String(show));
+      document.getElementById('toggleEye').setAttribute('aria-pressed', String(show));
     });
 
     const $msg = (t,err)=> {
@@ -266,6 +171,23 @@
       el.className = 'hint' + (err ? ' err' : '');
     };
 
+    // Traducción de errores comunes de Supabase
+    function traducirErrorAuth(error){
+      const raw = (error?.message || '').toLowerCase();
+      const status = error?.status || 0;
+
+      if (raw.includes('invalid login') || status === 400)
+        return 'Correo o contraseña incorrectos.';
+      if (raw.includes('email not confirmed') || raw.includes('not confirmed'))
+        return 'Tu correo aún no está confirmado. Revisa tu bandeja o solicita confirmación.';
+      if (raw.includes('rate limit') || status === 429)
+        return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+      if (raw.includes('network') || raw.includes('fetch') || status === 0)
+        return 'Problema de conexión. Verifica tu internet e inténtalo de nuevo.';
+
+      return 'No se pudo iniciar sesión. Inténtalo nuevamente.';
+    }
+
     // Login
     async function doLogin(){
       const email = document.getElementById('email').value.trim();
@@ -273,40 +195,16 @@
       if (!email || !password) { $msg('Complete correo y contraseña', true); return; }
       $msg('Procesando…');
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) { $msg('No se pudo iniciar sesión: ' + error.message, true); return; }
+      if (error) { $msg(traducirErrorAuth(error), true); return; }
       window.location.replace(DASHBOARD_PATH);
     }
     document.getElementById('btnLogin').addEventListener('click', doLogin);
     document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
 
-    // Forgot password -> envía email de reset y registra solicitud para Admin
-    document.getElementById('forgotLink').addEventListener('click', async (e)=>{
+    // ¿Olvidó su contraseña? -> solo mostrar aviso solicitado
+    document.getElementById('forgotLink').addEventListener('click', (e)=>{
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      if (!email) { $msg('Escribe tu correo y vuelve a intentar.', true); return; }
-      $msg('Enviando solicitud…');
-
-      try {
-        // 1) Correo de recuperación (Supabase)
-        const { error: resetErr } = await sb.auth.resetPasswordForEmail(email, { redirectTo: RESET_REDIRECT });
-        if (resetErr) throw resetErr;
-
-        // 2) Registrar solicitud en tabla admin_requests (para que salga en Admin > Solicitudes)
-        // Requiere:
-        //   - Tabla public.admin_requests
-        //   - Policy INSERT para rol anon (como te pasé)
-        await sb.from('admin_requests').insert({
-          kind: 'forgot_password',
-          email,
-          meta: { ua: navigator.userAgent, ts: new Date().toISOString() }
-        });
-
-        $msg('Si el correo existe, te enviamos instrucciones para restablecer la contraseña. Nuestro equipo ya fue notificado.');
-      } catch(err){
-        console.error(err);
-        // Aunque falle el registro en la tabla (por policies), intenta dar feedback neutro
-        $msg('Si el correo existe, te enviamos instrucciones para restablecer la contraseña.');
-      }
+      $msg('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
   </script>
 </body>
