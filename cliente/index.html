@@ -13,26 +13,53 @@
     --soft:0 14px 35px rgba(0,0,0,.18); --radius:18px;
     --bg1:#eef2f7; --bg2:#e9eef5; --bg3:#e7edf5; --bg4:#e6ecf4;
     --brand-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
+    --mx:50%; --my:50%; /* posición del cursor para el brillo */
   }
-  *{box-sizing:border-box} html,body{height:100%}
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--txt);
     background: radial-gradient(1100px 700px at 25% -20%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 70%, var(--bg4) 100%) fixed;
+    overflow-x:hidden;
+  }
+  /* halo de luz que sigue el cursor */
+  body::after{
+    content:"";
+    position:fixed; inset:0; pointer-events:none;
+    background:
+      radial-gradient(420px 420px at var(--mx) var(--my),
+        rgba(255,255,255,.18), rgba(255,255,255,0) 60%);
+    mix-blend-mode:soft-light; opacity:.9; transition:opacity .25s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    body::after{ opacity:.25; }
   }
 
-  /* ===== Escena 3D ===== */
-  .scene{ perspective:1200px; transform-style:preserve-3d; }
-  .tilt{ will-change:transform; transform:translateZ(0); }
-  .float-shadow{ filter: drop-shadow(0 20px 35px rgba(0,0,0,.18)); }
-
+  /* ===== Escena 3D (más notoria) ===== */
+  .stage{
+    perspective:1400px; transform-style:preserve-3d;
+  }
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
     display:grid; grid-template-columns:minmax(320px,640px) minmax(360px,520px);
     column-gap:64px; align-items:center; justify-content:center;
+    transform-style:preserve-3d;
   }
-  .left{ display:flex; flex-direction:column; align-items:center; }
+  /* contenedor que rota con el mouse */
+  .rig{
+    transform-style:preserve-3d;
+    will-change:transform;
+  }
+  /* cada capa se mueve con distinta profundidad */
+  .layer{
+    transform-style:preserve-3d;
+    will-change:transform,filter;
+  }
+  .float{ animation: bob 6s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ transform:translateZ(0) } 50%{ transform:translateZ(18px) } }
 
-  .logo{ width:min(220px, 40vw); height:auto; display:block; margin:8px auto 18px; }
+  .left{ display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
+  .logo{ width:min(260px, 42vw); height:auto; display:block; margin:8px auto 18px; }
   .brand-pill{
     display:inline-flex; align-items:center; justify-content:center; gap:18px;
     padding:18px 26px; background:var(--pill); color:#fff; border-radius:999px;
@@ -43,13 +70,16 @@
   .tagline{ margin:6px auto 18px; color:#111; font-weight:800; letter-spacing:.2px;
             font-size:clamp(16px,1.4vw,20px); text-align:center; text-wrap:balance; text-shadow:0 8px 30px rgba(0,0,0,.12); }
 
-  .cards{ width:100%; max-width:640px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:8px auto 6px; }
+  .cards{ width:100%; max-width:640px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:8px auto 6px; transform-style:preserve-3d; }
   .card{ background:#fff; border-radius:14px; border:1px solid var(--outline); padding:16px 16px 18px; box-shadow:var(--soft); }
   .card strong{ display:block; margin-bottom:6px; }
   .fine{ color:var(--muted); font-size:13px; margin:12px 0 0; }
 
-  .panel{ background:linear-gradient(180deg,#fff 0%, #fafbff 100%); border:1px solid var(--outline);
-          border-radius:var(--radius); padding:26px; box-shadow:var(--glow); }
+  .panel{
+    background:linear-gradient(180deg,#fff 0%, #fafbff 100%); border:1px solid var(--outline);
+    border-radius:var(--radius); padding:26px; box-shadow:var(--glow);
+    transform-style:preserve-3d;
+  }
   .panel h2{ margin:0 0 18px; font-size:28px; text-align:center; }
   .field{ margin:12px 0; } .label{ color:#3b3f46; margin:0 0 6px; font-size:14px; }
   .input{ width:100%; padding:12px 14px; border-radius:12px; border:1px solid #dde1ea; background:#fff; outline:none; font-size:15px; }
@@ -62,35 +92,51 @@
         padding:13px 16px; border-radius:12px; cursor:pointer; box-shadow:0 10px 28px rgba(0,0,0,.35); }
   .hint{ font-size:13px; color:#9aa1ac; margin-top:6px; text-align:center; } .err{ color:#c1121f; }
 
+  /* leve “brillo” que se desplaza sobre la tarjeta de login */
+  .panel::after{
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    background: radial-gradient(220px 180px at var(--mx) var(--my), rgba(255,255,255,.35), transparent 60%);
+    opacity:.25; transition:opacity .2s ease; mix-blend-mode:screen;
+  }
+
+  /* sombras dinámicas */
+  .shadow{
+    filter: drop-shadow(0 22px 28px rgba(0,0,0,.22));
+    will-change:filter,transform;
+  }
+
   @media (max-width:980px){
     .wrap{ grid-template-columns:1fr; row-gap:28px; padding:28px 16px 40px; }
     .logo{ width:min(300px, 60vw); margin-bottom:14px; }
     .brand-pill{ font-size:clamp(22px, 6vw, 32px); }
     .cards{ grid-template-columns:1fr; max-width:560px; }
     .panel{ max-width:680px; margin:6px auto 0; }
+    body::after{ opacity:.35; }
   }
 </style>
 </head>
-<body class="scene">
+<body class="stage">
   <div class="wrap">
-    <!-- Lado izquierdo -->
+    <!-- Grupo que rota con el mouse -->
+    <div id="rig" class="rig" aria-hidden="true" style="position:absolute; inset:0; transform-origin:50% 50%; z-index:-1;"></div>
+
     <section class="left">
-      <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo tilt float-shadow" />
-      <div class="brand-pill tilt float-shadow">
+      <img src="logologin.png" alt="FX | CAPITAL R.L. logo"
+           class="logo layer shadow" data-depth="1.00" />
+      <div class="brand-pill layer shadow" data-depth="0.85">
         <span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span>
       </div>
-      <div class="tagline tilt">Asesoría — Confianza — Crecimiento</div>
+      <div class="tagline layer" data-depth="0.70">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
-        <div class="card tilt"> <strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
-        <div class="card tilt"> <strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
-        <div class="card tilt"> <strong>Control</strong><div class="muted">Transparencia total</div></div>
+        <div class="card layer shadow" data-depth="0.60"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
+        <div class="card layer shadow" data-depth="0.55"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
+        <div class="card layer shadow" data-depth="0.50"><strong>Control</strong><div class="muted">Transparencia total</div></div>
       </div>
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <!-- Panel de login -->
-    <section class="panel tilt float-shadow" aria-labelledby="loginTitle">
+    <section class="panel layer shadow" data-depth="1.15" aria-labelledby="loginTitle" style="position:relative;">
       <h2 id="loginTitle">Iniciar Sesión</h2>
 
       <div class="field">
@@ -170,39 +216,90 @@
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // ===== Animación 3D permanente + tilt/parallax =====
-    (function enable3D(){
+    // ===== Interacción 3D más notable (tilt + parallax + glare que sigue el mouse) =====
+    (function interactive3D(){
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const els = Array.from(document.querySelectorAll('.tilt'));
-      let rx = 0, ry = 0;         // ángulos objetivo
-      let t = 0;                  // tiempo para “flotar”
-      let lastMove = Date.now();
-      let isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-      // Parallax con mouse (escritorio)
-      if (!isTouch) {
-        window.addEventListener('mousemove', (e)=>{
-          const nx = (e.clientX / window.innerWidth) - 0.5;
-          const ny = (e.clientY / window.innerHeight) - 0.5;
-          ry = nx * 10;           // +/- 10deg
-          rx = -ny * 8;           // +/- 8deg
-          lastMove = Date.now();
+      const rig = document.getElementById('rig');        // capa fantasma para los ángulos globales
+      const layers = Array.from(document.querySelectorAll('.layer')); // elementos con profundidad
+      const body = document.body;
+
+      let targetRX = 0, targetRY = 0;   // ángulos objetivo
+      let curRX = 0, curRY = 0;         // ángulos actuales
+      let px = 0, py = 0;               // parallax objetivo
+      let cx, cy;
+
+      function updateCenter(){
+        cx = window.innerWidth / 2;
+        cy = window.innerHeight / 2;
+      }
+      updateCenter();
+      window.addEventListener('resize', updateCenter, { passive:true });
+
+      function onPointerMove(e){
+        const x = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? cx;
+        const y = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? cy;
+
+        // normalizados -0.5..0.5
+        const nx = (x - cx) / cx;
+        const ny = (y - cy) / cy;
+
+        // tilt global más fuerte
+        targetRY = nx * 18;     // rotación Y (izq-der)
+        targetRX = -ny * 12;    // rotación X (arriba-abajo)
+
+        // desplazamiento parallax (px, py) base en px
+        px = nx * 30;
+        py = ny * 24;
+
+        // actualizar brillo global (fondo) y de la tarjeta
+        body.style.setProperty('--mx', `${x}px`);
+        body.style.setProperty('--my', `${y}px`);
+        document.querySelectorAll('.panel').forEach(p => {
+          p.style.setProperty('--mx', `${x}px`);
+          p.style.setProperty('--my', `${y}px`);
         });
       }
 
-      function loop(){
-        t += 0.015;  // velocidad del “flote”
-        const bob = prefersReduced ? 0 : Math.sin(t) * 4; // px
-
-        // Si no hay movimiento por 3s, baja gradualmente el tilt
-        if (Date.now() - lastMove > 3000) { rx *= 0.95; ry *= 0.95; }
-
-        els.forEach(el=>{
-          el.style.transform = `translateY(${bob}px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
-        });
-        requestAnimationFrame(loop);
+      if (!isTouch){
+        window.addEventListener('mousemove', onPointerMove, { passive:true });
+      } else {
+        // En móvil: movimiento sutil automático
+        let t = 0;
+        setInterval(()=> {
+          t += 0.04;
+          const fake = { clientX: cx + Math.sin(t)*cx*0.15, clientY: cy + Math.cos(t*0.8)*cy*0.12 };
+          onPointerMove(fake);
+        }, 40);
       }
-      loop();
+
+      function lerp(a,b,f){ return a + (b - a) * f; }
+
+      function raf(){
+        // easing suave
+        const ease = prefersReduced ? 0.08 : 0.14;
+        curRX = lerp(curRX, targetRX, ease);
+        curRY = lerp(curRY, targetRY, ease);
+
+        // aplicar al rig (rotación global)
+        rig.style.transform = `translateZ(0) rotateX(${curRX}deg) rotateY(${curRY}deg)`;
+
+        // mover capas con distinta profundidad
+        for (const el of layers){
+          const depth = Number(el.dataset.depth || '1'); // 1 = más cercano
+          const tx = px * depth;
+          const ty = py * depth;
+          const tz = (depth - 0.5) * 60; // separa en el eje Z según profundidad
+          el.style.transform = `translate3d(${tx}px, ${ty}px, ${tz}px)`;
+          // sombreado dinámico (más fuerza si está inclinado)
+          const sh = Math.min(1, Math.abs(curRX)+Math.abs(curRY)) * .018 + .18;
+          el.style.filter = `drop-shadow(0 22px 28px rgba(0,0,0,${sh.toFixed(3)}))`;
+        }
+
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
     })();
   </script>
 </body>
