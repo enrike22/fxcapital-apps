@@ -30,9 +30,7 @@
   .brand-row{display:flex;align-items:center;gap:18px}
   .brand-logo{
     width:112px;height:112px;border-radius:16px;object-fit:contain;
-    background:#fff;               /* fondo blanco para el logo */
-    padding:8px;
-    border:1px solid var(--line);
+    background:#fff; padding:8px; border:1px solid var(--line);
     box-shadow: var(--shadow-2), var(--shadow-inset);
   }
   .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
@@ -102,7 +100,6 @@
     <header>
       <div class="brand-wrap">
         <div class="brand-row">
-          <!-- Logo en /logo.png con fallback a GitHub raw -->
           <img
             src="/logo.png?v=6"
             alt="FX Capital"
@@ -253,6 +250,23 @@
     </div>
   </dialog>
 
+  <!-- ✨ MODAL FIN DE PERÍODO DE CUENTA (NUEVO) -->
+  <dialog id="endPeriodDlg" aria-labelledby="endTitle" aria-describedby="endDesc">
+    <div class="modal-h">
+      <div id="endTitle" style="font-weight:800">Aviso importante</div>
+    </div>
+    <div class="modal-b">
+      <p id="endDesc" class="muted" style="margin-top:0;font-size:15px;line-height:1.6">
+        Su período de cuenta ha finalizado. Para más información o para renovar la cuenta, por favor visite o póngase en contacto con una de nuestras oficinas.
+        <br><br>
+        Cordialmente,<br><b>FX | CAPITAL R.L.</b>
+      </p>
+      <div class="actions" style="margin-top:18px">
+        <button class="btn" id="ackEnd">Aceptar</button>
+      </div>
+    </div>
+  </dialog>
+
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
   const BASE_URL = 'https://clientes.fxcapital-gt.com/';
@@ -292,10 +306,18 @@
     el.addEventListener('focus', ()=> el.select());
   }
 
-  function paintWeeks(acc){
+  // ==== NUEVO: helper para "congelar" vistas si el período terminó ====
+  function minDate(a,b){ return a<b ? a : b; }
+
+  function paintWeeks(acc, opts={}){
     const today=clampDate(new Date());
     const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
-    const {start,end}=currentWindow(joined,today);
+
+    // si se pasa freezeUntil (fecha de cierre), congelamos la "fecha de hoy" en esa fecha
+    const freezeUntil = opts.freezeUntil ? clampDate(opts.freezeUntil) : null;
+    const todayForCalc = freezeUntil ? minDate(today, freezeUntil) : today;
+
+    const {start,end}=currentWindow(joined,todayForCalc);
     $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
     $('#monthNote').textContent  = `Periodo de cierre fin de mes: ${end.toLocaleDateString('es-GT')}.`;
 
@@ -303,12 +325,12 @@
     const allFridays=fridaysInRange(start,end), weekly=allFridays.length? (monthly/allFridays.length) : 0;
 
     const tbody=$('#weekBody'); tbody.innerHTML='';
-    const cutoff = today < end ? today : end;
+    const cutoff = todayForCalc < end ? todayForCalc : end;
     const shown = allFridays.filter(f => f < cutoff);
 
     if(shown.length===0){ tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`; }
     else{ shown.forEach(f=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`; tbody.appendChild(tr); }); }
-    $('#weekSum').textContent = (today >= end) ? fmtQ(monthly) : '—';
+    $('#weekSum').textContent = (todayForCalc >= end) ? fmtQ(monthly) : '—';
   }
 
   async function loadHeader(){
@@ -338,6 +360,9 @@
 
     const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const close  = new Date(joined.getFullYear(), joined.getMonth() + (acc.invest_months||0), joined.getDate());
+    const today  = clampDate(new Date());
+    const closeClamped = clampDate(close);
+
     $('#valOpenDate').textContent  = joined.toLocaleDateString('es-GT');
     $('#valCloseDate').textContent = close.toLocaleDateString('es-GT');
 
@@ -345,7 +370,24 @@
     const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
     $('#valPeriodInterest').textContent = fmtQ(total);
 
-    paintWeeks(acc);
+    // === NUEVO: fin de período ===
+    const accountEnded = today >= closeClamped;
+    // Mostrar modal sólo una vez por cuenta:
+    const ackKey = `fx_end_ack_${acc.id}`;
+    const alreadyAck = localStorage.getItem(ackKey) === '1';
+
+    // Pintar semanas con "congelamiento" al cierre si ya terminó
+    paintWeeks(acc, { freezeUntil: accountEnded ? closeClamped : null });
+
+    if(accountEnded && !alreadyAck){
+      const endDlg = document.getElementById('endPeriodDlg');
+      if(endDlg && !endDlg.open) endDlg.showModal();
+      // Al aceptar, guardamos acuse para no volver a mostrar
+      document.getElementById('ackEnd')?.addEventListener('click', ()=>{
+        localStorage.setItem(ackKey,'1');
+        endDlg.close();
+      }, { once:true });
+    }
   }
 
   // ===== RETIROS =====
