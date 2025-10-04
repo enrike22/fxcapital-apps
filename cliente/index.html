@@ -20,14 +20,19 @@
     background: radial-gradient(1100px 700px at 25% -20%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 70%, var(--bg4) 100%) fixed;
   }
 
+  /* ===== Escena 3D ===== */
+  .scene{ perspective:1200px; transform-style:preserve-3d; }
+  .tilt{ will-change:transform; transform:translateZ(0); }
+  .float-shadow{ filter: drop-shadow(0 20px 35px rgba(0,0,0,.18)); }
+
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
     display:grid; grid-template-columns:minmax(320px,640px) minmax(360px,520px);
     column-gap:64px; align-items:center; justify-content:center;
   }
   .left{ display:flex; flex-direction:column; align-items:center; }
-  .logo{ width:min(220px, 40vw); display:block; margin:8px auto 18px;
-         height:auto; filter:drop-shadow(0 20px 60px rgba(0,0,0,.25)); }
+
+  .logo{ width:min(220px, 40vw); height:auto; display:block; margin:8px auto 18px; }
   .brand-pill{
     display:inline-flex; align-items:center; justify-content:center; gap:18px;
     padding:18px 26px; background:var(--pill); color:#fff; border-radius:999px;
@@ -66,22 +71,26 @@
   }
 </style>
 </head>
-<body>
+<body class="scene">
   <div class="wrap">
+    <!-- Lado izquierdo -->
     <section class="left">
-      <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo" />
-      <div class="brand-pill"><span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span></div>
-      <div class="tagline">Asesoría — Confianza — Crecimiento</div>
+      <img src="logologin.png" alt="FX | CAPITAL R.L. logo" class="logo tilt float-shadow" />
+      <div class="brand-pill tilt float-shadow">
+        <span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span>
+      </div>
+      <div class="tagline tilt">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
-        <div class="card"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
-        <div class="card"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
-        <div class="card"><strong>Control</strong><div class="muted">Transparencia total</div></div>
+        <div class="card tilt"> <strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
+        <div class="card tilt"> <strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
+        <div class="card tilt"> <strong>Control</strong><div class="muted">Transparencia total</div></div>
       </div>
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <section class="panel" aria-labelledby="loginTitle">
+    <!-- Panel de login -->
+    <section class="panel tilt float-shadow" aria-labelledby="loginTitle">
       <h2 id="loginTitle">Iniciar Sesión</h2>
 
       <div class="field">
@@ -155,11 +164,46 @@
     $('btnLogin').addEventListener('click', doLogin);
     document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
 
-    // "¿Olvidó su contraseña?" -> sólo mostrar aviso
+    // "¿Olvidó su contraseña?" -> solo aviso
     $('forgotLink').addEventListener('click', (e)=>{
       e.preventDefault();
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
+
+    // ===== Animación 3D permanente + tilt/parallax =====
+    (function enable3D(){
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const els = Array.from(document.querySelectorAll('.tilt'));
+      let rx = 0, ry = 0;         // ángulos objetivo
+      let t = 0;                  // tiempo para “flotar”
+      let lastMove = Date.now();
+      let isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+      // Parallax con mouse (escritorio)
+      if (!isTouch) {
+        window.addEventListener('mousemove', (e)=>{
+          const nx = (e.clientX / window.innerWidth) - 0.5;
+          const ny = (e.clientY / window.innerHeight) - 0.5;
+          ry = nx * 10;           // +/- 10deg
+          rx = -ny * 8;           // +/- 8deg
+          lastMove = Date.now();
+        });
+      }
+
+      function loop(){
+        t += 0.015;  // velocidad del “flote”
+        const bob = prefersReduced ? 0 : Math.sin(t) * 4; // px
+
+        // Si no hay movimiento por 3s, baja gradualmente el tilt
+        if (Date.now() - lastMove > 3000) { rx *= 0.95; ry *= 0.95; }
+
+        els.forEach(el=>{
+          el.style.transform = `translateY(${bob}px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
+        });
+        requestAnimationFrame(loop);
+      }
+      loop();
+    })();
   </script>
 </body>
 </html>
