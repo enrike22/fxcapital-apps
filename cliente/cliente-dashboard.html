@@ -24,7 +24,6 @@
   body{margin:0;color:var(--txt);background:var(--grad-app) fixed, var(--bg0);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
-  /* Header */
   header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
   .brand-wrap{display:flex;flex-direction:column;gap:6px}
   .brand-row{display:flex;align-items:center;gap:18px}
@@ -40,7 +39,6 @@
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d;box-shadow:0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05)}
 
-  /* Panels & cards */
   .panel{background:var(--grad-panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55),var(--shadow-inset)}
   .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .section{padding:24px}
@@ -79,7 +77,6 @@
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
 
-  /* Ojo grande para password */
   .pwd-field{position:relative}
   .pwd-field .input{padding-right:56px}
   .eye-btn{
@@ -143,7 +140,7 @@
         <table class="table">
           <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
           <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
-          <tfoot><tr class="sum-row"><td>Total mes</td><td id="weekSum">—</td></tr></tfoot>
+          <tfoot><tr class="sum-row"><td>Acumulado del mes</td><td id="weekSum">—</td></tr></tfoot>
         </table>
       </div>
       <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
@@ -174,7 +171,6 @@
     </section>
   </div>
 
-  <!-- BLOQUEO (cuando se exige cambio de contraseña) -->
   <div class="blocker" id="panelBlocker"></div>
 
   <!-- MODAL RETIRO -->
@@ -250,7 +246,7 @@
     </div>
   </dialog>
 
-  <!-- ✨ MODAL FIN DE PERÍODO DE CUENTA (NUEVO) -->
+  <!-- MODAL FIN DE PERÍODO DE CUENTA (SIEMPRE QUE HAYA FINALIZADO) -->
   <dialog id="endPeriodDlg" aria-labelledby="endTitle" aria-describedby="endDesc">
     <div class="modal-h">
       <div id="endTitle" style="font-weight:800">Aviso importante</div>
@@ -277,13 +273,11 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  // ==== utilidades de fechas ====
   function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);} t.setHours(0,0,0,0); return t; }
   function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
   function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
   function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
 
-  // ==== formato de dinero con comas (en vivo) ====
   function cleanMoney(s){ return (s||'').toString().replace(/[,\s]/g,''); }
   function formatNumberString(val){
     val = cleanMoney(val);
@@ -306,16 +300,18 @@
     el.addEventListener('focus', ()=> el.select());
   }
 
-  // ==== NUEVO: helper para "congelar" vistas si el período terminó ====
-  function minDate(a,b){ return a<b ? a : b; }
-
+  // Congelar en la fecha de cierre: usar el día anterior al cierre para mostrar el último estado "antes del fin"
   function paintWeeks(acc, opts={}){
     const today=clampDate(new Date());
     const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
 
-    // si se pasa freezeUntil (fecha de cierre), congelamos la "fecha de hoy" en esa fecha
-    const freezeUntil = opts.freezeUntil ? clampDate(opts.freezeUntil) : null;
-    const todayForCalc = freezeUntil ? minDate(today, freezeUntil) : today;
+    // Si hay freezeAtClose => tomar el día anterior al cierre como "hoy" lógico
+    let todayForCalc = today;
+    if (opts.freezeAtClose){
+      const freeze = clampDate(opts.freezeAtClose);
+      const prev = new Date(freeze); prev.setDate(prev.getDate()-1); // día previo al cierre
+      todayForCalc = prev;
+    }
 
     const {start,end}=currentWindow(joined,todayForCalc);
     $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
@@ -328,9 +324,19 @@
     const cutoff = todayForCalc < end ? todayForCalc : end;
     const shown = allFridays.filter(f => f < cutoff);
 
-    if(shown.length===0){ tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`; }
-    else{ shown.forEach(f=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`; tbody.appendChild(tr); }); }
-    $('#weekSum').textContent = (todayForCalc >= end) ? fmtQ(monthly) : '—';
+    if(shown.length===0){
+      tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
+      $('#weekSum').textContent = '—';
+    }else{
+      shown.forEach(f=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
+        tbody.appendChild(tr);
+      });
+      // Acumulado parcial hasta la última fecha mostrada (último monto actualizado antes del fin)
+      const partial = weekly * shown.length;
+      $('#weekSum').textContent = fmtQ(partial);
+    }
   }
 
   async function loadHeader(){
@@ -360,7 +366,6 @@
 
     const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const close  = new Date(joined.getFullYear(), joined.getMonth() + (acc.invest_months||0), joined.getDate());
-    const today  = clampDate(new Date());
     const closeClamped = clampDate(close);
 
     $('#valOpenDate').textContent  = joined.toLocaleDateString('es-GT');
@@ -370,27 +375,20 @@
     const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
     $('#valPeriodInterest').textContent = fmtQ(total);
 
-    // === NUEVO: fin de período ===
-    const accountEnded = today >= closeClamped;
-    // Mostrar modal sólo una vez por cuenta:
-    const ackKey = `fx_end_ack_${acc.id}`;
-    const alreadyAck = localStorage.getItem(ackKey) === '1';
+    const accountEnded = clampDate(new Date()) >= closeClamped;
 
-    // Pintar semanas con "congelamiento" al cierre si ya terminó
-    paintWeeks(acc, { freezeUntil: accountEnded ? closeClamped : null });
+    // Pintar semanas congelando al día previo al cierre si ya finalizó
+    paintWeeks(acc, { freezeAtClose: accountEnded ? closeClamped : null });
 
-    if(accountEnded && !alreadyAck){
+    // Mostrar SIEMPRE el modal si la cuenta ya finalizó (en cada login/carga)
+    if(accountEnded){
       const endDlg = document.getElementById('endPeriodDlg');
       if(endDlg && !endDlg.open) endDlg.showModal();
-      // Al aceptar, guardamos acuse para no volver a mostrar
-      document.getElementById('ackEnd')?.addEventListener('click', ()=>{
-        localStorage.setItem(ackKey,'1');
-        endDlg.close();
-      }, { once:true });
+      document.getElementById('ackEnd')?.addEventListener('click', ()=> endDlg.close(), { once:true });
     }
   }
 
-  // ===== RETIROS =====
+  // ===== Retiros =====
   const dlg = document.getElementById('wdlg');
   let withdrawType='early';
   function selectType(t){
@@ -527,7 +525,6 @@
     window.location.href = BASE_URL;
   }
 
-  // ======= SIMULADOR =======
   function autoPlanAndRate(capital){
     if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
     if(capital >= 250000)                     return { name:'PLATINUM (20% semestral)', rate:0.20 };
@@ -559,11 +556,9 @@
     }
   }
 
-  // ===== INIT =====
   document.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('btnSignOut').addEventListener('click', async ()=>{ await sb.auth.signOut(); window.location.href = BASE_URL; });
 
-    // Retiro
     document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
     document.getElementById('wCancel')?.addEventListener('click', ()=> dlg.close());
@@ -573,7 +568,6 @@
     document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
     selectType('early'); toggleSwitchAll(false);
 
-    // Ojos y validación pwd
     __bindPwdEye('newPwd','eyeNew');
     __bindPwdEye('newPwd2','eyeNew2');
     ['newPwd','newPwd2'].forEach(id=>{
@@ -583,11 +577,9 @@
     document.getElementById('savePwd')?.addEventListener('click', __fxpwd_save);
     document.getElementById('logoutNow')?.addEventListener('click', __fxpwd_logout);
 
-    // Formato dinero en vivo
     bindMoneyInput('wAmount');
     bindMoneyInput('simCapital');
 
-    // Simulador
     document.getElementById('btnCalc').addEventListener('click', simulate);
 
     loadHeader();
