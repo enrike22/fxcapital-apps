@@ -22,16 +22,37 @@
     --soft:0 14px 35px rgba(0,0,0,.18); --radius:18px;
     --bg1:#eef2f7; --bg2:#e9eef5; --bg3:#e7edf5; --bg4:#e6ecf4;
     --brand-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
-    --mx:50%; --my:50%; /* posición del cursor para el brillo */
+    --mx:50%; --my:50%;
   }
+
   *{box-sizing:border-box}
+
   html,body{height:100%}
+
+  /* ===== Nitidez / Sharpness helpers (único cambio) ===== */
+  html, body{
+    /* Texto más definido (sin “lavado”) */
+    -webkit-font-smoothing: auto;         /* Chrome/Edge/Opera (Windows suele verse más nítido en auto) */
+    -moz-osx-font-smoothing: auto;        /* Firefox macOS */
+    text-rendering: geometricPrecision;   /* prioriza el trazo del texto */
+  }
+  /* El logo a máxima nitidez posible para raster */
+  .logo{
+    image-rendering: -webkit-optimize-contrast; /* WebKit */
+    image-rendering: crisp-edges;               /* Fallback */
+  }
+  /* Evitar difuminado por transformaciones y filtros en tarjetas principales */
+  .panel, .brand-pill, .cards .card{
+    backface-visibility: hidden;
+    transform: translateZ(0); /* fuerza capa propia, reduce blur en animaciones */
+  }
+  /* ===================================================== */
+
   body{
     margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--txt);
     background: radial-gradient(1100px 700px at 25% -20%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 70%, var(--bg4) 100%) fixed;
     overflow-x:hidden;
   }
-  /* halo de luz que sigue el cursor */
   body::after{
     content:"";
     position:fixed; inset:0; pointer-events:none;
@@ -44,26 +65,16 @@
     body::after{ opacity:.25; }
   }
 
-  /* ===== Escena 3D (más notoria) ===== */
-  .stage{
-    perspective:1400px; transform-style:preserve-3d;
-  }
+  /* ===== Escena 3D (misma) ===== */
+  .stage{ perspective:1400px; transform-style:preserve-3d; }
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
     display:grid; grid-template-columns:minmax(320px,640px) minmax(360px,520px);
     column-gap:64px; align-items:center; justify-content:center;
     transform-style:preserve-3d;
   }
-  /* contenedor que rota con el mouse */
-  .rig{
-    transform-style:preserve-3d;
-    will-change:transform;
-  }
-  /* cada capa se mueve con distinta profundidad */
-  .layer{
-    transform-style:preserve-3d;
-    will-change:transform,filter;
-  }
+  .rig{ transform-style:preserve-3d; will-change:transform; }
+  .layer{ transform-style:preserve-3d; will-change:transform,filter; }
   .float{ animation: bob 6s ease-in-out infinite; }
   @keyframes bob{ 0%,100%{ transform:translateZ(0) } 50%{ transform:translateZ(18px) } }
 
@@ -87,7 +98,7 @@
   .panel{
     background:linear-gradient(180deg,#fff 0%, #fafbff 100%); border:1px solid var(--outline);
     border-radius:var(--radius); padding:26px; box-shadow:var(--glow);
-    transform-style:preserve-3d;
+    transform-style:preserve-3d; position:relative;
   }
   .panel h2{ margin:0 0 18px; font-size:28px; text-align:center; }
   .field{ margin:12px 0; } .label{ color:#3b3f46; margin:0 0 6px; font-size:14px; }
@@ -101,14 +112,12 @@
         padding:13px 16px; border-radius:12px; cursor:pointer; box-shadow:0 10px 28px rgba(0,0,0,.35); }
   .hint{ font-size:13px; color:#9aa1ac; margin-top:6px; text-align:center; } .err{ color:#c1121f; }
 
-  /* leve “brillo” que se desplaza sobre la tarjeta de login */
   .panel::after{
     content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
     background: radial-gradient(220px 180px at var(--mx) var(--my), rgba(255,255,255,.35), transparent 60%);
     opacity:.25; transition:opacity .2s ease; mix-blend-mode:screen;
   }
 
-  /* sombras dinámicas */
   .shadow{
     filter: drop-shadow(0 22px 28px rgba(0,0,0,.22));
     will-change:filter,transform;
@@ -145,7 +154,7 @@
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <section class="panel layer shadow" data-depth="1.15" aria-labelledby="loginTitle" style="position:relative;">
+    <section class="panel layer shadow" data-depth="1.15" aria-labelledby="loginTitle">
       <h2 id="loginTitle">Iniciar Sesión</h2>
 
       <div class="field">
@@ -225,24 +234,21 @@
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // ===== Interacción 3D más notable (tilt + parallax + glare que sigue el mouse) =====
+    // ===== Interacción 3D (igual) =====
     (function interactive3D(){
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-      const rig = document.getElementById('rig');        // capa fantasma para los ángulos globales
-      const layers = Array.from(document.querySelectorAll('.layer')); // elementos con profundidad
+      const rig = document.getElementById('rig');
+      const layers = Array.from(document.querySelectorAll('.layer'));
       const body = document.body;
 
-      let targetRX = 0, targetRY = 0;   // ángulos objetivo
-      let curRX = 0, curRY = 0;         // ángulos actuales
-      let px = 0, py = 0;               // parallax objetivo
+      let targetRX = 0, targetRY = 0;
+      let curRX = 0, curRY = 0;
+      let px = 0, py = 0;
       let cx, cy;
 
-      function updateCenter(){
-        cx = window.innerWidth / 2;
-        cy = window.innerHeight / 2;
-      }
+      function updateCenter(){ cx = window.innerWidth / 2; cy = window.innerHeight / 2; }
       updateCenter();
       window.addEventListener('resize', updateCenter, { passive:true });
 
@@ -250,19 +256,15 @@
         const x = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? cx;
         const y = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? cy;
 
-        // normalizados -0.5..0.5
         const nx = (x - cx) / cx;
         const ny = (y - cy) / cy;
 
-        // tilt global más fuerte
-        targetRY = nx * 18;     // rotación Y (izq-der)
-        targetRX = -ny * 12;    // rotación X (arriba-abajo)
+        targetRY = nx * 18;
+        targetRX = -ny * 12;
 
-        // desplazamiento parallax (px, py) base en px
         px = nx * 30;
         py = ny * 24;
 
-        // actualizar brillo global (fondo) y de la tarjeta
         body.style.setProperty('--mx', `${x}px`);
         body.style.setProperty('--my', `${y}px`);
         document.querySelectorAll('.panel').forEach(p => {
@@ -274,7 +276,6 @@
       if (!isTouch){
         window.addEventListener('mousemove', onPointerMove, { passive:true });
       } else {
-        // En móvil: movimiento sutil automático
         let t = 0;
         setInterval(()=> {
           t += 0.04;
@@ -286,22 +287,18 @@
       function lerp(a,b,f){ return a + (b - a) * f; }
 
       function raf(){
-        // easing suave
         const ease = prefersReduced ? 0.08 : 0.14;
         curRX = lerp(curRX, targetRX, ease);
         curRY = lerp(curRY, targetRY, ease);
 
-        // aplicar al rig (rotación global)
         rig.style.transform = `translateZ(0) rotateX(${curRX}deg) rotateY(${curRY}deg)`;
 
-        // mover capas con distinta profundidad
         for (const el of layers){
-          const depth = Number(el.dataset.depth || '1'); // 1 = más cercano
+          const depth = Number(el.dataset.depth || '1');
           const tx = px * depth;
           const ty = py * depth;
-          const tz = (depth - 0.5) * 60; // separa en el eje Z según profundidad
+          const tz = (depth - 0.5) * 60;
           el.style.transform = `translate3d(${tx}px, ${ty}px, ${tz}px)`;
-          // sombreado dinámico (más fuerza si está inclinado)
           const sh = Math.min(1, Math.abs(curRX)+Math.abs(curRY)) * .018 + .18;
           el.style.filter = `drop-shadow(0 22px 28px rgba(0,0,0,${sh.toFixed(3)}))`;
         }
