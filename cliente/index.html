@@ -27,13 +27,12 @@
   *{box-sizing:border-box}
   html,body{height:100%}
 
-  /* nitidez ligera (sin cambiar estética) */
+  /* nitidez ligera */
   html, body{
     -webkit-font-smoothing:auto;
     -moz-osx-font-smoothing:auto;
     text-rendering:geometricPrecision;
   }
-  .logo{ image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges; }
 
   body{
     margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--txt);
@@ -47,7 +46,6 @@
   }
   @media (prefers-reduced-motion: reduce){ body::after{ opacity:.25; } }
 
-  /* layout original */
   .stage{ perspective:1400px; transform-style:preserve-3d; }
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
@@ -55,16 +53,40 @@
     column-gap:64px; align-items:center; justify-content:center; transform-style:preserve-3d;
   }
   .left{ display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
-  .logo{ width:min(260px, 42vw); height:auto; display:block; margin:8px auto 18px; }
 
-  /* efecto moneda: solo en el logo */
-  #logoCoin{
+  /* ===== Moneda de doble cara ===== */
+  .coin{
+    width:min(260px, 42vw);
+    aspect-ratio:1/1;
+    position:relative;
+    margin:8px auto 18px;
     transform-style:preserve-3d;
     will-change:transform;
     backface-visibility:hidden;
-    transition:filter .2s ease;
+    cursor:default;
+    filter:drop-shadow(0 22px 28px rgba(0,0,0,.22));
   }
-  #logoCoin:hover{ filter:brightness(1.02) contrast(1.02); }
+  .coin__face{
+    position:absolute; inset:0;
+    display:grid; place-items:center;
+    backface-visibility:hidden;
+    border-radius:50%;
+    overflow:hidden;
+  }
+  .coin__img{
+    width:100%; height:100%; object-fit:contain;
+    image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges;
+    background:#fff; /* fondo blanco para mayor contraste del logo */
+    border-radius:50%;
+  }
+  .coin__face--back{ transform:rotateY(180deg); }
+  /* pequeño canto para sensación de grosor */
+  .coin::before{
+    content:""; position:absolute; inset:0;
+    border-radius:50%;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), inset 0 16px 24px rgba(0,0,0,.08);
+    pointer-events:none;
+  }
 
   .brand-pill{
     display:inline-flex; align-items:center; justify-content:center; gap:18px;
@@ -108,7 +130,6 @@
 
   @media (max-width:980px){
     .wrap{ grid-template-columns:1fr; row-gap:28px; padding:28px 16px 40px; }
-    .logo{ width:min(300px, 60vw); margin-bottom:14px; }
     .brand-pill{ font-size:clamp(22px, 6vw, 32px); }
     .cards{ grid-template-columns:1fr; max-width:560px; }
     .panel{ max-width:680px; margin:6px auto 0; }
@@ -118,12 +139,18 @@
 </head>
 <body class="stage">
   <div class="wrap">
-    <!-- (El rig ya no se usa; se deja neutro) -->
-    <div id="rig" aria-hidden="true" style="position:absolute; inset:0; transform-origin:50% 50%; z-index:-1;"></div>
 
     <section class="left">
-      <img id="logoCoin" src="logologin.png" alt="FX | CAPITAL R.L. logo"
-           class="logo shadow" />
+      <!-- Moneda con dos caras (siempre visible al girar) -->
+      <div id="logoCoin" class="coin">
+        <div class="coin__face coin__face--front">
+          <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo frente">
+        </div>
+        <div class="coin__face coin__face--back">
+          <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo reverso">
+        </div>
+      </div>
+
       <div class="brand-pill shadow">
         <span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span>
       </div>
@@ -217,22 +244,21 @@
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // ===== Efecto MONEDA SOLO en el logo =====
+    // ===== Efecto MONEDA en el logo (con dos caras) =====
     (function coinSpin(){
       const el = document.getElementById('logoCoin');
       if(!el) return;
 
-      let angle = 0;       // rotación acumulada (grados)
-      let vel = 0;         // velocidad angular (grados/frame aprox.)
+      let angle = 0;       // grados
+      let vel = 0;         // velocidad angular
       let raf = null;
-      const friction = 0.96;      // desaceleración
-      const maxVel   = 6;         // límite de velocidad
-      const impulse  = 0.25;      // cuánto empuja cada movimiento
+      const friction = 0.96;
+      const maxVel   = 6;
+      const impulse  = 0.25;
 
       let lastX = null;
 
       function frame(){
-        // si no hay movimiento significativo, detener
         if (Math.abs(vel) < 0.001){
           vel = 0;
           raf = null;
@@ -241,8 +267,7 @@
         angle += vel;
         vel *= friction;
 
-        // ligera inclinación como moneda real (pequeño bamboleo en X)
-        const tilt = Math.sin(angle * Math.PI / 180) * 4; // 4°
+        const tilt = Math.sin(angle * Math.PI / 180) * 4;
         el.style.transform = `rotateY(${angle}deg) rotateX(${tilt}deg) translateZ(0)`;
         raf = requestAnimationFrame(frame);
       }
@@ -258,9 +283,9 @@
         const dx = e.clientX - lastX; lastX = e.clientX;
         kick(dx * impulse * 0.5);
       });
-      el.addEventListener('pointerleave', ()=>{ lastX = null; /* se detiene por fricción */ });
+      el.addEventListener('pointerleave', ()=>{ lastX = null; });
 
-      // soporte táctil: pequeño impulso al tocar/arrastrar
+      // táctil
       el.addEventListener('touchstart', ()=>kick(2), {passive:true});
       el.addEventListener('touchmove', (e)=>{
         if(e.touches.length){
