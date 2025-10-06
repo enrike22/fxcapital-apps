@@ -42,7 +42,7 @@
   }
   .left{ display:flex; flex-direction:column; align-items:center; }
 
-  /* ===== Moneda 3D doble cara — giro sutil SOLO en hover ===== */
+  /* ===== Moneda 3D doble cara (sin animación CSS; control JS) ===== */
   .coin{
     width:min(260px, 42vw);
     aspect-ratio:1/1;
@@ -50,21 +50,11 @@
     margin:8px auto 18px;
     transform-style:preserve-3d;
     filter:drop-shadow(0 22px 28px rgba(0,0,0,.22));
+    /* leve tilt inicial para dar volumen */
     transform: rotateX(8deg) rotateY(0deg);
-    animation: spinY 14s linear infinite;
-    animation-play-state: paused;            /* pausado por defecto */
+    will-change: transform;
+    cursor:default;
   }
-  .coin:hover{ animation-play-state: running; } /* gira al pasar el mouse */
-
-  @keyframes spinY{
-    0%   { transform: rotateX(8deg) rotateY(0deg); }
-    100% { transform: rotateX(8deg) rotateY(360deg); }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .coin, .coin:hover{ animation: none; }
-  }
-
   .coin__face{
     position:absolute; inset:0;
     display:grid; place-items:center;
@@ -122,7 +112,7 @@
   <div class="wrap">
 
     <section class="left">
-      <!-- Moneda doble cara (sin fondo, gira en hover) -->
+      <!-- Moneda doble cara (sin fondo) -->
       <div class="coin" id="coin">
         <div class="coin__face coin__face--front">
           <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo frente">
@@ -225,16 +215,48 @@
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // En pantallas táctiles: una vuelta al tocar
-    (function touchSpinOnce(){
+    // ===== Giro controlado por JS (funciona siempre, sin depender de CSS) =====
+    (function coinSpin(){
       const coin = document.getElementById('coin');
       if(!coin) return;
-      let timer=null;
+
+      let angle = 0;           // ángulo actual en grados
+      let speed = 0;           // velocidad actual (grados/seg)
+      const targetOn  = 360/14; // ~25.7°/s -> 1 vuelta cada 14s
+      let target = 0;          // velocidad objetivo
+      let rafId = null;
+      let lastTs = null;
+
+      function tick(ts){
+        if(lastTs == null) lastTs = ts;
+        const dt = (ts - lastTs) / 1000; // segundos
+        lastTs = ts;
+
+        // suavizado hacia la velocidad objetivo
+        const ease = 0.12;
+        speed += (target - speed) * ease;
+
+        // actualizar ángulo
+        angle = (angle + speed * dt) % 360;
+
+        // aplicar transform (manteniendo tilt X)
+        coin.style.transform = `rotateX(8deg) rotateY(${angle}deg)`;
+
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function start(){ target = targetOn; }
+      function stop(){ target = 0; }
+
+      coin.addEventListener('mouseenter', start);
+      coin.addEventListener('mouseleave', stop);
+      // Táctiles: una vuelta por toque
       coin.addEventListener('touchstart', ()=>{
-        coin.style.animationPlayState = 'running';
-        clearTimeout(timer);
-        timer = setTimeout(()=>{ coin.style.animationPlayState = 'paused'; }, 14000); // 14s = 1 vuelta
+        start();
+        setTimeout(stop, 14000);
       }, {passive:true});
+
+      rafId = requestAnimationFrame(tick);
     })();
   </script>
 </body>
