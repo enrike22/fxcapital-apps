@@ -22,7 +22,6 @@
     --soft:0 14px 35px rgba(0,0,0,.18); --radius:18px;
     --bg1:#eef2f7; --bg2:#e9eef5; --bg3:#e7edf5; --bg4:#e6ecf4;
     --brand-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
-    --mx:50%; --my:50%;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -39,13 +38,8 @@
     background: radial-gradient(1100px 700px at 25% -20%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 70%, var(--bg4) 100%) fixed;
     overflow-x:hidden;
   }
-  body::after{
-    content:""; position:fixed; inset:0; pointer-events:none;
-    background: radial-gradient(420px 420px at var(--mx) var(--my), rgba(255,255,255,.18), rgba(255,255,255,0) 60%);
-    mix-blend-mode:soft-light; opacity:.9; transition:opacity .25s ease;
-  }
-  @media (prefers-reduced-motion: reduce){ body::after{ opacity:.25; } }
 
+  /* ===== Layout original ===== */
   .stage{ perspective:1400px; transform-style:preserve-3d; }
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
@@ -54,7 +48,7 @@
   }
   .left{ display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
 
-  /* ===== Moneda de doble cara ===== */
+  /* ===== Moneda 3D de doble cara (giro infinito) ===== */
   .coin{
     width:min(260px, 42vw);
     aspect-ratio:1/1;
@@ -62,30 +56,45 @@
     margin:8px auto 18px;
     transform-style:preserve-3d;
     will-change:transform;
-    backface-visibility:hidden;
-    cursor:default;
     filter:drop-shadow(0 22px 28px rgba(0,0,0,.22));
+    animation: spinY 10s linear infinite;
   }
+  /* un pequeño “tilt” constante para sensación de volumen */
+  @keyframes spinY{
+    0%   { transform: rotateX(8deg) rotateY(0deg)   translateZ(0); }
+    100% { transform: rotateX(8deg) rotateY(360deg) translateZ(0); }
+  }
+  /* más rápido al pasar el mouse (opcional) */
+  .coin:hover{ animation-duration: 6s; }
+
+  /* Pausar si el usuario prefiere menos movimiento */
+  @media (prefers-reduced-motion: reduce){
+    .coin{ animation: none; transform: rotateX(8deg) rotateY(0); }
+  }
+
   .coin__face{
     position:absolute; inset:0;
     display:grid; place-items:center;
-    backface-visibility:hidden;
+    backface-visibility:hidden;  /* para que no se vea “espejado” */
     border-radius:50%;
     overflow:hidden;
   }
   .coin__img{
     width:100%; height:100%; object-fit:contain;
-    image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges;
-    background:#fff; /* fondo blanco para mayor contraste del logo */
+    /* SIN fondo: respeta la transparencia del PNG */
+    background: transparent;
     border-radius:50%;
+    image-rendering:-webkit-optimize-contrast; 
+    image-rendering:crisp-edges;
   }
   .coin__face--back{ transform:rotateY(180deg); }
-  /* pequeño canto para sensación de grosor */
+
+  /* Canto (borde) sutil para dar grosor sin poner fondo al logo */
   .coin::before{
     content:""; position:absolute; inset:0;
     border-radius:50%;
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12), inset 0 16px 24px rgba(0,0,0,.08);
-    pointer-events:none;
+    background: conic-gradient(from 0deg, rgba(0,0,0,.12), rgba(0,0,0,.02), rgba(0,0,0,.12));
+    opacity:.25; pointer-events:none;
   }
 
   .brand-pill{
@@ -120,20 +129,11 @@
         padding:13px 16px; border-radius:12px; cursor:pointer; box-shadow:0 10px 28px rgba(0,0,0,.35); }
   .hint{ font-size:13px; color:#9aa1ac; margin-top:6px; text-align:center; } .err{ color:#c1121f; }
 
-  .panel::after{
-    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
-    background: radial-gradient(220px 180px at var(--mx) var(--my), rgba(255,255,255,.35), transparent 60%);
-    opacity:.25; transition:opacity .2s ease; mix-blend-mode:screen;
-  }
-
-  .shadow{ filter: drop-shadow(0 22px 28px rgba(0,0,0,.22)); will-change:filter,transform; }
-
   @media (max-width:980px){
     .wrap{ grid-template-columns:1fr; row-gap:28px; padding:28px 16px 40px; }
     .brand-pill{ font-size:clamp(22px, 6vw, 32px); }
     .cards{ grid-template-columns:1fr; max-width:560px; }
     .panel{ max-width:680px; margin:6px auto 0; }
-    body::after{ opacity:.35; }
   }
 </style>
 </head>
@@ -141,8 +141,8 @@
   <div class="wrap">
 
     <section class="left">
-      <!-- Moneda con dos caras (siempre visible al girar) -->
-      <div id="logoCoin" class="coin">
+      <!-- Moneda con dos caras (siempre visible al girar, sin fondo blanco) -->
+      <div class="coin" aria-hidden="true">
         <div class="coin__face coin__face--front">
           <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo frente">
         </div>
@@ -151,20 +151,20 @@
         </div>
       </div>
 
-      <div class="brand-pill shadow">
+      <div class="brand-pill">
         <span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span>
       </div>
       <div class="tagline">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
-        <div class="card shadow"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
-        <div class="card shadow"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
-        <div class="card shadow"><strong>Control</strong><div class="muted">Transparencia total</div></div>
+        <div class="card"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
+        <div class="card"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
+        <div class="card"><strong>Control</strong><div class="muted">Transparencia total</div></div>
       </div>
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <section class="panel shadow" aria-labelledby="loginTitle">
+    <section class="panel" aria-labelledby="loginTitle">
       <h2 id="loginTitle">Iniciar Sesión</h2>
 
       <div class="field">
@@ -243,60 +243,6 @@
       e.preventDefault();
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
-
-    // ===== Efecto MONEDA en el logo (con dos caras) =====
-    (function coinSpin(){
-      const el = document.getElementById('logoCoin');
-      if(!el) return;
-
-      let angle = 0;       // grados
-      let vel = 0;         // velocidad angular
-      let raf = null;
-      const friction = 0.96;
-      const maxVel   = 6;
-      const impulse  = 0.25;
-
-      let lastX = null;
-
-      function frame(){
-        if (Math.abs(vel) < 0.001){
-          vel = 0;
-          raf = null;
-          return;
-        }
-        angle += vel;
-        vel *= friction;
-
-        const tilt = Math.sin(angle * Math.PI / 180) * 4;
-        el.style.transform = `rotateY(${angle}deg) rotateX(${tilt}deg) translateZ(0)`;
-        raf = requestAnimationFrame(frame);
-      }
-
-      function kick(v){
-        vel = Math.max(Math.min(vel + v, maxVel), -maxVel);
-        if(!raf) raf = requestAnimationFrame(frame);
-      }
-
-      el.addEventListener('pointerenter', ()=>{ lastX = null; kick(2.2); });
-      el.addEventListener('pointermove', (e)=>{
-        if(lastX === null){ lastX = e.clientX; return; }
-        const dx = e.clientX - lastX; lastX = e.clientX;
-        kick(dx * impulse * 0.5);
-      });
-      el.addEventListener('pointerleave', ()=>{ lastX = null; });
-
-      // táctil
-      el.addEventListener('touchstart', ()=>kick(2), {passive:true});
-      el.addEventListener('touchmove', (e)=>{
-        if(e.touches.length){
-          const x = e.touches[0].clientX;
-          if(lastX === null){ lastX = x; return; }
-          const dx = x - lastX; lastX = x;
-          kick(dx * impulse * 0.5);
-        }
-      }, {passive:true});
-      el.addEventListener('touchend', ()=>{ lastX = null; }, {passive:true});
-    })();
   </script>
 </body>
 </html>
