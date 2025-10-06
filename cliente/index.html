@@ -48,7 +48,7 @@
   }
   .left{ display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
 
-  /* ===== Moneda 3D de doble cara (giro infinito) ===== */
+  /* ===== Moneda 3D de doble cara (giro sutil SOLO en hover) ===== */
   .coin{
     width:min(260px, 42vw);
     aspect-ratio:1/1;
@@ -57,39 +57,42 @@
     transform-style:preserve-3d;
     will-change:transform;
     filter:drop-shadow(0 22px 28px rgba(0,0,0,.22));
-    animation: spinY 10s linear infinite;
+    /* siempre con un leve tilt para volumen */
+    transform: rotateX(8deg) rotateY(0deg);
+    /* predefinimos la animación pero en pausa */
+    animation: spinY 14s linear infinite;
+    animation-play-state: paused;   /* pausa por defecto */
   }
-  /* un pequeño “tilt” constante para sensación de volumen */
-  @keyframes spinY{
-    0%   { transform: rotateX(8deg) rotateY(0deg)   translateZ(0); }
-    100% { transform: rotateX(8deg) rotateY(360deg) translateZ(0); }
-  }
-  /* más rápido al pasar el mouse (opcional) */
-  .coin:hover{ animation-duration: 6s; }
+  /* al pasar el mouse, que gire suavemente (más rápido sin exagerar) */
+  .coin:hover{ animation-play-state: running; }
 
-  /* Pausar si el usuario prefiere menos movimiento */
+  @keyframes spinY{
+    0%   { transform: rotateX(8deg) rotateY(0deg); }
+    100% { transform: rotateX(8deg) rotateY(360deg); }
+  }
+
+  /* Pausa si el usuario prefiere menos movimiento */
   @media (prefers-reduced-motion: reduce){
-    .coin{ animation: none; transform: rotateX(8deg) rotateY(0); }
+    .coin, .coin:hover{ animation: none; }
   }
 
   .coin__face{
     position:absolute; inset:0;
     display:grid; place-items:center;
-    backface-visibility:hidden;  /* para que no se vea “espejado” */
+    backface-visibility:hidden;  /* evita efecto espejo */
     border-radius:50%;
     overflow:hidden;
   }
   .coin__img{
     width:100%; height:100%; object-fit:contain;
-    /* SIN fondo: respeta la transparencia del PNG */
-    background: transparent;
+    background: transparent;     /* SIN fondo, respeta PNG */
     border-radius:50%;
-    image-rendering:-webkit-optimize-contrast; 
+    image-rendering:-webkit-optimize-contrast;
     image-rendering:crisp-edges;
   }
   .coin__face--back{ transform:rotateY(180deg); }
 
-  /* Canto (borde) sutil para dar grosor sin poner fondo al logo */
+  /* canto sutil para dar grosor sin fondo */
   .coin::before{
     content:""; position:absolute; inset:0;
     border-radius:50%;
@@ -141,8 +144,8 @@
   <div class="wrap">
 
     <section class="left">
-      <!-- Moneda con dos caras (siempre visible al girar, sin fondo blanco) -->
-      <div class="coin" aria-hidden="true">
+      <!-- Moneda con dos caras (siempre visible al girar, sin fondo) -->
+      <div class="coin" id="coin">
         <div class="coin__face coin__face--front">
           <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo frente">
         </div>
@@ -243,6 +246,18 @@
       e.preventDefault();
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
+
+    // En pantallas táctiles: iniciar giro por 1 vuelta al tocar
+    (function touchSpinOnce(){
+      const coin = document.getElementById('coin');
+      if(!coin) return;
+      let timer=null;
+      coin.addEventListener('touchstart', ()=>{
+        coin.style.animationPlayState = 'running';
+        clearTimeout(timer);
+        timer = setTimeout(()=>{ coin.style.animationPlayState = 'paused'; }, 14000); // 14s = 1 vuelta
+      }, {passive:true});
+    })();
   </script>
 </body>
 </html>
