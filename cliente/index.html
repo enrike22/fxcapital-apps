@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FX | CAPITAL R.L. — Iniciar sesión</title>
 
-<!-- FAVICONS (archivos dentro de /cliente) -->
+<!-- FAVICONS -->
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -25,13 +25,7 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-
-  /* nitidez ligera */
-  html, body{
-    -webkit-font-smoothing:auto;
-    -moz-osx-font-smoothing:auto;
-    text-rendering:geometricPrecision;
-  }
+  html, body{ -webkit-font-smoothing:auto; -moz-osx-font-smoothing:auto; text-rendering:geometricPrecision; }
 
   body{
     margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--txt);
@@ -44,34 +38,29 @@
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
     display:grid; grid-template-columns:minmax(320px,640px) minmax(360px,520px);
-    column-gap:64px; align-items:center; justify-content:center; transform-style:preserve-3d;
+    column-gap:64px; align-items:center; justify-content:center;
   }
-  .left{ display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
+  .left{ display:flex; flex-direction:column; align-items:center; }
 
-  /* ===== Moneda 3D de doble cara (giro sutil SOLO en hover) ===== */
+  /* ===== Moneda 3D doble cara — giro sutil SOLO en hover ===== */
   .coin{
     width:min(260px, 42vw);
     aspect-ratio:1/1;
     position:relative;
     margin:8px auto 18px;
     transform-style:preserve-3d;
-    will-change:transform;
     filter:drop-shadow(0 22px 28px rgba(0,0,0,.22));
-    /* siempre con un leve tilt para volumen */
     transform: rotateX(8deg) rotateY(0deg);
-    /* predefinimos la animación pero en pausa */
     animation: spinY 14s linear infinite;
-    animation-play-state: paused;   /* pausa por defecto */
+    animation-play-state: paused;            /* pausado por defecto */
   }
-  /* al pasar el mouse, que gire suavemente (más rápido sin exagerar) */
-  .coin:hover{ animation-play-state: running; }
+  .coin:hover{ animation-play-state: running; } /* gira al pasar el mouse */
 
   @keyframes spinY{
     0%   { transform: rotateX(8deg) rotateY(0deg); }
     100% { transform: rotateX(8deg) rotateY(360deg); }
   }
 
-  /* Pausa si el usuario prefiere menos movimiento */
   @media (prefers-reduced-motion: reduce){
     .coin, .coin:hover{ animation: none; }
   }
@@ -79,26 +68,15 @@
   .coin__face{
     position:absolute; inset:0;
     display:grid; place-items:center;
-    backface-visibility:hidden;  /* evita efecto espejo */
+    backface-visibility:hidden;
     border-radius:50%;
     overflow:hidden;
   }
   .coin__img{
     width:100%; height:100%; object-fit:contain;
-    background: transparent;     /* SIN fondo, respeta PNG */
-    border-radius:50%;
-    image-rendering:-webkit-optimize-contrast;
-    image-rendering:crisp-edges;
+    background:transparent; border-radius:50%;
   }
   .coin__face--back{ transform:rotateY(180deg); }
-
-  /* canto sutil para dar grosor sin fondo */
-  .coin::before{
-    content:""; position:absolute; inset:0;
-    border-radius:50%;
-    background: conic-gradient(from 0deg, rgba(0,0,0,.12), rgba(0,0,0,.02), rgba(0,0,0,.12));
-    opacity:.25; pointer-events:none;
-  }
 
   .brand-pill{
     display:inline-flex; align-items:center; justify-content:center; gap:18px;
@@ -110,7 +88,7 @@
   .tagline{ margin:6px auto 18px; color:#111; font-weight:800; letter-spacing:.2px;
             font-size:clamp(16px,1.4vw,20px); text-align:center; text-wrap:balance; text-shadow:0 8px 30px rgba(0,0,0,.12); }
 
-  .cards{ width:100%; max-width:640px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:8px auto 6px; transform-style:preserve-3d; }
+  .cards{ width:100%; max-width:640px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:8px auto 6px; }
   .card{ background:#fff; border-radius:14px; border:1px solid var(--outline); padding:16px 16px 18px; box-shadow:var(--soft); }
   .card strong{ display:block; margin-bottom:6px; }
   .fine{ color:var(--muted); font-size:13px; margin:12px 0 0; }
@@ -118,7 +96,7 @@
   .panel{
     background:linear-gradient(180deg,#fff 0%, #fafbff 100%); border:1px solid var(--outline);
     border-radius:var(--radius); padding:26px; box-shadow:var(--glow);
-    transform-style:preserve-3d; position:relative;
+    position:relative;
   }
   .panel h2{ margin:0 0 18px; font-size:28px; text-align:center; }
   .field{ margin:12px 0; } .label{ color:#3b3f46; margin:0 0 6px; font-size:14px; }
@@ -144,7 +122,7 @@
   <div class="wrap">
 
     <section class="left">
-      <!-- Moneda con dos caras (siempre visible al girar, sin fondo) -->
+      <!-- Moneda doble cara (sin fondo, gira en hover) -->
       <div class="coin" id="coin">
         <div class="coin__face coin__face--front">
           <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo frente">
@@ -247,7 +225,7 @@
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // En pantallas táctiles: iniciar giro por 1 vuelta al tocar
+    // En pantallas táctiles: una vuelta al tocar
     (function touchSpinOnce(){
       const coin = document.getElementById('coin');
       if(!coin) return;
