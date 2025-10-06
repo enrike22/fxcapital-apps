@@ -24,29 +24,16 @@
     --brand-shadow:0 14px 40px rgba(0,0,0,.30), inset 0 -2px 0 rgba(255,255,255,.07);
     --mx:50%; --my:50%;
   }
-
   *{box-sizing:border-box}
-
   html,body{height:100%}
 
-  /* ===== Nitidez / Sharpness helpers (único cambio) ===== */
+  /* nitidez ligera (sin cambiar estética) */
   html, body{
-    /* Texto más definido (sin “lavado”) */
-    -webkit-font-smoothing: auto;         /* Chrome/Edge/Opera (Windows suele verse más nítido en auto) */
-    -moz-osx-font-smoothing: auto;        /* Firefox macOS */
-    text-rendering: geometricPrecision;   /* prioriza el trazo del texto */
+    -webkit-font-smoothing:auto;
+    -moz-osx-font-smoothing:auto;
+    text-rendering:geometricPrecision;
   }
-  /* El logo a máxima nitidez posible para raster */
-  .logo{
-    image-rendering: -webkit-optimize-contrast; /* WebKit */
-    image-rendering: crisp-edges;               /* Fallback */
-  }
-  /* Evitar difuminado por transformaciones y filtros en tarjetas principales */
-  .panel, .brand-pill, .cards .card{
-    backface-visibility: hidden;
-    transform: translateZ(0); /* fuerza capa propia, reduce blur en animaciones */
-  }
-  /* ===================================================== */
+  .logo{ image-rendering:-webkit-optimize-contrast; image-rendering:crisp-edges; }
 
   body{
     margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--txt);
@@ -54,32 +41,31 @@
     overflow-x:hidden;
   }
   body::after{
-    content:"";
-    position:fixed; inset:0; pointer-events:none;
-    background:
-      radial-gradient(420px 420px at var(--mx) var(--my),
-        rgba(255,255,255,.18), rgba(255,255,255,0) 60%);
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background: radial-gradient(420px 420px at var(--mx) var(--my), rgba(255,255,255,.18), rgba(255,255,255,0) 60%);
     mix-blend-mode:soft-light; opacity:.9; transition:opacity .25s ease;
   }
-  @media (prefers-reduced-motion: reduce){
-    body::after{ opacity:.25; }
-  }
+  @media (prefers-reduced-motion: reduce){ body::after{ opacity:.25; } }
 
-  /* ===== Escena 3D (misma) ===== */
+  /* layout original */
   .stage{ perspective:1400px; transform-style:preserve-3d; }
   .wrap{
     max-width:1280px; margin:0 auto; padding:40px 20px 64px;
     display:grid; grid-template-columns:minmax(320px,640px) minmax(360px,520px);
-    column-gap:64px; align-items:center; justify-content:center;
-    transform-style:preserve-3d;
+    column-gap:64px; align-items:center; justify-content:center; transform-style:preserve-3d;
   }
-  .rig{ transform-style:preserve-3d; will-change:transform; }
-  .layer{ transform-style:preserve-3d; will-change:transform,filter; }
-  .float{ animation: bob 6s ease-in-out infinite; }
-  @keyframes bob{ 0%,100%{ transform:translateZ(0) } 50%{ transform:translateZ(18px) } }
-
   .left{ display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
   .logo{ width:min(260px, 42vw); height:auto; display:block; margin:8px auto 18px; }
+
+  /* efecto moneda: solo en el logo */
+  #logoCoin{
+    transform-style:preserve-3d;
+    will-change:transform;
+    backface-visibility:hidden;
+    transition:filter .2s ease;
+  }
+  #logoCoin:hover{ filter:brightness(1.02) contrast(1.02); }
+
   .brand-pill{
     display:inline-flex; align-items:center; justify-content:center; gap:18px;
     padding:18px 26px; background:var(--pill); color:#fff; border-radius:999px;
@@ -118,10 +104,7 @@
     opacity:.25; transition:opacity .2s ease; mix-blend-mode:screen;
   }
 
-  .shadow{
-    filter: drop-shadow(0 22px 28px rgba(0,0,0,.22));
-    will-change:filter,transform;
-  }
+  .shadow{ filter: drop-shadow(0 22px 28px rgba(0,0,0,.22)); will-change:filter,transform; }
 
   @media (max-width:980px){
     .wrap{ grid-template-columns:1fr; row-gap:28px; padding:28px 16px 40px; }
@@ -135,26 +118,26 @@
 </head>
 <body class="stage">
   <div class="wrap">
-    <!-- Grupo que rota con el mouse -->
-    <div id="rig" class="rig" aria-hidden="true" style="position:absolute; inset:0; transform-origin:50% 50%; z-index:-1;"></div>
+    <!-- (El rig ya no se usa; se deja neutro) -->
+    <div id="rig" aria-hidden="true" style="position:absolute; inset:0; transform-origin:50% 50%; z-index:-1;"></div>
 
     <section class="left">
-      <img src="logologin.png" alt="FX | CAPITAL R.L. logo"
-           class="logo layer shadow" data-depth="1.00" />
-      <div class="brand-pill layer shadow" data-depth="0.85">
+      <img id="logoCoin" src="logologin.png" alt="FX | CAPITAL R.L. logo"
+           class="logo shadow" />
+      <div class="brand-pill shadow">
         <span>FX</span><span class="bar"></span><span>CAPITAL R.L.</span>
       </div>
-      <div class="tagline layer" data-depth="0.70">Asesoría — Confianza — Crecimiento</div>
+      <div class="tagline">Asesoría — Confianza — Crecimiento</div>
 
       <div class="cards">
-        <div class="card layer shadow" data-depth="0.60"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
-        <div class="card layer shadow" data-depth="0.55"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
-        <div class="card layer shadow" data-depth="0.50"><strong>Control</strong><div class="muted">Transparencia total</div></div>
+        <div class="card shadow"><strong>Seguridad</strong><div class="muted">Máxima protección</div></div>
+        <div class="card shadow"><strong>Rentabilidad</strong><div class="muted">Hasta 25% semestral*</div></div>
+        <div class="card shadow"><strong>Control</strong><div class="muted">Transparencia total</div></div>
       </div>
       <div class="fine">*El porcentaje final depende de su plan.</div>
     </section>
 
-    <section class="panel layer shadow" data-depth="1.15" aria-labelledby="loginTitle">
+    <section class="panel shadow" aria-labelledby="loginTitle">
       <h2 id="loginTitle">Iniciar Sesión</h2>
 
       <div class="field">
@@ -204,7 +187,7 @@
       $('toggleEye').setAttribute('aria-pressed', String(show));
     });
 
-    // Login con mensajes en español
+    // Login
     async function doLogin(){
       const email = $('email').value.trim();
       const password = $('password').value;
@@ -228,84 +211,66 @@
     $('btnLogin').addEventListener('click', doLogin);
     document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
 
-    // "¿Olvidó su contraseña?" -> solo aviso
+    // ¿Olvidó su contraseña?
     $('forgotLink').addEventListener('click', (e)=>{
       e.preventDefault();
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // ===== Interacción 3D (igual) =====
-    (function interactive3D(){
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // ===== Efecto MONEDA SOLO en el logo =====
+    (function coinSpin(){
+      const el = document.getElementById('logoCoin');
+      if(!el) return;
 
-      const rig = document.getElementById('rig');
-      const layers = Array.from(document.querySelectorAll('.layer'));
-      const body = document.body;
+      let angle = 0;       // rotación acumulada (grados)
+      let vel = 0;         // velocidad angular (grados/frame aprox.)
+      let raf = null;
+      const friction = 0.96;      // desaceleración
+      const maxVel   = 6;         // límite de velocidad
+      const impulse  = 0.25;      // cuánto empuja cada movimiento
 
-      let targetRX = 0, targetRY = 0;
-      let curRX = 0, curRY = 0;
-      let px = 0, py = 0;
-      let cx, cy;
+      let lastX = null;
 
-      function updateCenter(){ cx = window.innerWidth / 2; cy = window.innerHeight / 2; }
-      updateCenter();
-      window.addEventListener('resize', updateCenter, { passive:true });
-
-      function onPointerMove(e){
-        const x = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? cx;
-        const y = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? cy;
-
-        const nx = (x - cx) / cx;
-        const ny = (y - cy) / cy;
-
-        targetRY = nx * 18;
-        targetRX = -ny * 12;
-
-        px = nx * 30;
-        py = ny * 24;
-
-        body.style.setProperty('--mx', `${x}px`);
-        body.style.setProperty('--my', `${y}px`);
-        document.querySelectorAll('.panel').forEach(p => {
-          p.style.setProperty('--mx', `${x}px`);
-          p.style.setProperty('--my', `${y}px`);
-        });
-      }
-
-      if (!isTouch){
-        window.addEventListener('mousemove', onPointerMove, { passive:true });
-      } else {
-        let t = 0;
-        setInterval(()=> {
-          t += 0.04;
-          const fake = { clientX: cx + Math.sin(t)*cx*0.15, clientY: cy + Math.cos(t*0.8)*cy*0.12 };
-          onPointerMove(fake);
-        }, 40);
-      }
-
-      function lerp(a,b,f){ return a + (b - a) * f; }
-
-      function raf(){
-        const ease = prefersReduced ? 0.08 : 0.14;
-        curRX = lerp(curRX, targetRX, ease);
-        curRY = lerp(curRY, targetRY, ease);
-
-        rig.style.transform = `translateZ(0) rotateX(${curRX}deg) rotateY(${curRY}deg)`;
-
-        for (const el of layers){
-          const depth = Number(el.dataset.depth || '1');
-          const tx = px * depth;
-          const ty = py * depth;
-          const tz = (depth - 0.5) * 60;
-          el.style.transform = `translate3d(${tx}px, ${ty}px, ${tz}px)`;
-          const sh = Math.min(1, Math.abs(curRX)+Math.abs(curRY)) * .018 + .18;
-          el.style.filter = `drop-shadow(0 22px 28px rgba(0,0,0,${sh.toFixed(3)}))`;
+      function frame(){
+        // si no hay movimiento significativo, detener
+        if (Math.abs(vel) < 0.001){
+          vel = 0;
+          raf = null;
+          return;
         }
+        angle += vel;
+        vel *= friction;
 
-        requestAnimationFrame(raf);
+        // ligera inclinación como moneda real (pequeño bamboleo en X)
+        const tilt = Math.sin(angle * Math.PI / 180) * 4; // 4°
+        el.style.transform = `rotateY(${angle}deg) rotateX(${tilt}deg) translateZ(0)`;
+        raf = requestAnimationFrame(frame);
       }
-      requestAnimationFrame(raf);
+
+      function kick(v){
+        vel = Math.max(Math.min(vel + v, maxVel), -maxVel);
+        if(!raf) raf = requestAnimationFrame(frame);
+      }
+
+      el.addEventListener('pointerenter', ()=>{ lastX = null; kick(2.2); });
+      el.addEventListener('pointermove', (e)=>{
+        if(lastX === null){ lastX = e.clientX; return; }
+        const dx = e.clientX - lastX; lastX = e.clientX;
+        kick(dx * impulse * 0.5);
+      });
+      el.addEventListener('pointerleave', ()=>{ lastX = null; /* se detiene por fricción */ });
+
+      // soporte táctil: pequeño impulso al tocar/arrastrar
+      el.addEventListener('touchstart', ()=>kick(2), {passive:true});
+      el.addEventListener('touchmove', (e)=>{
+        if(e.touches.length){
+          const x = e.touches[0].clientX;
+          if(lastX === null){ lastX = x; return; }
+          const dx = x - lastX; lastX = x;
+          kick(dx * impulse * 0.5);
+        }
+      }, {passive:true});
+      el.addEventListener('touchend', ()=>{ lastX = null; }, {passive:true});
     })();
   </script>
 </body>
