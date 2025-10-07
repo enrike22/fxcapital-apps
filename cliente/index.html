@@ -42,7 +42,7 @@
   }
   .left{ display:flex; flex-direction:column; align-items:center; }
 
-  /* ===== Moneda 3D doble cara (sin animación CSS; control JS) ===== */
+  /* ===== Moneda 3D doble cara (control JS) ===== */
   .coin{
     width:min(260px, 42vw);
     aspect-ratio:1/1;
@@ -50,10 +50,8 @@
     margin:8px auto 18px;
     transform-style:preserve-3d;
     filter:drop-shadow(0 22px 28px rgba(0,0,0,.22));
-    /* leve tilt inicial para dar volumen */
-    transform: rotateX(8deg) rotateY(0deg);
+    transform: rotateX(8deg) rotateY(0deg); /* leve tilt inicial */
     will-change: transform;
-    cursor:default;
   }
   .coin__face{
     position:absolute; inset:0;
@@ -112,7 +110,7 @@
   <div class="wrap">
 
     <section class="left">
-      <!-- Moneda doble cara (sin fondo) -->
+      <!-- Moneda doble cara (sin fondo, giro continuo) -->
       <div class="coin" id="coin">
         <div class="coin__face coin__face--front">
           <img class="coin__img" src="logologin.png" alt="FX | CAPITAL R.L. logo frente">
@@ -215,48 +213,25 @@
       alert('Entre en contacto con la empresa para solicitar su cambio de contraseña.');
     });
 
-    // ===== Giro controlado por JS (funciona siempre, sin depender de CSS) =====
-    (function coinSpin(){
+    // ===== Giro continuo por JS (siempre activo) =====
+    (function spinForever(){
       const coin = document.getElementById('coin');
       if(!coin) return;
 
-      let angle = 0;           // ángulo actual en grados
-      let speed = 0;           // velocidad actual (grados/seg)
-      const targetOn  = 360/14; // ~25.7°/s -> 1 vuelta cada 14s
-      let target = 0;          // velocidad objetivo
-      let rafId = null;
-      let lastTs = null;
+      let angle = 0;                 // grados
+      const degPerSec = 360/14;      // 1 vuelta cada 14s (ajusta a gusto)
+      let lastTs = 0;
 
-      function tick(ts){
-        if(lastTs == null) lastTs = ts;
-        const dt = (ts - lastTs) / 1000; // segundos
+      function raf(ts){
+        if(!lastTs) lastTs = ts;
+        const dt = (ts - lastTs) / 1000; // s
         lastTs = ts;
 
-        // suavizado hacia la velocidad objetivo
-        const ease = 0.12;
-        speed += (target - speed) * ease;
-
-        // actualizar ángulo
-        angle = (angle + speed * dt) % 360;
-
-        // aplicar transform (manteniendo tilt X)
+        angle = (angle + degPerSec * dt) % 360;
         coin.style.transform = `rotateX(8deg) rotateY(${angle}deg)`;
-
-        rafId = requestAnimationFrame(tick);
+        requestAnimationFrame(raf);
       }
-
-      function start(){ target = targetOn; }
-      function stop(){ target = 0; }
-
-      coin.addEventListener('mouseenter', start);
-      coin.addEventListener('mouseleave', stop);
-      // Táctiles: una vuelta por toque
-      coin.addEventListener('touchstart', ()=>{
-        start();
-        setTimeout(stop, 14000);
-      }, {passive:true});
-
-      rafId = requestAnimationFrame(tick);
+      requestAnimationFrame(raf);
     })();
   </script>
 </body>
