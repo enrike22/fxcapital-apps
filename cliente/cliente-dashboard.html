@@ -21,7 +21,7 @@
     --line:#1f232a; --muted:#a8b0bc; --txt:#f7f9fc;
     --grad-app: radial-gradient(1200px 800px at 10% -20%, #12151a 0%, #0b0c0e 45%, #060708 100%);
     --grad-panel: linear-gradient(180deg, #0f1114 0%, #0b0d10 100%);
-    --grad-card: linear-gradient(180deg, #14171c 0%, #0f1216 100%);
+    --grad-card: linear-gradient(180deg, #1a1d23 0%, #12161b 100%); /* negro más claro */
     --shadow-1: 0 10px 25px rgba(0,0,0,.45);
     --shadow-2: 0 18px 40px rgba(0,0,0,.55);
     --shadow-inset: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.6);
@@ -36,13 +36,19 @@
   header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
   .brand-wrap{display:flex;flex-direction:column;gap:6px}
   .brand-row{display:flex;align-items:center;gap:18px}
+
+  /* LOGO: sin cuadro, sin borde, sin sombra y ocupando todo el espacio 112x112 */
   .brand-logo{
-    width:112px;height:112px;border-radius:16px;object-fit:contain;
-    background:transparent; /* sin fondo */
-    padding:8px; border:1px solid var(--line);
-    box-shadow: var(--shadow-2), var(--shadow-inset);
+    width:112px;height:112px;
     display:block;
+    object-fit:contain;
+    background:transparent;       /* sin fondo */
+    border:none;                  /* sin borde */
+    box-shadow:none;              /* sin sombra */
+    border-radius:0;              /* sin esquinas redondeadas */
+    padding:0;                    /* sin padding: la imagen llena el área */
   }
+
   .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
   .brand-sub{margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
 
@@ -50,22 +56,9 @@
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d;box-shadow:0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05)}
 
-  /* NEGRO MÁS CLARO para las cards destacadas de “Mi cuenta” */
-  .group.card{
-    background: linear-gradient(180deg,#1a1d23 0%, #12161b 100%);
-    border-color:#2a2f37;
-  }
-
-  /* Solo el botón “Solicitar retiro” en blanco con letras negras */
-  #btnOpenWithdraw{
-    background:#fff;
-    color:#0b0c0e;
-    border:1px solid var(--line);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45);
-  }
-
+  /* Las cards de “Mi cuenta” con negro más claro ya aplicado arriba en --grad-card */
   .panel{background:var(--grad-panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55),var(--shadow-inset)}
-  .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
+  .card{background:var(--grad-card);border:1px solid #2a2f37;border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .section{padding:24px}
 
   .grid{display:grid;gap:16px}
@@ -123,7 +116,7 @@
       <div class="brand-wrap">
         <div class="brand-row">
           <img
-            src="/logo-white.png?v=7"
+            src="/logo-white.png?v=8"
             alt="FX Capital"
             class="brand-logo"
             loading="eager"
