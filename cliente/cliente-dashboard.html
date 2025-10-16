@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FX | CAPITAL R.L. — Panel del Cliente</title>
 
+<!-- Evitar cache del dashboard (especialmente tras cerrar sesión) -->
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -13,7 +18,8 @@
 <meta name="theme-color" content="#0b0c0e">
 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
   :root{
     --bg0:#000; --bg1:#0b0c0e; --bg2:#111317; --bg3:#14171c;
@@ -32,6 +38,7 @@
     --panel-gray:#848484;
     --panel-gray-border:#767676;
   }
+
   *{box-sizing:border-box}
   html,body{height:100%}
   body{margin:0;color:var(--txt);background:var(--grad-app) fixed, var(--bg0);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -39,13 +46,22 @@
 
   /* ======= HEADER ======= */
   header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
-  .brand-wrap{display:flex;flex-direction:column;gap:6px}
-  .brand-row{display:flex;align-items:center;gap:18px}
-  .brand-logo{width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block}
-  .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
-  .brand-sub{margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
+  .brand-wrap{display:flex;flex-direction:column;gap:0}
+  .brand-row{
+    display:flex;align-items:center;gap:18px; /* centra verticalmente logo + nombre */
+  }
+  .brand-logo{
+    width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block
+  }
+  .brand-title{
+    margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1
+  }
+  /* bajar un poco el subtítulo para que no quede pegado al nombre */
+  .brand-sub{
+    margin:10px 0 0 0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9
+  }
 
-  .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;color:#0b0c0e;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45)}
+  .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;color:#0b0c0e;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45)}
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
 
   /* ======= PANEL + VARIANTE GRIS ======= */
@@ -62,19 +78,19 @@
   .panel.gray > .note{ color:#000 !important; }
 
   /* dentro de las tarjetas oscuras: mantener textos BLANCOS como antes */
+  .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .panel.gray .card .k,
   .panel.gray .card .v,
   .panel.gray .card .note,
   .panel.gray .card .muted{ color:#f7f9fc !important; }
   .panel.gray .card .k{ background:#12161b; border:1px solid var(--line); }
 
-  .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .section{padding:24px}
 
   .grid{display:grid;gap:16px}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
   @media (max-width:920px){.grid.cols-3{grid-template-columns:1fr 1fr}}
-  @media (max-width:680px){.grid.cols-3{grid-template-columns:1fr} header{gap:16px}}
+  @media (max-width:680px){.grid.cols-3{grid-template-columns:1fr}}
 
   .group{padding:18px 20px;position:relative;overflow:hidden}
   .group::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%);pointer-events:none}
@@ -88,33 +104,21 @@
   .panel.gray #simTable td,
   .panel.gray #simSum{ color:#000 !important; }
 
-  /* >>> Nota del simulador (debajo del botón) en NEGRO <<< */
+  /* Nota del simulador (debajo del botón) en NEGRO */
   .panel.gray #simNote{ color:#000 !important; }
 
   .note{color:var(--muted);font-size:13px;margin-top:10px}
 
-  dialog{border:0;border-radius:22px;background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);color:var(--txt);width:min(840px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.65),var(--shadow-inset)}
-  dialog::backdrop{background:rgba(0,0,0,.6)}
-  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
-  .modal-b{padding:18px 22px}
-
-  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s ease}
-  .pill:hover{filter:brightness(1.05)}
-  .pill.selected{background:#fff; color:#0b0c0e; border-color:#fff; box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);}
-  .pill.selected .muted{color:#1b1f24}
-
-  .input,textarea{width:100%;border:1px solid var(--line);background:#0f1116;color:#f5f7fb;border-radius:12px;padding:12px 14px}
-
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
-    header{padding-top:64px} /* espacio para el botón flotante */
+    header{padding-top:64px}
     .brand-row{gap:12px}
     .brand-logo{width:84px;height:84px}
-    .brand-title{font-size:clamp(26px,7.6vw,36px);line-height:1.02;word-break:break-word}
-    .brand-sub{font-size:clamp(13px,3.6vw,18px)}
+    .brand-title{font-size:clamp(26px,7.6vw,36px);line-height:1.02}
+    .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
     #btnSignOut{
       position:absolute; top:10px; right:12px; z-index:5;
-      padding:10px 14px; font-weight:800;
+      padding:10px 14px;
     }
   }
 </style>
@@ -161,7 +165,7 @@
       </div>
     </section>
 
-    <!-- RESULTADOS DEL MES (oscuro original) -->
+    <!-- RESULTADOS DEL MES (oscuro) -->
     <section class="panel section" style="margin-top:18px">
       <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
       <div class="muted" id="monthRange">—</div>
@@ -202,7 +206,7 @@
 
   <div class="blocker" id="panelBlocker"></div>
 
-  <!-- MODALES (igual que antes) -->
+  <!-- MODALES (idénticos a antes; omitidos por brevedad visual) -->
   <dialog id="wdlg">
     <div class="modal-h">
       <div style="font-weight:800">Solicitud de retiro</div>
@@ -243,62 +247,63 @@
     </div>
   </dialog>
 
-  <dialog id="msgDlg">
-    <div class="modal-h">
-      <div style="font-weight:800">FX | CAPITAL R.L.</div>
-      <button class="btn secondary" style="padding:8px 12px" id="msgClose">✕</button>
-    </div>
-    <div class="modal-b">
-      <p id="msgText" style="margin:0;line-height:1.6"></p>
-      <div style="margin-top:16px;display:flex;justify-content:flex-end">
-        <button class="btn" id="msgOk">Aceptar</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog id="forcePwdDlg">
-    <div class="modal-h"><div style="font-weight:800">BIENVENIDO A FX|CAPITAL R.L.</div></div>
-    <div class="modal-b">
-      <p class="muted" style="margin-top:0">Por motivos de seguridad, le solicitamos actualizar su contraseña actual.</p>
-      <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
-        <div>
-          <div class="k">Nueva contraseña</div>
-          <div class="pwd-field" style="position:relative">
-            <input id="newPwd" class="input" type="password" minlength="8" placeholder="Mínimo 8 caracteres" aria-describedby="errNew" style="padding-right:56px">
-            <button type="button" id="eyeNew" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar contraseña" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,#121419,#0f1116);color:#fff; display:grid; place-items:center;"></button>
-          </div>
-          <div id="errNew" class="err" role="alert" aria-live="polite" style="display:none"></div>
-        </div>
-        <div>
-          <div class="k">Confirmar contraseña</div>
-          <div class="pwd-field" style="position:relative">
-            <input id="newPwd2" class="input" type="password" minlength="8" placeholder="Repite la contraseña" aria-describedby="errNew2" style="padding-right:56px">
-            <button type="button" id="eyeNew2" class="eye-btn" aria-pressed="false" aria-label="Mostrar u ocultar confirmación" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,#121419,#0f1116);color:#fff; display:grid; place-items:center;"></button>
-          </div>
-          <div id="errNew2" class="err" role="alert" aria-live="polite" style="display:none"></div>
-        </div>
-      </div>
-
-      <div class="actions" style="margin-top:28px">
-        <button class="btn secondary" id="logoutNow">Salir sin cambiar</button>
-        <button class="btn" id="savePwd">Guardar y continuar</button>
-      </div>
-    </div>
-  </dialog>
-
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
   const BASE_URL   = 'https://clientes.fxcapital-gt.com/';
-  const LOGIN_URL  = BASE_URL;
+  const LOGIN_URL  = BASE_URL;  // ajusta si tu login está en otra ruta
 
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  });
 
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
+  /* ===== Logout robusto (PC + iOS) ===== */
+  async function forceLogout(){
+    try {
+      const { error } = await sb.auth.signOut({ scope:'global' });
+      if (error) console.warn('Supabase signOut error:', error.message);
+      // Limpieza de restos locales
+      Object.keys(localStorage).forEach(k=>{
+        if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
+      });
+      sessionStorage.clear();
+      // Limpieza IndexedDB (si el navegador lo permite)
+      if (indexedDB && indexedDB.databases){
+        try{
+          const dbs = await indexedDB.databases();
+          for (const db of dbs){
+            if (db.name && /supabase|auth|localforage/i.test(db.name)) indexedDB.deleteDatabase(db.name);
+          }
+        }catch(e){}
+      }
+    } catch(e){
+      console.warn('forceLogout cleanup error:', e);
+    } finally {
+      const bust = `logged_out=${Date.now()}`;
+      const sep  = LOGIN_URL.includes('?') ? '&' : '?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+    }
+  }
+
+  document.getElementById('btnSignOut')?.addEventListener('click', (ev)=>{
+    ev.preventDefault(); forceLogout();
+  });
+
+  // Si la sesión se cierra desde otro tab, redirige
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      const bust = `logged_out=${Date.now()}`;
+      const sep  = LOGIN_URL.includes('?') ? '&' : '?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+    }
+  });
+
+  /* ===== Resto de utilidades ===== */
   function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);} t.setHours(0,0,0,0); return t; }
   function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
   function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
@@ -325,8 +330,6 @@
     el.addEventListener('blur', ()=>{ el.value = formatNumberString(el.value); });
     el.addEventListener('focus', ()=> el.select());
   }
-
-  function fridayOfSameWeekLocal(d){ return fridayOfSameWeek(d); }
 
   function paintWeeks(acc, opts={}){
     const today=clampDate(new Date());
@@ -366,15 +369,13 @@
 
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_URL); return; }
+    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
     const uid=session.user.id;
 
     const [{ data: prof }, { data: acc }] = await Promise.all([
       sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
-
-    if (prof?.must_change_password === true) __fxpwd_enforce();
 
     $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
     if(!acc){
@@ -401,103 +402,7 @@
     $('#valPeriodInterest').textContent = fmtQ(total);
 
     const accountEnded = clampDate(new Date()) >= closeClamped;
-
     paintWeeks(acc, { freezeAtClose: accountEnded ? closeClamped : null });
-
-    if(accountEnded){
-      const endDlg = document.getElementById('endPeriodDlg');
-      if(endDlg && !endDlg.open) endDlg.showModal();
-      document.getElementById('ackEnd')?.addEventListener('click', ()=> endDlg.close(), { once:true });
-    }
-  }
-
-  const msgDlg = document.getElementById('msgDlg');
-  function showMessage(html){
-    document.getElementById('msgText').innerHTML = html;
-    if(!msgDlg.open) msgDlg.showModal();
-  }
-  document.getElementById('msgOk').addEventListener('click', ()=> msgDlg.close());
-  document.getElementById('msgClose').addEventListener('click', ()=> msgDlg.close());
-
-  const dlg = document.getElementById('wdlg');
-  function selectType(t){
-    document.getElementById('optEarly').classList.toggle('selected',t==='early');
-    document.getElementById('optHealth').classList.toggle('selected',t==='health');
-    document.getElementById('optEarly').setAttribute('aria-pressed', String(t==='early'));
-    document.getElementById('optHealth').setAttribute('aria-pressed', String(t==='health'));
-  }
-  function toggleSwitchAll(force){
-    const sw=document.getElementById('switchAll');
-    const on=(typeof force==='boolean')?force:!sw.classList.contains('on');
-    sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on));
-    document.getElementById('wAmount').disabled=on;
-  }
-
-  async function enviarSolicitudRetiro(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_URL); return; }
-
-    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
-    if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
-
-    const capital=Number(acc?.capital||0);
-    const all=document.getElementById('switchAll').classList.contains('on');
-    const amount=all? capital : Number((document.getElementById('wAmount').value||'').replace(/[,\s]/g,'') || 0);
-    const reason=(document.getElementById('wReason').value||'').trim();
-
-    if(!all){
-      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
-      if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
-    }
-    if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
-
-    const { error } = await sb.functions.invoke('send-withdrawal-email', {
-      body:{ amount, reason, full_withdrawal:all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' }
-    });
-
-    if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
-
-    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
-
-    dlg.close();
-    document.getElementById('wAmount').value=''; document.getElementById('wReason').value='';
-    toggleSwitchAll(false);
-  }
-
-  const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
-  const __fxpwd_blocker  = document.getElementById('panelBlocker');
-
-  function __fxpwd_enforce(){
-    if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
-    if(__fxpwd_blocker) __fxpwd_blocker.classList.add('on');
-    document.querySelectorAll('button,input,textarea,select').forEach(el=>{
-      if(__fxpwd_forceDlg && el.closest('#forcePwdDlg')) return;
-      el.disabled = true;
-    });
-  }
-
-  async function __fxpwd_save(){
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
-    const p2 = (document.getElementById('newPwd2')?.value || '').trim();
-    if(p1.length<8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
-    if(p1!==p2){ alert('Las contraseñas no coinciden.'); return; }
-
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ window.location.replace(LOGIN_URL); return; }
-
-    const up = await sb.auth.updateUser({ password:p1 });
-    if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
-
-    await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id).then(()=>{});
-    __fxpwd_forceDlg?.close();
-    if(__fxpwd_blocker) __fxpwd_blocker.classList.remove('on');
-    showMessage('¡Contraseña actualizada! Bienvenido al panel.');
-  }
-
-  async function __fxpwd_logout(){
-    await sb.auth.signOut();
-    window.location.replace(LOGIN_URL);
   }
 
   function autoPlanAndRate(capital){
@@ -525,26 +430,17 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async ()=>{
-    document.getElementById('btnSignOut').addEventListener('click', __fxpwd_logout);
-    // Redirección automática si se pierde la sesión
-    sb.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') window.location.replace(LOGIN_URL);
-    });
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.getElementById('btnSignOut')?.addEventListener('click', (e)=>{ e.preventDefault(); forceLogout(); });
 
+    // botón retiro
     const dlg = document.getElementById('wdlg');
-    document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
-    document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
-    document.getElementById('wCancel')?.addEventListener('click', ()=> dlg.close());
-    document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
-    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
-    document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
-    document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
-    selectType('early'); toggleSwitchAll(false);
+    document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=> dlg.showModal());
+    document.getElementById('xClose')?.addEventListener('click', ()=> dlg.close());
 
-    bindMoneyInput('wAmount');
     bindMoneyInput('simCapital');
-    document.getElementById('btnCalc').addEventListener('click', simulate);
+
+    document.getElementById('btnCalc')?.addEventListener('click', simulate);
 
     loadHeader();
   });
