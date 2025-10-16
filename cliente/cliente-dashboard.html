@@ -28,6 +28,10 @@
     --shadow-inset: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.6);
     --radius:18px; --gloss: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
     --chip:#171b20; --danger:#ff4d4f;
+
+    /* tono gris tomado del swatch proporcionado */
+    --panel-gray:#848484;
+    --panel-gray-border:#767676;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -50,6 +54,15 @@
   .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d;box-shadow:0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05)}
 
   .panel{background:var(--grad-panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55),var(--shadow-inset)}
+  /* Variante gris solicitada */
+  .panel.gray{
+    background:var(--panel-gray) !important;
+    background-image:none !important;
+    border-color:var(--panel-gray-border);
+    box-shadow:0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+    color:#fff;
+  }
+
   .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .section{padding:24px}
 
@@ -146,8 +159,8 @@
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
     </header>
 
-    <!-- MI CUENTA -->
-    <section class="panel section">
+    <!-- MI CUENTA (fondo gris) -->
+    <section class="panel section gray">
       <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
       <div class="grid cols-3">
         <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
@@ -167,7 +180,7 @@
       </div>
     </section>
 
-    <!-- RESULTADOS DEL MES -->
+    <!-- RESULTADOS DEL MES (sin cambios) -->
     <section class="panel section" style="margin-top:18px">
       <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
       <div class="muted" id="monthRange">—</div>
@@ -181,8 +194,8 @@
       <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
     </section>
 
-    <!-- SIMULADOR -->
-    <section class="panel section" style="margin-top:18px">
+    <!-- SIMULADOR (fondo gris) -->
+    <section class="panel section gray" style="margin-top:18px">
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
       <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
