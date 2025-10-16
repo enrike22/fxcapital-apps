@@ -47,19 +47,10 @@
   /* ======= HEADER ======= */
   header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
   .brand-wrap{display:flex;flex-direction:column;gap:0}
-  .brand-row{
-    display:flex;align-items:center;gap:18px; /* centra verticalmente logo + nombre */
-  }
-  .brand-logo{
-    width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block
-  }
-  .brand-title{
-    margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1
-  }
-  /* bajar un poco el subtítulo para que no quede pegado al nombre */
-  .brand-sub{
-    margin:10px 0 0 0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9
-  }
+  .brand-row{display:flex;align-items:center;gap:18px}
+  .brand-logo{width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block}
+  .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
+  .brand-sub{margin:10px 0 0 0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
 
   .btn{appearance:none;border:0;border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;color:#0b0c0e;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px rgba(0,0,0,.45)}
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
@@ -108,6 +99,49 @@
   .panel.gray #simNote{ color:#000 !important; }
 
   .note{color:var(--muted);font-size:13px;margin-top:10px}
+
+  /* ======= DIALOG (MODAL RETIRO) ======= */
+  dialog{border:0;border-radius:22px;background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);color:var(--txt);width:min(840px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.65),var(--shadow-inset)}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .modal-b{padding:18px 22px}
+  .modal-close{
+    width:36px;height:36px;border-radius:50%;
+    display:grid;place-items:center;border:1px solid var(--line);
+    background:linear-gradient(180deg,#121419,#0f1116);color:#fff;cursor:pointer;
+    box-shadow:var(--shadow-inset)
+  }
+
+  /* Pills de retiro (selección → blancas) */
+  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s ease}
+  .pill:hover{filter:brightness(1.05)}
+  .pill.selected{
+    background:#fff; color:#0b0c0e; border-color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .pill.selected .muted{color:#1b1f24}
+
+  /* SWITCH: blanco al activar */
+  .switch{
+    --w:58px;--h:32px;--knob:26px;
+    inline-size:var(--w);block-size:var(--h);
+    background:linear-gradient(180deg,#1b1f26,#0f1216);
+    border-radius:999px;border:1px solid var(--line);position:relative;
+    transition:all .18s ease; cursor:pointer;
+  }
+  .switch::after{
+    content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);
+    border-radius:50%;background:linear-gradient(180deg,#fff,#d9d9d9);
+    top:50%;left:3px;translate:0 -50%; transition:all .18s ease;
+  }
+  .switch.on{
+    background:#fff; border-color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .switch.on::after{
+    left:calc(var(--w) - var(--knob) - 3px);
+    background:linear-gradient(180deg,#2a2f36,#161a1f); /* knob oscuro para contraste */
+  }
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -206,15 +240,15 @@
 
   <div class="blocker" id="panelBlocker"></div>
 
-  <!-- MODALES (idénticos a antes; omitidos por brevedad visual) -->
-  <dialog id="wdlg">
+  <!-- MODAL RETIRO (restaurado) -->
+  <dialog id="wdlg" aria-labelledby="wdlgTitle">
     <div class="modal-h">
-      <div style="font-weight:800">Solicitud de retiro</div>
-      <button class="btn secondary" style="padding:8px 12px" id="xClose">✕</button>
+      <div id="wdlgTitle" style="font-weight:800">Solicitud retiro de capital</div>
+      <button class="modal-close" id="xClose" aria-label="Cerrar">✕</button>
     </div>
     <div class="modal-b">
       <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
-        <div class="pill" id="optEarly" tabindex="0" role="button" aria-pressed="true">
+        <div class="pill selected" id="optEarly" tabindex="0" role="button" aria-pressed="true">
           <div style="font-weight:700;margin-bottom:6px">Antes de tiempo</div>
           <div class="muted">Aplicará una penalización del 10%.</div>
         </div>
@@ -223,6 +257,7 @@
           <div class="muted">Exento de penalización.</div>
         </div>
       </div>
+
       <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:14px">
         <div>
           <div class="k">Monto a retirar (Q)</div>
@@ -231,7 +266,7 @@
         </div>
         <div>
           <div class="k">Motivo</div>
-          <textarea id="wReason" placeholder="Explique brevemente el motivo…"></textarea>
+          <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
         </div>
       </div>
 
@@ -240,9 +275,23 @@
         <div>Retirar todo mi capital</div>
       </div>
 
-      <div class="actions">
+      <div class="actions" style="display:flex;gap:12px;justify-content:flex-start">
         <button class="btn secondary" id="wCancel">Cancelar</button>
         <button class="btn" id="wSend">Enviar solicitud</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL MENSAJES -->
+  <dialog id="msgDlg">
+    <div class="modal-h">
+      <div style="font-weight:800">FX | CAPITAL R.L.</div>
+      <button class="modal-close" id="msgClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-b">
+      <p id="msgText" style="margin:0;line-height:1.6"></p>
+      <div style="margin-top:16px;display:flex;justify-content:flex-end">
+        <button class="btn" id="msgOk">Aceptar</button>
       </div>
     </div>
   </dialog>
@@ -262,17 +311,15 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  /* ===== Logout robusto (PC + iOS) ===== */
+  /* ===== Logout robusto ===== */
   async function forceLogout(){
     try {
       const { error } = await sb.auth.signOut({ scope:'global' });
       if (error) console.warn('Supabase signOut error:', error.message);
-      // Limpieza de restos locales
       Object.keys(localStorage).forEach(k=>{
         if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
       });
       sessionStorage.clear();
-      // Limpieza IndexedDB (si el navegador lo permite)
       if (indexedDB && indexedDB.databases){
         try{
           const dbs = await indexedDB.databases();
@@ -289,12 +336,9 @@
       window.location.replace(`${LOGIN_URL}${sep}${bust}`);
     }
   }
-
   document.getElementById('btnSignOut')?.addEventListener('click', (ev)=>{
     ev.preventDefault(); forceLogout();
   });
-
-  // Si la sesión se cierra desde otro tab, redirige
   sb.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
       const bust = `logged_out=${Date.now()}`;
@@ -303,7 +347,7 @@
     }
   });
 
-  /* ===== Resto de utilidades ===== */
+  /* ===== Helpers ===== */
   function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);} t.setHours(0,0,0,0); return t; }
   function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
   function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
@@ -367,6 +411,83 @@
     }
   }
 
+  /* ===== Retiro ===== */
+  const dlg = document.getElementById('wdlg');
+  function selectType(t){
+    document.getElementById('optEarly').classList.toggle('selected',t==='early');
+    document.getElementById('optHealth').classList.toggle('selected',t==='health');
+    document.getElementById('optEarly').setAttribute('aria-pressed', String(t==='early'));
+    document.getElementById('optHealth').setAttribute('aria-pressed', String(t==='health'));
+  }
+  function toggleSwitchAll(force){
+    const sw=document.getElementById('switchAll');
+    const on=(typeof force==='boolean')?force:!sw.classList.contains('on');
+    sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on));
+    document.getElementById('wAmount').disabled=on;
+  }
+
+  async function enviarSolicitudRetiro(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
+
+    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
+    if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
+
+    const capital=Number(acc?.capital||0);
+    const all=document.getElementById('switchAll').classList.contains('on');
+    const amount=all? capital : Number((document.getElementById('wAmount').value||'').replace(/[,\s]/g,'') || 0);
+    const reason=(document.getElementById('wReason').value||'').trim();
+
+    if(!all){
+      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
+      if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
+      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
+    }
+    if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
+
+    const { error } = await sb.functions.invoke('send-withdrawal-email', {
+      body:{ amount, reason, full_withdrawal:all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' }
+    });
+
+    if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
+
+    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
+
+    dlg.close();
+    document.getElementById('wAmount').value=''; document.getElementById('wReason').value='';
+    toggleSwitchAll(false);
+    selectType('early');
+  }
+
+  /* ===== Mensajes ===== */
+  const msgDlg = document.getElementById('msgDlg');
+  function showMessage(html){
+    document.getElementById('msgText').innerHTML = html;
+    if(!msgDlg.open) msgDlg.showModal();
+  }
+
+  /* ===== Inicio ===== */
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=> dlg.showModal());
+    document.getElementById('xClose')?.addEventListener('click', ()=> dlg.close());
+    document.getElementById('wCancel')?.addEventListener('click', ()=> dlg.close());
+    document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
+
+    document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
+    document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
+    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
+
+    bindMoneyInput('wAmount');
+    bindMoneyInput('simCapital');
+
+    document.getElementById('btnCalc')?.addEventListener('click', simulate);
+    document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg.close());
+    document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg.close());
+
+    loadHeader();
+  });
+
+  /* ===== Cabecera / Simulador ===== */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
@@ -377,32 +498,35 @@
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    $('#valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—');
+    document.getElementById('valName')?.parentElement && (document.getElementById('valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—'));
     if(!acc){
-      ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>$('#'+id).textContent='—');
-      $('#valCapital').textContent=fmtQ(0); $('#valPeriodInterest').textContent=fmtQ(0);
+      ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; });
+      const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
+      const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
       return;
     }
 
-    $('#valAccountId').textContent = acc.id||'—';
-    $('#valPlan').textContent = acc.plan||'—';
-    $('#valCurrency').textContent = acc.currency||'—';
-    $('#valMonths').textContent = acc.invest_months ?? '—';
-    $('#valCapital').textContent = fmtQ(acc.capital||0);
+    const map = {
+      valAccountId: acc.id||'—',
+      valPlan: acc.plan||'—',
+      valCurrency: acc.currency||'—',
+      valMonths: acc.invest_months ?? '—'
+    };
+    for (const k in map){ const el=document.getElementById(k); if(el) el.textContent=map[k]; }
+    const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
 
     const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const close  = new Date(joined.getFullYear(), joined.getMonth() + (acc.invest_months||0), joined.getDate());
     const closeClamped = clampDate(close);
 
-    $('#valOpenDate').textContent  = joined.toLocaleDateString('es-GT');
-    $('#valCloseDate').textContent = close.toLocaleDateString('es-GT');
+    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = joined.toLocaleDateString('es-GT');
+    const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = close.toLocaleDateString('es-GT');
 
     const semPct=(acc.interest_pct||0)/100;
     const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
-    $('#valPeriodInterest').textContent = fmtQ(total);
+    const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
 
-    const accountEnded = clampDate(new Date()) >= closeClamped;
-    paintWeeks(acc, { freezeAtClose: accountEnded ? closeClamped : null });
+    paintWeeks(acc, {});
   }
 
   function autoPlanAndRate(capital){
@@ -429,21 +553,6 @@
       body.appendChild(tr);
     }
   }
-
-  document.addEventListener('DOMContentLoaded', ()=>{
-    document.getElementById('btnSignOut')?.addEventListener('click', (e)=>{ e.preventDefault(); forceLogout(); });
-
-    // botón retiro
-    const dlg = document.getElementById('wdlg');
-    document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=> dlg.showModal());
-    document.getElementById('xClose')?.addEventListener('click', ()=> dlg.close());
-
-    bindMoneyInput('simCapital');
-
-    document.getElementById('btnCalc')?.addEventListener('click', simulate);
-
-    loadHeader();
-  });
   </script>
 </body>
 </html>
