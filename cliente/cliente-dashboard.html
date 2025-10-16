@@ -68,7 +68,7 @@
   .panel.gray > .muted,
   .panel.gray > .note{ color:#000 !important; }
 
-  /* dentro de las tarjetas oscuras: mantener textos BLANCOS como antes */
+  /* dentro de las tarjetas oscuras: mantener textos BLANCOS */
   .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .panel.gray .card .k,
   .panel.gray .card .v,
@@ -91,13 +91,9 @@
   .table{width:100%;border-collapse:separate;border-spacing:0}
   .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
   .table th{color:var(--muted);font-weight:700;text-align:left;background:linear-gradient(180deg,#101318,#0c0f13);position:sticky;top:0;z-index:1}
-  /* resultados del simulador y totales en negro sobre panel gris */
   .panel.gray #simTable td,
   .panel.gray #simSum{ color:#000 !important; }
-
-  /* Nota del simulador (debajo del botón) en NEGRO */
   .panel.gray #simNote{ color:#000 !important; }
-
   .note{color:var(--muted);font-size:13px;margin-top:10px}
 
   /* ======= DIALOG (MODAL RETIRO) ======= */
@@ -112,16 +108,15 @@
     box-shadow:var(--shadow-inset)
   }
 
-  /* Pills de retiro (selección → blancas) */
-  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s ease}
+  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s}
   .pill:hover{filter:brightness(1.05)}
   .pill.selected{
-    background:#fff; color:#0b0c0e; border-color:#fff;
+    background:#fff;color:#0b0c0e;border-color:#fff;
     box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);
   }
   .pill.selected .muted{color:#1b1f24}
 
-  /* SWITCH: blanco al activar */
+  /* SWITCH */
   .switch{
     --w:58px;--h:32px;--knob:26px;
     inline-size:var(--w);block-size:var(--h);
@@ -140,12 +135,11 @@
   }
   .switch.on::after{
     left:calc(var(--w) - var(--knob) - 3px);
-    background:linear-gradient(180deg,#2a2f36,#161a1f); /* knob oscuro para contraste */
+    background:linear-gradient(180deg,#2a2f36,#161a1f);
   }
 
-  /* ===== Campo “Motivo” más grande (ocupa toda la fila) ===== */
-  .col-span-2{ grid-column:1 / -1; }
-  textarea.input{ min-height:200px; resize:vertical; }
+  /* Motivo compacto (como input alto) */
+  textarea.input{min-height:56px;max-height:220px;resize:vertical}
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -154,10 +148,7 @@
     .brand-logo{width:84px;height:84px}
     .brand-title{font-size:clamp(26px,7.6vw,36px);line-height:1.02}
     .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
-    #btnSignOut{
-      position:absolute; top:10px; right:12px; z-index:5;
-      padding:10px 14px;
-    }
+    #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
   }
 </style>
 </head>
@@ -244,7 +235,7 @@
 
   <div class="blocker" id="panelBlocker"></div>
 
-  <!-- MODAL RETIRO (restaurado) -->
+  <!-- MODAL RETIRO -->
   <dialog id="wdlg" aria-labelledby="wdlgTitle">
     <div class="modal-h">
       <div id="wdlgTitle" style="font-weight:800">Solicitud retiro de capital</div>
@@ -268,8 +259,8 @@
           <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
           <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
         </div>
-        <!-- Motivo a todo el ancho y más alto -->
-        <div class="col-span-2">
+        <!-- Motivo compacto en la columna derecha (como en la 1a imagen) -->
+        <div>
           <div class="k">Motivo</div>
           <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
         </div>
@@ -304,7 +295,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
   const BASE_URL   = 'https://clientes.fxcapital-gt.com/';
-  const LOGIN_URL  = BASE_URL;  // ajusta si tu login está en otra ruta
+  const LOGIN_URL  = BASE_URL;
 
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
@@ -320,30 +311,22 @@
   async function forceLogout(){
     try {
       const { error } = await sb.auth.signOut({ scope:'global' });
-      if (error) console.warn('Supabase signOut error:', error.message);
-      Object.keys(localStorage).forEach(k=>{
-        if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
-      });
+      if (error) console.warn('Supabase signOut error:', error?.message);
+      Object.keys(localStorage).forEach(k=>{ if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k); });
       sessionStorage.clear();
       if (indexedDB && indexedDB.databases){
         try{
           const dbs = await indexedDB.databases();
-          for (const db of dbs){
-            if (db.name && /supabase|auth|localforage/i.test(db.name)) indexedDB.deleteDatabase(db.name);
-          }
+          for (const db of dbs){ if (db.name && /supabase|auth|localforage/i.test(db.name)) indexedDB.deleteDatabase(db.name); }
         }catch(e){}
       }
-    } catch(e){
-      console.warn('forceLogout cleanup error:', e);
     } finally {
       const bust = `logged_out=${Date.now()}`;
       const sep  = LOGIN_URL.includes('?') ? '&' : '?';
       window.location.replace(`${LOGIN_URL}${sep}${bust}`);
     }
   }
-  document.getElementById('btnSignOut')?.addEventListener('click', (ev)=>{
-    ev.preventDefault(); forceLogout();
-  });
+  document.getElementById('btnSignOut')?.addEventListener('click', (ev)=>{ ev.preventDefault(); forceLogout(); });
   sb.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
       const bust = `logged_out=${Date.now()}`;
@@ -372,10 +355,7 @@
     if(!el) return;
     el.inputMode = 'decimal';
     el.autocomplete = 'off';
-    el.addEventListener('input', ()=>{
-      el.value = formatNumberString(el.value);
-      el.selectionStart = el.selectionEnd = el.value.length;
-    });
+    el.addEventListener('input', ()=>{ el.value = formatNumberString(el.value); el.selectionStart = el.selectionEnd = el.value.length; });
     el.addEventListener('blur', ()=>{ el.value = formatNumberString(el.value); });
     el.addEventListener('focus', ()=> el.select());
   }
@@ -561,3 +541,4 @@
   </script>
 </body>
 </html>
+s
