@@ -143,6 +143,10 @@
     background:linear-gradient(180deg,#2a2f36,#161a1f); /* knob oscuro para contraste */
   }
 
+  /* ===== Campo “Motivo” más grande (ocupa toda la fila) ===== */
+  .col-span-2{ grid-column:1 / -1; }
+  textarea.input{ min-height:200px; resize:vertical; }
+
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
     header{padding-top:64px}
@@ -264,7 +268,8 @@
           <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
           <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
         </div>
-        <div>
+        <!-- Motivo a todo el ancho y más alto -->
+        <div class="col-span-2">
           <div class="k">Motivo</div>
           <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
         </div>
