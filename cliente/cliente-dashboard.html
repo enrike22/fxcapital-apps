@@ -18,15 +18,17 @@
 <style>
   :root{
     --bg0:#000; --bg1:#0b0c0e; --bg2:#111317; --bg3:#14171c;
-    --line:#1f232a; --muted:#a8b0bc; --txt:#f7f9fc;
+    --line:#252a31;          /* un poco más claro */
+    --muted:#a8b0bc; --txt:#f7f9fc;
     --grad-app: radial-gradient(1200px 800px at 10% -20%, #12151a 0%, #0b0c0e 45%, #060708 100%);
-    --grad-panel: linear-gradient(180deg, #0f1114 0%, #0b0d10 100%);
-    --grad-card: linear-gradient(180deg, #1a1d23 0%, #12161b 100%); /* negro más claro */
+    --grad-panel: linear-gradient(180deg, #111317 0%, #0b0d10 100%);
+    /* NEGRO MÁS CLARO EN CARDS */
+    --grad-card: linear-gradient(180deg, #191d22 0%, #12161b 100%);
     --shadow-1: 0 10px 25px rgba(0,0,0,.45);
     --shadow-2: 0 18px 40px rgba(0,0,0,.55);
     --shadow-inset: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.6);
     --radius:18px; --gloss: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
-    --chip:#15181d; --danger:#ff4d4f;
+    --chip:#171b20; --danger:#ff4d4f;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -36,19 +38,15 @@
   header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
   .brand-wrap{display:flex;flex-direction:column;gap:6px}
   .brand-row{display:flex;align-items:center;gap:18px}
-
-  /* LOGO: sin cuadro, sin borde, sin sombra y ocupando todo el espacio 112x112 */
+  /* LOGO SIN CUADRO DE FONDO, MISMA ÁREA */
   .brand-logo{
-    width:112px;height:112px;
+    width:112px;height:112px;border-radius:16px;object-fit:contain;
+    background:transparent;           /* sin cuadro */
+    padding:0;                        /* sin relleno blanco */
+    border:0;                         /* sin borde */
+    box-shadow:none;                  /* sin sombra de caja */
     display:block;
-    object-fit:contain;
-    background:transparent;       /* sin fondo */
-    border:none;                  /* sin borde */
-    box-shadow:none;              /* sin sombra */
-    border-radius:0;              /* sin esquinas redondeadas */
-    padding:0;                    /* sin padding: la imagen llena el área */
   }
-
   .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
   .brand-sub{margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
 
@@ -56,9 +54,8 @@
   .btn.secondary{color:var(--txt);background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);border:1px solid var(--line);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d;box-shadow:0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05)}
 
-  /* Las cards de “Mi cuenta” con negro más claro ya aplicado arriba en --grad-card */
   .panel{background:var(--grad-panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55),var(--shadow-inset)}
-  .card{background:var(--grad-card);border:1px solid #2a2f37;border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
+  .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .section{padding:24px}
 
   .grid{display:grid;gap:16px}
@@ -68,7 +65,7 @@
 
   .group{padding:18px 20px;position:relative;overflow:hidden}
   .group::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%);pointer-events:none}
-  .k{display:inline-block;font-size:13px;color:var(--muted);background:#0f1216;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
+  .k{display:inline-block;font-size:13px;color:var(--muted);background:#12161b;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
   .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
 
   .table{width:100%;border-collapse:separate;border-spacing:0}
@@ -82,8 +79,14 @@
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
   .modal-b{padding:18px 22px}
 
-  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#121419,#0f1116);box-shadow:var(--shadow-inset)}
-  .pill.selected{border-color:#3a3f48;box-shadow:0 0 0 2px rgba(255,255,255,.08) inset,var(--shadow-inset)}
+  /* PILLS EN RETIRO */
+  .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s ease}
+  .pill:hover{filter:brightness(1.05)}
+  .pill.selected{
+    background:#fff; color:#0b0c0e; border-color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .pill.selected .muted{color:#1b1f24}
 
   .input,textarea{width:100%;border:1px solid var(--line);background:#0f1116;color:#f5f7fb;border-radius:12px;padding:12px 14px}
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
@@ -116,7 +119,7 @@
       <div class="brand-wrap">
         <div class="brand-row">
           <img
-            src="/logo-white.png?v=8"
+            src="/logo-white.png?v=1"   <!-- usa tu PNG blanco/transparente -->
             alt="FX Capital"
             class="brand-logo"
             loading="eager"
@@ -146,6 +149,7 @@
         <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
       </div>
       <div style="margin-top:16px">
+        <!-- FONDO BLANCO / LETRA NEGRA -->
         <button class="btn" id="btnOpenWithdraw">Solicitar retiro</button>
       </div>
     </section>
@@ -228,6 +232,20 @@
       <div class="actions">
         <button class="btn secondary" id="wCancel">Cancelar</button>
         <button class="btn" id="wSend">Enviar solicitud</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL MENSAJES (reemplaza alert para éxito de retiro) -->
+  <dialog id="msgDlg">
+    <div class="modal-h">
+      <div style="font-weight:800">FX | CAPITAL R.L.</div>
+      <button class="btn secondary" style="padding:8px 12px" id="msgClose">✕</button>
+    </div>
+    <div class="modal-b">
+      <p id="msgText" style="margin:0;line-height:1.6"></p>
+      <div style="margin-top:16px;display:flex;justify-content:flex-end">
+        <button class="btn" id="msgOk">Aceptar</button>
       </div>
     </div>
   </dialog>
@@ -406,6 +424,15 @@
     }
   }
 
+  // ===== UI helpers: mensaje personalizado =====
+  const msgDlg = document.getElementById('msgDlg');
+  function showMessage(html){
+    document.getElementById('msgText').innerHTML = html;
+    if(!msgDlg.open) msgDlg.showModal();
+  }
+  document.getElementById('msgOk').addEventListener('click', ()=> msgDlg.close());
+  document.getElementById('msgClose').addEventListener('click', ()=> msgDlg.close());
+
   // ===== Retiros =====
   const dlg = document.getElementById('wdlg');
   let withdrawType='early';
@@ -413,6 +440,9 @@
     withdrawType=t;
     document.getElementById('optEarly').classList.toggle('selected',t==='early');
     document.getElementById('optHealth').classList.toggle('selected',t==='health');
+    // accesibilidad
+    document.getElementById('optEarly').setAttribute('aria-pressed', String(t==='early'));
+    document.getElementById('optHealth').setAttribute('aria-pressed', String(t==='health'));
   }
   function toggleSwitchAll(force){
     const sw=document.getElementById('switchAll');
@@ -446,7 +476,9 @@
 
     if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
 
-    alert('Solicitud enviada. Te escribiremos pronto.');
+    // ÉXITO: modal personalizado con tu texto
+    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
+
     dlg.close();
     document.getElementById('wAmount').value=''; document.getElementById('wReason').value='';
     toggleSwitchAll(false);
@@ -535,7 +567,7 @@
 
     __fxpwd_forceDlg?.close();
     __fxpwd_lockPanel(false);
-    alert('¡Contraseña actualizada! Bienvenido al panel.');
+    showMessage('¡Contraseña actualizada! Bienvenido al panel.');
   }
 
   async function __fxpwd_logout(){
