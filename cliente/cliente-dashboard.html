@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FX | CAPITAL R.L. — Panel del Cliente</title>
 
-<!-- FAVICONS (archivos junto a este HTML, p.ej. /cliente) -->
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -30,8 +29,8 @@
     --chip:#171b20; --danger:#ff4d4f;
 
     /* gris del panel */
-    --panel-gray:#848484;          /* ajusta aquí si quieres más oscuro */
-    --panel-gray-border:#767676;   /* borde del panel gris */
+    --panel-gray:#848484;          /* si quieres más oscuro, cambia aquí */
+    --panel-gray-border:#767676;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -50,23 +49,25 @@
   .btn.danger{color:#fff;background:linear-gradient(180deg,#bb3335,#941f21);border:1px solid #651b1d;box-shadow:0 10px 22px rgba(149,33,36,.45), inset 0 1px 0 rgba(255,255,255,.05)}
 
   .panel{background:var(--grad-panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55),var(--shadow-inset)}
-  /* Variante gris solicitada con texto negro para contraste */
+  /* Variante gris con contraste negro en textos generales del panel */
   .panel.gray{
     background:var(--panel-gray) !important;
     background-image:none !important;
     border-color:var(--panel-gray-border);
     box-shadow:0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
-    color:#000; /* texto por defecto en negro */
+    color:#000;
   }
-  /* Títulos y subtítulos en negro dentro del panel gris */
-  .panel.gray h2,
-  .panel.gray .muted,
-  .panel.gray .note{ color:#000 !important; }
+  /* Solo títulos y texto descriptivo del panel gris en negro */
+  .panel.gray > h2,
+  .panel.gray > .muted,
+  .panel.gray > .note{ color:#000 !important; }
 
-  /* Chips/keys más legibles sobre gris */
-  .panel.gray .k{
-    color:#000; background:rgba(255,255,255,.6); border:1px solid rgba(0,0,0,.2);
-  }
+  /* *** IMPORTANTE: Dentro de las cards oscuras, volver a letras BLANCAS *** */
+  .panel.gray .card .k,
+  .panel.gray .card .v,
+  .panel.gray .card .note,
+  .panel.gray .card .muted{ color:#f7f9fc !important; }
+  .panel.gray .card .k{ background:#12161b; border:1px solid var(--line); }
 
   .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .section{padding:24px}
@@ -78,21 +79,23 @@
 
   .group{padding:18px 20px;position:relative;overflow:hidden}
   .group::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%);pointer-events:none}
+  .k{display:inline-block;font-size:13px;color:var(--muted);background:#12161b;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
   .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
 
   .table{width:100%;border-collapse:separate;border-spacing:0}
   .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
   .table th{color:var(--muted);font-weight:700;text-align:left;background:linear-gradient(180deg,#101318,#0c0f13);position:sticky;top:0;z-index:1}
-  /* Celdas del simulador en negro para contraste sobre el panel gris */
-  .panel.gray .table td,
-  .panel.gray tfoot td{ color:#000 !important; }
+  /* Resultados del simulador (tabla y total) en NEGRO para contrastar con el panel gris */
+  .panel.gray #simTable td,
+  .panel.gray #simSum{ color:#000 !important; }
+
+  .note{color:var(--muted);font-size:13px;margin-top:10px}
 
   dialog{border:0;border-radius:22px;background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);color:var(--txt);width:min(840px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.65),var(--shadow-inset)}
   dialog::backdrop{background:rgba(0,0,0,.6)}
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
   .modal-b{padding:18px 22px}
 
-  /* Pills de retiro (selección → blancas) */
   .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s ease}
   .pill:hover{filter:brightness(1.05)}
   .pill.selected{background:#fff; color:#0b0c0e; border-color:#fff; box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);}
@@ -102,7 +105,6 @@
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){.row{grid-template-columns:1fr}}
 
-  /* SWITCH: blanco al activar */
   .switch{--w:58px;--h:32px;--knob:26px;inline-size:var(--w);block-size:var(--h);background:linear-gradient(180deg,#1b1f26,#0f1216);border-radius:999px;border:1px solid var(--line);position:relative;transition:all .18s ease; cursor:pointer;}
   .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background:linear-gradient(180deg,#fff,#d9d9d9);top:50%;left:3px;translate:0 -50%; transition:all .18s ease;}
   .switch.on{background:#fff; border-color:#fff; box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);}
@@ -117,10 +119,6 @@
   .eye-btn svg{width:28px;height:28px}
   .input.invalid{border-color:var(--danger)!important}
   .err{color:var(--danger); font-size:12px; margin-top:6px}
-
-  /* Resultados del simulador en negro explícito */
-  #simFinal, #simSum, #simPlan,
-  #simBody td, #weekSum { color:#000 !important; }
 </style>
 </head>
 <body>
@@ -142,7 +140,7 @@
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
     </header>
 
-    <!-- MI CUENTA (fondo gris con texto negro) -->
+    <!-- MI CUENTA (gris con textos negros; las cards mantienen texto blanco) -->
     <section class="panel section gray">
       <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
       <div class="grid cols-3">
@@ -177,7 +175,7 @@
       <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
     </section>
 
-    <!-- SIMULADOR (fondo gris con textos negros) -->
+    <!-- SIMULADOR (gris con títulos negros; dentro de cards vuelve a blanco; resultados/tabla en negro) -->
     <section class="panel section gray" style="margin-top:18px">
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
       <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
@@ -311,7 +309,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
   const BASE_URL   = 'https://clientes.fxcapital-gt.com/';
-  const LOGIN_URL  = BASE_URL; // si tu login vive en otra ruta, ponla aquí, p.ej.: BASE_URL + 'index.html'
+  const LOGIN_URL  = BASE_URL; // si tu login vive en otra ruta, ponla aquí
 
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
@@ -348,7 +346,6 @@
     el.addEventListener('focus', ()=> el.select());
   }
 
-  // Congelar en la fecha de cierre
   function paintWeeks(acc, opts={}){
     const today=clampDate(new Date());
     const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
@@ -432,7 +429,6 @@
     }
   }
 
-  // ===== Modal de mensajes =====
   const msgDlg = document.getElementById('msgDlg');
   function showMessage(html){
     document.getElementById('msgText').innerHTML = html;
@@ -441,11 +437,8 @@
   document.getElementById('msgOk').addEventListener('click', ()=> msgDlg.close());
   document.getElementById('msgClose').addEventListener('click', ()=> msgDlg.close());
 
-  // ===== Retiros =====
   const dlg = document.getElementById('wdlg');
-  let withdrawType='early';
   function selectType(t){
-    withdrawType=t;
     document.getElementById('optEarly').classList.toggle('selected',t==='early');
     document.getElementById('optHealth').classList.toggle('selected',t==='health');
     document.getElementById('optEarly').setAttribute('aria-pressed', String(t==='early'));
@@ -467,7 +460,7 @@
 
     const capital=Number(acc?.capital||0);
     const all=document.getElementById('switchAll').classList.contains('on');
-    const amount=all? capital : Number(cleanMoney(document.getElementById('wAmount').value) || 0);
+    const amount=all? capital : Number((document.getElementById('wAmount').value||'').replace(/[,\s]/g,'') || 0);
     const reason=(document.getElementById('wReason').value||'').trim();
 
     if(!all){
@@ -478,7 +471,7 @@
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
 
     const { error } = await sb.functions.invoke('send-withdrawal-email', {
-      body:{ amount, reason, full_withdrawal:all, account_id:acc?.id||null, user_email:session.user.email, user_name: $('#valName')?.textContent || '' }
+      body:{ amount, reason, full_withdrawal:all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' }
     });
 
     if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
@@ -490,7 +483,6 @@
     toggleSwitchAll(false);
   }
 
-  // ===== Cambio de contraseña forzado =====
   const __fxpwd_forceDlg = document.getElementById('forcePwdDlg');
   const __fxpwd_blocker  = document.getElementById('panelBlocker');
 
@@ -507,71 +499,20 @@
     if(__fxpwd_forceDlg && !__fxpwd_forceDlg.open) __fxpwd_forceDlg.showModal();
   }
 
-  const __eyeSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
-  <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-  const __eyeOffSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-  function __bindPwdEye(inputId, btnId){
-    const inp = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
-    if(!inp || !btn) return;
-    btn.innerHTML = __eyeSVG;
-    btn.addEventListener('click', ()=>{
-      const show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      btn.setAttribute('aria-pressed', String(show));
-      btn.innerHTML = show ? __eyeOffSVG : __eyeSVG;
-    });
-  }
-
-  function __fxpwd_setError(inputEl, errEl, msg){
-    if(!inputEl || !errEl) return;
-    if(msg){
-      inputEl.classList.add('invalid');
-      errEl.textContent = msg;
-      errEl.style.display = 'block';
-    }else{
-      inputEl.classList.remove('invalid');
-      errEl.textContent = '';
-      errEl.style.display = 'none';
-    }
-  }
-  function __fxpwd_validate(){
+  async function __fxpwd_save(){
     const p1 = (document.getElementById('newPwd')?.value || '').trim();
     const p2 = (document.getElementById('newPwd2')?.value || '').trim();
-    const in1 = document.getElementById('newPwd');
-    const in2 = document.getElementById('newPwd2');
-    const e1  = document.getElementById('errNew');
-    const e2  = document.getElementById('errNew2');
+    if(p1.length<8){ alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+    if(p1!==p2){ alert('Las contraseñas no coinciden.'); return; }
 
-    let ok = true;
-    if(p1.length < 8){ __fxpwd_setError(in1,e1,'La contraseña debe tener al menos 8 caracteres.'); ok = false; } else { __fxpwd_setError(in1,e1,''); }
-    if(p2.length === 0){ __fxpwd_setError(in2,e2,'Confirme su contraseña.'); ok = false; }
-    else if(p1 !== p2){ __fxpwd_setError(in2,e2,'Las contraseñas no coinciden.'); ok = false; } else { __fxpwd_setError(in2,e2,''); }
-    return ok;
-  }
-
-  async function __fxpwd_save(){
-    if(!__fxpwd_validate()) return;
-
-    const p1 = (document.getElementById('newPwd')?.value || '').trim();
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ window.location.replace(LOGIN_URL); return; }
 
     const up = await sb.auth.updateUser({ password:p1 });
     if(up.error){ alert('No se pudo actualizar la contraseña: '+up.error.message); return; }
 
-    const upd = await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id);
-    if(upd.error){ console.warn('No se pudo actualizar must_change_password:', upd.error.message); }
-
-    document.getElementById('forcePwdDlg')?.close();
+    await sb.from('profiles').update({ must_change_password:false }).eq('id',session.user.id).then(()=>{});
+    __fxpwd_forceDlg?.close();
     __fxpwd_lockPanel(false);
     showMessage('¡Contraseña actualizada! Bienvenido al panel.');
   }
@@ -587,11 +528,8 @@
     return { name:'NO ELEGIBLE', rate:0 };
   }
   function simulate(){
-    const cap = Number(cleanMoney(document.getElementById('simCapital').value) || 0);
-    if(cap < 2000){
-      alert('El capital mínimo para simular es Q 2,000.');
-      return;
-    }
+    const cap = Number((document.getElementById('simCapital').value||'').replace(/[,\s]/g,'') || 0);
+    if(cap < 2000){ alert('El capital mínimo para simular es Q 2,000.'); return; }
     const {name, rate} = autoPlanAndRate(cap);
     document.getElementById('simPlan').textContent = name;
     const months = 6;
@@ -600,7 +538,6 @@
     document.getElementById('simFinal').textContent = fmtQ(cap + total);
     document.getElementById('simSum').textContent   = fmtQ(total);
     document.getElementById('simNote').textContent  = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-
     const body = document.getElementById('simBody');
     body.innerHTML = '';
     for(let m=1;m<=months;m++){
@@ -611,7 +548,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', async ()=>{
-    // Enlace robusto para cerrar sesión + redirección garantizada
     document.getElementById('btnSignOut').addEventListener('click', __fxpwd_logout);
 
     // Redirección automática si se pierde la sesión en cualquier momento
@@ -619,78 +555,16 @@
       if (event === 'SIGNED_OUT') window.location.replace(LOGIN_URL);
     });
 
-    // Resto de bindings
-    const dlg = document.getElementById('wdlg');
     document.getElementById('btnOpenWithdraw').addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose').addEventListener('click', ()=> dlg.close());
     document.getElementById('wCancel')?.addEventListener('click', ()=> dlg.close());
     document.getElementById('wSend').addEventListener('click', enviarSolicitudRetiro);
-    document.getElementById('switchAll').addEventListener('click', ()=>{
-      const sw=document.getElementById('switchAll');
-      const on=!sw.classList.contains('on');
-      sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on));
-      document.getElementById('wAmount').disabled=on;
-    });
-    document.getElementById('optEarly').addEventListener('click', ()=>{
-      document.getElementById('optEarly').classList.add('selected');
-      document.getElementById('optHealth').classList.remove('selected');
-    });
-    document.getElementById('optHealth').addEventListener('click', ()=>{
-      document.getElementById('optHealth').classList.add('selected');
-      document.getElementById('optEarly').classList.remove('selected');
-    });
+    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
+    document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
+    document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
+    selectType('early'); toggleSwitchAll(false);
 
-    // Ojos en campos de contraseña
-    (function(){
-      const __eyeSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="1.8"/>
-  <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-      const __eyeOffSVG = `
-<svg viewBox="0 0 24 24" fill="none">
-  <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M1 12s4-7 11-7c2.7 0 5 .9 6.9 2.1M23 12s-4 7-11 7c-2.7 0-5-.9-6.9-2.1" stroke="currentColor" stroke-width="1.8"/>
-  <path d="M9.9 9.9a3.5 3.5 0 004.2 4.2" stroke="currentColor" stroke-width="1.8"/>
-</svg>`;
-      function bindEye(inputId, btnId){
-        const inp = document.getElementById(inputId);
-        const btn = document.getElementById(btnId);
-        if(!inp || !btn) return;
-        btn.innerHTML = __eyeSVG;
-        btn.addEventListener('click', ()=>{
-          const show = inp.type === 'password';
-          inp.type = show ? 'text' : 'password';
-          btn.setAttribute('aria-pressed', String(show));
-          btn.innerHTML = show ? __eyeOffSVG : __eyeSVG;
-        });
-      }
-      bindEye('newPwd','eyeNew'); bindEye('newPwd2','eyeNew2');
-    })();
-
-    // Inputs monetarios
-    (function bindMoney(){
-      const ids = ['wAmount','simCapital'];
-      ids.forEach(id=>{
-        const el = document.getElementById(id);
-        if(!el) return;
-        el.inputMode = 'decimal';
-        el.autocomplete = 'off';
-        el.addEventListener('input', ()=>{
-          let v = (el.value||'').toString().replace(/[,\s]/g,'');
-          if(v !== '' && !isNaN(v)){
-            const p = v.split('.');
-            p[0]=p[0].replace(/^0+(?=\d)/,'');
-            v = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (p[1]?'.'+p[1].slice(0,2):'');
-          }
-          el.value = v;
-          el.selectionStart = el.selectionEnd = el.value.length;
-        });
-        el.addEventListener('blur', ()=>{ el.value = el.value; });
-        el.addEventListener('focus', ()=> el.select());
-      });
-    })();
-
+    ['wAmount','simCapital'].forEach(id=>bindMoneyInput(id));
     document.getElementById('btnCalc').addEventListener('click', simulate);
 
     loadHeader();
