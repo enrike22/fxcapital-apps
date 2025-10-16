@@ -62,13 +62,12 @@
     background-image:none !important;
     border-color:var(--panel-gray-border);
     box-shadow:0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
-    color:#000; /* textos generales del panel en negro */
+    color:#000;
   }
   .panel.gray > h2,
   .panel.gray > .muted,
   .panel.gray > .note{ color:#000 !important; }
 
-  /* dentro de las tarjetas oscuras: mantener textos BLANCOS */
   .card{background:var(--grad-card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-1),var(--shadow-inset)}
   .panel.gray .card .k,
   .panel.gray .card .v,
@@ -87,6 +86,9 @@
   .group::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%);pointer-events:none}
   .k{display:inline-block;font-size:13px;color:var(--muted);background:#12161b;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
   .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
+
+  /* Campos base */
+  .input{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#0f1116;color:#f5f7fb}
 
   .table{width:100%;border-collapse:separate;border-spacing:0}
   .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
@@ -138,8 +140,13 @@
     background:linear-gradient(180deg,#2a2f36,#161a1f);
   }
 
-  /* Motivo compacto (como input alto) */
-  textarea.input{min-height:56px;max-height:220px;resize:vertical}
+  /* Inputs dentro del modal: blancos */
+  #wdlg .input{background:#fff;color:#0b0c0e}
+
+  /* Motivo: etiqueta y caja alineadas arriba y ocupando todo el ancho de la columna */
+  .motivo-row{display:flex;align-items:flex-start;gap:10px}
+  .motivo-row .k{margin:0}
+  .motivo-row textarea.input{min-height:72px;max-height:240px;resize:vertical;width:100%}
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -259,10 +266,12 @@
           <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
           <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
         </div>
-        <!-- Motivo compacto en la columna derecha (como en la 1a imagen) -->
+        <!-- Motivo mejorado: etiqueta alineada arriba y textarea ancho -->
         <div>
-          <div class="k">Motivo</div>
-          <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
+          <div class="motivo-row">
+            <span class="k">Motivo</span>
+            <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
+          </div>
         </div>
       </div>
 
@@ -299,9 +308,7 @@
 
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
-  });
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
 
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
@@ -541,4 +548,3 @@
   </script>
 </body>
 </html>
-s
