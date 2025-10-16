@@ -142,11 +142,8 @@
 
   /* Inputs dentro del modal: blancos */
   #wdlg .input{background:#fff;color:#0b0c0e}
-
-  /* Motivo: etiqueta y caja alineadas arriba y ocupando todo el ancho de la columna */
-  .motivo-row{display:flex;align-items:flex-start;gap:10px}
-  .motivo-row .k{margin:0}
-  .motivo-row textarea.input{min-height:72px;max-height:240px;resize:vertical;width:100%}
+  /* Textarea del motivo: cómodo y alineado bajo el título */
+  #wReason.input{min-height:96px;max-height:240px;resize:vertical}
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -266,12 +263,11 @@
           <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
           <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
         </div>
-        <!-- Motivo mejorado: etiqueta alineada arriba y textarea ancho -->
+
+        <!-- Motivo: título arriba y textarea debajo, ancho completo -->
         <div>
-          <div class="motivo-row">
-            <span class="k">Motivo</span>
-            <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
-          </div>
+          <div class="k">Motivo</div>
+          <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
         </div>
       </div>
 
