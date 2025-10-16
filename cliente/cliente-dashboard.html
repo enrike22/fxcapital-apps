@@ -18,11 +18,10 @@
 <style>
   :root{
     --bg0:#000; --bg1:#0b0c0e; --bg2:#111317; --bg3:#14171c;
-    --line:#252a31;          /* un poco más claro */
+    --line:#252a31;
     --muted:#a8b0bc; --txt:#f7f9fc;
     --grad-app: radial-gradient(1200px 800px at 10% -20%, #12151a 0%, #0b0c0e 45%, #060708 100%);
     --grad-panel: linear-gradient(180deg, #111317 0%, #0b0d10 100%);
-    /* NEGRO MÁS CLARO EN CARDS */
     --grad-card: linear-gradient(180deg, #191d22 0%, #12161b 100%);
     --shadow-1: 0 10px 25px rgba(0,0,0,.45);
     --shadow-2: 0 18px 40px rgba(0,0,0,.55);
@@ -38,14 +37,10 @@
   header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
   .brand-wrap{display:flex;flex-direction:column;gap:6px}
   .brand-row{display:flex;align-items:center;gap:18px}
-  /* LOGO SIN CUADRO DE FONDO, MISMA ÁREA */
+  /* LOGO sin fondo, mismo tamaño visual */
   .brand-logo{
     width:112px;height:112px;border-radius:16px;object-fit:contain;
-    background:transparent;           /* sin cuadro */
-    padding:0;                        /* sin relleno blanco */
-    border:0;                         /* sin borde */
-    box-shadow:none;                  /* sin sombra de caja */
-    display:block;
+    background:transparent; padding:0; border:0; box-shadow:none; display:block;
   }
   .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
   .brand-sub{margin:0;font-weight:700;color:#cfd6e2;font-size:clamp(16px,2.2vw,28px);opacity:.9}
@@ -79,7 +74,7 @@
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
   .modal-b{padding:18px 22px}
 
-  /* PILLS EN RETIRO */
+  /* Pills de retiro (selección → blancas) */
   .pill{border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;background:linear-gradient(180deg,#15181d,#101317);box-shadow:var(--shadow-inset);transition:all .18s ease}
   .pill:hover{filter:brightness(1.05)}
   .pill.selected{
@@ -92,9 +87,28 @@
   .row{display:grid;gap:14px;grid-template-columns:1fr 1fr}
   @media (max-width:720px){.row{grid-template-columns:1fr}}
 
-  .switch{--w:58px;--h:32px;--knob:26px;inline-size:var(--w);block-size:var(--h);background:linear-gradient(180deg,#1b1f26,#0f1216);border-radius:999px;border:1px solid var(--line);position:relative}
-  .switch::after{content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);border-radius:50%;background:linear-gradient(180deg,#fff,#d9d9d9);top:50%;left:3px;translate:0 -50%}
-  .switch.on::after{left:calc(var(--w) - var(--knob) - 3px)}
+  /* SWITCH: blanco al activar */
+  .switch{
+    --w:58px;--h:32px;--knob:26px;
+    inline-size:var(--w);block-size:var(--h);
+    background:linear-gradient(180deg,#1b1f26,#0f1216);
+    border-radius:999px;border:1px solid var(--line);position:relative;
+    transition:all .18s ease; cursor:pointer;
+  }
+  .switch::after{
+    content:"";position:absolute;inline-size:var(--knob);block-size:var(--knob);
+    border-radius:50%;background:linear-gradient(180deg,#fff,#d9d9d9);
+    top:50%;left:3px;translate:0 -50%; transition:all .18s ease;
+  }
+  .switch.on{
+    background:#fff; border-color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .switch.on::after{
+    left:calc(var(--w) - var(--knob) - 3px);
+    background:linear-gradient(180deg,#2a2f36,#161a1f); /* knob oscuro para contraste */
+  }
+
   .blocker{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);display:none}
   .blocker.on{display:block}
 
@@ -119,7 +133,7 @@
       <div class="brand-wrap">
         <div class="brand-row">
           <img
-            src="/logo-white.png?v=1"   <!-- usa tu PNG blanco/transparente -->
+            src="/logo-white.png?v=1"
             alt="FX Capital"
             class="brand-logo"
             loading="eager"
@@ -149,7 +163,6 @@
         <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
       </div>
       <div style="margin-top:16px">
-        <!-- FONDO BLANCO / LETRA NEGRA -->
         <button class="btn" id="btnOpenWithdraw">Solicitar retiro</button>
       </div>
     </section>
@@ -236,7 +249,7 @@
     </div>
   </dialog>
 
-  <!-- MODAL MENSAJES (reemplaza alert para éxito de retiro) -->
+  <!-- MODAL MENSAJES -->
   <dialog id="msgDlg">
     <div class="modal-h">
       <div style="font-weight:800">FX | CAPITAL R.L.</div>
@@ -282,7 +295,7 @@
     </div>
   </dialog>
 
-  <!-- MODAL FIN DE PERÍODO DE CUENTA (SIEMPRE QUE HAYA FINALIZADO) -->
+  <!-- MODAL FIN DE PERÍODO -->
   <dialog id="endPeriodDlg" aria-labelledby="endTitle" aria-describedby="endDesc">
     <div class="modal-h">
       <div id="endTitle" style="font-weight:800">Aviso importante</div>
@@ -336,16 +349,15 @@
     el.addEventListener('focus', ()=> el.select());
   }
 
-  // Congelar en la fecha de cierre: usar el día anterior al cierre para mostrar el último estado "antes del fin"
+  // Congelar en la fecha de cierre
   function paintWeeks(acc, opts={}){
     const today=clampDate(new Date());
     const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
 
-    // Si hay freezeAtClose => tomar el día anterior al cierre como "hoy" lógico
     let todayForCalc = today;
     if (opts.freezeAtClose){
       const freeze = clampDate(opts.freezeAtClose);
-      const prev = new Date(freeze); prev.setDate(prev.getDate()-1); // día previo al cierre
+      const prev = new Date(freeze); prev.setDate(prev.getDate()-1);
       todayForCalc = prev;
     }
 
@@ -369,7 +381,6 @@
         tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
         tbody.appendChild(tr);
       });
-      // Acumulado parcial hasta la última fecha mostrada (último monto actualizado antes del fin)
       const partial = weekly * shown.length;
       $('#weekSum').textContent = fmtQ(partial);
     }
@@ -413,10 +424,8 @@
 
     const accountEnded = clampDate(new Date()) >= closeClamped;
 
-    // Pintar semanas congelando al día previo al cierre si ya finalizó
     paintWeeks(acc, { freezeAtClose: accountEnded ? closeClamped : null });
 
-    // Mostrar SIEMPRE el modal si la cuenta ya finalizó (en cada login/carga)
     if(accountEnded){
       const endDlg = document.getElementById('endPeriodDlg');
       if(endDlg && !endDlg.open) endDlg.showModal();
@@ -424,7 +433,7 @@
     }
   }
 
-  // ===== UI helpers: mensaje personalizado =====
+  // ===== Modal de mensajes =====
   const msgDlg = document.getElementById('msgDlg');
   function showMessage(html){
     document.getElementById('msgText').innerHTML = html;
@@ -440,7 +449,6 @@
     withdrawType=t;
     document.getElementById('optEarly').classList.toggle('selected',t==='early');
     document.getElementById('optHealth').classList.toggle('selected',t==='health');
-    // accesibilidad
     document.getElementById('optEarly').setAttribute('aria-pressed', String(t==='early'));
     document.getElementById('optHealth').setAttribute('aria-pressed', String(t==='health'));
   }
@@ -476,7 +484,6 @@
 
     if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
 
-    // ÉXITO: modal personalizado con tu texto
     showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
 
     dlg.close();
