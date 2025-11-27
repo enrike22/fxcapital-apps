@@ -144,44 +144,61 @@
   #wdlg .input{background:#fff;color:#0b0c0e}
   #wReason.input{min-height:96px;max-height:240px;resize:vertical}
 
- /* === NUEVO MODAL CONTRASEÑA (3D + mayor contraste) === */
+  /* === NUEVO MODAL CONTRASEÑA (3D + inputs más visibles) === */
 
-/* Solo afecta al modal de contraseña, no a los demás */
+/* Dialog con efecto 3D marcado */
 #pwdDlg{
   background:
-    radial-gradient(140% 180% at 10% 0%, #232832 0%, #151820 40%, #050608 100%);
+    radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
   box-shadow:
-    0 32px 80px rgba(0,0,0,.85),
-    0 0 0 1px rgba(255,255,255,.05),
-    inset 0 1px 0 rgba(255,255,255,.06);
-  border-radius:28px;
+    0 36px 90px rgba(0,0,0,.92),
+    0 0 0 1px rgba(255,255,255,.08),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 -10px 30px rgba(0,0,0,.8);
+  border-radius:30px;
+  transform:translateY(-6px);
 }
 
-/* Línea del header un poco más luminosa para el efecto 3D */
+/* Header con borde más luminoso para reforzar el relieve */
 #pwdDlg .modal-h{
-  border-bottom-color:rgba(255,255,255,.08);
+  border-bottom-color:rgba(255,255,255,.14);
 }
 
-/* Inputs con más contraste y aspecto profesional */
+/* Chips "Nueva contraseña" / "Confirmar nueva contraseña" más visibles */
+#pwdDlg .k{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.28);
+  color:#f3f6ff;
+  font-size:13px;
+  font-weight:600;
+}
+
+/* Inputs con mayor contraste, sombra y fuente más grande */
 #pwdDlg .input{
   background:#fdfdfd;
   color:#0b0c0e;
-  border-radius:12px;
-  border:1px solid rgba(12,16,26,.85);
+  font-size:15.5px;          /* más grande que el resto del sitio */
+  padding:14px 44px 14px 16px;
+  border-radius:14px;
+  border:1px solid #0c1018;
   box-shadow:
-    0 0 0 1px rgba(0,0,0,.45) inset,
-    0 8px 18px rgba(0,0,0,.35);
+    0 0 0 1px rgba(0,0,0,.55) inset,
+    0 10px 24px rgba(0,0,0,.45);
 }
 
-/* Estado focus bien marcado */
+#pwdDlg .input::placeholder{
+  color:#7a808c;
+}
+
+/* Estado focus bien marcado y con halo suave */
 #pwdDlg .input:focus{
   outline:none;
   background:#ffffff;
   border-color:#ffffff;
   box-shadow:
-    0 0 0 1px rgba(255,255,255,.85),
-    0 0 0 4px rgba(255,255,255,.07),
-    0 10px 24px rgba(0,0,0,.45);
+    0 0 0 1px rgba(255,255,255,.9),
+    0 0 0 4px rgba(255,255,255,.09),
+    0 14px 30px rgba(0,0,0,.6);
 }
 
 /* Wrapper del campo para colocar el ojo */
@@ -189,21 +206,21 @@
   position:relative;
 }
 
-/* Botón ojo con mejor visibilidad */
+/* Botón ojo más visible y con hover/focus */
 .pwd-toggle{
   position:absolute;
-  right:10px;
+  right:12px;
   top:50%;
   transform:translateY(-50%);
   border:0;
   background:transparent;
   cursor:pointer;
-  font-size:16px;
-  color:#888;
+  font-size:17px;
+  color:#8c92a0;
   padding:4px;
 }
 .pwd-toggle:hover{
-  color:#cfd6e2;
+  color:#dde3f2;
 }
 .pwd-toggle:focus-visible{
   outline:2px solid #ffffff;
