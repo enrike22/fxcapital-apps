@@ -142,8 +142,37 @@
 
   /* Inputs dentro del modal: blancos */
   #wdlg .input{background:#fff;color:#0b0c0e}
-  /* Textarea del motivo: cómodo y alineado bajo el título */
   #wReason.input{min-height:96px;max-height:240px;resize:vertical}
+
+  /* === NUEVO MODAL CONTRASEÑA === */
+  #pwdDlg .input{
+    background:#fff;
+    color:#0b0c0e;
+  }
+  .pwd-field-wrap{
+    position:relative;
+  }
+  .pwd-toggle{
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    border:0;
+    background:transparent;
+    cursor:pointer;
+    font-size:16px;
+    color:#555;
+    padding:4px;
+  }
+  .pwd-toggle:focus-visible{
+    outline:2px solid #fff;
+    outline-offset:2px;
+  }
+  #pwdError{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--danger);
+  }
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -279,6 +308,43 @@
       <div class="actions" style="display:flex;gap:12px;justify-content:flex-start">
         <button class="btn secondary" id="wCancel">Cancelar</button>
         <button class="btn" id="wSend">Enviar solicitud</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- === NUEVO MODAL CONTRASEÑA === -->
+  <dialog id="pwdDlg" aria-labelledby="pwdTitle">
+    <div class="modal-h">
+      <div id="pwdTitle" style="font-weight:800">Actualizar contraseña</div>
+      <!-- Sin botón de cerrar, se cierra solo cuando complete el proceso -->
+      <div style="width:36px;height:36px"></div>
+    </div>
+    <div class="modal-b">
+      <p class="note" style="margin-top:0;margin-bottom:16px">
+        Por seguridad, debe actualizar su contraseña antes de continuar usando el panel.
+      </p>
+
+      <div style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+        <div>
+          <div class="k">Nueva contraseña</div>
+          <div class="pwd-field-wrap">
+            <input id="pwdNew" class="input" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+            <button type="button" id="pwdNewEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña">👁</button>
+          </div>
+        </div>
+        <div>
+          <div class="k">Confirmar nueva contraseña</div>
+          <div class="pwd-field-wrap">
+            <input id="pwdConfirm" class="input" type="password" autocomplete="new-password" placeholder="Repita la contraseña">
+            <button type="button" id="pwdConfirmEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña">👁</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pwdError"></div>
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:18px">
+        <button class="btn" id="pwdSave">Guardar contraseña</button>
       </div>
     </div>
   </dialog>
@@ -454,6 +520,85 @@
     if(!msgDlg.open) msgDlg.showModal();
   }
 
+  /* === LÓGICA CAMBIO DE CONTRASEÑA OBLIGATORIO === */
+  let pwdDlg;
+  function openPwdDialog(){
+    if(!pwdDlg) pwdDlg = document.getElementById('pwdDlg');
+    if(!pwdDlg) return;
+
+    // Evitar que se cierre con Esc o clic fuera
+    pwdDlg.addEventListener('cancel', (e)=> e.preventDefault());
+    pwdDlg.showModal();
+
+    // Limpiar campos y errores cada vez que se abra
+    const newEl = document.getElementById('pwdNew');
+    const confEl = document.getElementById('pwdConfirm');
+    const errEl = document.getElementById('pwdError');
+    if(newEl) newEl.value = '';
+    if(confEl) confEl.value = '';
+    if(errEl) errEl.textContent = '';
+  }
+
+  async function handleSavePassword(){
+    const newEl = document.getElementById('pwdNew');
+    const confEl = document.getElementById('pwdConfirm');
+    const errEl  = document.getElementById('pwdError');
+    if(!newEl || !confEl || !errEl) return;
+
+    const pwd  = (newEl.value || '').trim();
+    const cpwd = (confEl.value || '').trim();
+
+    errEl.textContent = '';
+
+    if(pwd.length < 8){
+      errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+    if(pwd !== cpwd){
+      errEl.textContent = 'Las contraseñas no coinciden.';
+      return;
+    }
+
+    const btn = document.getElementById('pwdSave');
+    if(btn){
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+    }
+
+    try{
+      // Actualizar contraseña en Supabase
+      const { error: updErr } = await sb.auth.updateUser({ password: pwd });
+      if(updErr){
+        errEl.textContent = 'No se pudo actualizar la contraseña. Inténtelo de nuevo.';
+        console.error(updErr);
+        return;
+      }
+
+      // Marcar que ya no necesita cambiar contraseña
+      const { data:{ user } } = await sb.auth.getUser();
+      if(user?.id){
+        await sb.from('profiles').update({ must_change_password:false }).eq('id', user.id);
+      }
+
+      // Cerrar modal y avisar
+      if(pwdDlg && pwdDlg.open) pwdDlg.close();
+      showMessage('Su contraseña se actualizó correctamente. Puede seguir utilizando su panel con normalidad.');
+    }finally{
+      if(btn){
+        btn.disabled = false;
+        btn.textContent = 'Guardar contraseña';
+      }
+    }
+  }
+
+  function togglePwdVisibility(inputId, btnId){
+    const input = document.getElementById(inputId);
+    const btn   = document.getElementById(btnId);
+    if(!input || !btn) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+  }
+
   /* ===== Inicio ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=> dlg.showModal());
@@ -471,6 +616,14 @@
     document.getElementById('btnCalc')?.addEventListener('click', simulate);
     document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg.close());
     document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg.close());
+
+    // Listeners del modal de contraseña
+    const _pwdSaveBtn = document.getElementById('pwdSave');
+    const _pwdNewEye  = document.getElementById('pwdNewEye');
+    const _pwdConfEye = document.getElementById('pwdConfirmEye');
+    if(_pwdSaveBtn) _pwdSaveBtn.addEventListener('click', handleSavePassword);
+    if(_pwdNewEye)  _pwdNewEye.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
+    if(_pwdConfEye) _pwdConfEye.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
 
     loadHeader();
   });
@@ -491,6 +644,10 @@
       ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; });
       const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
       const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
+      // Si no hay cuenta pero debe cambiar contraseña, igual forzamos el modal
+      if(prof?.must_change_password){
+        openPwdDialog();
+      }
       return;
     }
 
@@ -515,6 +672,11 @@
     const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
 
     paintWeeks(acc, {});
+
+    // Forzar cambio de contraseña en primer inicio
+    if(prof?.must_change_password){
+      openPwdDialog();
+    }
   }
 
   function autoPlanAndRate(capital){
