@@ -144,35 +144,78 @@
   #wdlg .input{background:#fff;color:#0b0c0e}
   #wReason.input{min-height:96px;max-height:240px;resize:vertical}
 
-  /* === NUEVO MODAL CONTRASEÑA === */
-  #pwdDlg .input{
-    background:#fff;
-    color:#0b0c0e;
-  }
-  .pwd-field-wrap{
-    position:relative;
-  }
-  .pwd-toggle{
-    position:absolute;
-    right:10px;
-    top:50%;
-    transform:translateY(-50%);
-    border:0;
-    background:transparent;
-    cursor:pointer;
-    font-size:16px;
-    color:#555;
-    padding:4px;
-  }
-  .pwd-toggle:focus-visible{
-    outline:2px solid #fff;
-    outline-offset:2px;
-  }
-  #pwdError{
-    margin-top:8px;
-    font-size:13px;
-    color:var(--danger);
-  }
+ /* === NUEVO MODAL CONTRASEÑA (3D + mayor contraste) === */
+
+/* Solo afecta al modal de contraseña, no a los demás */
+#pwdDlg{
+  background:
+    radial-gradient(140% 180% at 10% 0%, #232832 0%, #151820 40%, #050608 100%);
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.85),
+    0 0 0 1px rgba(255,255,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  border-radius:28px;
+}
+
+/* Línea del header un poco más luminosa para el efecto 3D */
+#pwdDlg .modal-h{
+  border-bottom-color:rgba(255,255,255,.08);
+}
+
+/* Inputs con más contraste y aspecto profesional */
+#pwdDlg .input{
+  background:#fdfdfd;
+  color:#0b0c0e;
+  border-radius:12px;
+  border:1px solid rgba(12,16,26,.85);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.45) inset,
+    0 8px 18px rgba(0,0,0,.35);
+}
+
+/* Estado focus bien marcado */
+#pwdDlg .input:focus{
+  outline:none;
+  background:#ffffff;
+  border-color:#ffffff;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.85),
+    0 0 0 4px rgba(255,255,255,.07),
+    0 10px 24px rgba(0,0,0,.45);
+}
+
+/* Wrapper del campo para colocar el ojo */
+.pwd-field-wrap{
+  position:relative;
+}
+
+/* Botón ojo con mejor visibilidad */
+.pwd-toggle{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  font-size:16px;
+  color:#888;
+  padding:4px;
+}
+.pwd-toggle:hover{
+  color:#cfd6e2;
+}
+.pwd-toggle:focus-visible{
+  outline:2px solid #ffffff;
+  outline-offset:2px;
+}
+
+/* Mensaje de error */
+#pwdError{
+  margin-top:8px;
+  font-size:13px;
+  color:var(--danger);
+}
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
