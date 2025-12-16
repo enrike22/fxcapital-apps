@@ -104,27 +104,7 @@
 .panel.gray #simSum{ color:#000 !important; }
 .panel.gray #simNote{ color:#000 !important; }
 .note{color:var(--muted);font-size:13px;margin-top:10px}
-/* === Alternancia gris claro / gris oscuro en panels === */
 
-/* Gris CLARO: secciones pares */
-.wrap > section.panel.section:nth-of-type(even){
-  background: var(--panel-gray) !important;
-  border-color: var(--panel-gray-border);
-  color:#000;
-}
-
-/* Ajustes de texto para gris claro */
-.wrap > section.panel.section:nth-of-type(even) h2,
-.wrap > section.panel.section:nth-of-type(even) .muted,
-.wrap > section.panel.section:nth-of-type(even) .note{
-  color:#000 !important;
-}
-
-/* Gris OSCURO: secciones impares (default) */
-.wrap > section.panel.section:nth-of-type(odd){
-  background: var(--grad-panel);
-  color: var(--txt);
-}
 /* ✅ Inputs blancos + texto negro SOLO en modal de recarga */
 #tdlg .input{
   background:#ffffff !important;
