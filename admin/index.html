@@ -64,6 +64,34 @@ tbody tr:hover{background:#0e1116}
 
   <!-- APP -->
   <div id="app" class="hidden">
+<!-- TOPUPS PENDIENTES -->
+<div class="card">
+  <div class="header" style="margin:0 0 10px">
+    <h2 style="margin:0">Recargas pendientes</h2>
+    <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Email</th>
+          <th>Monto</th>
+          <th>Banco</th>
+          <th>Boleta</th>
+          <th class="nowrap">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="topups"></tbody>
+    </table>
+  </div>
+
+  <p class="small" style="margin-top:10px">
+    Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
+  </p>
+</div>
 
     <!-- Crear/Editar -->
     <div class="card" id="formCard">
@@ -328,10 +356,124 @@ function renderUsers(rows){
 $("q")?.addEventListener("input",(e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
-  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x_bank_account_type]
+  // ✅ FIX: x_bank_account_type -> x.bank_account_type
+  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
     .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   renderUsers(filt);
 });
+
+/*** TOPUPS PENDIENTES (NUEVO) ***/
+async function listTopups(){
+  const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
+
+  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code`;
+  const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`, { headers:h, cache:"no-store" });
+
+  if(!r.ok){
+    console.error(await r.text());
+    alert("No se pudo cargar recargas pendientes.");
+    return;
+  }
+
+  const rows = await r.json();
+
+  const uids = [...new Set(rows.map(x=>x.user_id).filter(Boolean))];
+  let profMap = new Map();
+
+  if(uids.length){
+    const pr = await fetch(`${BASE}/profiles?select=id,full_name,email&id=in.(${uids.join(",")})`, { headers:h, cache:"no-store" });
+    if(pr.ok){
+      const profs = await pr.json();
+      profMap = new Map(profs.map(p=>[p.id,p]));
+    }
+  }
+
+  renderTopups(rows, profMap);
+}
+
+function renderTopups(rows, profMap){
+  const tb = $("topups");
+  if(!tb) return;
+  tb.innerHTML = "";
+
+  rows.forEach(x=>{
+    const p = profMap.get(x.user_id) || {};
+    const name = p.full_name || "—";
+    const email = p.email || "—";
+    const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
+    const amt  = fmtMoney(x.amount, x.currency || "GTQ");
+    const bank = x.bank_name || "—";
+
+    // Por ahora mostramos el path como referencia.
+    // Luego lo cambiamos por botón "Ver boleta" con Signed URL si bucket es PRIVATE.
+    const receipt = x.receipt_path ? `<span class="nowrap">${x.receipt_path}</span>` : "—";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="nowrap">${date}</td>
+      <td>${name}</td>
+      <td>${email}</td>
+      <td>${amt}</td>
+      <td>${bank}</td>
+      <td>${receipt}</td>
+      <td class="nowrap">
+        <button class="ghost" onclick="approveTopup('${x.id}')">Aprobar</button>
+        <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  if(!rows.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="7" class="small">No hay recargas pendientes.</td>`;
+    tb.appendChild(tr);
+  }
+}
+
+async function approveTopup(topupId){
+  if(!confirm("¿Aprobar esta recarga?\n\nEsto sumará el monto al capital del cliente.")) return;
+
+  const r = await fetch(`${RPC}/approve_topup`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId })
+  });
+
+  if(!r.ok){
+    console.error(await r.text());
+    alert("No se pudo aprobar la recarga.");
+    return;
+  }
+
+  alert("Recarga aprobada y capital acreditado.");
+  await listTopups();
+  await listUsers();
+}
+
+function rejectTopupPrompt(topupId){
+  const reason = prompt("Motivo del rechazo (opcional):") || "";
+  rejectTopup(topupId, reason);
+}
+
+async function rejectTopup(topupId, reason){
+  if(!confirm("¿Rechazar esta recarga?")) return;
+
+  const r = await fetch(`${RPC}/reject_topup`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId, p_reason: reason })
+  });
+
+  if(!r.ok){
+    console.error(await r.text());
+    alert("No se pudo rechazar la recarga.");
+    return;
+  }
+
+  alert("Recarga rechazada.");
+  await listTopups();
+}
 
 /*** Editar ***/
 function editClient(x){
@@ -488,7 +630,8 @@ async function deleteClient(x){
 async function initApp(){
   if(localStorage.token){
     show($("unauth"), false); show($("app"), true); show($("logoutBtn"), true);
-    await listUsers(); // sin Solicitudes
+    await listUsers(); 
+    await listTopups(); // ✅ NUEVO
   }else{
     show($("app"), false); show($("logoutBtn"), false); show($("unauth"), true);
   }
@@ -508,6 +651,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
     validateRatePlan();
   });
   $("btnRefreshUsers").addEventListener("click", listUsers);
+
+  // ✅ NUEVO: refrescar topups
+  $("btnRefreshTopups")?.addEventListener("click", listTopups);
 
   // Enlazar formateo de Capital inicial
   bindCapitalFormatter($("u_capital"));
