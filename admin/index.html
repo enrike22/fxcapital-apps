@@ -406,7 +406,13 @@ function renderTopups(rows, profMap){
 
     // Por ahora mostramos el path como referencia.
     // Luego lo cambiamos por botón "Ver boleta" con Signed URL si bucket es PRIVATE.
-    const receipt = x.receipt_path ? `<span class="nowrap">${x.receipt_path}</span>` : "—";
+    const BUCKET = "topup-receipts";
+const receipt = x.receipt_path
+  ? `<button class="ghost" type="button"
+        onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
+        Ver boleta
+     </button>`
+  : "—";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -473,6 +479,34 @@ async function rejectTopup(topupId, reason){
 
   alert("Recarga rechazada.");
   await listTopups();
+}
+async function openReceipt(bucket, path){
+  try{
+    const r = await fetch(
+      `${PROJECT_URL}/functions/v1/admin-signed-receipt`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + (localStorage.token || "")
+        },
+        body: JSON.stringify({ bucket, path })
+      }
+    );
+
+    if(!r.ok){
+      console.error(await r.text());
+      alert("No se pudo abrir la boleta.");
+      return;
+    }
+
+    const { signedUrl } = await r.json();
+    window.open(signedUrl, "_blank");
+  }catch(e){
+    console.error(e);
+    alert("Error al abrir la boleta.");
+  }
 }
 
 /*** Editar ***/
@@ -663,3 +697,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
