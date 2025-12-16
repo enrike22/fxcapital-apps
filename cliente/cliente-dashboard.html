@@ -82,49 +82,43 @@
   @media (max-width:920px){.grid.cols-3{grid-template-columns:1fr 1fr}}
   @media (max-width:680px){.grid.cols-3{grid-template-columns:1fr}}
 
- .group{padding:18px 20px;position:relative;overflow:hidden}
-.group::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%);pointer-events:none}
-.k{display:inline-block;font-size:13px;color:var(--muted);background:#12161b;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
+  .group{padding:18px 20px;position:relative;overflow:hidden}
+  .group::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent 40%);pointer-events:none}
+  .k{display:inline-block;font-size:13px;color:var(--muted);background:#12161b;border:1px solid var(--line);padding:6px 10px;border-radius:999px;margin-bottom:8px}
 
-/* ✅ Labels del modal "Enviar boleta de recarga" en blanco y negrita */
-#tdlg .k{
-  color:#ffffff !important;
-  font-weight:800 !important;
-}
+  /* ✅ Labels del modal "Enviar boleta de recarga" en blanco y negrita */
+  #tdlg .k{ color:#ffffff !important; font-weight:800 !important; }
 
-.v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
+  .v{display:block;font-size:16px;font-weight:700;letter-spacing:.2px}
 
-/* Campos base */
-.input{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#0f1116;color:#f5f7fb}
+  /* Campos base */
+  .input{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#0f1116;color:#f5f7fb}
 
-.table{width:100%;border-collapse:separate;border-spacing:0}
-.table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
-.table th{color:var(--muted);font-weight:700;text-align:left;background:linear-gradient(180deg,#101318,#0c0f13);position:sticky;top:0;z-index:1}
-.panel.gray #simTable td,
-.panel.gray #simSum{ color:#000 !important; }
-.panel.gray #simNote{ color:#000 !important; }
-.note{color:var(--muted);font-size:13px;margin-top:10px}
-/* === Separación vertical uniforme entre secciones === */
-.wrap > section.panel.section{
-  margin-top:18px;
-}
-/* ✅ Inputs blancos + texto negro SOLO en modal de recarga */
-#tdlg .input{
-  background:#ffffff !important;
-  color:#000000 !important;
-  border:1px solid #bfc6d1;
-}
+  .table{width:100%;border-collapse:separate;border-spacing:0}
+  .table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line)}
+  .table th{color:var(--muted);font-weight:700;text-align:left;background:linear-gradient(180deg,#101318,#0c0f13);position:sticky;top:0;z-index:1}
+  .panel.gray #simTable td,
+  .panel.gray #simSum{ color:#000 !important; }
+  .panel.gray #simNote{ color:#000 !important; }
+  .note{color:var(--muted);font-size:13px;margin-top:10px}
 
-#tdlg .input::placeholder{
-  color:#6b7280;
-}
+  /* === Separación vertical uniforme entre secciones === */
+  .wrap > section.panel.section{ margin-top:18px; }
 
-#tdlg .input:focus{
-  outline:none;
-  border-color:#000000;
-  box-shadow:0 0 0 2px rgba(0,0,0,.08);
-}
-  /* ======= DIALOG (MODAL RETIRO) ======= */
+  /* ✅ Inputs blancos + texto negro SOLO en modal de recarga */
+  #tdlg .input{
+    background:#ffffff !important;
+    color:#000000 !important;
+    border:1px solid #bfc6d1;
+  }
+  #tdlg .input::placeholder{ color:#6b7280; }
+  #tdlg .input:focus{
+    outline:none;
+    border-color:#000000;
+    box-shadow:0 0 0 2px rgba(0,0,0,.08);
+  }
+
+  /* ======= DIALOG (MODALES) ======= */
   dialog{border:0;border-radius:22px;background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);color:var(--txt);width:min(840px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.65),var(--shadow-inset)}
   dialog::backdrop{background:rgba(0,0,0,.6)}
   .modal-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
@@ -166,28 +160,19 @@
     background:linear-gradient(180deg,#2a2f36,#161a1f);
   }
 
-  /* Inputs dentro del modal: blancos */
+  /* Inputs dentro del modal de retiro: blancos */
   #wdlg .input{background:#fff;color:#0b0c0e}
   #wReason.input{min-height:96px;max-height:240px;resize:vertical}
 
-  /* === NUEVO MODAL CONTRASEÑA (3D + inputs más visibles) === */
-
+  /* === MODAL CONTRASEÑA (3D) === */
   #pwdDlg{
-    background:
-      radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
-    box-shadow:
-      0 36px 90px rgba(0,0,0,.92),
-      0 0 0 1px rgba(255,255,255,.08),
-      inset 0 1px 0 rgba(255,255,255,.08),
-      inset 0 -10px 30px rgba(0,0,0,.8);
+    background: radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
+    box-shadow: 0 36px 90px rgba(0,0,0,.92), 0 0 0 1px rgba(255,255,255,.08),
+                inset 0 1px 0 rgba(255,255,255,.08), inset 0 -10px 30px rgba(0,0,0,.8);
     border-radius:30px;
     transform:translateY(-6px);
   }
-
-  #pwdDlg .modal-h{
-    border-bottom-color:rgba(255,255,255,.14);
-  }
-
+  #pwdDlg .modal-h{ border-bottom-color:rgba(255,255,255,.14); }
   #pwdDlg .k{
     background:rgba(255,255,255,.08);
     border-color:rgba(255,255,255,.28);
@@ -195,7 +180,6 @@
     font-size:13px;
     font-weight:600;
   }
-
   #pwdDlg .input{
     background:#fdfdfd;
     color:#0b0c0e;
@@ -203,29 +187,16 @@
     padding:14px 44px 14px 16px;
     border-radius:14px;
     border:1px solid #0c1018;
-    box-shadow:
-      0 0 0 1px rgba(0,0,0,.55) inset,
-      0 10px 24px rgba(0,0,0,.45);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.55) inset, 0 10px 24px rgba(0,0,0,.45);
   }
-
-  #pwdDlg .input::placeholder{
-    color:#7a808c;
-  }
-
+  #pwdDlg .input::placeholder{ color:#7a808c; }
   #pwdDlg .input:focus{
     outline:none;
     background:#ffffff;
     border-color:#ffffff;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.9),
-      0 0 0 4px rgba(255,255,255,.09),
-      0 14px 30px rgba(0,0,0,.6);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.9), 0 0 0 4px rgba(255,255,255,.09), 0 14px 30px rgba(0,0,0,.6);
   }
-
-  .pwd-field-wrap{
-    position:relative;
-  }
-
+  .pwd-field-wrap{ position:relative; }
   .pwd-toggle{
     position:absolute;
     right:12px;
@@ -238,19 +209,9 @@
     color:#8c92a0;
     padding:4px;
   }
-  .pwd-toggle:hover{
-    color:#dde3f2;
-  }
-  .pwd-toggle:focus-visible{
-    outline:2px solid #ffffff;
-    outline-offset:2px;
-  }
-
-  #pwdError{
-    margin-top:8px;
-    font-size:13px;
-    color:var(--danger);
-  }
+  .pwd-toggle:hover{ color:#dde3f2; }
+  .pwd-toggle:focus-visible{ outline:2px solid #ffffff; outline-offset:2px; }
+  #pwdError{ margin-top:8px; font-size:13px; color:var(--danger); }
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -260,6 +221,141 @@
     .brand-title{font-size:clamp(26px,7.6vw,36px);line-height:1.02}
     .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
     #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
+  }
+
+  /* ===== RECARGA POR TRANSFERENCIA (estética pro) ===== */
+  .tx-wrap{padding-top:22px}
+
+  .tx-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:14px; margin:0 0 14px 0;
+  }
+  .tx-title{ display:flex; gap:12px; align-items:flex-start; }
+  .tx-icon{
+    width:38px; height:38px; border-radius:14px;
+    display:grid; place-items:center;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    flex:0 0 auto;
+  }
+  .tx-title h2{margin:0;font-size:20px;letter-spacing:.2px}
+  .tx-title p{margin:6px 0 0; font-size:13px; line-height:1.4; color:var(--muted)}
+
+  .tx-badge{
+    font-size:12px; padding:7px 10px; border-radius:999px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    color:#e9edf6;
+    white-space:nowrap;
+  }
+
+  .tx-steps{display:flex; align-items:center; gap:10px; margin:0 0 16px 0}
+  .tx-step{
+    display:flex; align-items:center; gap:8px;
+    font-size:12.5px;
+    padding:7px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+  }
+  .tx-step-dot{
+    width:20px; height:20px; border-radius:999px;
+    display:grid; place-items:center;
+    font-size:12px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.10);
+  }
+  .tx-step-active{
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.14);
+  }
+  .tx-step-line{flex:1;height:1px;background:rgba(255,255,255,.10);border-radius:999px}
+
+  .tx-grid{display:grid; grid-template-columns: 1.4fr .9fr; gap:14px}
+  @media (max-width: 900px){ .tx-grid{grid-template-columns:1fr} }
+
+  .tx-panel{
+    border-radius:16px;
+    padding:14px;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(0,0,0,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .tx-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .tx-chip{
+    font-size:12px; padding:6px 10px; border-radius:999px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    color:#eef2fb;
+  }
+
+  .tx-rows{display:flex; flex-direction:column; gap:10px}
+  .tx-row{
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap:10px;
+    align-items:center;
+    padding:10px 10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .tx-row-strong{grid-template-columns: 1fr auto auto}
+  .tx-k{font-size:12.5px; opacity:.78}
+  .tx-v{font-size:13px; font-weight:700}
+
+  .tx-mono{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    letter-spacing:.3px;
+    padding:6px 10px;
+    border-radius:10px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+  }
+
+  .tx-copy{
+    height:34px; padding:0 12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .tx-copy:hover{background:rgba(255,255,255,.12)}
+  .tx-copy:disabled{opacity:.6; cursor:not-allowed}
+
+  .tx-hint{
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.4;
+  }
+
+  .tx-primary{
+    width:100%;
+    height:44px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.16);
+    background:#fff;
+    color:#0b0c0e;
+    font-weight:900;
+    cursor:pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 10px 24px rgba(0,0,0,.35);
+  }
+  .tx-primary:hover{filter:brightness(.98)}
+
+  .tx-note{
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.45;
+    padding:10px 12px;
+    border-radius:12px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
   }
 </style>
 </head>
@@ -305,50 +401,84 @@
         <button class="btn" id="btnOpenWithdraw">Solicitar retiro</button>
       </div>
     </section>
-    
-<!-- ✅ NUEVO: RECARGA POR TRANSFERENCIA -->
-<section class="panel section">
-  <h2 style="margin:0 0 10px 0">Recarga por transferencia</h2>
 
-  <div class="muted" style="margin-bottom:14px">
-    Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.
-  </div>
+    <!-- ✅ NUEVO: RECARGA POR TRANSFERENCIA (PRO) -->
+    <section class="panel section tx-wrap">
 
-  <!-- Datos bancarios -->
-  <div class="card group" style="margin:12px 0 16px 0">
-    <div class="k" style="color:#ffffff;font-weight:800">
-      Datos para transferencia
-    </div>
+      <div class="tx-head">
+        <div class="tx-title">
+          <div class="tx-icon">⇄</div>
+          <div>
+            <h2>Recarga por transferencia</h2>
+            <p>Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.</p>
+          </div>
+        </div>
+        <span class="tx-badge">Validación administrativa</span>
+      </div>
 
-    <div class="v" style="line-height:1.7">
-      <b>Nombre de la cuenta:</b> Fx Inversiones<br>
-      <b>Número de cuenta:</b> 021-010518-5<br>
-      <b>Tipo de cuenta:</b> Monetaria<br>
-      <b>Moneda:</b> Quetzales (GTQ)
-    </div>
+      <div class="tx-steps">
+        <div class="tx-step tx-step-active" id="txStep1">
+          <span class="tx-step-dot">1</span><span>Transferir</span>
+        </div>
+        <div class="tx-step-line"></div>
+        <div class="tx-step" id="txStep2">
+          <span class="tx-step-dot">2</span><span>Subir boleta</span>
+        </div>
+      </div>
 
-    <div class="note" style="margin-top:10px">
-      Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
-    </div>
+      <div class="tx-grid">
+        <!-- Datos -->
+        <div class="tx-panel">
+          <div class="tx-panel-head">
+            <span class="tx-chip">Datos para transferencia</span>
+          </div>
 
-    <div style="margin-top:10px">
-      <button
-        class="btn secondary"
-        onclick="navigator.clipboard.writeText('021-010518-5')"
-      >
-        Copiar número de cuenta
-      </button>
-    </div>
-  </div>
+          <div class="tx-rows">
+            <div class="tx-row">
+              <span class="tx-k">Nombre de la cuenta</span>
+              <span class="tx-v">Fx Inversiones</span>
+            </div>
 
-  <button class="btn" id="btnOpenTopup">
-    Enviar boleta de recarga
-  </button>
+            <div class="tx-row tx-row-strong">
+              <span class="tx-k">Número de cuenta</span>
+              <span class="tx-v tx-mono" id="acctNumber">021-010518-5</span>
 
-  <div class="note" style="margin-top:12px">
-    Nota: El acreditamiento puede tomar unas horas (según validación).
-  </div>
-</section>
+              <button class="tx-copy" type="button" id="btnCopyAcct">Copiar</button>
+            </div>
+
+            <div class="tx-row">
+              <span class="tx-k">Tipo de cuenta</span>
+              <span class="tx-v">Monetaria</span>
+            </div>
+
+            <div class="tx-row">
+              <span class="tx-k">Moneda</span>
+              <span class="tx-v">Quetzales (GTQ)</span>
+            </div>
+          </div>
+
+          <div class="tx-hint">
+            Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
+          </div>
+        </div>
+
+        <!-- Acción -->
+        <div class="tx-panel">
+          <div class="tx-panel-head">
+            <span class="tx-chip">Acción</span>
+          </div>
+
+          <!-- IMPORTANTE: mantenemos tu ID para tu lógica -->
+          <button class="tx-primary" id="btnOpenTopup" type="button">
+            Enviar boleta de recarga
+          </button>
+
+          <div class="tx-note">
+            <b>Nota:</b> El acreditamiento puede tomar unas horas (según validación).
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- RESULTADOS DEL MES (oscuro) -->
     <section class="panel section gray" style="margin-top:18px">
@@ -470,7 +600,7 @@
     </div>
   </dialog>
 
-  <!-- ✅ NUEVO: MODAL RECARGA (TRANSFERENCIA) -->
+  <!-- ✅ MODAL RECARGA (TRANSFERENCIA) -->
   <dialog id="tdlg" aria-labelledby="tdlgTitle">
     <div class="modal-h">
       <div id="tdlgTitle" style="font-weight:800">Enviar boleta de recarga</div>
@@ -534,8 +664,10 @@
   const LOGIN_URL  = BASE_URL;
 
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY'; /* <-- deja tu key real aquí */
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  });
 
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
@@ -551,7 +683,9 @@
       if (indexedDB && indexedDB.databases){
         try{
           const dbs = await indexedDB.databases();
-          for (const db of dbs){ if (db.name && /supabase|auth|localforage/i.test(db.name)) indexedDB.deleteDatabase(db.name); }
+          for (const db of dbs){
+            if (db.name && /supabase|auth|localforage/i.test(db.name)) indexedDB.deleteDatabase(db.name);
+          }
         }catch(e){}
       }
     } finally {
@@ -570,10 +704,32 @@
   });
 
   /* ===== Helpers ===== */
-  function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);} t.setHours(0,0,0,0); return t; }
-  function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
-  function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
-  function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
+  function nextMonthSameDay(d){
+    const x=clampDate(d);
+    const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
+    while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);}
+    t.setHours(0,0,0,0); return t;
+  }
+  function fridayOfSameWeek(d){
+    const x=clampDate(d);
+    const add=(5-x.getDay()+7)%7;
+    const f=new Date(x);
+    f.setDate(x.getDate()+add);
+    f.setHours(0,0,0,0);
+    return f;
+  }
+  function currentWindow(joinedAt, today){
+    let start=clampDate(joinedAt), end=nextMonthSameDay(start);
+    while(end <= today){ start=end; end=nextMonthSameDay(start); }
+    return {start,end};
+  }
+  function fridaysInRange(start,end){
+    let f=fridayOfSameWeek(start);
+    if(f<start) f.setDate(f.getDate()+7);
+    const list=[];
+    while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); }
+    return list;
+  }
 
   function cleanMoney(s){ return (s||'').toString().replace(/[,\s]/g,''); }
   function formatNumberString(val){
@@ -647,9 +803,18 @@
 
   async function enviarSolicitudRetiro(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
+    if(!session){
+      const bust=`no_session=${Date.now()}`;
+      const sep=LOGIN_URL.includes('?')?'&':'?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+      return;
+    }
 
-    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
+    const { data: acc, error: accErr } = await sb.from('accounts')
+      .select('capital,id')
+      .eq('user_id',session.user.id)
+      .single();
+
     if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
 
     const capital=Number(acc?.capital||0);
@@ -660,20 +825,30 @@
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
+      const restante=capital-amount;
+      if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
     }
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
 
     const { error } = await sb.functions.invoke('send-withdrawal-email', {
-      body:{ amount, reason, full_withdrawal:all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' }
+      body:{
+        amount, reason, full_withdrawal:all,
+        account_id:acc?.id||null,
+        user_email:session.user.email,
+        user_name: document.getElementById('valName')?.textContent || ''
+      }
     });
 
-    if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
+    if(error){
+      alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error)));
+      return;
+    }
 
     showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
 
     dlg.close();
-    document.getElementById('wAmount').value=''; document.getElementById('wReason').value='';
+    document.getElementById('wAmount').value='';
+    document.getElementById('wReason').value='';
     toggleSwitchAll(false);
     selectType('early');
   }
@@ -778,6 +953,10 @@
          Un administrador revisará su boleta y acreditará el capital.`
       );
 
+      // ✅ NUEVO: marcar paso 2 como activo
+      document.getElementById('txStep1')?.classList.remove('tx-step-active');
+      document.getElementById('txStep2')?.classList.add('tx-step-active');
+
       tdlg.close();
       document.getElementById('tAmount').value = '';
       document.getElementById('tBank').value = '';
@@ -845,28 +1024,42 @@
     const input = document.getElementById(inputId);
     const btn   = document.getElementById(btnId);
     if(!input || !btn) return;
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
+    input.type = (input.type === 'password') ? 'text' : 'password';
   }
 
   /* ===== Inicio ===== */
   document.addEventListener('DOMContentLoaded', ()=>{
+
+    // ✅ Reset visual de pasos de recarga
+    const resetTopupSteps = () => {
+      document.getElementById('txStep2')?.classList.remove('tx-step-active');
+      document.getElementById('txStep1')?.classList.add('tx-step-active');
+    };
+
+    // Retiro
     document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=> dlg.showModal());
     document.getElementById('xClose')?.addEventListener('click', ()=> dlg.close());
     document.getElementById('wCancel')?.addEventListener('click', ()=> dlg.close());
     document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
 
-    document.getElementById('optEarly').addEventListener('click', ()=>selectType('early'));
-    document.getElementById('optHealth').addEventListener('click', ()=>selectType('health'));
-    document.getElementById('switchAll').addEventListener('click', ()=>toggleSwitchAll());
+    // ⚠️ (protección) por si no existen, usamos optional chaining
+    document.getElementById('optEarly')?.addEventListener('click', ()=>selectType('early'));
+    document.getElementById('optHealth')?.addEventListener('click', ()=>selectType('health'));
+    document.getElementById('switchAll')?.addEventListener('click', ()=>toggleSwitchAll());
 
+    // Inputs con formato
     bindMoneyInput('wAmount');
     bindMoneyInput('simCapital');
+    bindMoneyInput('tAmount');
 
+    // Simulador
     document.getElementById('btnCalc')?.addEventListener('click', simulate);
+
+    // Modal mensajes
     document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg.close());
     document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg.close());
 
+    // Password
     const _pwdSaveBtn = document.getElementById('pwdSave');
     const _pwdNewEye  = document.getElementById('pwdNewEye');
     const _pwdConfEye = document.getElementById('pwdConfirmEye');
@@ -874,20 +1067,50 @@
     if(_pwdNewEye)  _pwdNewEye.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
     if(_pwdConfEye) _pwdConfEye.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
 
-    // ✅ NUEVO: listeners recarga
-    document.getElementById('btnOpenTopup')?.addEventListener('click', ()=> tdlg.showModal());
-    document.getElementById('tClose')?.addEventListener('click', ()=> tdlg.close());
-    document.getElementById('tCancel')?.addEventListener('click', ()=> tdlg.close());
+    // ✅ Recarga: abrir / cerrar / cancelar (resetea pasos)
+    document.getElementById('btnOpenTopup')?.addEventListener('click', ()=>{
+      resetTopupSteps();
+      tdlg.showModal();
+    });
+    document.getElementById('tClose')?.addEventListener('click', ()=>{
+      resetTopupSteps();
+      tdlg.close();
+    });
+    document.getElementById('tCancel')?.addEventListener('click', ()=>{
+      resetTopupSteps();
+      tdlg.close();
+    });
     document.getElementById('tSend')?.addEventListener('click', enviarTopupTransferencia);
-    bindMoneyInput('tAmount');
 
+    // ✅ Estética: copiar cuenta con feedback (Copiado ✓)
+    const btnCopy = document.getElementById('btnCopyAcct');
+    const acctEl  = document.getElementById('acctNumber');
+    btnCopy?.addEventListener('click', async () => {
+      const text = acctEl?.textContent?.trim() || '021-010518-5';
+      try{
+        await navigator.clipboard.writeText(text);
+        const old = btnCopy.textContent;
+        btnCopy.textContent = 'Copiado ✓';
+        btnCopy.disabled = true;
+        setTimeout(()=>{ btnCopy.textContent = old; btnCopy.disabled = false; }, 1200);
+      }catch(e){
+        alert('No se pudo copiar. Copie manualmente: ' + text);
+      }
+    });
+
+    // Cargar datos
     loadHeader();
   });
 
   /* ===== Cabecera / Simulador ===== */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
+    if(!session){
+      const bust=`no_session=${Date.now()}`;
+      const sep=LOGIN_URL.includes('?')?'&':'?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+      return;
+    }
     const uid=session.user.id;
 
     const [{ data: prof }, { data: acc }] = await Promise.all([
@@ -895,16 +1118,21 @@
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
     ]);
 
-    document.getElementById('valName')?.parentElement && (document.getElementById('valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—'));
+    document.getElementById('valName')?.parentElement &&
+      (document.getElementById('valName').textContent = (prof?.full_name || prof?.email || session.user.email || '—'));
+
     if(!acc){
-      ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; });
+      ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.textContent='—';
+      });
       const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
       const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
       if(prof?.must_change_password){ openPwdDialog(); }
       return;
     }
 
-    // ✅ NUEVO: guardar account_id para la recarga
+    // ✅ Guardar account_id para la recarga (IMPORTANTE)
     CURRENT_ACCOUNT_ID = acc.id;
 
     const map = {
@@ -933,7 +1161,7 @@
 
   function autoPlanAndRate(capital){
     if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
-    if(capital >= 250000)                     return { name:'PLATINUM (20% semestral)', rate:0.20 };
+    if(capital >= 250000) return { name:'PLATINUM (20% semestral)', rate:0.20 };
     return { name:'NO ELEGIBLE', rate:0 };
   }
   function simulate(){
