@@ -105,6 +105,22 @@
 .panel.gray #simNote{ color:#000 !important; }
 .note{color:var(--muted);font-size:13px;margin-top:10px}
 
+/* ✅ Inputs blancos + texto negro SOLO en modal de recarga */
+#tdlg .input{
+  background:#ffffff !important;
+  color:#000000 !important;
+  border:1px solid #bfc6d1;
+}
+
+#tdlg .input::placeholder{
+  color:#6b7280;
+}
+
+#tdlg .input:focus{
+  outline:none;
+  border-color:#000000;
+  box-shadow:0 0 0 2px rgba(0,0,0,.08);
+}
   /* ======= DIALOG (MODAL RETIRO) ======= */
   dialog{border:0;border-radius:22px;background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);color:var(--txt);width:min(840px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.65),var(--shadow-inset)}
   dialog::backdrop{background:rgba(0,0,0,.6)}
@@ -302,7 +318,7 @@
     </section>
 
     <!-- SIMULADOR (gris) -->
-    <section class="panel section gray" style="margin-top:18px">
+    <section class="panel section" style="margin-top:18px">
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
       <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
       <div class="grid cols-3">
