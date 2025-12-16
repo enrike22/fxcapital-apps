@@ -309,34 +309,41 @@
 <!-- ✅ NUEVO: RECARGA POR TRANSFERENCIA -->
 <section class="panel section">
   <h2 style="margin:0 0 10px 0">Recarga por transferencia</h2>
+
   <div class="muted" style="margin-bottom:14px">
     Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.
   </div>
-<div class="card group" style="margin:12px 0 16px 0">
-  <div class="k">Datos para transferencia</div>
 
-  <div class="v" style="line-height:1.7">
-    <b>Nombre de la cuenta:</b> Fx Inversiones<br>
-    <b>Número de cuenta:</b> 021-010518-5<br>
-    <b>Tipo de cuenta:</b> Monetaria<br>
-    <b>Moneda:</b> Quetzales (GTQ)
+  <!-- Datos bancarios -->
+  <div class="card group" style="margin:12px 0 16px 0">
+    <div class="k" style="color:#ffffff;font-weight:800">
+      Datos para transferencia
+    </div>
+
+    <div class="v" style="line-height:1.7">
+      <b>Nombre de la cuenta:</b> Fx Inversiones<br>
+      <b>Número de cuenta:</b> 021-010518-5<br>
+      <b>Tipo de cuenta:</b> Monetaria<br>
+      <b>Moneda:</b> Quetzales (GTQ)
+    </div>
+
+    <div class="note" style="margin-top:10px">
+      Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
+    </div>
+
+    <div style="margin-top:10px">
+      <button
+        class="btn secondary"
+        onclick="navigator.clipboard.writeText('021-010518-5')"
+      >
+        Copiar número de cuenta
+      </button>
+    </div>
   </div>
 
-  <div class="note" style="margin-top:10px">
-    Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
-  </div>
-
-  <div style="margin-top:10px">
-    <button
-      class="btn secondary"
-      onclick="navigator.clipboard.writeText('021-010518-5')"
-    >
-      Copiar número de cuenta
-    </button>
-  </div>
-</div>
-
-  <button class="btn" id="btnOpenTopup">Enviar boleta de recarga</button>
+  <button class="btn" id="btnOpenTopup">
+    Enviar boleta de recarga
+  </button>
 
   <div class="note" style="margin-top:12px">
     Nota: El acreditamiento puede tomar unas horas (según validación).
