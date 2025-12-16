@@ -146,93 +146,85 @@
 
   /* === NUEVO MODAL CONTRASEÑA (3D + inputs más visibles) === */
 
-/* Dialog con efecto 3D marcado */
-#pwdDlg{
-  background:
-    radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
-  box-shadow:
-    0 36px 90px rgba(0,0,0,.92),
-    0 0 0 1px rgba(255,255,255,.08),
-    inset 0 1px 0 rgba(255,255,255,.08),
-    inset 0 -10px 30px rgba(0,0,0,.8);
-  border-radius:30px;
-  transform:translateY(-6px);
-}
+  #pwdDlg{
+    background:
+      radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
+    box-shadow:
+      0 36px 90px rgba(0,0,0,.92),
+      0 0 0 1px rgba(255,255,255,.08),
+      inset 0 1px 0 rgba(255,255,255,.08),
+      inset 0 -10px 30px rgba(0,0,0,.8);
+    border-radius:30px;
+    transform:translateY(-6px);
+  }
 
-/* Header con borde más luminoso para reforzar el relieve */
-#pwdDlg .modal-h{
-  border-bottom-color:rgba(255,255,255,.14);
-}
+  #pwdDlg .modal-h{
+    border-bottom-color:rgba(255,255,255,.14);
+  }
 
-/* Chips "Nueva contraseña" / "Confirmar nueva contraseña" más visibles */
-#pwdDlg .k{
-  background:rgba(255,255,255,.08);
-  border-color:rgba(255,255,255,.28);
-  color:#f3f6ff;
-  font-size:13px;
-  font-weight:600;
-}
+  #pwdDlg .k{
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.28);
+    color:#f3f6ff;
+    font-size:13px;
+    font-weight:600;
+  }
 
-/* Inputs con mayor contraste, sombra y fuente más grande */
-#pwdDlg .input{
-  background:#fdfdfd;
-  color:#0b0c0e;
-  font-size:15.5px;          /* más grande que el resto del sitio */
-  padding:14px 44px 14px 16px;
-  border-radius:14px;
-  border:1px solid #0c1018;
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,.55) inset,
-    0 10px 24px rgba(0,0,0,.45);
-}
+  #pwdDlg .input{
+    background:#fdfdfd;
+    color:#0b0c0e;
+    font-size:15.5px;
+    padding:14px 44px 14px 16px;
+    border-radius:14px;
+    border:1px solid #0c1018;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,.55) inset,
+      0 10px 24px rgba(0,0,0,.45);
+  }
 
-#pwdDlg .input::placeholder{
-  color:#7a808c;
-}
+  #pwdDlg .input::placeholder{
+    color:#7a808c;
+  }
 
-/* Estado focus bien marcado y con halo suave */
-#pwdDlg .input:focus{
-  outline:none;
-  background:#ffffff;
-  border-color:#ffffff;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.9),
-    0 0 0 4px rgba(255,255,255,.09),
-    0 14px 30px rgba(0,0,0,.6);
-}
+  #pwdDlg .input:focus{
+    outline:none;
+    background:#ffffff;
+    border-color:#ffffff;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.9),
+      0 0 0 4px rgba(255,255,255,.09),
+      0 14px 30px rgba(0,0,0,.6);
+  }
 
-/* Wrapper del campo para colocar el ojo */
-.pwd-field-wrap{
-  position:relative;
-}
+  .pwd-field-wrap{
+    position:relative;
+  }
 
-/* Botón ojo más visible y con hover/focus */
-.pwd-toggle{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  border:0;
-  background:transparent;
-  cursor:pointer;
-  font-size:17px;
-  color:#8c92a0;
-  padding:4px;
-}
-.pwd-toggle:hover{
-  color:#dde3f2;
-}
-.pwd-toggle:focus-visible{
-  outline:2px solid #ffffff;
-  outline-offset:2px;
-}
+  .pwd-toggle{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    border:0;
+    background:transparent;
+    cursor:pointer;
+    font-size:17px;
+    color:#8c92a0;
+    padding:4px;
+  }
+  .pwd-toggle:hover{
+    color:#dde3f2;
+  }
+  .pwd-toggle:focus-visible{
+    outline:2px solid #ffffff;
+    outline-offset:2px;
+  }
 
-/* Mensaje de error */
-#pwdError{
-  margin-top:8px;
-  font-size:13px;
-  color:var(--danger);
-}
+  #pwdError{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--danger);
+  }
 
   /* ======= HEADER: versión móvil ======= */
   @media (max-width:560px){
@@ -245,6 +237,7 @@
   }
 </style>
 </head>
+
 <body>
   <div class="wrap" id="appWrap">
     <header>
@@ -324,6 +317,20 @@
         </table>
       </div>
     </section>
+
+    <!-- ✅ NUEVO: RECARGA POR TRANSFERENCIA -->
+    <section class="panel section gray" style="margin-top:18px">
+      <h2 style="margin:0 0 10px 0">Recarga por transferencia</h2>
+      <div class="muted" style="margin-bottom:14px">
+        Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.
+      </div>
+
+      <button class="btn" id="btnOpenTopup">Enviar boleta de recarga</button>
+
+      <div class="note" style="margin-top:12px">
+        Nota: El acreditamiento puede tomar unas horas (según validación).
+      </div>
+    </section>
   </div>
 
   <div class="blocker" id="panelBlocker"></div>
@@ -353,7 +360,6 @@
           <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
         </div>
 
-        <!-- Motivo: título arriba y textarea debajo, ancho completo -->
         <div>
           <div class="k">Motivo</div>
           <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
@@ -376,7 +382,6 @@
   <dialog id="pwdDlg" aria-labelledby="pwdTitle">
     <div class="modal-h">
       <div id="pwdTitle" style="font-weight:800">Actualizar contraseña</div>
-      <!-- Sin botón de cerrar, se cierra solo cuando complete el proceso -->
       <div style="width:36px;height:36px"></div>
     </div>
     <div class="modal-b">
@@ -409,6 +414,50 @@
     </div>
   </dialog>
 
+  <!-- ✅ NUEVO: MODAL RECARGA (TRANSFERENCIA) -->
+  <dialog id="tdlg" aria-labelledby="tdlgTitle">
+    <div class="modal-h">
+      <div id="tdlgTitle" style="font-weight:800">Enviar boleta de recarga</div>
+      <button class="modal-close" id="tClose" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="modal-b">
+      <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+        <div>
+          <div class="k">Monto depositado (Q)</div>
+          <input id="tAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
+          <div class="note">Monto mínimo sugerido: <b>Q 2,000</b>.</div>
+        </div>
+        <div>
+          <div class="k">Banco (opcional)</div>
+          <input id="tBank" class="input" type="text" placeholder="Ej. Banrural / BAC / BI">
+        </div>
+      </div>
+
+      <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:14px">
+        <div>
+          <div class="k">Fecha/hora del depósito (opcional)</div>
+          <input id="tDate" class="input" type="datetime-local">
+        </div>
+        <div>
+          <div class="k">Boleta (JPG/PNG/PDF)</div>
+          <input id="tReceipt" class="input" type="file" accept="image/*,application/pdf">
+          <div class="note">Máximo recomendado: <b>6 MB</b>.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="k">Notas (opcional)</div>
+        <textarea id="tNotes" class="input" placeholder="Referencia, número de transacción, etc." style="min-height:96px;resize:vertical"></textarea>
+      </div>
+
+      <div class="actions" style="display:flex;gap:12px;justify-content:flex-start;margin-top:16px">
+        <button class="btn secondary" id="tCancel">Cancelar</button>
+        <button class="btn" id="tSend">Enviar recarga</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- MODAL MENSAJES -->
   <dialog id="msgDlg">
     <div class="modal-h">
@@ -429,7 +478,7 @@
   const LOGIN_URL  = BASE_URL;
 
   const SUPABASE_URL = 'https://czvpehbubfrinutztnwh.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY'; /* <-- deja tu key real aquí */
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
 
   const $ = s=>document.querySelector(s);
@@ -580,17 +629,117 @@
     if(!msgDlg.open) msgDlg.showModal();
   }
 
+  /* ===== Recarga por transferencia ===== */
+  const tdlg = document.getElementById('tdlg');
+  let CURRENT_ACCOUNT_ID = null;
+
+  function genRefCode(){
+    return `FXC-${Math.floor(100000 + Math.random()*900000)}`;
+  }
+  function extFromFile(file){
+    const name = (file?.name || '').toLowerCase();
+    const parts = name.split('.');
+    return parts.length > 1 ? parts.pop() : 'bin';
+  }
+  function safeParseMoney(str){
+    return Number((str || '').toString().replace(/[,\s]/g,'') || 0);
+  }
+
+  async function enviarTopupTransferencia(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
+    if(!CURRENT_ACCOUNT_ID){ showMessage('No se encontró su cuenta. Intente recargar la página.'); return; }
+
+    const amount = safeParseMoney(document.getElementById('tAmount')?.value);
+    const bank   = (document.getElementById('tBank')?.value || '').trim();
+    const notes  = (document.getElementById('tNotes')?.value || '').trim();
+    const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
+    const fileEl = document.getElementById('tReceipt');
+    const file   = fileEl?.files?.[0];
+
+    if(amount <= 0){ alert('Ingrese un monto válido.'); return; }
+    if(!file){ alert('Debe adjuntar la boleta (JPG/PNG/PDF).'); return; }
+
+    const MAX_MB = 6;
+    if(file.size > MAX_MB * 1024 * 1024){
+      alert(`La boleta excede ${MAX_MB}MB. Comprímala o envíe una versión más ligera.`);
+      return;
+    }
+
+    const okType = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
+    if(!okType){ alert('Formato no permitido. Use JPG/PNG o PDF.'); return; }
+
+    const btn = document.getElementById('tSend');
+    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    const reference_code = genRefCode();
+    const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
+
+    try{
+      const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
+      const ext = extFromFile(file);
+      const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
+
+      const up = await sb.storage.from('topup-receipts').upload(receipt_path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if(up.error){
+        console.error(up.error);
+        alert('No se pudo subir la boleta. Intente de nuevo.');
+        return;
+      }
+
+      const ins = await sb.from('topups').insert({
+        user_id: session.user.id,
+        account_id: CURRENT_ACCOUNT_ID,
+        amount,
+        currency: 'GTQ',
+        provider: 'bank_transfer',
+        status: 'pending',
+        reference_code,
+        bank_name: bank || null,
+        deposit_datetime,
+        receipt_path,
+        notes: notes || null,
+        provider_ref: null,
+        checkout_url: null,
+        idempotency_key: null,
+        webhook_event_id: null
+      });
+
+      if(ins.error){
+        console.error(ins.error);
+        try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
+        alert('No se pudo registrar la recarga. Intente de nuevo.');
+        return;
+      }
+
+      showMessage(
+        `Recarga enviada con éxito.<br><br>
+         <b>Código:</b> ${reference_code}<br>
+         Un administrador revisará su boleta y acreditará el capital.`
+      );
+
+      tdlg.close();
+      document.getElementById('tAmount').value = '';
+      document.getElementById('tBank').value = '';
+      document.getElementById('tNotes').value = '';
+      document.getElementById('tDate').value = '';
+      if(fileEl) fileEl.value = '';
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = 'Enviar recarga'; }
+    }
+  }
+
   /* === LÓGICA CAMBIO DE CONTRASEÑA OBLIGATORIO === */
   let pwdDlg;
   function openPwdDialog(){
     if(!pwdDlg) pwdDlg = document.getElementById('pwdDlg');
     if(!pwdDlg) return;
-
-    // Evitar que se cierre con Esc o clic fuera
     pwdDlg.addEventListener('cancel', (e)=> e.preventDefault());
     pwdDlg.showModal();
-
-    // Limpiar campos y errores cada vez que se abra
     const newEl = document.getElementById('pwdNew');
     const confEl = document.getElementById('pwdConfirm');
     const errEl = document.getElementById('pwdError');
@@ -610,23 +759,13 @@
 
     errEl.textContent = '';
 
-    if(pwd.length < 8){
-      errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
-      return;
-    }
-    if(pwd !== cpwd){
-      errEl.textContent = 'Las contraseñas no coinciden.';
-      return;
-    }
+    if(pwd.length < 8){ errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.'; return; }
+    if(pwd !== cpwd){ errEl.textContent = 'Las contraseñas no coinciden.'; return; }
 
     const btn = document.getElementById('pwdSave');
-    if(btn){
-      btn.disabled = true;
-      btn.textContent = 'Guardando...';
-    }
+    if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
 
     try{
-      // Actualizar contraseña en Supabase
       const { error: updErr } = await sb.auth.updateUser({ password: pwd });
       if(updErr){
         errEl.textContent = 'No se pudo actualizar la contraseña. Inténtelo de nuevo.';
@@ -634,20 +773,15 @@
         return;
       }
 
-      // Marcar que ya no necesita cambiar contraseña
       const { data:{ user } } = await sb.auth.getUser();
       if(user?.id){
         await sb.from('profiles').update({ must_change_password:false }).eq('id', user.id);
       }
 
-      // Cerrar modal y avisar
       if(pwdDlg && pwdDlg.open) pwdDlg.close();
       showMessage('Su contraseña se actualizó correctamente. Puede seguir utilizando su panel con normalidad.');
     }finally{
-      if(btn){
-        btn.disabled = false;
-        btn.textContent = 'Guardar contraseña';
-      }
+      if(btn){ btn.disabled = false; btn.textContent = 'Guardar contraseña'; }
     }
   }
 
@@ -677,13 +811,19 @@
     document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg.close());
     document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg.close());
 
-    // Listeners del modal de contraseña
     const _pwdSaveBtn = document.getElementById('pwdSave');
     const _pwdNewEye  = document.getElementById('pwdNewEye');
     const _pwdConfEye = document.getElementById('pwdConfirmEye');
     if(_pwdSaveBtn) _pwdSaveBtn.addEventListener('click', handleSavePassword);
     if(_pwdNewEye)  _pwdNewEye.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
     if(_pwdConfEye) _pwdConfEye.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
+
+    // ✅ NUEVO: listeners recarga
+    document.getElementById('btnOpenTopup')?.addEventListener('click', ()=> tdlg.showModal());
+    document.getElementById('tClose')?.addEventListener('click', ()=> tdlg.close());
+    document.getElementById('tCancel')?.addEventListener('click', ()=> tdlg.close());
+    document.getElementById('tSend')?.addEventListener('click', enviarTopupTransferencia);
+    bindMoneyInput('tAmount');
 
     loadHeader();
   });
@@ -704,12 +844,12 @@
       ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; });
       const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
       const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
-      // Si no hay cuenta pero debe cambiar contraseña, igual forzamos el modal
-      if(prof?.must_change_password){
-        openPwdDialog();
-      }
+      if(prof?.must_change_password){ openPwdDialog(); }
       return;
     }
+
+    // ✅ NUEVO: guardar account_id para la recarga
+    CURRENT_ACCOUNT_ID = acc.id;
 
     const map = {
       valAccountId: acc.id||'—',
@@ -722,7 +862,6 @@
 
     const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const close  = new Date(joined.getFullYear(), joined.getMonth() + (acc.invest_months||0), joined.getDate());
-    const closeClamped = clampDate(close);
 
     const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = joined.toLocaleDateString('es-GT');
     const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = close.toLocaleDateString('es-GT');
@@ -733,10 +872,7 @@
 
     paintWeeks(acc, {});
 
-    // Forzar cambio de contraseña en primer inicio
-    if(prof?.must_change_password){
-      openPwdDialog();
-    }
+    if(prof?.must_change_password){ openPwdDialog(); }
   }
 
   function autoPlanAndRate(capital){
