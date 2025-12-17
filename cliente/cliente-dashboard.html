@@ -546,6 +546,31 @@
       <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
     </section>
 
+    <!-- ESTADO DE CUENTA (mes a mes) -->
+    <section class="panel section gray" style="margin-top:18px">
+      <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
+      <div class="muted" id="stmtRange">—</div>
+
+      <div style="overflow:auto;margin-top:8px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Capital inicio</th>
+              <th>Interés (beneficio)</th>
+              <th>Estado</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="stmtBody">
+            <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note" id="stmtNote">—</div>
+    </section>
+
     <!-- SIMULADOR -->
     <section class="panel section" style="margin-top:18px">
       <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
@@ -752,7 +777,13 @@
   });
 
   /* ===== Helpers ===== */
-  function nextMonthSameDay(d){ const x=clampDate(d); const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate()); while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1);} t.setHours(0,0,0,0); return t; }
+  function nextMonthSameDay(d){
+    const x=clampDate(d);
+    const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
+    while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); }
+    t.setHours(0,0,0,0);
+    return t;
+  }
   function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
   function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
   function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
@@ -809,6 +840,189 @@
       });
       const partial = weekly * shown.length;
       $('#weekSum').textContent = fmtQ(partial);
+    }
+  }
+
+  /* ===== Estado de cuenta (mes a mes) ===== */
+
+  // suma meses usando tu regla “mismo día o último día del mes”
+  function addMonthsSameDay(d, months){
+    let x = clampDate(d);
+    for(let i=0;i<months;i++) x = nextMonthSameDay(x);
+    return x;
+  }
+
+  function buildPeriods(joinedAt, investMonths){
+    const start0 = clampDate(joinedAt);
+    const periods = [];
+    let start = start0;
+    for(let i=0;i<Number(investMonths||0);i++){
+      const end = nextMonthSameDay(start);
+      periods.push({ idx:i+1, start:new Date(start), end:new Date(end) });
+      start = end;
+    }
+    return periods;
+  }
+
+  function daysBetween(a,b){
+    const ms = 24*60*60*1000;
+    return Math.max(0, Math.round((clampDate(b) - clampDate(a))/ms));
+  }
+
+  // Construye “eventos” de capital para prorratear si hay recarga dentro del mes
+  // events: [{at: Date, capital: number}] ordenados por fecha (inicio + cada approved_at)
+  function buildCapitalEvents(acc, approvedTopups){
+    const joined = acc?.joined_at ? new Date(acc.joined_at) : new Date();
+
+    // Si tienes initial_capital úsalo; si no, reconstruimos desde capital actual - sum(topups)
+    const sumTopups = (approvedTopups||[]).reduce((s,t)=>s + Number(t.amount||0), 0);
+    const initial = Number(acc.initial_capital ?? (Number(acc.capital||0) - sumTopups) ?? 0);
+
+    let running = initial;
+    const ev = [{ at: clampDate(joined), capital: running }];
+
+    const sorted = (approvedTopups||[])
+      .filter(t => t.approved_at)
+      .slice()
+      .sort((a,b)=> new Date(a.approved_at)-new Date(b.approved_at));
+
+    for(const t of sorted){
+      running += Number(t.amount||0);
+      ev.push({ at: clampDate(new Date(t.approved_at)), capital: running });
+    }
+    return ev;
+  }
+
+  // Interés del periodo prorrateado si cambia capital dentro del mismo periodo
+  function interestForPeriod(periodStart, periodEnd, events, monthlyRate){
+    const start = clampDate(periodStart);
+    const end   = clampDate(periodEnd);
+    const totalDays = daysBetween(start, end) || 1;
+
+    // puntos relevantes dentro del periodo
+    const pts = events
+      .filter(e => e.at < end)               // eventos antes del cierre
+      .map(e => ({ at: clampDate(e.at), capital: Number(e.capital||0) }))
+      .sort((a,b)=>a.at-b.at);
+
+    // capital vigente al inicio
+    let currentCapital = pts[0]?.capital ?? 0;
+    for(const p of pts){
+      if(p.at <= start) currentCapital = p.capital;
+    }
+
+    // construimos segmentos
+    const segs = [];
+    let cursor = new Date(start);
+
+    // eventos dentro del periodo (start < e.at < end)
+    const inside = pts.filter(e => e.at > start && e.at < end);
+
+    for(const e of inside){
+      segs.push({ from:new Date(cursor), to:new Date(e.at), capital: currentCapital });
+      currentCapital = e.capital;
+      cursor = new Date(e.at);
+    }
+    segs.push({ from:new Date(cursor), to:new Date(end), capital: currentCapital });
+
+    // interés proporcional por días
+    let interest = 0;
+    for(const s of segs){
+      const d = daysBetween(s.from, s.to);
+      const portion = d / totalDays;
+      interest += (Number(s.capital||0) * Number(monthlyRate||0)) * portion;
+    }
+    return interest;
+  }
+
+  function monthLabel(start, end, idx){
+    const s = start.toLocaleDateString('es-GT');
+    const e = new Date(end); e.setDate(e.getDate()-1);
+    const ee = e.toLocaleDateString('es-GT');
+    const n = String(idx).padStart(2,'0');
+    return `Mes ${n} (${s} — ${ee})`;
+  }
+
+  function renderStatementTable({ acc, periods, events, settlementsMap }){
+    const tbody = document.getElementById('stmtBody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    const semRate = Number(acc.interest_pct||0)/100;
+    const monthlyRate = semRate/6;
+
+    const isCompound = !!acc.compound_interest;
+
+    // saldo (solo crece si compound)
+    let saldo = 0;
+
+    // saldo inicial = capital vigente al inicio del primer periodo
+    const firstCap = (()=>{
+      let cap = 0;
+      const s0 = clampDate(new Date(acc.joined_at));
+      for(const ev of events){
+        if(ev.at <= s0) cap = ev.capital;
+      }
+      return cap;
+    })();
+    saldo = firstCap;
+
+    // rango
+    const stmtRange = document.getElementById('stmtRange');
+    if(stmtRange && periods.length){
+      stmtRange.textContent = `${periods[0].start.toLocaleDateString('es-GT')} — ${periods[periods.length-1].end.toLocaleDateString('es-GT')}`;
+    }
+
+    const today = clampDate(new Date());
+
+    for(const p of periods){
+      const ended = p.end <= today; // periodo ya cerró
+
+      // capital inicio del periodo
+      let capStart = firstCap;
+      for(const ev of events){
+        if(ev.at <= clampDate(p.start)) capStart = ev.capital;
+      }
+
+      const interest = interestForPeriod(p.start, p.end, events, monthlyRate);
+
+      const key = clampDate(p.start).toISOString().slice(0,10);
+      const st  = settlementsMap[key];
+
+      let estado = 'En curso';
+      if(isCompound){
+        estado = ended ? 'Acumulado' : 'En curso';
+      }else{
+        if(ended){
+          estado = (st && st.status === 'paid') ? 'Pagado' : 'Pendiente';
+        }else{
+          estado = 'En curso';
+        }
+      }
+
+      // saldo: solo aumenta si compound y el periodo ya cerró
+      if(isCompound && ended){
+        saldo += interest;
+      }else{
+        saldo = capStart;
+      }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${monthLabel(p.start, p.end, p.idx)}</td>
+        <td>${fmtQ(capStart)}</td>
+        <td>${fmtQ(interest)}</td>
+        <td><b>${estado}</b></td>
+        <td>${fmtQ(saldo)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    const note = document.getElementById('stmtNote');
+    if(note){
+      note.innerHTML = isCompound
+        ? `Modo: <b>Interés acumulado</b>. El capital permanece fijo; el saldo aumenta al cierre de cada mes.`
+        : `Modo: <b>Pago mensual</b>. El capital y el saldo se mantienen; el interés se marca como <b>Pagado</b> cuando el administrador lo registra.`;
     }
   }
 
@@ -1047,7 +1261,7 @@
 
     const [{ data: prof }, { data: acc }] = await Promise.all([
       sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
-      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at').eq('user_id',uid).single()
+      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital').eq('user_id',uid).single()
     ]);
 
     const vn = document.getElementById('valName');
@@ -1066,6 +1280,31 @@
     /* ✅ guardar account_id para la recarga */
     CURRENT_ACCOUNT_ID = acc.id;
 
+    // 1) Traer topups aprobados (para cambios de capital por recargas)
+    const { data: approvedTopups } = await sb
+      .from('topups')
+      .select('amount, approved_at, status, account_id')
+      .eq('account_id', acc.id)
+      .eq('status', 'paid'); // ✅ CORRECTO
+
+    // 2) Traer settlements (para Pagado/Pendiente)
+    const { data: settlements } = await sb
+      .from('interest_settlements')
+      .select('period_start, status, paid_at, paid_amount')
+      .eq('account_id', acc.id);
+
+    const settlementsMap = {};
+    (settlements||[]).forEach(s=>{
+      const k = (s.period_start ? s.period_start.toString().slice(0,10) : '');
+      if(k) settlementsMap[k] = s;
+    });
+
+    // 3) Construir periodos + eventos y renderizar Estado de cuenta
+    const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
+    const periods = buildPeriods(joinedForPeriods, acc.invest_months);
+    const events  = buildCapitalEvents(acc, approvedTopups||[]);
+    renderStatementTable({ acc, periods, events, settlementsMap });
+
     const map = {
       valAccountId: acc.id||'—',
       valPlan: acc.plan||'—',
@@ -1080,7 +1319,7 @@
     const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
 
     const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
-    const close  = new Date(joined.getFullYear(), joined.getMonth() + (acc.invest_months||0), joined.getDate());
+    const close  = addMonthsSameDay(joined, acc.invest_months||0);
 
     const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = joined.toLocaleDateString('es-GT');
     const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = close.toLocaleDateString('es-GT');
