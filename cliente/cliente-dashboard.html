@@ -75,6 +75,36 @@
     box-shadow:var(--shadow-1),var(--shadow-inset)
   }
 
+  /* ✅ BOTÓN CTA “RECARGAR CAPITAL” (más visible) */
+  .btn.cta{
+    padding:13px 20px;
+    font-weight:1000;
+    letter-spacing:.2px;
+    background:
+      radial-gradient(140% 180% at 30% 0%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 55%),
+      linear-gradient(180deg,#ffffff 0%, #e9eef7 100%);
+    color:#0b0c0e;
+    border:1px solid rgba(255,255,255,.92);
+    box-shadow:
+      0 18px 46px rgba(0,0,0,.58),
+      0 0 0 6px rgba(255,255,255,.06),
+      inset 0 1px 0 rgba(255,255,255,.85);
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+  }
+  .btn.cta::before{
+    content:"⇄";
+    width:26px;height:26px;border-radius:10px;
+    display:grid;place-items:center;
+    background:rgba(0,0,0,.08);
+    border:1px solid rgba(0,0,0,.10);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+    font-weight:1000;
+  }
+  .btn.cta:hover{filter:brightness(.98)}
+  .btn.cta:active{transform:translateY(1px)}
+
   /* ======= PANEL + VARIANTE GRIS ======= */
   .panel{
     background:var(--grad-panel);
@@ -430,7 +460,7 @@
 
     <!-- NAV / ACCIONES -->
     <div style="display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap">
-      <button class="btn secondary" id="btnGoTopup" type="button">Recargar Capital</button>
+      <button class="btn cta" id="btnGoTopup" type="button">Recargar Capital</button>
       <button class="btn secondary" id="btnGoHome" type="button" style="display:none">Volver a Mi cuenta</button>
     </div>
 
@@ -499,12 +529,12 @@
       <!-- SIMULADOR -->
       <section class="panel section" style="margin-top:18px">
         <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
-        <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, usando el <b>mismo plan y %</b> asignado en su cuenta.</div>
+        <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>. Plan automático según capital ingresado.</div>
         <div class="grid cols-3">
           <div class="group card"><span class="k">Capital a simular (Q)</span>
             <input id="simCapital" class="input" type="text" inputmode="decimal" placeholder="Ej. 40,000" />
           </div>
-          <div class="group card"><span class="k">Plan y % (según su cuenta)</span><div id="simPlan" class="v">—</div></div>
+          <div class="group card"><span class="k">Plan y % (según monto)</span><div id="simPlan" class="v">—</div></div>
           <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
@@ -750,10 +780,6 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  /* ===== Estado de simulador (toma plan y % desde accounts) ===== */
-  let SIM_SEM_PCT = 0;   // ejemplo: 15 (si interest_pct=15)
-  let SIM_PLAN    = '—';
-
   /* ===== Logout robusto ===== */
   async function forceLogout(){
     try {
@@ -971,14 +997,19 @@
     })();
     saldo = firstCap;
 
-    const stmtRange = document.getElementById('stmtRange');
-    if(stmtRange && periods.length){
-      stmtRange.textContent = `${periods[0].start.toLocaleDateString('es-GT')} — ${periods[periods.length-1].end.toLocaleDateString('es-GT')}`;
-    }
-
     const today = clampDate(new Date());
 
-    for(const p of periods){
+    // ✅ Mostrar SOLO meses ya iniciados: pasados + mes en curso (no futuros)
+    const visiblePeriods = periods.filter(p => clampDate(p.start) <= today);
+
+    const stmtRange = document.getElementById('stmtRange');
+    if(stmtRange && visiblePeriods.length){
+      stmtRange.textContent = `${visiblePeriods[0].start.toLocaleDateString('es-GT')} — ${visiblePeriods[visiblePeriods.length-1].end.toLocaleDateString('es-GT')}`;
+    } else if(stmtRange){
+      stmtRange.textContent = '—';
+    }
+
+    for(const p of visiblePeriods){
       const closeEffective = businessCloseDate(p.end);
       const ended = today >= closeEffective;
 
@@ -993,7 +1024,6 @@
       const st  = settlementsMap[key];
 
       let estado = 'En curso';
-
       if(isCompound){
         estado = ended ? 'Acumulado' : 'En curso';
       }else{
@@ -1016,6 +1046,10 @@
         <td>${fmtQ(saldo)}</td>
       `;
       tbody.appendChild(tr);
+    }
+
+    if(!visiblePeriods.length){
+      tbody.innerHTML = `<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
     }
 
     const note = document.getElementById('stmtNote');
@@ -1248,7 +1282,14 @@
     input.type = isPassword ? 'text' : 'password';
   }
 
-  /* ===== Simulador (usa SIM_PLAN y SIM_SEM_PCT desde accounts) ===== */
+  /* ===== Simulador (plan automático por monto) ===== */
+  function getSimPlanForCapital(cap){
+    cap = Number(cap||0);
+    if(cap >= 250000) return { plan:'PLATINUM', semPct:20 };
+    if(cap >= 2000)   return { plan:'STANDARD', semPct:15 };
+    return { plan:'—', semPct:0 };
+  }
+
   function buildSimRows(cap, semPct){
     const monthlyRate = (Number(semPct||0)/100)/6; // semestral /6
     const rows = [];
@@ -1283,24 +1324,27 @@
     const raw = document.getElementById('simCapital')?.value || '';
     const cap = Number(raw.replace(/[,\s]/g,'') || 0);
     const note = document.getElementById('simNote');
+    const sp = document.getElementById('simPlan');
 
     if(cap <= 0){
+      if(sp) sp.textContent = '—';
       if(note) note.textContent = 'Ingrese un capital válido.';
-      renderSim(0, SIM_SEM_PCT);
+      renderSim(0, 0);
       return;
     }
 
-    const sp = document.getElementById('simPlan');
-    if(sp) sp.textContent = `${SIM_PLAN} — ${Number(SIM_SEM_PCT||0)}% semestral`;
+    const { plan, semPct } = getSimPlanForCapital(cap);
 
-    if(!SIM_SEM_PCT){
-      if(note) note.textContent = 'No se detectó el % de interés de su cuenta.';
+    if(cap < 2000){
+      if(sp) sp.textContent = '—';
+      if(note) note.textContent = 'El mínimo para simular es Q 2,000.00.';
       renderSim(cap, 0);
       return;
     }
 
+    if(sp) sp.textContent = `${plan} — ${semPct}% semestral`;
     if(note) note.textContent = 'Cálculo estimado (interés simple).';
-    renderSim(cap, SIM_SEM_PCT);
+    renderSim(cap, semPct);
   }
 
   /* ===== Cabecera / Carga cuenta ===== */
@@ -1325,7 +1369,6 @@
       const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
 
       // Simulador sin datos
-      SIM_PLAN = '—'; SIM_SEM_PCT = 0;
       const sp = document.getElementById('simPlan'); if(sp) sp.textContent = '—';
       renderSim(0,0);
 
@@ -1334,12 +1377,6 @@
     }
 
     CURRENT_ACCOUNT_ID = acc.id;
-
-    // ✅ Plan y % del simulador = EXACTAMENTE el de la cuenta
-    SIM_PLAN = acc.plan || '—';
-    SIM_SEM_PCT = Number(acc.interest_pct || 0);
-    const simPlanEl = document.getElementById('simPlan');
-    if(simPlanEl) simPlanEl.textContent = `${SIM_PLAN} — ${SIM_SEM_PCT}% semestral`;
 
     const { data: approvedTopups } = await sb
       .from('topups')
@@ -1486,8 +1523,10 @@
     if(window.location.hash === '#recarga') showView('topup');
     await loadHeader();
 
-    // Inicializa simulador a 0 (pero ya con el plan/% mostrado)
-    renderSim(0, SIM_SEM_PCT);
+    // Inicializa simulador
+    const sp = document.getElementById('simPlan');
+    if(sp) sp.textContent = '—';
+    renderSim(0, 0);
     const note = document.getElementById('simNote');
     if(note) note.textContent = 'Ingrese un capital y presione Calcular.';
   })();
