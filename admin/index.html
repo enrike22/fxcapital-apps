@@ -378,6 +378,14 @@ tbody tr:hover{
 
       <div class="row">
         <div>
+          <label>Modo de intereses</label>
+          <select id="u_interest_mode">
+            <option value="monthly">Pagados mensualmente</option>
+            <option value="compound">Acumulados (hasta finalizar meses)</option>
+          </select>
+          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
+        </div>
+        <div>
           <label>Email</label>
           <input id="u_email" placeholder="cliente@demo.com">
           <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
@@ -430,15 +438,6 @@ tbody tr:hover{
           <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20">
           <div id="rateError" class="error hidden">la tasa de interés indicada con el plan indicado no coinciden</div>
           <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
-        </div>
-
-        <div>
-          <label>Modo de intereses</label>
-          <select id="u_interest_mode">
-            <option value="monthly">Pagados mensualmente</option>
-            <option value="compound">Acumulados (hasta finalizar meses)</option>
-          </select>
-          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
         </div>
 
         <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
@@ -1112,4 +1111,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
