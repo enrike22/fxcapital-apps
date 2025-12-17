@@ -38,7 +38,7 @@
     --radius:18px; --gloss: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 35%);
     --chip:#171b20; --danger:#ff4d4f;
 
-    /* ✅ Gris “premium 3D” (más contraste, sin “gritón”) */
+    /* ✅ Gris “premium 3D” */
     --panel-gray-bg1:#4b515b;
     --panel-gray-bg2:#1b1f27;
     --panel-gray-border:rgba(255,255,255,.16);
@@ -55,47 +55,45 @@
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
   /* ======= HEADER ======= */
-header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
-.brand-wrap{display:flex;flex-direction:column;gap:0}
-.brand-row{display:flex;align-items:center;gap:18px}
-.brand-logo{width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block}
+  header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+  .brand-wrap{display:flex;flex-direction:column;gap:0}
+  .brand-row{display:flex;align-items:center;gap:18px}
+  .brand-logo{width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block}
 
-.brand-title{
-  margin:0;
-  font-weight:900;
-  letter-spacing:.4px;
-  font-size:clamp(32px,6vw,72px);
-  line-height:1;
-
-  /* ✅ evita que Android lo parta en 2 líneas */
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.brand-sub{margin:10px 0 0 0;font-weight:700;color:#e7ecf6;font-size:clamp(16px,2.2vw,28px);opacity:.92}
-
-.btn{
-  appearance:none;border:0;border-radius:999px;
-  padding:12px 18px;font-weight:900;cursor:pointer;
-  color:#0b0c0e;background:#fff;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 22px rgba(0,0,0,.45)
-}
-.btn.secondary{
-  color:var(--txt);
-  background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);
-  border:1px solid var(--line);
-  box-shadow:var(--shadow-1),var(--shadow-inset)
-}
-
-/* ✅ Ajuste solo en móviles */
-@media (max-width:560px){
   .brand-title{
-    font-size: clamp(24px, 8.2vw, 34px);
+    margin:0;
+    font-weight:900;
+    letter-spacing:.4px;
+    font-size:clamp(32px,6vw,72px);
+    line-height:1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-}
 
-  /* ✅ BOTÓN CTA “RECARGAR CAPITAL” (más visible) */
+  .brand-sub{margin:10px 0 0 0;font-weight:700;color:#e7ecf6;font-size:clamp(16px,2.2vw,28px);opacity:.92}
+
+  .btn{
+    appearance:none;border:0;border-radius:999px;
+    padding:12px 18px;font-weight:900;cursor:pointer;
+    color:#0b0c0e;background:#fff;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 22px rgba(0,0,0,.45)
+  }
+  .btn.secondary{
+    color:var(--txt);
+    background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow-1),var(--shadow-inset)
+  }
+
+  /* ✅ Ajuste solo en móviles */
+  @media (max-width:560px){
+    .brand-title{
+      font-size: clamp(24px, 8.2vw, 34px);
+    }
+  }
+
+  /* ✅ BOTÓN CTA */
   .btn.cta{
     padding:13px 20px;
     font-weight:1000;
@@ -125,7 +123,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
   .btn.cta:hover{filter:brightness(.98)}
   .btn.cta:active{transform:translateY(1px)}
 
-  /* ======= PANEL + VARIANTE GRIS ======= */
+  /* ======= PANEL ======= */
   .panel{
     background:var(--grad-panel);
     border:1px solid var(--line);
@@ -253,57 +251,17 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     background:linear-gradient(180deg,#2a2f36,#161a1f);
   }
 
-  #wdlg .input{background:#fff;color:#0b0c0e;border:1px solid rgba(0,0,0,.18)}
-  #wReason.input{min-height:96px;max-height:240px;resize:vertical}
-
-  #pwdDlg{
-    background:radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
-    box-shadow:0 36px 90px rgba(0,0,0,.92),0 0 0 1px rgba(255,255,255,.08),
-      inset 0 1px 0 rgba(255,255,255,.08), inset 0 -10px 30px rgba(0,0,0,.8);
-    border-radius:30px;
-    transform:translateY(-6px);
+  #tdlg .k{ color:#ffffff !important; font-weight:900 !important; }
+  #tdlg .input{
+    background:#ffffff !important;
+    color:#000000 !important;
+    border:1px solid #bfc6d1;
   }
-  #pwdDlg .modal-h{border-bottom-color:rgba(255,255,255,.14)}
-  #pwdDlg .k{
-    background:rgba(255,255,255,.08);
-    border-color:rgba(255,255,255,.28);
-    color:#f3f6ff;
-    font-size:13px;
-    font-weight:700;
-  }
-  #pwdDlg .input{
-    background:#fdfdfd;
-    color:#0b0c0e;
-    font-size:15.5px;
-    padding:14px 44px 14px 16px;
-    border-radius:14px;
-    border:1px solid #0c1018;
-    box-shadow:0 0 0 1px rgba(0,0,0,.55) inset, 0 10px 24px rgba(0,0,0,.45);
-  }
-  #pwdDlg .input::placeholder{color:#7a808c}
-  #pwdDlg .input:focus{
+  #tdlg .input::placeholder{ color:#6b7280; }
+  #tdlg .input:focus{
     outline:none;
-    background:#ffffff;
-    border-color:#ffffff;
-    box-shadow:0 0 0 1px rgba(255,255,255,.9), 0 0 0 4px rgba(255,255,255,.09), 0 14px 30px rgba(0,0,0,.6);
-  }
-  .pwd-field-wrap{position:relative}
-  .pwd-toggle{
-    position:absolute; right:12px; top:50%; transform:translateY(-50%);
-    border:0; background:transparent; cursor:pointer;
-    font-size:17px; color:#8c92a0; padding:4px;
-  }
-  .pwd-toggle:hover{color:#dde3f2}
-  .pwd-toggle:focus-visible{outline:2px solid #ffffff; outline-offset:2px}
-  #pwdError{margin-top:8px;font-size:13px;color:var(--danger)}
-
-  @media (max-width:560px){
-    header{padding-top:64px}
-    .brand-row{gap:12px}
-    .brand-logo{width:84px;height:84px}
-    .brand-title{font-size:clamp(26px,7.6vw,36px);line-height:1.02}
-    .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
-    #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
+    border-color:#000000;
+    box-shadow:0 0 0 2px rgba(0,0,0,.08);
   }
 
   /* ===== RECARGA POR TRANSFERENCIA (3D PRO) ===== */
@@ -321,29 +279,21 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
   .tx-title h2{margin:0;font-size:20px;letter-spacing:.2px}
   .tx-title p{margin:6px 0 0; font-size:13px; line-height:1.4; color:var(--muted)}
   .tx-badge{
-  font-size:12px;
-  padding:7px 12px;
-  border-radius:999px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.14);
-  color:#f4f7ff;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
-
-  /* ✅ FIX Android */
-  max-width:100%;
-  white-space:normal;
-  text-align:center;
-}
-@media (max-width: 520px){
-  .tx-head{
-    flex-direction: column;
-    align-items: flex-start;
+    font-size:12px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    color:#f4f7ff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    max-width:100%;
+    white-space:normal;
+    text-align:center;
   }
-
-  .tx-badge{
-    margin-top: 8px;
+  @media (max-width: 520px){
+    .tx-head{flex-direction: column;align-items: flex-start;}
+    .tx-badge{margin-top: 8px;}
   }
-}
 
   .tx-steps{display:flex; align-items:center; gap:10px; margin:0 0 16px 0}
   .tx-step{
@@ -457,18 +407,28 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     border:1px solid rgba(255,255,255,.12);
   }
 
-  #tdlg .k{ color:#ffffff !important; font-weight:900 !important; }
-
-  #tdlg .input{
-    background:#ffffff !important;
-    color:#000000 !important;
-    border:1px solid #bfc6d1;
+  /* ===== Nav ===== */
+  .nav-actions{display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap}
+  .nav-actions .btn{display:inline-flex;align-items:center;gap:10px}
+  .btn.icon::before{
+    content:"⬤";
+    width:10px;height:10px;border-radius:50%;
+    background:rgba(0,0,0,.18);
+    border:1px solid rgba(0,0,0,.15);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55);
+    display:inline-block;
   }
-  #tdlg .input::placeholder{ color:#6b7280; }
-  #tdlg .input:focus{
-    outline:none;
-    border-color:#000000;
-    box-shadow:0 0 0 2px rgba(0,0,0,.08);
+  .btn.panelBtn::before{content:"▦";}
+  .btn.withdrawBtn::before{content:"⇣";}
+  .btn.backBtn::before{content:"←";}
+
+  @media (max-width:560px){
+    header{padding-top:64px}
+    .brand-row{gap:12px}
+    .brand-logo{width:84px;height:84px}
+    .brand-title{font-size:clamp(26px,7.6vw,36px);line-height:1.02}
+    .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
+    #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
   }
 </style>
 </head>
@@ -495,13 +455,18 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     </header>
 
     <!-- NAV / ACCIONES -->
-    <div style="display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap">
-      <button class="btn cta" id="btnGoTopup" type="button">Recargar Capital</button>
-      <button class="btn secondary" id="btnGoHome" type="button" style="display:none">Volver a Mi cuenta</button>
+    <div class="nav-actions">
+      <button class="btn secondary panelBtn icon" id="btnNavPanel" type="button">Mi Panel</button>
+      <button class="btn cta icon" id="btnNavDeposit" type="button">Depositar</button>
+      <button class="btn secondary withdrawBtn icon" id="btnNavWithdraw" type="button">Retirar</button>
+
+      <button class="btn secondary backBtn icon" id="btnBackPanel" type="button" style="display:none">Volver a Mi Panel</button>
     </div>
 
-    <!-- VISTA PRINCIPAL -->
-    <div id="viewHome">
+    <!-- =========================
+         VISTA: MI PANEL
+    ========================== -->
+    <div id="viewPanel">
       <!-- MI CUENTA -->
       <section class="panel section gray">
         <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
@@ -517,9 +482,6 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
           <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
           <div class="card group"><span class="k">Finalización de apertura de cuenta</span><span id="valCloseDate" class="v">—</span></div>
           <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
-        </div>
-        <div style="margin-top:16px">
-          <button class="btn" id="btnOpenWithdraw">Solicitar retiro</button>
         </div>
       </section>
 
@@ -585,16 +547,19 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
           </table>
         </div>
       </section>
-    </div><!-- /#viewHome -->
+    </div><!-- /#viewPanel -->
 
-    <!-- VISTA RECARGA -->
-    <div id="viewTopup" style="display:none">
+    <!-- =========================
+         VISTA: DEPOSITAR
+         (NO tocada, solo renombrada)
+    ========================== -->
+    <div id="viewDeposit" style="display:none">
       <section class="panel section tx-wrap">
         <div class="tx-head">
           <div class="tx-title">
             <div class="tx-icon">⇄</div>
             <div>
-              <h2>Recarga por transferencia</h2>
+              <h2>Depósito por transferencia</h2>
               <p>Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.</p>
             </div>
           </div>
@@ -651,7 +616,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
             </div>
 
             <button class="tx-primary" id="btnOpenTopup" type="button">
-              Enviar boleta de recarga
+              Enviar boleta de depósito
             </button>
 
             <div class="tx-note">
@@ -660,54 +625,56 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
           </div>
         </div>
       </section>
-    </div><!-- /#viewTopup -->
+    </div><!-- /#viewDeposit -->
+
+    <!-- =========================
+         VISTA: RETIRAR
+    ========================== -->
+    <div id="viewWithdraw" style="display:none">
+      <section class="panel section gray">
+        <h2 style="margin:0 0 14px 0">Solicitud de retiro de capital</h2>
+
+        <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+          <div class="pill selected" id="optEarly" tabindex="0" role="button" aria-pressed="true">
+            <div style="font-weight:800;margin-bottom:6px">Antes de tiempo</div>
+            <div class="muted">Aplicará una penalización del 10%.</div>
+          </div>
+          <div class="pill" id="optHealth" tabindex="0" role="button" aria-pressed="false">
+            <div style="font-weight:800;margin-bottom:6px">Causas de salud</div>
+            <div class="muted">Exento de penalización.</div>
+          </div>
+        </div>
+
+        <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:14px">
+          <div>
+            <div class="k">Monto a retirar (Q)</div>
+            <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
+            <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
+          </div>
+
+          <div>
+            <div class="k">Motivo</div>
+            <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…" style="min-height:96px;max-height:240px;resize:vertical"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
+          <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0" title="Retirar todo mi capital"></div>
+          <div>Retirar todo mi capital</div>
+        </div>
+
+        <div class="actions" style="display:flex;gap:12px;justify-content:flex-start">
+          <button class="btn secondary" id="wCancel">Cancelar</button>
+          <button class="btn" id="wSend">Enviar solicitud</button>
+        </div>
+
+        <div class="note" style="margin-top:14px">
+          Al enviar la solicitud, un representante de <b>FX | CAPITAL R.L.</b> revisará su información y se comunicará con usted.
+        </div>
+      </section>
+    </div><!-- /#viewWithdraw -->
 
   </div><!-- /wrap -->
-
-  <div class="blocker" id="panelBlocker"></div>
-
-  <!-- MODAL RETIRO -->
-  <dialog id="wdlg" aria-labelledby="wdlgTitle">
-    <div class="modal-h">
-      <div id="wdlgTitle" style="font-weight:900">Solicitud retiro de capital</div>
-      <button class="modal-close" id="xClose" aria-label="Cerrar">✕</button>
-    </div>
-    <div class="modal-b">
-      <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
-        <div class="pill selected" id="optEarly" tabindex="0" role="button" aria-pressed="true">
-          <div style="font-weight:800;margin-bottom:6px">Antes de tiempo</div>
-          <div class="muted">Aplicará una penalización del 10%.</div>
-        </div>
-        <div class="pill" id="optHealth" tabindex="0" role="button" aria-pressed="false">
-          <div style="font-weight:800;margin-bottom:6px">Causas de salud</div>
-          <div class="muted">Exento de penalización.</div>
-        </div>
-      </div>
-
-      <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:14px">
-        <div>
-          <div class="k">Monto a retirar (Q)</div>
-          <input id="wAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
-          <div class="note">Si el retiro es parcial, debe permanecer al menos <b>Q 2,000</b>.</div>
-        </div>
-
-        <div>
-          <div class="k">Motivo</div>
-          <textarea id="wReason" class="input" placeholder="Explique brevemente el motivo…"></textarea>
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
-        <div id="switchAll" class="switch" role="switch" aria-checked="false" tabindex="0" title="Retirar todo mi capital"></div>
-        <div>Retirar todo mi capital</div>
-      </div>
-
-      <div class="actions" style="display:flex;gap:12px;justify-content:flex-start">
-        <button class="btn secondary" id="wCancel">Cancelar</button>
-        <button class="btn" id="wSend">Enviar solicitud</button>
-      </div>
-    </div>
-  </dialog>
 
   <!-- MODAL CONTRASEÑA -->
   <dialog id="pwdDlg" aria-labelledby="pwdTitle">
@@ -723,21 +690,23 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
       <div style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
         <div>
           <div class="k">Nueva contraseña</div>
-          <div class="pwd-field-wrap">
-            <input id="pwdNew" class="input" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
-            <button type="button" id="pwdNewEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña">👁</button>
+          <div class="pwd-field-wrap" style="position:relative">
+            <input id="pwdNew" class="input" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres" style="padding-right:44px">
+            <button type="button" id="pwdNewEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña"
+              style="position:absolute; right:12px; top:50%; transform:translateY(-50%); border:0; background:transparent; cursor:pointer; font-size:17px; color:#8c92a0; padding:4px;">👁</button>
           </div>
         </div>
         <div>
           <div class="k">Confirmar nueva contraseña</div>
-          <div class="pwd-field-wrap">
-            <input id="pwdConfirm" class="input" type="password" autocomplete="new-password" placeholder="Repita la contraseña">
-            <button type="button" id="pwdConfirmEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña">👁</button>
+          <div class="pwd-field-wrap" style="position:relative">
+            <input id="pwdConfirm" class="input" type="password" autocomplete="new-password" placeholder="Repita la contraseña" style="padding-right:44px">
+            <button type="button" id="pwdConfirmEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña"
+              style="position:absolute; right:12px; top:50%; transform:translateY(-50%); border:0; background:transparent; cursor:pointer; font-size:17px; color:#8c92a0; padding:4px;">👁</button>
           </div>
         </div>
       </div>
 
-      <div id="pwdError"></div>
+      <div id="pwdError" style="margin-top:8px;font-size:13px;color:var(--danger)"></div>
 
       <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:18px">
         <button class="btn" id="pwdSave">Guardar contraseña</button>
@@ -748,7 +717,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
   <!-- MODAL RECARGA (TRANSFERENCIA) -->
   <dialog id="tdlg" aria-labelledby="tdlgTitle">
     <div class="modal-h">
-      <div id="tdlgTitle" style="font-weight:900">Enviar boleta de recarga</div>
+      <div id="tdlgTitle" style="font-weight:900">Enviar boleta de depósito</div>
       <button class="modal-close" id="tClose" aria-label="Cerrar">✕</button>
     </div>
 
@@ -784,7 +753,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
 
       <div class="actions" style="display:flex;gap:12px;justify-content:flex-start;margin-top:16px">
         <button class="btn secondary" id="tCancel">Cancelar</button>
-        <button class="btn" id="tSend">Enviar recarga</button>
+        <button class="btn" id="tSend">Enviar depósito</button>
       </div>
     </div>
   </dialog>
@@ -844,7 +813,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     }
   });
 
-  /* ===== Helpers ===== */
+  /* ===== Helpers fechas ===== */
   function nextMonthSameDay(d){
     const x=clampDate(d);
     const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
@@ -912,7 +881,6 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
   }
 
   /* ===== Estado de cuenta (mes a mes) ===== */
-
   function addMonthsSameDay(d, months){
     let x = clampDate(d);
     for(let i=0;i<months;i++) x = nextMonthSameDay(x);
@@ -1063,7 +1031,6 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
       if(isCompound){
         estado = ended ? 'Acumulado' : 'En curso';
       }else{
-        // ✅ AUTOMÁTICO: terminó → Pagado, si no → En curso (con regla fin de semana)
         estado = ended ? 'Pagado' : 'En curso';
       }
 
@@ -1096,8 +1063,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     }
   }
 
-  /* ===== Retiro ===== */
-  const dlg = document.getElementById('wdlg');
+  /* ===== Retiro (pestaña) ===== */
   function selectType(t){
     document.getElementById('optEarly')?.classList.toggle('selected',t==='early');
     document.getElementById('optHealth')?.classList.toggle('selected',t==='health');
@@ -1140,7 +1106,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
 
     showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
 
-    dlg?.close();
+    // reset form
     if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
     if(document.getElementById('wReason')) document.getElementById('wReason').value='';
     toggleSwitchAll(false);
@@ -1234,12 +1200,12 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
       if(ins.error){
         console.error(ins.error);
         try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
-        alert('No se pudo registrar la recarga. Intente de nuevo.');
+        alert('No se pudo registrar el depósito. Intente de nuevo.');
         return;
       }
 
       showMessage(
-        `Recarga enviada con éxito.<br><br>
+        `Depósito enviado con éxito.<br><br>
          <b>Código:</b> ${reference_code}<br>
          Un administrador revisará su boleta y acreditará el capital.`
       );
@@ -1254,7 +1220,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
       if(document.getElementById('tDate')) document.getElementById('tDate').value = '';
       if(fileEl) fileEl.value = '';
     } finally {
-      if(btn){ btn.disabled = false; btn.textContent = 'Enviar recarga'; }
+      if(btn){ btn.disabled = false; btn.textContent = 'Enviar depósito'; }
     }
   }
 
@@ -1318,16 +1284,15 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     input.type = isPassword ? 'text' : 'password';
   }
 
-  /* ===== Simulador (plan automático por monto) ===== */
+  /* ===== Simulador ===== */
   function getSimPlanForCapital(cap){
     cap = Number(cap||0);
     if(cap >= 250000) return { plan:'PLATINUM', semPct:20 };
     if(cap >= 2000)   return { plan:'STANDARD', semPct:15 };
     return { plan:'—', semPct:0 };
   }
-
   function buildSimRows(cap, semPct){
-    const monthlyRate = (Number(semPct||0)/100)/6; // semestral /6
+    const monthlyRate = (Number(semPct||0)/100)/6;
     const rows = [];
     let sum = 0;
     for(let i=1;i<=6;i++){
@@ -1337,7 +1302,6 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     }
     return { rows, sum, final: cap + sum };
   }
-
   function renderSim(cap, semPct){
     const { rows, sum, final } = buildSimRows(cap, semPct);
 
@@ -1355,7 +1319,6 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     const sf = document.getElementById('simFinal');
     if(sf) sf.textContent = fmtQ(final);
   }
-
   function handleCalc(){
     const raw = document.getElementById('simCapital')?.value || '';
     const cap = Number(raw.replace(/[,\s]/g,'') || 0);
@@ -1383,7 +1346,7 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     renderSim(cap, semPct);
   }
 
-  /* ===== Cabecera / Carga cuenta ===== */
+  /* ===== Carga cuenta ===== */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
@@ -1404,7 +1367,6 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
       const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
       const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
 
-      // Simulador sin datos
       const sp = document.getElementById('simPlan'); if(sp) sp.textContent = '—';
       renderSim(0,0);
 
@@ -1464,56 +1426,77 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
     if(prof?.must_change_password){ openPwdDialog(); }
   }
 
-  /* ===== Navegación Home / Recarga ===== */
-  function showView(which){
-    const home = document.getElementById('viewHome');
-    const top  = document.getElementById('viewTopup');
-    const btnTop = document.getElementById('btnGoTopup');
-    const btnHome = document.getElementById('btnGoHome');
+  /* ===== Navegación Panel / Depositar / Retirar ===== */
+  function setNavMode(mode){
+    const btnPanel = document.getElementById('btnNavPanel');
+    const btnDep   = document.getElementById('btnNavDeposit');
+    const btnW     = document.getElementById('btnNavWithdraw');
+    const btnBack  = document.getElementById('btnBackPanel');
 
-    if(which === 'topup'){
-      if(home) home.style.display = 'none';
-      if(top) top.style.display = 'block';
-      if(btnTop) btnTop.style.display = 'none';
-      if(btnHome) btnHome.style.display = 'inline-flex';
-      window.location.hash = '#recarga';
-    }else{
-      if(home) home.style.display = 'block';
-      if(top) top.style.display = 'none';
-      if(btnTop) btnTop.style.display = 'inline-flex';
-      if(btnHome) btnHome.style.display = 'none';
-      if(window.location.hash === '#recarga') history.replaceState(null,'', window.location.pathname);
+    const showMainNav = (mode === 'panel');
+    if(btnPanel) btnPanel.style.display = showMainNav ? 'inline-flex' : 'none';
+    if(btnDep)   btnDep.style.display   = showMainNav ? 'inline-flex' : 'none';
+    if(btnW)     btnW.style.display     = showMainNav ? 'inline-flex' : 'none';
+    if(btnBack)  btnBack.style.display  = showMainNav ? 'none' : 'inline-flex';
+  }
+
+  function showView(which){
+    const panel = document.getElementById('viewPanel');
+    const dep   = document.getElementById('viewDeposit');
+    const wit   = document.getElementById('viewWithdraw');
+
+    if(which === 'deposit'){
+      if(panel) panel.style.display = 'none';
+      if(dep)   dep.style.display   = 'block';
+      if(wit)   wit.style.display   = 'none';
+      setNavMode('sub');
+      window.location.hash = '#depositar';
+      return;
+    }
+
+    if(which === 'withdraw'){
+      if(panel) panel.style.display = 'none';
+      if(dep)   dep.style.display   = 'none';
+      if(wit)   wit.style.display   = 'block';
+      setNavMode('sub');
+      window.location.hash = '#retirar';
+      // Reset UI retiro al entrar
+      selectType('early');
+      toggleSwitchAll(false);
+      return;
+    }
+
+    // panel
+    if(panel) panel.style.display = 'block';
+    if(dep)   dep.style.display   = 'none';
+    if(wit)   wit.style.display   = 'none';
+    setNavMode('panel');
+    if(window.location.hash === '#depositar' || window.location.hash === '#retirar'){
+      history.replaceState(null,'', window.location.pathname);
     }
   }
 
   /* ===== Eventos UI ===== */
-  document.getElementById('btnGoTopup')?.addEventListener('click', ()=> showView('topup'));
-  document.getElementById('btnGoHome')?.addEventListener('click', ()=> showView('home'));
+  document.getElementById('btnNavPanel')?.addEventListener('click', ()=> showView('panel'));
+  document.getElementById('btnNavDeposit')?.addEventListener('click', ()=> showView('deposit'));
+  document.getElementById('btnNavWithdraw')?.addEventListener('click', ()=> showView('withdraw'));
+  document.getElementById('btnBackPanel')?.addEventListener('click', ()=> showView('panel'));
 
-  // Abrir modal retiro
-  document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=>{
-    selectType('early');
-    toggleSwitchAll(false);
-    dlg?.showModal();
-  });
-  document.getElementById('xClose')?.addEventListener('click', ()=> dlg?.close());
-  document.getElementById('wCancel')?.addEventListener('click', ()=> dlg?.close());
-
+  // Retiro (pestaña)
   document.getElementById('optEarly')?.addEventListener('click', ()=> selectType('early'));
   document.getElementById('optHealth')?.addEventListener('click', ()=> selectType('health'));
-
   document.getElementById('switchAll')?.addEventListener('click', ()=> toggleSwitchAll());
   document.getElementById('switchAll')?.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleSwitchAll(); }
   });
-
   document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
+  document.getElementById('wCancel')?.addEventListener('click', ()=> showView('panel'));
 
   // Modal mensajes
   document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
   document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
 
-  // Modal topup
+  // Modal depósito
   document.getElementById('btnOpenTopup')?.addEventListener('click', ()=>{
     document.getElementById('txStep1')?.classList.remove('tx-step-active');
     document.getElementById('txStep2')?.classList.add('tx-step-active');
@@ -1556,10 +1539,14 @@ header{position:relative;display:flex;align-items:flex-start;justify-content:spa
 
   /* ===== Init ===== */
   (async function init(){
-    if(window.location.hash === '#recarga') showView('topup');
+    // Por defecto: Panel. Si viene con hash, respétalo.
+    const h = (window.location.hash||'').toLowerCase();
+    if(h === '#depositar') showView('deposit');
+    else if(h === '#retirar') showView('withdraw');
+    else showView('panel');
+
     await loadHeader();
 
-    // Inicializa simulador
     const sp = document.getElementById('simPlan');
     if(sp) sp.textContent = '—';
     renderSim(0, 0);
