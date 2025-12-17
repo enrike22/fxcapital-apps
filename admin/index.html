@@ -562,16 +562,15 @@ function setCapitalInputValue(n){
   $("u_capital").value = formatCapitalString(val);
 }
 
-/*** LOGIN ***/
+/*** LOGIN (ARREGLADO 100%) ***/
 async function doLogin(e){
   e.preventDefault();
+
   const email = $("email").value.trim();
   const password = $("password").value;
+
   $("loginMsg").textContent = "";
   setLoading($("loginForm"), true);
-const data = await r.json();
-console.log("LOGIN STATUS:", r.status, data);
-if(!r.ok){ $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido"; return; }
 
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
@@ -579,15 +578,29 @@ if(!r.ok){ $("loginMsg").textContent = data?.error_description || data?.error ||
       headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
       body: JSON.stringify({ email, password })
     });
-    const data = await r.json();
+
+    // parse seguro del JSON (aunque venga vacío)
+    let data = null;
+    try{ data = await r.json(); }catch{ data = null; }
+
+    console.log("LOGIN STATUS:", r.status, data);
+
     if(!r.ok){
-      $("loginMsg").textContent = data?.error_description || "Login inválido";
+      $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido";
       return;
     }
+
+    if(!data?.access_token){
+      $("loginMsg").textContent = "Login inválido (sin token).";
+      return;
+    }
+
     localStorage.token = data.access_token;
-    localStorage.uid = data.user.id;
+    localStorage.uid = data.user?.id || "";
     await initApp();
-  }catch{
+
+  }catch(err){
+    console.error(err);
     $("loginMsg").textContent = "Error de red";
   }finally{
     setLoading($("loginForm"), false);
@@ -1111,5 +1124,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-
