@@ -39,8 +39,8 @@
     --chip:#171b20; --danger:#ff4d4f;
 
     /* ✅ Gris “premium 3D” (más contraste, sin “gritón”) */
-    --panel-gray-bg1:#4b515b;  /* <- ajustado */
-    --panel-gray-bg2:#1b1f27;  /* <- ajustado */
+    --panel-gray-bg1:#4b515b;
+    --panel-gray-bg2:#1b1f27;
     --panel-gray-border:rgba(255,255,255,.16);
   }
 
@@ -55,7 +55,7 @@
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
   /* ======= HEADER ======= */
-  header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+  header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
   .brand-wrap{display:flex;flex-direction:column;gap:0}
   .brand-row{display:flex;align-items:center;gap:18px}
   .brand-logo{width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block}
@@ -75,7 +75,7 @@
     box-shadow:var(--shadow-1),var(--shadow-inset)
   }
 
-  /* ======= PANEL + VARIANTE GRIS (✅ legible y 3D) ======= */
+  /* ======= PANEL + VARIANTE GRIS ======= */
   .panel{
     background:var(--grad-panel);
     border:1px solid var(--line);
@@ -125,7 +125,6 @@
 
   .v{display:block;font-size:16px;font-weight:800;letter-spacing:.2px}
 
-  /* Campos base */
   .input{
     width:100%;
     border:1px solid rgba(255,255,255,.16);
@@ -145,16 +144,13 @@
     background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
     position:sticky;top:0;z-index:1
   }
-  /* ✅ En panel gris, que todo sea blanco legible */
   .panel.gray .table td{ color:#ffffff !important; }
   .panel.gray .table th{ color:#ffffff !important; }
 
   .note{color:var(--muted);font-size:13px;margin-top:10px;opacity:.95}
 
-  /* === Separación vertical uniforme entre secciones === */
   .wrap > section.panel.section{ margin-top:18px; }
 
-  /* ======= DIALOG (MODAL) ======= */
   dialog{
     border:0;border-radius:22px;
     background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);
@@ -185,7 +181,6 @@
   }
   .pill.selected .muted{color:#1b1f24}
 
-  /* SWITCH */
   .switch{
     --w:58px;--h:32px;--knob:26px;
     inline-size:var(--w);block-size:var(--h);
@@ -208,11 +203,9 @@
     background:linear-gradient(180deg,#2a2f36,#161a1f);
   }
 
-  /* Inputs dentro del modal retiro: blancos */
   #wdlg .input{background:#fff;color:#0b0c0e;border:1px solid rgba(0,0,0,.18)}
   #wReason.input{min-height:96px;max-height:240px;resize:vertical}
 
-  /* === MODAL CONTRASEÑA (3D + inputs) === */
   #pwdDlg{
     background:radial-gradient(160% 200% at 10% 0%, #272c38 0%, #171b24 40%, #06070b 100%);
     box-shadow:0 36px 90px rgba(0,0,0,.92),0 0 0 1px rgba(255,255,255,.08),
@@ -254,7 +247,6 @@
   .pwd-toggle:focus-visible{outline:2px solid #ffffff; outline-offset:2px}
   #pwdError{margin-top:8px;font-size:13px;color:var(--danger)}
 
-  /* ======= HEADER: móvil ======= */
   @media (max-width:560px){
     header{padding-top:64px}
     .brand-row{gap:12px}
@@ -399,10 +391,8 @@
     border:1px solid rgba(255,255,255,.12);
   }
 
-  /* ✅ Labels del modal "Enviar boleta de recarga" en blanco y negrita */
   #tdlg .k{ color:#ffffff !important; font-weight:900 !important; }
 
-  /* ✅ Inputs blancos + texto negro SOLO en modal de recarga */
   #tdlg .input{
     background:#ffffff !important;
     color:#000000 !important;
@@ -438,163 +428,175 @@
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
     </header>
 
-    <!-- MI CUENTA (gris pro legible) -->
-    <section class="panel section gray">
-      <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
-      <div class="grid cols-3">
-        <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
-        <div class="card group"><span class="k">Apertura de cuenta</span><span id="valOpenDate" class="v">—</span></div>
-        <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
+    <!-- NAV / ACCIONES -->
+    <div style="display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap">
+      <button class="btn secondary" id="btnGoTopup" type="button">Recargar Capital</button>
+      <button class="btn secondary" id="btnGoHome" type="button" style="display:none">Volver a Mi cuenta</button>
+    </div>
 
-        <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
-        <div class="card group"><span class="k">Cuenta (ID)</span><span id="valAccountId" class="v">—</span></div>
-        <div class="card group"><span class="k">Período (meses)</span><span id="valMonths" class="v">—</span></div>
+    <!-- VISTA PRINCIPAL -->
+    <div id="viewHome">
+      <!-- MI CUENTA -->
+      <section class="panel section gray">
+        <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
+        <div class="grid cols-3">
+          <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
+          <div class="card group"><span class="k">Apertura de cuenta</span><span id="valOpenDate" class="v">—</span></div>
+          <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
 
-        <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
-        <div class="card group"><span class="k">Finalización de apertura de cuenta</span><span id="valCloseDate" class="v">—</span></div>
-        <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
-      </div>
-      <div style="margin-top:16px">
-        <button class="btn" id="btnOpenWithdraw">Solicitar retiro</button>
-      </div>
-    </section>
+          <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
+          <div class="card group"><span class="k">Cuenta (ID)</span><span id="valAccountId" class="v">—</span></div>
+          <div class="card group"><span class="k">Período (meses)</span><span id="valMonths" class="v">—</span></div>
 
-    <!-- RECARGA POR TRANSFERENCIA (3D PRO) -->
-    <section class="panel section tx-wrap">
-      <div class="tx-head">
-        <div class="tx-title">
-          <div class="tx-icon">⇄</div>
-          <div>
-            <h2>Recarga por transferencia</h2>
-            <p>Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.</p>
+          <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
+          <div class="card group"><span class="k">Finalización de apertura de cuenta</span><span id="valCloseDate" class="v">—</span></div>
+          <div class="card group"><span class="k">Interés total del período</span><span id="valPeriodInterest" class="v">Q 0.00</span></div>
+        </div>
+        <div style="margin-top:16px">
+          <button class="btn" id="btnOpenWithdraw">Solicitar retiro</button>
+        </div>
+      </section>
+
+      <!-- RESULTADOS DEL MES -->
+      <section class="panel section gray" style="margin-top:18px">
+        <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
+        <div class="muted" id="monthRange">—</div>
+        <div style="overflow:auto;margin-top:8px">
+          <table class="table">
+            <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
+            <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
+            <tfoot><tr class="sum-row"><td>Acumulado del mes</td><td id="weekSum">—</td></tr></tfoot>
+          </table>
+        </div>
+        <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
+      </section>
+
+      <!-- ESTADO DE CUENTA -->
+      <section class="panel section gray" style="margin-top:18px">
+        <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
+        <div class="muted" id="stmtRange">—</div>
+
+        <div style="overflow:auto;margin-top:8px">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Capital inicio</th>
+                <th>Interés (beneficio)</th>
+                <th>Estado</th>
+                <th>Saldo</th>
+              </tr>
+            </thead>
+            <tbody id="stmtBody">
+              <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note" id="stmtNote">—</div>
+      </section>
+
+      <!-- SIMULADOR -->
+      <section class="panel section" style="margin-top:18px">
+        <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
+        <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, usando el <b>mismo plan y %</b> asignado en su cuenta.</div>
+        <div class="grid cols-3">
+          <div class="group card"><span class="k">Capital a simular (Q)</span>
+            <input id="simCapital" class="input" type="text" inputmode="decimal" placeholder="Ej. 40,000" />
+          </div>
+          <div class="group card"><span class="k">Plan y % (según su cuenta)</span><div id="simPlan" class="v">—</div></div>
+          <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+          <button class="btn" id="btnCalc">Calcular</button>
+          <span id="simNote" class="note"></span>
+        </div>
+        <div style="overflow:auto;margin-top:12px">
+          <table class="table" id="simTable">
+            <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
+            <tbody id="simBody"><tr><td>1</td><td>Q 0.00</td></tr></tbody>
+            <tfoot><tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr></tfoot>
+          </table>
+        </div>
+      </section>
+    </div><!-- /#viewHome -->
+
+    <!-- VISTA RECARGA -->
+    <div id="viewTopup" style="display:none">
+      <section class="panel section tx-wrap">
+        <div class="tx-head">
+          <div class="tx-title">
+            <div class="tx-icon">⇄</div>
+            <div>
+              <h2>Recarga por transferencia</h2>
+              <p>Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.</p>
+            </div>
+          </div>
+          <span class="tx-badge">Validación administrativa</span>
+        </div>
+
+        <div class="tx-steps">
+          <div class="tx-step tx-step-active" id="txStep1">
+            <span class="tx-step-dot">1</span><span>Transferir</span>
+          </div>
+          <div class="tx-step-line"></div>
+          <div class="tx-step" id="txStep2">
+            <span class="tx-step-dot">2</span><span>Subir boleta</span>
           </div>
         </div>
-        <span class="tx-badge">Validación administrativa</span>
-      </div>
 
-      <div class="tx-steps">
-        <div class="tx-step tx-step-active" id="txStep1">
-          <span class="tx-step-dot">1</span><span>Transferir</span>
-        </div>
-        <div class="tx-step-line"></div>
-        <div class="tx-step" id="txStep2">
-          <span class="tx-step-dot">2</span><span>Subir boleta</span>
-        </div>
-      </div>
-
-      <div class="tx-grid">
-        <div class="tx-panel">
-          <div class="tx-panel-head">
-            <span class="tx-chip">Datos para transferencia</span>
-          </div>
-
-          <div class="tx-rows">
-            <div class="tx-row">
-              <span class="tx-k">Nombre de la cuenta</span>
-              <span class="tx-v">Fx Inversiones</span>
+        <div class="tx-grid">
+          <div class="tx-panel">
+            <div class="tx-panel-head">
+              <span class="tx-chip">Datos para transferencia</span>
             </div>
 
-            <div class="tx-row tx-row-strong">
-              <span class="tx-k">Número de cuenta</span>
-              <span class="tx-v tx-mono" id="acctNumber">021-010518-5</span>
-              <button class="tx-copy" type="button" id="btnCopyAcct">Copiar</button>
+            <div class="tx-rows">
+              <div class="tx-row">
+                <span class="tx-k">Nombre de la cuenta</span>
+                <span class="tx-v">Fx Inversiones</span>
+              </div>
+
+              <div class="tx-row tx-row-strong">
+                <span class="tx-k">Número de cuenta</span>
+                <span class="tx-v tx-mono" id="acctNumber">021-010518-5</span>
+                <button class="tx-copy" type="button" id="btnCopyAcct">Copiar</button>
+              </div>
+
+              <div class="tx-row">
+                <span class="tx-k">Tipo de cuenta</span>
+                <span class="tx-v">Monetaria</span>
+              </div>
+
+              <div class="tx-row">
+                <span class="tx-k">Moneda</span>
+                <span class="tx-v">Quetzales (GTQ)</span>
+              </div>
             </div>
 
-            <div class="tx-row">
-              <span class="tx-k">Tipo de cuenta</span>
-              <span class="tx-v">Monetaria</span>
-            </div>
-
-            <div class="tx-row">
-              <span class="tx-k">Moneda</span>
-              <span class="tx-v">Quetzales (GTQ)</span>
+            <div class="tx-hint">
+              Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
             </div>
           </div>
 
-          <div class="tx-hint">
-            Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
+          <div class="tx-panel">
+            <div class="tx-panel-head">
+              <span class="tx-chip">Acción</span>
+            </div>
+
+            <button class="tx-primary" id="btnOpenTopup" type="button">
+              Enviar boleta de recarga
+            </button>
+
+            <div class="tx-note">
+              <b>Nota:</b> El acreditamiento puede tomar unas horas (según validación).
+            </div>
           </div>
         </div>
+      </section>
+    </div><!-- /#viewTopup -->
 
-        <div class="tx-panel">
-          <div class="tx-panel-head">
-            <span class="tx-chip">Acción</span>
-          </div>
-
-          <button class="tx-primary" id="btnOpenTopup" type="button">
-            Enviar boleta de recarga
-          </button>
-
-          <div class="tx-note">
-            <b>Nota:</b> El acreditamiento puede tomar unas horas (según validación).
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- RESULTADOS DEL MES (gris pro legible) -->
-    <section class="panel section gray" style="margin-top:18px">
-      <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
-      <div class="muted" id="monthRange">—</div>
-      <div style="overflow:auto;margin-top:8px">
-        <table class="table">
-          <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
-          <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
-          <tfoot><tr class="sum-row"><td>Acumulado del mes</td><td id="weekSum">—</td></tr></tfoot>
-        </table>
-      </div>
-      <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
-    </section>
-
-    <!-- ESTADO DE CUENTA (mes a mes) -->
-    <section class="panel section gray" style="margin-top:18px">
-      <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
-      <div class="muted" id="stmtRange">—</div>
-
-      <div style="overflow:auto;margin-top:8px">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Mes</th>
-              <th>Capital inicio</th>
-              <th>Interés (beneficio)</th>
-              <th>Estado</th>
-              <th>Saldo</th>
-            </tr>
-          </thead>
-          <tbody id="stmtBody">
-            <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note" id="stmtNote">—</div>
-    </section>
-
-    <!-- SIMULADOR -->
-    <section class="panel section" style="margin-top:18px">
-      <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
-      <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>, según el plan asignado automáticamente por monto.</div>
-      <div class="grid cols-3">
-        <div class="group card"><span class="k">Capital a simular (Q)</span>
-          <input id="simCapital" class="input" type="text" inputmode="decimal" placeholder="Ej. 40,000" />
-        </div>
-        <div class="group card"><span class="k">Plan asignado (auto)</span><div id="simPlan" class="v">—</div></div>
-        <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
-        <button class="btn" id="btnCalc">Calcular</button>
-        <span id="simNote" class="note"></span>
-      </div>
-      <div style="overflow:auto;margin-top:12px">
-        <table class="table" id="simTable">
-          <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
-          <tbody id="simBody"><tr><td>1</td><td>Q 0.00</td></tr></tbody>
-          <tfoot><tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr></tfoot>
-        </table>
-      </div>
-    </section>
-  </div>
+  </div><!-- /wrap -->
 
   <div class="blocker" id="panelBlocker"></div>
 
@@ -748,6 +750,10 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
+  /* ===== Estado de simulador (toma plan y % desde accounts) ===== */
+  let SIM_SEM_PCT = 0;   // ejemplo: 15 (si interest_pct=15)
+  let SIM_PLAN    = '—';
+
   /* ===== Logout robusto ===== */
   async function forceLogout(){
     try {
@@ -845,7 +851,6 @@
 
   /* ===== Estado de cuenta (mes a mes) ===== */
 
-  // suma meses usando tu regla “mismo día o último día del mes”
   function addMonthsSameDay(d, months){
     let x = clampDate(d);
     for(let i=0;i<months;i++) x = nextMonthSameDay(x);
@@ -869,12 +874,19 @@
     return Math.max(0, Math.round((clampDate(b) - clampDate(a))/ms));
   }
 
-  // Construye “eventos” de capital para prorratear si hay recarga dentro del mes
-  // events: [{at: Date, capital: number}] ordenados por fecha (inicio + cada approved_at)
+  // ✅ Si el cierre cae sábado/domingo, se considera “cerrado” hasta lunes
+  function businessCloseDate(endDate){
+    const d = clampDate(endDate);
+    const dow = d.getDay(); // 0=Dom, 6=Sab
+    if(dow === 6){ d.setDate(d.getDate()+2); }
+    else if(dow === 0){ d.setDate(d.getDate()+1); }
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
   function buildCapitalEvents(acc, approvedTopups){
     const joined = acc?.joined_at ? new Date(acc.joined_at) : new Date();
 
-    // Si tienes initial_capital úsalo; si no, reconstruimos desde capital actual - sum(topups)
     const sumTopups = (approvedTopups||[]).reduce((s,t)=>s + Number(t.amount||0), 0);
     const initial = Number(acc.initial_capital ?? (Number(acc.capital||0) - sumTopups) ?? 0);
 
@@ -893,29 +905,24 @@
     return ev;
   }
 
-  // Interés del periodo prorrateado si cambia capital dentro del mismo periodo
   function interestForPeriod(periodStart, periodEnd, events, monthlyRate){
     const start = clampDate(periodStart);
     const end   = clampDate(periodEnd);
     const totalDays = daysBetween(start, end) || 1;
 
-    // puntos relevantes dentro del periodo
     const pts = events
-      .filter(e => e.at < end)               // eventos antes del cierre
+      .filter(e => e.at < end)
       .map(e => ({ at: clampDate(e.at), capital: Number(e.capital||0) }))
       .sort((a,b)=>a.at-b.at);
 
-    // capital vigente al inicio
     let currentCapital = pts[0]?.capital ?? 0;
     for(const p of pts){
       if(p.at <= start) currentCapital = p.capital;
     }
 
-    // construimos segmentos
     const segs = [];
     let cursor = new Date(start);
 
-    // eventos dentro del periodo (start < e.at < end)
     const inside = pts.filter(e => e.at > start && e.at < end);
 
     for(const e of inside){
@@ -925,7 +932,6 @@
     }
     segs.push({ from:new Date(cursor), to:new Date(end), capital: currentCapital });
 
-    // interés proporcional por días
     let interest = 0;
     for(const s of segs){
       const d = daysBetween(s.from, s.to);
@@ -953,10 +959,8 @@
 
     const isCompound = !!acc.compound_interest;
 
-    // saldo (solo crece si compound)
     let saldo = 0;
 
-    // saldo inicial = capital vigente al inicio del primer periodo
     const firstCap = (()=>{
       let cap = 0;
       const s0 = clampDate(new Date(acc.joined_at));
@@ -967,7 +971,6 @@
     })();
     saldo = firstCap;
 
-    // rango
     const stmtRange = document.getElementById('stmtRange');
     if(stmtRange && periods.length){
       stmtRange.textContent = `${periods[0].start.toLocaleDateString('es-GT')} — ${periods[periods.length-1].end.toLocaleDateString('es-GT')}`;
@@ -976,9 +979,9 @@
     const today = clampDate(new Date());
 
     for(const p of periods){
-      const ended = p.end <= today; // periodo ya cerró
+      const closeEffective = businessCloseDate(p.end);
+      const ended = today >= closeEffective;
 
-      // capital inicio del periodo
       let capStart = firstCap;
       for(const ev of events){
         if(ev.at <= clampDate(p.start)) capStart = ev.capital;
@@ -990,17 +993,14 @@
       const st  = settlementsMap[key];
 
       let estado = 'En curso';
+
       if(isCompound){
         estado = ended ? 'Acumulado' : 'En curso';
       }else{
-        if(ended){
-          estado = (st && st.status === 'paid') ? 'Pagado' : 'Pendiente';
-        }else{
-          estado = 'En curso';
-        }
+        // ✅ AUTOMÁTICO: terminó → Pagado, si no → En curso (con regla fin de semana)
+        estado = ended ? 'Pagado' : 'En curso';
       }
 
-      // saldo: solo aumenta si compound y el periodo ya cerró
       if(isCompound && ended){
         saldo += interest;
       }else{
@@ -1022,7 +1022,7 @@
     if(note){
       note.innerHTML = isCompound
         ? `Modo: <b>Interés acumulado</b>. El capital permanece fijo; el saldo aumenta al cierre de cada mes.`
-        : `Modo: <b>Pago mensual</b>. El capital y el saldo se mantienen; el interés se marca como <b>Pagado</b> cuando el administrador lo registra.`;
+        : `Modo: <b>Pago mensual</b>. El capital y el saldo se mantienen; al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
 
@@ -1089,17 +1089,13 @@
   const tdlg = document.getElementById('tdlg');
   let CURRENT_ACCOUNT_ID = null;
 
-  function genRefCode(){
-    return `FXC-${Math.floor(100000 + Math.random()*900000)}`;
-  }
+  function genRefCode(){ return `FXC-${Math.floor(100000 + Math.random()*900000)}`; }
   function extFromFile(file){
     const name = (file?.name || '').toLowerCase();
     const parts = name.split('.');
     return parts.length > 1 ? parts.pop() : 'bin';
   }
-  function safeParseMoney(str){
-    return Number((str || '').toString().replace(/[,\s]/g,'') || 0);
-  }
+  function safeParseMoney(str){ return Number((str || '').toString().replace(/[,\s]/g,'') || 0); }
 
   async function enviarTopupTransferencia(){
     const { data:{ session } } = await sb.auth.getSession();
@@ -1178,7 +1174,6 @@
          Un administrador revisará su boleta y acreditará el capital.`
       );
 
-      /* ✅ marcar paso 2 como activo */
       document.getElementById('txStep1')?.classList.remove('tx-step-active');
       document.getElementById('txStep2')?.classList.add('tx-step-active');
 
@@ -1253,7 +1248,62 @@
     input.type = isPassword ? 'text' : 'password';
   }
 
-  /* ===== Cabecera / Simulador ===== */
+  /* ===== Simulador (usa SIM_PLAN y SIM_SEM_PCT desde accounts) ===== */
+  function buildSimRows(cap, semPct){
+    const monthlyRate = (Number(semPct||0)/100)/6; // semestral /6
+    const rows = [];
+    let sum = 0;
+    for(let i=1;i<=6;i++){
+      const interest = cap * monthlyRate;
+      sum += interest;
+      rows.push({ month:i, interest });
+    }
+    return { rows, sum, final: cap + sum };
+  }
+
+  function renderSim(cap, semPct){
+    const { rows, sum, final } = buildSimRows(cap, semPct);
+
+    const tbody = document.getElementById('simBody');
+    if(tbody){
+      tbody.innerHTML = '';
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.month}</td><td>${fmtQ(r.interest)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    const ss = document.getElementById('simSum');
+    if(ss) ss.textContent = fmtQ(sum);
+    const sf = document.getElementById('simFinal');
+    if(sf) sf.textContent = fmtQ(final);
+  }
+
+  function handleCalc(){
+    const raw = document.getElementById('simCapital')?.value || '';
+    const cap = Number(raw.replace(/[,\s]/g,'') || 0);
+    const note = document.getElementById('simNote');
+
+    if(cap <= 0){
+      if(note) note.textContent = 'Ingrese un capital válido.';
+      renderSim(0, SIM_SEM_PCT);
+      return;
+    }
+
+    const sp = document.getElementById('simPlan');
+    if(sp) sp.textContent = `${SIM_PLAN} — ${Number(SIM_SEM_PCT||0)}% semestral`;
+
+    if(!SIM_SEM_PCT){
+      if(note) note.textContent = 'No se detectó el % de interés de su cuenta.';
+      renderSim(cap, 0);
+      return;
+    }
+
+    if(note) note.textContent = 'Cálculo estimado (interés simple).';
+    renderSim(cap, SIM_SEM_PCT);
+  }
+
+  /* ===== Cabecera / Carga cuenta ===== */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
@@ -1273,21 +1323,30 @@
       });
       const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
       const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
+
+      // Simulador sin datos
+      SIM_PLAN = '—'; SIM_SEM_PCT = 0;
+      const sp = document.getElementById('simPlan'); if(sp) sp.textContent = '—';
+      renderSim(0,0);
+
       if(prof?.must_change_password){ openPwdDialog(); }
       return;
     }
 
-    /* ✅ guardar account_id para la recarga */
     CURRENT_ACCOUNT_ID = acc.id;
 
-    // 1) Traer topups aprobados (para cambios de capital por recargas)
+    // ✅ Plan y % del simulador = EXACTAMENTE el de la cuenta
+    SIM_PLAN = acc.plan || '—';
+    SIM_SEM_PCT = Number(acc.interest_pct || 0);
+    const simPlanEl = document.getElementById('simPlan');
+    if(simPlanEl) simPlanEl.textContent = `${SIM_PLAN} — ${SIM_SEM_PCT}% semestral`;
+
     const { data: approvedTopups } = await sb
       .from('topups')
       .select('amount, approved_at, status, account_id')
       .eq('account_id', acc.id)
-      .eq('status', 'paid'); // ✅ CORRECTO
+      .eq('status', 'paid');
 
-    // 2) Traer settlements (para Pagado/Pendiente)
     const { data: settlements } = await sb
       .from('interest_settlements')
       .select('period_start, status, paid_at, paid_amount')
@@ -1299,7 +1358,6 @@
       if(k) settlementsMap[k] = s;
     });
 
-    // 3) Construir periodos + eventos y renderizar Estado de cuenta
     const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const periods = buildPeriods(joinedForPeriods, acc.invest_months);
     const events  = buildCapitalEvents(acc, approvedTopups||[]);
@@ -1333,101 +1391,107 @@
     if(prof?.must_change_password){ openPwdDialog(); }
   }
 
-  function autoPlanAndRate(capital){
-    if(capital >= 2000 && capital < 250000) return { name:'STANDARD (15% semestral)', rate:0.15 };
-    if(capital >= 250000)                  return { name:'PLATINUM (20% semestral)', rate:0.20 };
-    return { name:'NO ELEGIBLE', rate:0 };
-  }
+  /* ===== Navegación Home / Recarga ===== */
+  function showView(which){
+    const home = document.getElementById('viewHome');
+    const top  = document.getElementById('viewTopup');
+    const btnTop = document.getElementById('btnGoTopup');
+    const btnHome = document.getElementById('btnGoHome');
 
-  function simulate(){
-    const cap = Number((document.getElementById('simCapital')?.value||'').replace(/[,\s]/g,'') || 0);
-    if(cap < 2000){ alert('El capital mínimo para simular es Q 2,000.'); return; }
-    const {name, rate} = autoPlanAndRate(cap);
-    document.getElementById('simPlan').textContent = name;
-    const months = 6;
-    const monthlyInterest = cap * (rate/6);
-    const total = monthlyInterest * months;
-    document.getElementById('simFinal').textContent = fmtQ(cap + total);
-    document.getElementById('simSum').textContent   = fmtQ(total);
-    document.getElementById('simNote').textContent  = `Plan: ${name}. Tasa semestral ${(rate*100).toFixed(0)}%. Tasa mensual ${(rate/6*100).toFixed(2)}%.`;
-    const body = document.getElementById('simBody');
-    body.innerHTML = '';
-    for(let m=1;m<=months;m++){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${m}</td><td>${fmtQ(monthlyInterest)}</td>`;
-      body.appendChild(tr);
+    if(which === 'topup'){
+      if(home) home.style.display = 'none';
+      if(top) top.style.display = 'block';
+      if(btnTop) btnTop.style.display = 'none';
+      if(btnHome) btnHome.style.display = 'inline-flex';
+      window.location.hash = '#recarga';
+    }else{
+      if(home) home.style.display = 'block';
+      if(top) top.style.display = 'none';
+      if(btnTop) btnTop.style.display = 'inline-flex';
+      if(btnHome) btnHome.style.display = 'none';
+      if(window.location.hash === '#recarga') history.replaceState(null,'', window.location.pathname);
     }
   }
 
-  /* ===== Inicio ===== */
-  document.addEventListener('DOMContentLoaded', ()=>{
+  /* ===== Eventos UI ===== */
+  document.getElementById('btnGoTopup')?.addEventListener('click', ()=> showView('topup'));
+  document.getElementById('btnGoHome')?.addEventListener('click', ()=> showView('home'));
 
-    /* ✅ Reset visual de pasos */
-    const resetTopupSteps = () => {
-      document.getElementById('txStep2')?.classList.remove('tx-step-active');
-      document.getElementById('txStep1')?.classList.add('tx-step-active');
-    };
-
-    /* Retiro */
-    document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=> dlg?.showModal());
-    document.getElementById('xClose')?.addEventListener('click', ()=> dlg?.close());
-    document.getElementById('wCancel')?.addEventListener('click', ()=> dlg?.close());
-    document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
-    document.getElementById('optEarly')?.addEventListener('click', ()=>selectType('early'));
-    document.getElementById('optHealth')?.addEventListener('click', ()=>selectType('health'));
-    document.getElementById('switchAll')?.addEventListener('click', ()=>toggleSwitchAll());
-
-    /* Inputs con formato */
-    bindMoneyInput('wAmount');
-    bindMoneyInput('simCapital');
-    bindMoneyInput('tAmount');
-
-    /* Simulador */
-    document.getElementById('btnCalc')?.addEventListener('click', simulate);
-
-    /* Modal mensajes */
-    document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
-    document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
-
-    /* Password */
-    document.getElementById('pwdSave')?.addEventListener('click', handleSavePassword);
-    document.getElementById('pwdNewEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
-    document.getElementById('pwdConfirmEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
-
-    /* ✅ Recarga: abrir / cerrar / cancelar / enviar */
-    document.getElementById('btnOpenTopup')?.addEventListener('click', ()=>{
-      resetTopupSteps();
-      tdlg?.showModal();
-    });
-    document.getElementById('tClose')?.addEventListener('click', ()=>{
-      resetTopupSteps();
-      tdlg?.close();
-    });
-    document.getElementById('tCancel')?.addEventListener('click', ()=>{
-      resetTopupSteps();
-      tdlg?.close();
-    });
-    document.getElementById('tSend')?.addEventListener('click', enviarTopupTransferencia);
-
-    /* ✅ Copiar cuenta con feedback */
-    const btnCopy = document.getElementById('btnCopyAcct');
-    const acctEl  = document.getElementById('acctNumber');
-    btnCopy?.addEventListener('click', async () => {
-      const text = acctEl?.textContent?.trim() || '021-010518-5';
-      try{
-        await navigator.clipboard.writeText(text);
-        const old = btnCopy.textContent;
-        btnCopy.textContent = 'Copiado ✓';
-        btnCopy.disabled = true;
-        setTimeout(()=>{ btnCopy.textContent = old; btnCopy.disabled = false; }, 1200);
-      }catch(e){
-        alert('No se pudo copiar. Copie manualmente: ' + text);
-      }
-    });
-
-    /* Cargar datos */
-    loadHeader();
+  // Abrir modal retiro
+  document.getElementById('btnOpenWithdraw')?.addEventListener('click', ()=>{
+    selectType('early');
+    toggleSwitchAll(false);
+    dlg?.showModal();
   });
+  document.getElementById('xClose')?.addEventListener('click', ()=> dlg?.close());
+  document.getElementById('wCancel')?.addEventListener('click', ()=> dlg?.close());
+
+  document.getElementById('optEarly')?.addEventListener('click', ()=> selectType('early'));
+  document.getElementById('optHealth')?.addEventListener('click', ()=> selectType('health'));
+
+  document.getElementById('switchAll')?.addEventListener('click', ()=> toggleSwitchAll());
+  document.getElementById('switchAll')?.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleSwitchAll(); }
+  });
+
+  document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
+
+  // Modal mensajes
+  document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
+  document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
+
+  // Modal topup
+  document.getElementById('btnOpenTopup')?.addEventListener('click', ()=>{
+    document.getElementById('txStep1')?.classList.remove('tx-step-active');
+    document.getElementById('txStep2')?.classList.add('tx-step-active');
+    tdlg?.showModal();
+  });
+  document.getElementById('tClose')?.addEventListener('click', ()=> tdlg?.close());
+  document.getElementById('tCancel')?.addEventListener('click', ()=> tdlg?.close());
+  document.getElementById('tSend')?.addEventListener('click', enviarTopupTransferencia);
+
+  // Copiar número de cuenta
+  document.getElementById('btnCopyAcct')?.addEventListener('click', async ()=>{
+    const txt = document.getElementById('acctNumber')?.textContent?.trim() || '';
+    if(!txt) return;
+    try{
+      await navigator.clipboard.writeText(txt);
+      showMessage('Número de cuenta copiado al portapapeles.');
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showMessage('Número de cuenta copiado al portapapeles.');
+    }
+  });
+
+  // Password toggles
+  document.getElementById('pwdNewEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
+  document.getElementById('pwdConfirmEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
+  document.getElementById('pwdSave')?.addEventListener('click', handleSavePassword);
+
+  // Simulador
+  document.getElementById('btnCalc')?.addEventListener('click', handleCalc);
+
+  /* ===== Bind inputs monetarios ===== */
+  bindMoneyInput('wAmount');
+  bindMoneyInput('simCapital');
+  bindMoneyInput('tAmount');
+
+  /* ===== Init ===== */
+  (async function init(){
+    if(window.location.hash === '#recarga') showView('topup');
+    await loadHeader();
+
+    // Inicializa simulador a 0 (pero ya con el plan/% mostrado)
+    renderSim(0, SIM_SEM_PCT);
+    const note = document.getElementById('simNote');
+    if(note) note.textContent = 'Ingrese un capital y presione Calcular.';
+  })();
+
   </script>
 </body>
 </html>
