@@ -220,6 +220,15 @@ button.danger:hover{
   box-shadow: 0 18px 44px rgba(255,77,79,.24), 0 16px 40px rgba(0,0,0,.45);
 }
 
+button.ok{
+  background: linear-gradient(180deg, rgba(45,212,191,1), rgba(45,212,191,.75));
+  color:#02110f;
+  box-shadow: 0 14px 34px rgba(45,212,191,.18), 0 12px 30px rgba(0,0,0,.35);
+}
+button.ok:hover{
+  box-shadow: 0 18px 44px rgba(45,212,191,.22), 0 16px 40px rgba(0,0,0,.45);
+}
+
 .inline{display:flex;gap:10px;align-items:center}
 .row{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 hr.sep{border:0;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
@@ -312,6 +321,62 @@ tbody tr:hover{
   .header{flex-direction:column;align-items:flex-start}
   .searchbar{max-width:100%;min-width:0;width:100%}
 }
+
+/* ===== Modal (nuevo) ===== */
+.modal-backdrop{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(8px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:9999;
+}
+.modal{
+  width:min(720px, 100%);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow: 0 30px 90px rgba(0,0,0,.65);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), transparent 22%),
+    linear-gradient(180deg, var(--card1), var(--card2));
+  position:relative;
+  overflow:hidden;
+}
+.modal:before{
+  content:"";
+  position:absolute; inset:-1px;
+  background: var(--grid);
+  opacity:.85;
+  pointer-events:none;
+  mask: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,.55) 45%, rgba(0,0,0,0));
+}
+.modal-inner{
+  position:relative;
+  padding:20px 18px 18px;
+}
+.modal-title{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-bottom:10px;
+}
+.modal-title h3{
+  margin:0;
+  font-size:18px;
+  letter-spacing:.2px;
+}
+.modal-actions{
+  display:flex; gap:10px; justify-content:flex-end; margin-top:14px;
+}
+.xbtn{
+  background: transparent;
+  border:1px solid rgba(255,255,255,.12);
+  color: rgba(245,247,250,.9);
+  padding:10px 12px;
+  border-radius:999px;
+  box-shadow:none;
+}
+.xbtn:hover{ border-color: rgba(255,255,255,.18); box-shadow: var(--shadow2); transform: translateY(-1px); }
 </style>
 </head>
 
@@ -492,10 +557,83 @@ tbody tr:hover{
   </div>
 </div>
 
+<!-- ===== MODAL: ACREDITAR CAPITAL ===== -->
+<div id="modalAccredit" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Acreditar capital</h3>
+        <button class="xbtn" type="button" onclick="closeAccreditModal()">✕</button>
+      </div>
+
+      <div class="small" id="accreditClientInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Monto a acreditar</label>
+          <input id="accreditAmount" type="text" inputmode="decimal" placeholder="0.00">
+          <div class="small">Se registrará como <b>topup paid</b> + <b>approved_at</b>.</div>
+        </div>
+        <div>
+          <label>Fecha efectiva</label>
+          <input id="accreditDate" type="date">
+          <div class="small">Afecta intereses <b>desde este mes</b> en adelante (sin tocar meses anteriores).</div>
+        </div>
+        <div>
+          <label>Banco (opcional)</label>
+          <input id="accreditBank" placeholder="Banco Industrial">
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="accreditMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeAccreditModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnAccreditDo">Acreditar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RESET PASSWORD ===== -->
+<div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Restablecer contraseña (Admin)</h3>
+        <button class="xbtn" type="button" onclick="closeResetModal()">✕</button>
+      </div>
+
+      <div class="small" id="resetClientInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Nueva contraseña</label>
+          <input id="resetNewPass" type="text" placeholder="Mínimo 8 caracteres">
+          <div class="small">Esto forzará al cliente a iniciar sesión nuevamente y cambiarla (según tu flujo de cliente).</div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="resetMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeResetModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnResetDo">Restablecer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const ANON_KEY    = "REEMPLAZA_TU_ANON_KEY_AQUI"; // <-- (te recomiendo NO dejarla hardcodeada en prod)
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
@@ -563,7 +701,7 @@ function setCapitalInputValue(n){
   $("u_capital").value = formatCapitalString(val);
 }
 
-/*** LOGIN (ARREGLADO 100%: Authorization + sin código roto) ***/
+/*** LOGIN ***/
 async function doLogin(e){
   e.preventDefault();
 
@@ -578,7 +716,7 @@ async function doLogin(e){
       method:"POST",
       headers:{
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,   // ✅ FIX CLAVE (evita Invalid API key)
+        Authorization: "Bearer " + ANON_KEY,
         "Content-Type":"application/json"
       },
       body: JSON.stringify({ email, password })
@@ -586,8 +724,6 @@ async function doLogin(e){
 
     let data = null;
     try{ data = await r.json(); }catch{ data = null; }
-
-    console.log("LOGIN STATUS:", r.status, data);
 
     if(!r.ok){
       $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido";
@@ -645,7 +781,7 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
-/*** LISTA (usa vista filtrada; fallback si no existe) ***/
+/*** LISTA ***/
 let CACHED = [];
 async function listUsers(){
   const h = {
@@ -726,6 +862,8 @@ function renderUsers(rows){
       <td>${x.compound_interest ? "Acumulado" : "Mensual"}</td>
       <td class="nowrap">
         <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
+        <button class="ghost" onclick='openAccreditModal(${JSON.stringify(x)})'>Acreditar capital</button>
+        <button class="ghost" onclick='openResetModal(${JSON.stringify(x)})'>Reset contraseña</button>
         <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
       </td>`;
     tb.appendChild(tr);
@@ -1024,7 +1162,7 @@ async function saveUser(){
   }
 }
 
-/*** Eliminar ***/
+/*** Eliminar (tu lógica original) ***/
 async function deleteClient(x){
   const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
   if(!confirm(msg)) return;
@@ -1082,6 +1220,189 @@ async function deleteClient(x){
   alert("Cliente eliminado correctamente.");
 }
 
+/* ============================================================
+   NUEVO: ACREDITAR CAPITAL (Manual)
+   Recomendado: RPC admin_accredit_capital
+   ============================================================ */
+let ACCREDIT_CTX = null;
+
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function openAccreditModal(client){
+  ACCREDIT_CTX = client;
+
+  $("accreditClientInfo").innerHTML =
+    `<b>${client.full_name||'—'}</b> — ${client.email||'—'}<br>`+
+    `Capital actual: <b>${fmtMoney(client.capital, client.currency)}</b> · Modo: <b>${client.compound_interest ? "Acumulado" : "Mensual"}</b>`;
+
+  $("accreditAmount").value = "0";
+  $("accreditDate").value = todayISO();
+  $("accreditBank").value = (client.bank_name || "Banco Industrial");
+  $("accreditMsg").textContent = "";
+
+  show($("modalAccredit"), true);
+}
+
+function closeAccreditModal(){
+  show($("modalAccredit"), false);
+  ACCREDIT_CTX = null;
+}
+
+bindCapitalFormatter($("accreditAmount"));
+
+async function doAccreditCapital(){
+  if(!ACCREDIT_CTX) return;
+
+  const amount = parseCapitalFromInput($("accreditAmount").value);
+  const date = $("accreditDate").value || todayISO();
+  const bank = ($("accreditBank").value || "").trim() || null;
+
+  if(!amount || amount <= 0){
+    $("accreditMsg").textContent = "Monto inválido.";
+    return;
+  }
+  if(!ACCREDIT_CTX.account_id || !ACCREDIT_CTX.user_id){
+    $("accreditMsg").textContent = "Falta account_id / user_id en el cliente (revisa vista v_admin_users_filtered).";
+    return;
+  }
+
+  const msg = `¿Acreditar ${fmtMoney(amount, ACCREDIT_CTX.currency)} a ${ACCREDIT_CTX.full_name||'cliente'}?\n\nFecha efectiva: ${date}\n\nEsto creará un topup como PAID + approved_at, y recalculará intereses desde ese mes (sin tocar meses anteriores).`;
+  if(!confirm(msg)) return;
+
+  $("accreditMsg").textContent = "Acreditando…";
+  setLoading($("accreditMsg"), true);
+
+  try{
+    // ✅ RPC recomendado (transaccional)
+    // Debe existir en Supabase como: public.admin_accredit_capital(p_account_id uuid, p_user_id uuid, p_amount numeric, p_effective_date date, p_bank_name text)
+    const r = await fetch(`${RPC}/admin_accredit_capital`,{
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_account_id: ACCREDIT_CTX.account_id,
+        p_user_id: ACCREDIT_CTX.user_id,
+        p_amount: amount,
+        p_effective_date: date,
+        p_bank_name: bank
+      })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || "No se pudo acreditar (RPC admin_accredit_capital).");
+    }
+
+    $("accreditMsg").textContent = "Acreditado.";
+    await listUsers();
+    await listTopups();
+    closeAccreditModal();
+    alert("Capital acreditado correctamente.");
+
+  }catch(e){
+    console.error(e);
+    $("accreditMsg").textContent = "Error.";
+    alert("No se pudo acreditar: " + (e.message||e));
+  }finally{
+    setLoading($("accreditMsg"), false);
+  }
+}
+
+/* ============================================================
+   NUEVO: RESET PASSWORD + FORZAR CAMBIO
+   - Edge Function: /functions/v1/admin-reset-password (Service Role)
+   - y set flag en profiles: must_change_password=true (o el nombre que uses)
+   ============================================================ */
+let RESET_CTX = null;
+
+function openResetModal(client){
+  RESET_CTX = client;
+  $("resetClientInfo").innerHTML =
+    `<b>${client.full_name||'—'}</b> — ${client.email||'—'}<br>`+
+    `Esto asignará una contraseña nueva y marcará “forzar cambio”.`;
+
+  $("resetNewPass").value = "";
+  $("resetMsg").textContent = "";
+  show($("modalReset"), true);
+}
+
+function closeResetModal(){
+  show($("modalReset"), false);
+  RESET_CTX = null;
+}
+
+async function doResetPassword(){
+  if(!RESET_CTX) return;
+
+  const newPass = ($("resetNewPass").value || "").trim();
+  if(newPass.length < 8){
+    $("resetMsg").textContent = "La contraseña debe tener mínimo 8 caracteres.";
+    return;
+  }
+  if(!RESET_CTX.email){
+    $("resetMsg").textContent = "Falta email del cliente.";
+    return;
+  }
+
+  if(!confirm(`¿Restablecer contraseña a ${RESET_CTX.email}?\n\nEsto forzará al cliente a iniciar sesión otra vez y cambiarla.`)) return;
+
+  $("resetMsg").textContent = "Restableciendo…";
+  setLoading($("resetMsg"), true);
+
+  try{
+    // 1) Edge Function: actualiza contraseña en Auth (admin)
+    const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-reset-password";
+    const r = await fetch(url,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization:"Bearer " + (localStorage.token||"")
+      },
+      body: JSON.stringify({
+        email: RESET_CTX.email,
+        new_password: newPass
+      })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || "No se pudo resetear (Edge Function admin-reset-password).");
+    }
+
+    // 2) Marcar flag para que el panel cliente muestre “cambiar contraseña”
+    //    (Ajustá el nombre del campo según tu tabla real)
+    //    Recomendado: profiles.must_change_password boolean
+    if(RESET_CTX.user_id){
+      const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(RESET_CTX.user_id)}`,{
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({
+          must_change_password: true,
+          must_change_password_at: new Date().toISOString()
+        })
+      });
+
+      // Si tu profiles no tiene esos campos, este PATCH fallará: en ese caso, quitá el PATCH o cambiá el campo.
+      if(!pr.ok){
+        console.warn("No se pudo marcar must_change_password en profiles:", await pr.text().catch(()=> ""));
+      }
+    }
+
+    $("resetMsg").textContent = "Listo.";
+    closeResetModal();
+    alert("Contraseña restablecida. El cliente deberá iniciar sesión y cambiarla.");
+
+  }catch(e){
+    console.error(e);
+    $("resetMsg").textContent = "Error.";
+    alert("No se pudo restablecer: " + (e.message||e));
+  }finally{
+    setLoading($("resetMsg"), false);
+  }
+}
+
 /*** INIT ***/
 async function initApp(){
   if(localStorage.token){
@@ -1123,6 +1444,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnRefreshTopups")?.addEventListener("click", listTopups);
 
   bindCapitalFormatter($("u_capital"));
+
+  $("btnAccreditDo").addEventListener("click", doAccreditCapital);
+  $("btnResetDo").addEventListener("click", doResetPassword);
+
+  // Cerrar modales con click afuera
+  $("modalAccredit").addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
+  $("modalReset").addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
+
   initApp();
 });
 </script>
