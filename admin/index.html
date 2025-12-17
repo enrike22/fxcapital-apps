@@ -4,39 +4,317 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Admin</title>
+
 <style>
-:root{--bg:#0a0a0a;--fg:#f5f7fa;--muted:#cdd3da;--card:#0f1012;--border:#21262c;--shadow:0 14px 40px rgba(0,0,0,.5);--radius:18px;--chip:#15181d;--danger:#ff4d4f}
+/* ========= 3D PRO THEME ========= */
+:root{
+  --bg:#07080a;
+  --fg:#f5f7fa;
+  --muted:#c7cdd6;
+
+  --card1:#0f1116;
+  --card2:#0b0d11;
+
+  --border:rgba(255,255,255,.08);
+  --border2:rgba(255,255,255,.12);
+
+  --shadow: 0 18px 60px rgba(0,0,0,.55);
+  --shadow2: 0 10px 30px rgba(0,0,0,.45);
+
+  --radius:18px;
+  --radius2:14px;
+
+  --chip:#121620;
+
+  --danger:#ff4d4f;
+  --ok:#2dd4bf;
+
+  --glow: 0 0 0 3px rgba(255,255,255,.06), 0 0 40px rgba(255,255,255,.06);
+  --glow2: 0 0 0 3px rgba(45,212,191,.15), 0 0 40px rgba(45,212,191,.10);
+
+  --txtSoft: rgba(245,247,250,.86);
+  --txtDim: rgba(245,247,250,.68);
+
+  --grid: radial-gradient(circle at 25% 12%, rgba(255,255,255,.06), transparent 55%),
+          radial-gradient(circle at 75% 18%, rgba(45,212,191,.08), transparent 60%),
+          radial-gradient(circle at 50% 90%, rgba(255,255,255,.05), transparent 55%);
+}
+
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;font-size:16px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-.container{max-width:1280px;margin:0 auto;padding:36px 22px}
-.card{background:linear-gradient(180deg,var(--card),#101214);border:1px solid var(--border);border-radius:18px;padding:26px 22px;box-shadow:0 14px 40px rgba(0,0,0,.5);margin-bottom:24px}
-h1{margin:0 0 18px;font-size:28px;letter-spacing:.2px}
-h2{margin:0 0 14px;font-size:20px;font-weight:700}
-label{display:block;margin:10px 0 6px;color:var(--muted);font-size:14px}
-input,select{width:100%;background:#0b0d0f;color:var(--fg);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:15px}
-button{background:#fff;color:#0b0c0e;border:none;padding:12px 18px;border-radius:999px;font-weight:800;cursor:pointer;font-size:15px}
-button.ghost{background:#15181d;color:var(--fg);border:1px solid var(--border)}
-button.danger{background:#ff4d4f;color:#fff}
-.small{font-size:13px;color:var(--muted)}
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 800px at 20% 0%, rgba(255,255,255,.06), transparent 60%),
+    radial-gradient(900px 700px at 90% 20%, rgba(45,212,191,.08), transparent 55%),
+    radial-gradient(900px 700px at 50% 100%, rgba(255,255,255,.05), transparent 60%),
+    linear-gradient(180deg, var(--bg), #050508);
+  color:var(--fg);
+  font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+.container{
+  max-width:1320px;
+  margin:0 auto;
+  padding:34px 22px 46px;
+}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+h1{
+  margin:0;
+  font-size:28px;
+  letter-spacing:.2px;
+  line-height:1.15;
+  color:var(--fg);
+  text-shadow: 0 1px 0 rgba(255,255,255,.05);
+}
+
+h2{
+  margin:0 0 14px;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.2px;
+  color:var(--fg);
+}
+
+.small{font-size:13px;color:var(--txtDim)}
 .error{font-size:13px;color:var(--danger)}
 .nowrap{white-space:nowrap}
 .hidden{display:none}
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+
+/* ---- cards (3D) ---- */
+.card{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), transparent 24%),
+    linear-gradient(180deg, var(--card1), var(--card2));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:26px 22px;
+  box-shadow: var(--shadow);
+  margin-bottom:22px;
+  transform: translateZ(0);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.card:before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  background: var(--grid);
+  opacity:.9;
+  pointer-events:none;
+  mask: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,.55) 45%, rgba(0,0,0,0));
+}
+
+.card:after{
+  content:"";
+  position:absolute;
+  inset:-120px;
+  background:
+    conic-gradient(from 180deg at 50% 50%, rgba(255,255,255,.14), transparent 40%, rgba(45,212,191,.10), transparent 70%, rgba(255,255,255,.10));
+  opacity:.08;
+  filter: blur(20px);
+  transform: translate3d(0,0,0);
+  pointer-events:none;
+  animation: floatGlow 8s ease-in-out infinite;
+}
+
+@keyframes floatGlow{
+  0%,100%{ transform: translate3d(0,0,0) rotate(0deg); }
+  50%{ transform: translate3d(10px,-8px,0) rotate(10deg); }
+}
+
+.card:hover{
+  transform: translateY(-2px);
+  border-color: var(--border2);
+  box-shadow: 0 22px 70px rgba(0,0,0,.6);
+}
+
+/* ---- inputs ---- */
+label{
+  display:block;
+  margin:10px 0 6px;
+  color:var(--txtDim);
+  font-size:13px;
+  letter-spacing:.2px;
+}
+
+input,select{
+  width:100%;
+  background: rgba(8,10,14,.9);
+  color:var(--fg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px 12px;
+  font-size:15px;
+  outline:none;
+  transition: box-shadow .15s ease, border-color .15s ease, transform .12s ease, background .15s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+input::placeholder{ color: rgba(245,247,250,.35); }
+
+input:focus,select:focus{
+  border-color: rgba(45,212,191,.40);
+  box-shadow: var(--glow2);
+  background: rgba(10,12,16,.95);
+}
+
+input:hover,select:hover{
+  border-color: rgba(255,255,255,.14);
+}
+
+/* ---- buttons ---- */
+button{
+  background: linear-gradient(180deg, #ffffff, #e9edf2);
+  color:#0b0c0e;
+  border:none;
+  padding:12px 18px;
+  border-radius:999px;
+  font-weight:900;
+  cursor:pointer;
+  font-size:15px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.55);
+  transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
+}
+
+button:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 18px 44px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.65);
+  filter: brightness(1.02);
+}
+
+button:active{ transform: translateY(0px) scale(.99); }
+
+button.ghost{
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  color:var(--fg);
+  border:1px solid var(--border);
+  box-shadow: 0 10px 26px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+button.ghost:hover{
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 14px 36px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+button.danger{
+  background: linear-gradient(180deg, #ff6b6c, #ff3f40);
+  color:#fff;
+  box-shadow: 0 14px 34px rgba(255,77,79,.20), 0 12px 30px rgba(0,0,0,.35);
+}
+
+button.danger:hover{
+  box-shadow: 0 18px 44px rgba(255,77,79,.24), 0 16px 40px rgba(0,0,0,.45);
+}
+
 .inline{display:flex;gap:10px;align-items:center}
 .row{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-hr.sep{border:0;border-top:1px solid var(--border);margin:14px 0}
-.searchbar{position:relative;max-width:500px}
+hr.sep{border:0;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
+
+/* ---- searchbar ---- */
+.searchbar{position:relative;max-width:520px;min-width:280px}
 .searchbar input{padding-left:40px}
-.searchbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.7;pointer-events:none}
-.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+.searchbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.75;pointer-events:none}
+
+/* ---- tables ---- */
+.table-wrap{
+  overflow:auto;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius2);
+  background: rgba(0,0,0,.16);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
 table{width:100%;border-collapse:separate;border-spacing:0}
-th,td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:15px}
-th{text-align:left;color:#d7dce2;background:#0f1114;position:sticky;top:0}
-tbody tr:hover{background:#0e1116}
-@media (min-width:1200px){.container{max-width:1320px}}
+th,td{
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  vertical-align:middle;
+  font-size:15px;
+  color: var(--txtSoft);
+}
+
+th{
+  text-align:left;
+  color: rgba(245,247,250,.92);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  position:sticky;
+  top:0;
+  z-index:2;
+  backdrop-filter: blur(8px);
+}
+
+tbody tr{
+  transition: background .12s ease, transform .12s ease;
+}
+
+tbody tr:hover{
+  background: rgba(255,255,255,.035);
+}
+
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:13px;
+  color: rgba(245,247,250,.86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.dot{
+  width:8px;height:8px;border-radius:99px;
+  background: rgba(45,212,191,.9);
+  box-shadow: 0 0 0 3px rgba(45,212,191,.12);
+}
+
+/* ---- subtle page fade in ---- */
+@keyframes fadeUp{
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+.container{ animation: fadeUp .32s ease both; }
+
+/* ---- small loader (optional) ---- */
+.loading{
+  opacity:.85;
+  position:relative;
+}
+.loading:after{
+  content:"";
+  width:10px;height:10px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.25);
+  border-top-color: rgba(255,255,255,.8);
+  display:inline-block;
+  margin-left:10px;
+  vertical-align:middle;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+@media (max-width:680px){
+  .header{flex-direction:column;align-items:flex-start}
+  .searchbar{max-width:100%;min-width:0;width:100%}
+}
 </style>
 </head>
+
 <body>
 <div class="container">
 
@@ -64,45 +342,49 @@ tbody tr:hover{background:#0e1116}
 
   <!-- APP -->
   <div id="app" class="hidden">
-<!-- TOPUPS PENDIENTES -->
-<div class="card">
-  <div class="header" style="margin:0 0 10px">
-    <h2 style="margin:0">Recargas pendientes</h2>
-    <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
-  </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Cliente</th>
-          <th>Email</th>
-          <th>Monto</th>
-          <th>Banco</th>
-          <th>Boleta</th>
-          <th class="nowrap">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="topups"></tbody>
-    </table>
-  </div>
+    <!-- TOPUPS PENDIENTES -->
+    <div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Recargas pendientes</h2>
+        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
+      </div>
 
-  <p class="small" style="margin-top:10px">
-    Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
-  </p>
-</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Monto</th>
+              <th>Banco</th>
+              <th>Boleta</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="topups"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
+      </p>
+    </div>
 
     <!-- Crear/Editar -->
     <div class="card" id="formCard">
       <h2>Crear / Editar usuario</h2>
+
       <div class="row">
         <div>
           <label>Email</label>
           <input id="u_email" placeholder="cliente@demo.com">
           <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
         </div>
+
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+
         <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555"></div>
 
         <div>
@@ -113,16 +395,20 @@ tbody tr:hover{background:#0e1116}
           </div>
         </div>
 
-        <div><label>Moneda</label>
+        <div>
+          <label>Moneda</label>
           <select id="u_currency"><option>GTQ</option><option>USD</option></select>
         </div>
-        <div><label>Capital inicial</label>
-          <!-- text + inputmode decimal para permitir comas -->
+
+        <div>
+          <label>Capital inicial</label>
           <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00">
         </div>
+
         <div><label>Fecha ingreso</label><input id="u_joined" type="date"></div>
 
-        <div><label>Plan</label>
+        <div>
+          <label>Plan</label>
           <select id="u_plan">
             <option value="STANDARD">Estandar-15%</option>
             <option value="PLATINUM">Platinum-20%</option>
@@ -146,6 +432,15 @@ tbody tr:hover{background:#0e1116}
           <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
         </div>
 
+        <div>
+          <label>Modo de intereses</label>
+          <select id="u_interest_mode">
+            <option value="monthly">Pagados mensualmente</option>
+            <option value="compound">Acumulados (hasta finalizar meses)</option>
+          </select>
+          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
+        </div>
+
         <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
         <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
         <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …"></div>
@@ -166,6 +461,7 @@ tbody tr:hover{background:#0e1116}
         <h2 style="margin:0">Clientes</h2>
         <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
       </div>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -181,12 +477,17 @@ tbody tr:hover{background:#0e1116}
               <th class="nowrap">Tipo de cuenta</th>
               <th>Meses</th>
               <th class="nowrap">Tasa %/6m</th>
+              <th>Modo</th>
               <th class="nowrap">Acciones</th>
             </tr>
           </thead>
           <tbody id="users"></tbody>
         </table>
       </div>
+
+      <p class="small" style="margin-top:10px">
+        <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
+      </p>
     </div>
 
   </div>
@@ -195,12 +496,17 @@ tbody tr:hover{background:#0e1116}
 <script>
 /*** SUPABASE CONFIG ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
 function headersJSON(){
-  return { apikey: ANON_KEY, Authorization: "Bearer "+(localStorage.token||""), "Content-Type":"application/json", "Prefer":"return=representation" };
+  return {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + (localStorage.token || ""),
+    "Content-Type":"application/json",
+    "Prefer":"return=representation"
+  };
 }
 
 /*** HELPERS UI ***/
@@ -209,6 +515,11 @@ const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
+
+function setLoading(el, isLoading){
+  if(!el) return;
+  el.classList.toggle("loading", !!isLoading);
+}
 
 /*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
 function formatCapitalString(raw){
@@ -258,28 +569,57 @@ async function doLogin(e){
   const email = $("email").value.trim();
   const password = $("password").value;
   $("loginMsg").textContent = "";
+  setLoading($("loginForm"), true);
+
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-      method:"POST", headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
+      method:"POST",
+      headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
       body: JSON.stringify({ email, password })
     });
     const data = await r.json();
-    if(!r.ok){ $("loginMsg").textContent = data?.error_description || "Login inválido"; return; }
-    localStorage.token = data.access_token; localStorage.uid = data.user.id;
+    if(!r.ok){
+      $("loginMsg").textContent = data?.error_description || "Login inválido";
+      return;
+    }
+    localStorage.token = data.access_token;
+    localStorage.uid = data.user.id;
     await initApp();
-  }catch{ $("loginMsg").textContent = "Error de red"; }
+  }catch{
+    $("loginMsg").textContent = "Error de red";
+  }finally{
+    setLoading($("loginForm"), false);
+  }
 }
-function logout(){ localStorage.removeItem("token"); localStorage.removeItem("uid"); location.reload(); }
+
+function logout(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("uid");
+  location.reload();
+}
 
 /*** Edge Functions auxiliares ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
   if(!password) return { ok:true, status:204, json: async()=>({}) };
   const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
-  return fetch(url, { method:"POST", headers:{ "Content-Type":"application/json", apikey:ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") }, body: JSON.stringify({ email, password, full_name: fullName }) });
+  return fetch(url, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      apikey:ANON_KEY,
+      Authorization:"Bearer "+(localStorage.token||"")
+    },
+    body: JSON.stringify({ email, password, full_name: fullName })
+  });
 }
+
 async function getAuthUserIdByEmail(email){
   try{
-    const r = await fetch(`${RPC}/get_user_id_by_email`, { method:"POST", headers: headersJSON(), body: JSON.stringify({ p_email: email }) });
+    const r = await fetch(`${RPC}/get_user_id_by_email`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({ p_email: email })
+    });
     if(!r.ok) return null;
     const id = await r.json();
     return id || null;
@@ -289,28 +629,38 @@ async function getAuthUserIdByEmail(email){
 /*** LISTA (usa vista filtrada; fallback si no existe) ***/
 let CACHED = [];
 async function listUsers(){
-  const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
-  const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`;
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at,compound_interest`;
 
   let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
 
   if (r.ok) {
-    CACHED = await r.json(); renderUsers(CACHED); return;
+    CACHED = await r.json();
+    renderUsers(CACHED);
+    return;
   }
 
-  // Fallback join manual (sin admins)
-  CACHED = await loadUsersViaJoinFallback(h); renderUsers(CACHED);
+  CACHED = await loadUsersViaJoinFallback(h);
+  renderUsers(CACHED);
 }
 
 async function loadUsersViaJoinFallback(h){
   try{
     const [aRes, pRes] = await Promise.all([
-      fetch(`${BASE}/accounts?select=id,user_id,currency,capital,plan,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at`, { headers:h, cache:"no-store" }),
+      fetch(`${BASE}/accounts?select=id,user_id,currency,capital,plan,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at,compound_interest`, { headers:h, cache:"no-store" }),
       fetch(`${BASE}/profiles?select=id,full_name,email,phone,is_admin`, { headers:h, cache:"no-store" }),
     ]);
+
     const accounts = aRes.ok ? await aRes.json() : [];
     const profiles = pRes.ok ? await pRes.json() : [];
     const pmap = new Map(profiles.map(p => [p.id, p]));
+
     return accounts.map(a=>{
       const p = pmap.get(a.user_id) || {};
       if (p.is_admin) return null;
@@ -320,16 +670,26 @@ async function loadUsersViaJoinFallback(h){
         email: p.email || null,
         phone: p.phone || null,
         account_id: a.id,
-        currency: a.currency, capital: a.capital, plan: a.plan,
-        bank_name: a.bank_name, bank_account: a.bank_account, bank_account_type: a.bank_account_type,
-        invest_months: a.invest_months, interest_pct: a.interest_pct, joined_at: a.joined_at
+        currency: a.currency,
+        capital: a.capital,
+        plan: a.plan,
+        bank_name: a.bank_name,
+        bank_account: a.bank_account,
+        bank_account_type: a.bank_account_type,
+        invest_months: a.invest_months,
+        interest_pct: a.interest_pct,
+        joined_at: a.joined_at,
+        compound_interest: a.compound_interest
       };
     }).filter(Boolean).sort((x,y)=> (x.full_name||'').localeCompare(y.full_name||'' ));
-  }catch{ return []; }
+  }catch{
+    return [];
+  }
 }
 
 function renderUsers(rows){
-  const tb = $("users"); tb.innerHTML = "";
+  const tb = $("users");
+  tb.innerHTML = "";
   rows.forEach(x=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -344,6 +704,7 @@ function renderUsers(rows){
       <td class="nowrap">${x.bank_account_type ?? '—'}</td>
       <td>${x.invest_months ?? '—'}</td>
       <td>${x.interest_pct ?? '—'}</td>
+      <td>${x.compound_interest ? "Acumulado" : "Mensual"}</td>
       <td class="nowrap">
         <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
         <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
@@ -356,15 +717,19 @@ function renderUsers(rows){
 $("q")?.addEventListener("input",(e)=>{
   const q = e.target.value.trim().toLowerCase();
   if(!q){ renderUsers(CACHED); return; }
-  // ✅ FIX: x_bank_account_type -> x.bank_account_type
   const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
     .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   renderUsers(filt);
 });
 
-/*** TOPUPS PENDIENTES (NUEVO) ***/
+/*** TOPUPS PENDIENTES ***/
 async function listTopups(){
-  const h = { apikey: ANON_KEY, Authorization: "Bearer "+localStorage.token, "Cache-Control":"no-cache, no-store, must-revalidate", Pragma:"no-cache" };
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
 
   const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code`;
   const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`, { headers:h, cache:"no-store" });
@@ -376,7 +741,6 @@ async function listTopups(){
   }
 
   const rows = await r.json();
-
   const uids = [...new Set(rows.map(x=>x.user_id).filter(Boolean))];
   let profMap = new Map();
 
@@ -404,15 +768,13 @@ function renderTopups(rows, profMap){
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
 
-    // Por ahora mostramos el path como referencia.
-    // Luego lo cambiamos por botón "Ver boleta" con Signed URL si bucket es PRIVATE.
     const BUCKET = "topup-receipts";
-const receipt = x.receipt_path
-  ? `<button class="ghost" type="button"
-        onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
-        Ver boleta
-     </button>`
-  : "—";
+    const receipt = x.receipt_path
+      ? `<button class="ghost" type="button"
+            onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
+            Ver boleta
+         </button>`
+      : "—";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -480,20 +842,18 @@ async function rejectTopup(topupId, reason){
   alert("Recarga rechazada.");
   await listTopups();
 }
+
 async function openReceipt(bucket, path){
   try{
-    const r = await fetch(
-      `${PROJECT_URL}/functions/v1/admin-signed-receipt`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: ANON_KEY,
-          Authorization: "Bearer " + (localStorage.token || "")
-        },
-        body: JSON.stringify({ bucket, path })
-      }
-    );
+    const r = await fetch(`${PROJECT_URL}/functions/v1/admin-signed-receipt`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + (localStorage.token || "")
+      },
+      body: JSON.stringify({ bucket, path })
+    });
 
     if(!r.ok){
       console.error(await r.text());
@@ -515,16 +875,17 @@ function editClient(x){
   $("u_name").value  = x.full_name || "";
   $("u_phone").value = x.phone || "";
   $("u_currency").value = x.currency || "GTQ";
-  setCapitalInputValue(x.capital); // <-- formateado
+  setCapitalInputValue(x.capital);
   $("u_joined").value   = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
   $("u_plan").value     = x.plan || "STANDARD";
+  $("u_interest_mode").value = x.compound_interest ? "compound" : "monthly";
   $("u_months").value   = x.invest_months ?? "12";
   $("u_rate").value     = (x.interest_pct ?? "") === null ? "" : (x.interest_pct ?? "");
   $("u_bank_name").value   = x.bank_name ?? "";
   $("u_bank_account").value= x.bank_account ?? "";
   $("u_bank_account_type").value = x.bank_account_type ?? "";
   $("u_pass").value = "";
-  validateRatePlan(); // recalcula error visual
+  validateRatePlan();
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -535,7 +896,6 @@ function validateRatePlan(){
   const rate = rateStr === "" ? null : Number(rateStr);
   const err = $("rateError");
 
-  // autocompletar por plan si vacío
   if(rate === null){
     if(plan === "STANDARD") $("u_rate").value = 15;
     if(plan === "PLATINUM") $("u_rate").value = 20;
@@ -545,7 +905,7 @@ function validateRatePlan(){
   let isValid = true;
   if(plan === "STANDARD") isValid = (finalRate === 15);
   else if(plan === "PLATINUM") isValid = (finalRate === 20);
-  else if(plan === "BLACK") isValid = true; // sin restricción
+  else if(plan === "BLACK") isValid = true;
 
   show(err, !isValid);
   return isValid;
@@ -560,7 +920,7 @@ async function saveUser(){
   const phone    = $("u_phone").value.trim();
   const password = $("u_pass").value;
   const currency = $("u_currency").value;
-  const capital  = parseCapitalFromInput($("u_capital").value); // <-- limpio sin comas
+  const capital  = parseCapitalFromInput($("u_capital").value);
   const joined   = $("u_joined").value || null;
   const plan     = $("u_plan").value;
   const months   = parseInt($("u_months").value, 10);
@@ -570,7 +930,9 @@ async function saveUser(){
   const bankAcct = $("u_bank_account").value.trim();
   const bankType = $("u_bank_account_type").value.trim();
   const msgEl    = $("saveMsg");
-  msgEl.textContent = "…";
+
+  msgEl.textContent = "Guardando…";
+  setLoading(msgEl, true);
 
   try{
     if(!email) throw new Error("Email requerido");
@@ -578,17 +940,22 @@ async function saveUser(){
     if(isNaN(capital)||capital<0) throw new Error("Capital inválido");
     if(!validateRatePlan()) throw new Error("La tasa no coincide con el plan.");
 
-    // Auth: crear si hace falta y hay contraseña
     let uid = await getAuthUserIdByEmail(email);
+
     if (!uid && password){
       const rCreate = await createAuthUserIfNeeded(email, password, fullName);
-      if(!rCreate.ok){ throw new Error("No se pudo crear en Auth (revisa whitelist/secrets)."); }
+      if(!rCreate.ok) throw new Error("No se pudo crear en Auth (revisa whitelist/secrets).");
       try{ uid = (await rCreate.json()).id || null; }catch{}
-      if(!uid){ for(let i=0;i<5 && !uid;i++){ await sleep(400); uid = await getAuthUserIdByEmail(email); } }
+      if(!uid){
+        for(let i=0;i<5 && !uid;i++){
+          await sleep(400);
+          uid = await getAuthUserIdByEmail(email);
+        }
+      }
     }
+
     if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
-    // RPC canónico (12 parámetros) — evita PGRST202
     const body = {
       p_email: email,
       p_full_name: fullName,
@@ -605,15 +972,36 @@ async function saveUser(){
     };
 
     const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST", headers: headersJSON(), body: JSON.stringify(body)
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify(body)
     });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
+
+    // Guardar modo de interés (compound_interest) en accounts
+    const mode = $("u_interest_mode").value; // monthly | compound
+    const compound = (mode === "compound");
+    const uidForAccount = uid || await getAuthUserIdByEmail(email);
+
+    if(uidForAccount){
+      const pr = await fetch(`${BASE}/accounts?user_id=eq.${encodeURIComponent(uidForAccount)}`, {
+        method: "PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({ compound_interest: compound })
+      });
+      if(!pr.ok){
+        console.error(await pr.text());
+        throw new Error("Se guardó el usuario, pero no se pudo actualizar el modo de interés.");
+      }
+    }
 
     msgEl.textContent = "Guardado";
     await listUsers();
   }catch(e){
     msgEl.textContent = "Error";
     alert("No se pudo guardar: " + (e.message||e));
+  }finally{
+    setLoading(msgEl, false);
   }
 }
 
@@ -623,15 +1011,25 @@ async function deleteClient(x){
   if(!confirm(msg)) return;
 
   const jh = headersJSON();
-  const mustOk = async (resp, label) => { if (!resp.ok) throw new Error(`Error al ${label}: ${(await resp.text().catch(()=>'')) || resp.status}`); };
+  const mustOk = async (resp, label) => {
+    if (!resp.ok) throw new Error(`Error al ${label}: ${(await resp.text().catch(()=>'')) || resp.status}`);
+  };
 
   if (!x.user_id || !x.account_id){
     const r = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, { headers: jh, cache:"no-store" });
-    if (r.ok){ const rows = await r.json(); x.user_id = x.user_id || rows?.[0]?.user_id; x.account_id = x.account_id || rows?.[0]?.account_id; }
+    if (r.ok){
+      const rows = await r.json();
+      x.user_id = x.user_id || rows?.[0]?.user_id;
+      x.account_id = x.account_id || rows?.[0]?.account_id;
+    }
   }
 
   try{
-    const r = await fetch(`${RPC}/admin_delete_user_cascade`, { method:"POST", headers: jh, body: JSON.stringify({ p_email: x.email, p_dry_run: false }) });
+    const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
+      method:"POST",
+      headers: jh,
+      body: JSON.stringify({ p_email: x.email, p_dry_run: false })
+    });
     if (r.status !== 404) await mustOk(r, "RPC admin_delete_user_cascade");
     else throw new Error("sin RPC");
   }catch{
@@ -649,7 +1047,12 @@ async function deleteClient(x){
   try{
     let uid = x.user_id || await getAuthUserIdByEmail(x.email);
     await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
-      method:"POST", headers:{ "Content-Type":"application/json", apikey: ANON_KEY, Authorization:"Bearer "+(localStorage.token||"") },
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization:"Bearer "+(localStorage.token||"")
+      },
       body: JSON.stringify({ user_id: uid || null, email: x.email || null })
     });
   }catch{}
@@ -663,11 +1066,15 @@ async function deleteClient(x){
 /*** INIT ***/
 async function initApp(){
   if(localStorage.token){
-    show($("unauth"), false); show($("app"), true); show($("logoutBtn"), true);
-    await listUsers(); 
-    await listTopups(); // ✅ NUEVO
+    show($("unauth"), false);
+    show($("app"), true);
+    show($("logoutBtn"), true);
+    await listUsers();
+    await listTopups();
   }else{
-    show($("app"), false); show($("logoutBtn"), false); show($("unauth"), true);
+    show($("app"), false);
+    show($("logoutBtn"), false);
+    show($("unauth"), true);
   }
 }
 
@@ -675,26 +1082,30 @@ async function initApp(){
 document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
+
   $("togglePass").addEventListener("click", ()=> {
-    const inp = $("u_pass"); inp.type = (inp.type === "password") ? "text" : "password";
+    const inp = $("u_pass");
+    inp.type = (inp.type === "password") ? "text" : "password";
   });
+
   $("saveBtn").addEventListener("click", saveUser);
+
   $("clearBtn").addEventListener("click", ()=>{
     ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value="");
-    $("u_currency").value="GTQ"; $("u_plan").value="STANDARD"; $("u_months").value="12"; $("saveMsg").textContent="";
+    $("u_currency").value="GTQ";
+    $("u_plan").value="STANDARD";
+    $("u_months").value="12";
+    $("u_interest_mode").value="monthly";
+    $("saveMsg").textContent="";
     validateRatePlan();
   });
-  $("btnRefreshUsers").addEventListener("click", listUsers);
 
-  // ✅ NUEVO: refrescar topups
+  $("btnRefreshUsers").addEventListener("click", listUsers);
   $("btnRefreshTopups")?.addEventListener("click", listTopups);
 
-  // Enlazar formateo de Capital inicial
   bindCapitalFormatter($("u_capital"));
-
   initApp();
 });
 </script>
 </body>
 </html>
-
