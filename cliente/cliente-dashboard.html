@@ -88,7 +88,9 @@
 
   /* ✅ Ajuste solo en móviles */
   @media (max-width:560px){
-    .brand-title{font-size: clamp(24px, 8.2vw, 34px);}
+    .brand-title{
+      font-size: clamp(24px, 8.2vw, 34px);
+    }
   }
 
   /* ✅ BOTÓN CTA */
@@ -195,6 +197,8 @@
 
   .note{color:var(--muted);font-size:13px;margin-top:10px;opacity:.95}
 
+  .wrap > section.panel.section{ margin-top:18px; }
+
   dialog{
     border:0;border-radius:22px;
     background:var(--gloss),linear-gradient(180deg,#14161b,#0f1116);
@@ -245,6 +249,162 @@
   .switch.on::after{
     left:calc(var(--w) - var(--knob) - 3px);
     background:linear-gradient(180deg,#2a2f36,#161a1f);
+  }
+
+  #tdlg .k{ color:#ffffff !important; font-weight:900 !important; }
+  #tdlg .input{
+    background:#ffffff !important;
+    color:#000000 !important;
+    border:1px solid #bfc6d1;
+  }
+  #tdlg .input::placeholder{ color:#6b7280; }
+  #tdlg .input:focus{
+    outline:none;
+    border-color:#000000;
+    box-shadow:0 0 0 2px rgba(0,0,0,.08);
+  }
+
+  /* ===== RECARGA POR TRANSFERENCIA (3D PRO) ===== */
+  .tx-wrap{padding-top:22px}
+  .tx-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin:0 0 14px 0}
+  .tx-title{display:flex; gap:12px; align-items:flex-start}
+  .tx-icon{
+    width:38px; height:38px; border-radius:14px;
+    display:grid; place-items:center;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    flex:0 0 auto;
+  }
+  .tx-title h2{margin:0;font-size:20px;letter-spacing:.2px}
+  .tx-title p{margin:6px 0 0; font-size:13px; line-height:1.4; color:var(--muted)}
+  .tx-badge{
+    font-size:12px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    color:#f4f7ff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    max-width:100%;
+    white-space:normal;
+    text-align:center;
+  }
+  @media (max-width: 520px){
+    .tx-head{flex-direction: column;align-items: flex-start;}
+    .tx-badge{margin-top: 8px;}
+  }
+
+  .tx-steps{display:flex; align-items:center; gap:10px; margin:0 0 16px 0}
+  .tx-step{
+    display:flex; align-items:center; gap:8px;
+    font-size:12.5px;
+    padding:7px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    color:#f4f7ff;
+  }
+  .tx-step-dot{
+    width:20px; height:20px; border-radius:999px;
+    display:grid; place-items:center;
+    font-size:12px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.14);
+  }
+  .tx-step-active{
+    background:rgba(255,255,255,.12);
+    border-color:rgba(255,255,255,.20);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+  }
+  .tx-step-line{flex:1;height:1px;background:rgba(255,255,255,.14);border-radius:999px}
+
+  .tx-grid{display:grid; grid-template-columns: 1.4fr .9fr; gap:14px}
+  @media (max-width: 900px){ .tx-grid{grid-template-columns:1fr} }
+
+  .tx-panel{
+    border-radius:16px;
+    padding:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .tx-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .tx-chip{
+    font-size:12px; padding:6px 10px; border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    color:#f4f7ff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  }
+
+  .tx-rows{display:flex; flex-direction:column; gap:10px}
+  .tx-row{
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap:10px;
+    align-items:center;
+    padding:10px 10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);
+  }
+  .tx-row-strong{grid-template-columns: 1fr auto auto}
+  .tx-k{font-size:12.5px; opacity:.92; color:#f1f5ff}
+  .tx-v{font-size:13px; font-weight:900; color:#ffffff}
+
+  .tx-mono{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    letter-spacing:.3px;
+    padding:6px 10px;
+    border-radius:10px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.16);
+    color:#ffffff;
+  }
+
+  .tx-copy{
+    height:34px; padding:0 12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .tx-copy:hover{background:rgba(255,255,255,.16)}
+  .tx-copy:disabled{opacity:.6; cursor:not-allowed}
+
+  .tx-hint{
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.4;
+  }
+
+  .tx-primary{
+    width:100%;
+    height:44px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.18);
+    background:#fff;
+    color:#0b0c0e;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 12px 26px rgba(0,0,0,.38);
+  }
+  .tx-primary:hover{filter:brightness(.98)}
+
+  .tx-note{
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.45;
+    padding:10px 12px;
+    border-radius:12px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
   }
 
   /* ===== Nav ===== */
@@ -327,7 +487,7 @@
         </div>
       </section>
 
-      <!-- ✅ Estas 3 secciones: al iniciar sesión deben estar OCULTAS -->
+      <!-- ✅ Estas 3 secciones se despliegan/ocultan con "Mi Panel" -->
       <div id="panelExtras">
 
         <!-- RESULTADOS DEL MES -->
@@ -400,14 +560,78 @@
          VISTA: DEPOSITAR
     ========================== -->
     <div id="viewDeposit" style="display:none">
-      <section class="panel section">
-        <h2 style="margin:0 0 10px 0">Depósito por transferencia</h2>
-        <div class="muted">Envíe su boleta de transferencia para solicitar una recarga.</div>
-        <div style="margin-top:14px">
-          <button class="btn" id="btnOpenTopup" type="button">Enviar boleta de depósito</button>
+      <section class="panel section tx-wrap">
+        <div class="tx-head">
+          <div class="tx-title">
+            <div class="tx-icon">⇄</div>
+            <div>
+              <h2>Depósito por transferencia</h2>
+              <p>Envíe su boleta de transferencia para solicitar una recarga. Un administrador revisará y acreditará su capital.</p>
+            </div>
+          </div>
+          <span class="tx-badge">Validación administrativa</span>
+        </div>
+
+        <div class="tx-steps">
+          <div class="tx-step tx-step-active" id="txStep1">
+            <span class="tx-step-dot">1</span><span>Transferir</span>
+          </div>
+          <div class="tx-step-line"></div>
+          <div class="tx-step" id="txStep2">
+            <span class="tx-step-dot">2</span><span>Subir boleta</span>
+          </div>
+        </div>
+
+        <div class="tx-grid">
+          <div class="tx-panel">
+            <div class="tx-panel-head">
+              <span class="tx-chip">Datos para transferencia</span>
+            </div>
+
+            <div class="tx-rows">
+              <div class="tx-row">
+                <span class="tx-k">Nombre de la cuenta</span>
+                <span class="tx-v">Fx Inversiones</span>
+              </div>
+
+              <div class="tx-row tx-row-strong">
+                <span class="tx-k">Número de cuenta</span>
+                <span class="tx-v tx-mono" id="acctNumber">021-010518-5</span>
+                <button class="tx-copy" type="button" id="btnCopyAcct">Copiar</button>
+              </div>
+
+              <div class="tx-row">
+                <span class="tx-k">Tipo de cuenta</span>
+                <span class="tx-v">Monetaria</span>
+              </div>
+
+              <div class="tx-row">
+                <span class="tx-k">Moneda</span>
+                <span class="tx-v">Quetzales (GTQ)</span>
+              </div>
+            </div>
+
+            <div class="tx-hint">
+              Realice la transferencia a esta cuenta y posteriormente adjunte la boleta para solicitar la recarga de su capital.
+            </div>
+          </div>
+
+          <div class="tx-panel">
+            <div class="tx-panel-head">
+              <span class="tx-chip">Acción</span>
+            </div>
+
+            <button class="tx-primary" id="btnOpenTopup" type="button">
+              Enviar boleta de depósito
+            </button>
+
+            <div class="tx-note">
+              <b>Nota:</b> El acreditamiento puede tomar unas horas (según validación).
+            </div>
+          </div>
         </div>
       </section>
-    </div>
+    </div><!-- /#viewDeposit -->
 
     <!-- =========================
          VISTA: RETIRAR
@@ -454,20 +678,44 @@
           Al enviar la solicitud, un representante de <b>FX | CAPITAL R.L.</b> revisará su información y se comunicará con usted.
         </div>
       </section>
-    </div>
+    </div><!-- /#viewWithdraw -->
 
   </div><!-- /wrap -->
 
-  <!-- MODAL MENSAJES -->
-  <dialog id="msgDlg">
+  <!-- MODAL CONTRASEÑA -->
+  <dialog id="pwdDlg" aria-labelledby="pwdTitle">
     <div class="modal-h">
-      <div style="font-weight:900">FX | CAPITAL R.L.</div>
-      <button class="modal-close" id="msgClose" aria-label="Cerrar">✕</button>
+      <div id="pwdTitle" style="font-weight:900">Actualizar contraseña</div>
+      <div style="width:36px;height:36px"></div>
     </div>
     <div class="modal-b">
-      <p id="msgText" style="margin:0;line-height:1.6"></p>
-      <div style="margin-top:16px;display:flex;justify-content:flex-end">
-        <button class="btn" id="msgOk">Aceptar</button>
+      <p class="note" style="margin-top:0;margin-bottom:16px">
+        Por seguridad, debe actualizar su contraseña antes de continuar usando el panel.
+      </p>
+
+      <div style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+        <div>
+          <div class="k">Nueva contraseña</div>
+          <div class="pwd-field-wrap" style="position:relative">
+            <input id="pwdNew" class="input" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres" style="padding-right:44px">
+            <button type="button" id="pwdNewEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña"
+              style="position:absolute; right:12px; top:50%; transform:translateY(-50%); border:0; background:transparent; cursor:pointer; font-size:17px; color:#8c92a0; padding:4px;">👁</button>
+          </div>
+        </div>
+        <div>
+          <div class="k">Confirmar nueva contraseña</div>
+          <div class="pwd-field-wrap" style="position:relative">
+            <input id="pwdConfirm" class="input" type="password" autocomplete="new-password" placeholder="Repita la contraseña" style="padding-right:44px">
+            <button type="button" id="pwdConfirmEye" class="pwd-toggle" aria-label="Mostrar u ocultar contraseña"
+              style="position:absolute; right:12px; top:50%; transform:translateY(-50%); border:0; background:transparent; cursor:pointer; font-size:17px; color:#8c92a0; padding:4px;">👁</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pwdError" style="margin-top:8px;font-size:13px;color:var(--danger)"></div>
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:18px">
+        <button class="btn" id="pwdSave">Guardar contraseña</button>
       </div>
     </div>
   </dialog>
@@ -484,10 +732,23 @@
         <div>
           <div class="k">Monto depositado (Q)</div>
           <input id="tAmount" class="input" type="text" inputmode="decimal" placeholder="Ej. 5,000">
+          <div class="note">Monto mínimo sugerido: <b>Q 2,000</b>.</div>
+        </div>
+        <div>
+          <div class="k">Banco (opcional)</div>
+          <input id="tBank" class="input" type="text" placeholder="Ej. Banrural / BAC / BI">
+        </div>
+      </div>
+
+      <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:14px">
+        <div>
+          <div class="k">Fecha/hora del depósito (opcional)</div>
+          <input id="tDate" class="input" type="datetime-local">
         </div>
         <div>
           <div class="k">Boleta (JPG/PNG/PDF)</div>
           <input id="tReceipt" class="input" type="file" accept="image/*,application/pdf">
+          <div class="note">Máximo recomendado: <b>6 MB</b>.</div>
         </div>
       </div>
 
@@ -499,6 +760,20 @@
       <div class="actions" style="display:flex;gap:12px;justify-content:flex-start;margin-top:16px">
         <button class="btn secondary" id="tCancel">Cancelar</button>
         <button class="btn" id="tSend">Enviar depósito</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL MENSAJES -->
+  <dialog id="msgDlg">
+    <div class="modal-h">
+      <div style="font-weight:900">FX | CAPITAL R.L.</div>
+      <button class="modal-close" id="msgClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-b">
+      <p id="msgText" style="margin:0;line-height:1.6"></p>
+      <div style="margin-top:16px;display:flex;justify-content:flex-end">
+        <button class="btn" id="msgOk">Aceptar</button>
       </div>
     </div>
   </dialog>
@@ -523,6 +798,12 @@
       if (error) console.warn('Supabase signOut error:', error?.message);
       Object.keys(localStorage).forEach(k=>{ if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k); });
       sessionStorage.clear();
+      if (indexedDB && indexedDB.databases){
+        try{
+          const dbs = await indexedDB.databases();
+          for (const db of dbs){ if (db.name && /supabase|auth|localforage/i.test(db.name)) indexedDB.deleteDatabase(db.name); }
+        }catch(e){}
+      }
     } finally {
       const bust = `logged_out=${Date.now()}`;
       const sep  = LOGIN_URL.includes('?') ? '&' : '?';
@@ -530,6 +811,13 @@
     }
   }
   document.getElementById('btnSignOut')?.addEventListener('click', (ev)=>{ ev.preventDefault(); forceLogout(); });
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      const bust = `logged_out=${Date.now()}`;
+      const sep  = LOGIN_URL.includes('?') ? '&' : '?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+    }
+  });
 
   /* ===== Helpers fechas ===== */
   function nextMonthSameDay(d){
@@ -632,7 +920,6 @@
     return d;
   }
 
-  // ✅ Eventos de capital: “initial_capital” + topups aprobados (desde su fecha)
   function buildCapitalEvents(acc, approvedTopups){
     const joined = acc?.joined_at ? new Date(acc.joined_at) : new Date();
 
@@ -654,7 +941,6 @@
     return ev;
   }
 
-  // ✅ Interés prorrateado por días (si capital cambia dentro del mes, no toca meses anteriores)
   function interestForPeriod(periodStart, periodEnd, events, monthlyRate){
     const start = clampDate(periodStart);
     const end   = clampDate(periodEnd);
@@ -672,6 +958,7 @@
 
     const segs = [];
     let cursor = new Date(start);
+
     const inside = pts.filter(e => e.at > start && e.at < end);
 
     for(const e of inside){
@@ -698,11 +985,8 @@
     return `Mes ${n} (${s} — ${ee})`;
   }
 
-  // ✅ Estado de cuenta:
-  // - Capital inicio = capital base (no incluye intereses)
-  // - Interés (beneficio) para "Acumulado" = SOLO sobre capital base (NO sobre saldo total)
-  // - Saldo para "Acumulado" = capital base + intereses acumulados (simple acumulado)
-  function renderStatementTable({ acc, periods, events }){
+  /* ✅✅✅ FIX: interés en acumulado se calcula SOLO sobre capital base (NO sobre saldo) */
+  function renderStatementTable({ acc, periods, events, settlementsMap }){
     const tbody = document.getElementById('stmtBody');
     if(!tbody) return;
     tbody.innerHTML = '';
@@ -710,7 +994,7 @@
     const semRate = Number(acc.interest_pct||0)/100;
     const monthlyRate = semRate/6;
 
-    const isAccum = !!acc.compound_interest; // tu bandera actual "compound_interest"
+    const isCompound = !!acc.compound_interest;
 
     function capitalAtDate(date){
       let cap = 0;
@@ -732,6 +1016,7 @@
     }
 
     let accrued = 0; // intereses acumulados (solo meses cerrados)
+    let saldoBase = capitalAtDate(acc.joined_at ? new Date(acc.joined_at) : new Date());
 
     for(const p of visiblePeriods){
       const closeEffective = businessCloseDate(p.end);
@@ -739,22 +1024,28 @@
 
       const capStart = capitalAtDate(p.start);
 
-      // ✅ Interés SIEMPRE calculado sobre capital base (capStart), incluso si es "Acumulado"
-      // (si hubo recarga/cambio de capital dentro del mes, se prorratea sin tocar meses anteriores)
+      // ✅ IMPORTANTE: el interés siempre sale de EVENTS BASE (no sumamos accrued)
       const interest = interestForPeriod(p.start, p.end, events, monthlyRate);
 
       let estado = 'En curso';
-      if(isAccum){
+      if(isCompound){
         estado = ended ? 'Acumulado' : 'En curso';
       }else{
         estado = ended ? 'Pagado' : 'En curso';
       }
 
-      // ✅ Saldo
+      // ✅ Saldo:
+      // - mensual: solo capital base
+      // - acumulado: capital base + accrued (pero accrued solo suma cuando el mes termina)
       let saldo = capStart;
-      if(isAccum){
-        if(ended) accrued += interest;     // acumula intereses solo al cerrar el mes
-        saldo = capStart + accrued;        // saldo refleja capital base + acumulado
+
+      if(isCompound){
+        if(ended){
+          accrued += interest;            // suma interés al cierre
+        }
+        saldo = capStart + accrued;       // saldo refleja capital + intereses ya acumulados
+      }else{
+        saldo = capStart;
       }
 
       const tr = document.createElement('tr');
@@ -774,27 +1065,11 @@
 
     const note = document.getElementById('stmtNote');
     if(note){
-      note.innerHTML = isAccum
-        ? `Modo: <b>Interés acumulado</b>. El <b>Interés</b> se calcula sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre de cada mes.`
-        : `Modo: <b>Pago mensual</b>. El capital se mantiene (salvo que el admin acredite capital en meses futuros). Al concluir el mes, el estado cambia a <b>Pagado</b> (si el cierre cae sábado/domingo, cambia hasta el lunes).`;
+      note.innerHTML = isCompound
+        ? `Modo: <b>Interés acumulado</b>. El <b>Interés (beneficio)</b> se calcula únicamente sobre el <b>capital base</b> del período (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre de cada mes.`
+        : `Modo: <b>Pago mensual</b>. El capital se mantiene (salvo ajustes del admin en meses futuros). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
-
-  /* ===== Mensajes ===== */
-  const msgDlg = document.getElementById('msgDlg');
-  function showMessage(html){
-    const mt = document.getElementById('msgText');
-    if(mt) mt.innerHTML = html;
-    if(msgDlg && !msgDlg.open) msgDlg.showModal();
-  }
-  document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
-  document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
-
-  /* ===== Modal depósito simple ===== */
-  const tdlg = document.getElementById('tdlg');
-  document.getElementById('btnOpenTopup')?.addEventListener('click', ()=> tdlg?.showModal());
-  document.getElementById('tClose')?.addEventListener('click', ()=> tdlg?.close());
-  document.getElementById('tCancel')?.addEventListener('click', ()=> tdlg?.close());
 
   /* ===== Retiro (pestaña) ===== */
   function selectType(t){
@@ -810,6 +1085,352 @@
     sw.classList.toggle('on',on); sw.setAttribute('aria-checked',String(on));
     const wa = document.getElementById('wAmount');
     if(wa) wa.disabled = on;
+  }
+
+  async function enviarSolicitudRetiro(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
+
+    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
+    if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
+
+    const capital=Number(acc?.capital||0);
+    const all=document.getElementById('switchAll')?.classList.contains('on');
+    const amount=all? capital : Number((document.getElementById('wAmount')?.value||'').replace(/[,\s]/g,'') || 0);
+    const reason=(document.getElementById('wReason')?.value||'').trim();
+
+    if(!all){
+      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
+      if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
+      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
+    }
+    if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
+
+    const { error } = await sb.functions.invoke('send-withdrawal-email', {
+      body:{ amount, reason, full_withdrawal:!!all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' }
+    });
+
+    if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
+
+    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
+
+    if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
+    if(document.getElementById('wReason')) document.getElementById('wReason').value='';
+    toggleSwitchAll(false);
+    selectType('early');
+  }
+
+  /* ===== Mensajes ===== */
+  const msgDlg = document.getElementById('msgDlg');
+  function showMessage(html){
+    const mt = document.getElementById('msgText');
+    if(mt) mt.innerHTML = html;
+    if(msgDlg && !msgDlg.open) msgDlg.showModal();
+  }
+
+  /* ===== Recarga por transferencia ===== */
+  const tdlg = document.getElementById('tdlg');
+  let CURRENT_ACCOUNT_ID = null;
+
+  function genRefCode(){ return `FXC-${Math.floor(100000 + Math.random()*900000)}`; }
+  function extFromFile(file){
+    const name = (file?.name || '').toLowerCase();
+    const parts = name.split('.');
+    return parts.length > 1 ? parts.pop() : 'bin';
+  }
+  function safeParseMoney(str){ return Number((str || '').toString().replace(/[,\s]/g,'') || 0); }
+
+  async function enviarTopupTransferencia(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
+    if(!CURRENT_ACCOUNT_ID){ showMessage('No se encontró su cuenta. Intente recargar la página.'); return; }
+
+    const amount = safeParseMoney(document.getElementById('tAmount')?.value);
+    const bank   = (document.getElementById('tBank')?.value || '').trim();
+    const notes  = (document.getElementById('tNotes')?.value || '').trim();
+    const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
+    const fileEl = document.getElementById('tReceipt');
+    const file   = fileEl?.files?.[0];
+
+    if(amount <= 0){ alert('Ingrese un monto válido.'); return; }
+    if(!file){ alert('Debe adjuntar la boleta (JPG/PNG/PDF).'); return; }
+
+    const MAX_MB = 6;
+    if(file.size > MAX_MB * 1024 * 1024){
+      alert(`La boleta excede ${MAX_MB}MB. Comprímala o envíe una versión más ligera.`);
+      return;
+    }
+
+    const okType = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
+    if(!okType){ alert('Formato no permitido. Use JPG/PNG o PDF.'); return; }
+
+    const btn = document.getElementById('tSend');
+    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    const reference_code = genRefCode();
+    const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
+
+    try{
+      const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
+      const ext = extFromFile(file);
+      const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
+
+      const up = await sb.storage.from('topup-receipts').upload(receipt_path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if(up.error){
+        console.error(up.error);
+        alert('No se pudo subir la boleta. Intente de nuevo.');
+        return;
+      }
+
+      const ins = await sb.from('topups').insert({
+        user_id: session.user.id,
+        account_id: CURRENT_ACCOUNT_ID,
+        amount,
+        currency: 'GTQ',
+        provider: 'bank_transfer',
+        status: 'pending',
+        reference_code,
+        bank_name: bank || null,
+        deposit_datetime,
+        receipt_path,
+        notes: notes || null,
+        provider_ref: null,
+        checkout_url: null,
+        idempotency_key: null,
+        webhook_event_id: null
+      });
+
+      if(ins.error){
+        console.error(ins.error);
+        try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
+        alert('No se pudo registrar el depósito. Intente de nuevo.');
+        return;
+      }
+
+      showMessage(
+        `Depósito enviado con éxito.<br><br>
+         <b>Código:</b> ${reference_code}<br>
+         Un administrador revisará su boleta y acreditará el capital.`
+      );
+
+      document.getElementById('txStep1')?.classList.remove('tx-step-active');
+      document.getElementById('txStep2')?.classList.add('tx-step-active');
+
+      tdlg?.close();
+      if(document.getElementById('tAmount')) document.getElementById('tAmount').value = '';
+      if(document.getElementById('tBank')) document.getElementById('tBank').value = '';
+      if(document.getElementById('tNotes')) document.getElementById('tNotes').value = '';
+      if(document.getElementById('tDate')) document.getElementById('tDate').value = '';
+      if(fileEl) fileEl.value = '';
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = 'Enviar depósito'; }
+    }
+  }
+
+  /* === LÓGICA CAMBIO DE CONTRASEÑA OBLIGATORIO === */
+  let pwdDlg;
+  function openPwdDialog(){
+    if(!pwdDlg) pwdDlg = document.getElementById('pwdDlg');
+    if(!pwdDlg) return;
+    pwdDlg.addEventListener('cancel', (e)=> e.preventDefault());
+    pwdDlg.showModal();
+    const newEl = document.getElementById('pwdNew');
+    const confEl = document.getElementById('pwdConfirm');
+    const errEl = document.getElementById('pwdError');
+    if(newEl) newEl.value = '';
+    if(confEl) confEl.value = '';
+    if(errEl) errEl.textContent = '';
+  }
+
+  async function handleSavePassword(){
+    const newEl = document.getElementById('pwdNew');
+    const confEl = document.getElementById('pwdConfirm');
+    const errEl  = document.getElementById('pwdError');
+    if(!newEl || !confEl || !errEl) return;
+
+    const pwd  = (newEl.value || '').trim();
+    const cpwd = (confEl.value || '').trim();
+
+    errEl.textContent = '';
+
+    if(pwd.length < 8){ errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.'; return; }
+    if(pwd !== cpwd){ errEl.textContent = 'Las contraseñas no coinciden.'; return; }
+
+    const btn = document.getElementById('pwdSave');
+    if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+    try{
+      const { error: updErr } = await sb.auth.updateUser({ password: pwd });
+      if(updErr){
+        errEl.textContent = 'No se pudo actualizar la contraseña. Inténtelo de nuevo.';
+        console.error(updErr);
+        return;
+      }
+
+      const { data:{ user } } = await sb.auth.getUser();
+      if(user?.id){
+        await sb.from('profiles').update({ must_change_password:false }).eq('id', user.id);
+      }
+
+      if(pwdDlg && pwdDlg.open) pwdDlg.close();
+      showMessage('Su contraseña se actualizó correctamente. Puede seguir utilizando su panel con normalidad.');
+    }finally{
+      if(btn){ btn.disabled = false; btn.textContent = 'Guardar contraseña'; }
+    }
+  }
+
+  function togglePwdVisibility(inputId, btnId){
+    const input = document.getElementById(inputId);
+    const btn   = document.getElementById(btnId);
+    if(!input || !btn) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+  }
+
+  /* ===== Simulador ===== */
+  function getSimPlanForCapital(cap){
+    cap = Number(cap||0);
+    if(cap >= 250000) return { plan:'PLATINUM', semPct:20 };
+    if(cap >= 2000)   return { plan:'STANDARD', semPct:15 };
+    return { plan:'—', semPct:0 };
+  }
+  function buildSimRows(cap, semPct){
+    const monthlyRate = (Number(semPct||0)/100)/6;
+    const rows = [];
+    let sum = 0;
+    for(let i=1;i<=6;i++){
+      const interest = cap * monthlyRate;
+      sum += interest;
+      rows.push({ month:i, interest });
+    }
+    return { rows, sum, final: cap + sum };
+  }
+  function renderSim(cap, semPct){
+    const { rows, sum, final } = buildSimRows(cap, semPct);
+
+    const tbody = document.getElementById('simBody');
+    if(tbody){
+      tbody.innerHTML = '';
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.month}</td><td>${fmtQ(r.interest)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    const ss = document.getElementById('simSum');
+    if(ss) ss.textContent = fmtQ(sum);
+    const sf = document.getElementById('simFinal');
+    if(sf) sf.textContent = fmtQ(final);
+  }
+  function handleCalc(){
+    const raw = document.getElementById('simCapital')?.value || '';
+    const cap = Number(raw.replace(/[,\s]/g,'') || 0);
+    const note = document.getElementById('simNote');
+    const sp = document.getElementById('simPlan');
+
+    if(cap <= 0){
+      if(sp) sp.textContent = '—';
+      if(note) note.textContent = 'Ingrese un capital válido.';
+      renderSim(0, 0);
+      return;
+    }
+
+    const { plan, semPct } = getSimPlanForCapital(cap);
+
+    if(cap < 2000){
+      if(sp) sp.textContent = '—';
+      if(note) note.textContent = 'El mínimo para simular es Q 2,000.00.';
+      renderSim(cap, 0);
+      return;
+    }
+
+    if(sp) sp.textContent = `${plan} — ${semPct}% semestral`;
+    if(note) note.textContent = 'Cálculo estimado (interés simple).';
+    renderSim(cap, semPct);
+  }
+
+  /* ===== Carga cuenta ===== */
+  async function loadHeader(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
+    const uid=session.user.id;
+
+    const [{ data: prof }, { data: acc }] = await Promise.all([
+      sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
+      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital').eq('user_id',uid).single()
+    ]);
+
+    const vn = document.getElementById('valName');
+    if(vn) vn.textContent = (prof?.full_name || prof?.email || session.user.email || '—');
+
+    if(!acc){
+      ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.textContent='—';
+      });
+      const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(0);
+      const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent=fmtQ(0);
+
+      const sp = document.getElementById('simPlan'); if(sp) sp.textContent = '—';
+      renderSim(0,0);
+
+      if(prof?.must_change_password){ openPwdDialog(); }
+      return;
+    }
+
+    CURRENT_ACCOUNT_ID = acc.id;
+
+    const { data: approvedTopups } = await sb
+      .from('topups')
+      .select('amount, approved_at, status, account_id')
+      .eq('account_id', acc.id)
+      .eq('status', 'paid');
+
+    const { data: settlements } = await sb
+      .from('interest_settlements')
+      .select('period_start, status, paid_at, paid_amount')
+      .eq('account_id', acc.id);
+
+    const settlementsMap = {};
+    (settlements||[]).forEach(s=>{
+      const k = (s.period_start ? s.period_start.toString().slice(0,10) : '');
+      if(k) settlementsMap[k] = s;
+    });
+
+    const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
+    const periods = buildPeriods(joinedForPeriods, acc.invest_months);
+    const events  = buildCapitalEvents(acc, approvedTopups||[]);
+    renderStatementTable({ acc, periods, events, settlementsMap });
+
+    const map = {
+      valAccountId: acc.id||'—',
+      valPlan: acc.plan||'—',
+      valCurrency: acc.currency||'—',
+      valMonths: acc.invest_months ?? '—'
+    };
+    for (const k in map){
+      const el=document.getElementById(k);
+      if(el) el.textContent=map[k];
+    }
+
+    const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
+
+    const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
+    const close  = addMonthsSameDay(joined, acc.invest_months||0);
+
+    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = joined.toLocaleDateString('es-GT');
+    const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = close.toLocaleDateString('es-GT');
+
+    const semPct=(acc.interest_pct||0)/100;
+    const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
+    const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
+
+    paintWeeks(acc, {});
+
+    if(prof?.must_change_password){ openPwdDialog(); }
   }
 
   /* ===== Navegación Panel / Depositar / Retirar ===== */
@@ -864,25 +1485,24 @@
     }
   }
 
-  /* ===== ✅ Toggle “Mi Panel” (por defecto oculto al iniciar sesión) ===== */
+  /* ✅✅✅ Toggle “Mi Panel” (solo muestra/oculta panelExtras). Por defecto: OCULTO */
   let PANEL_EXTRAS_OPEN = false;
   function setPanelExtras(open){
     const extras = document.getElementById('panelExtras');
-    const btn = document.getElementById('btnNavPanel');
     PANEL_EXTRAS_OPEN = !!open;
-
     if(extras) extras.classList.toggle('hidden', !PANEL_EXTRAS_OPEN);
 
-    // ✅ Texto del botón
-    if(btn) btn.textContent = PANEL_EXTRAS_OPEN ? 'Ocultar Panel' : 'Mi Panel';
+    // ✅ Texto siempre igual (como pediste)
+    const btn = document.getElementById('btnNavPanel');
+    if(btn) btn.textContent = 'Mi Panel';
   }
   function togglePanelExtras(){ setPanelExtras(!PANEL_EXTRAS_OPEN); }
 
+  /* ===== Eventos UI ===== */
   document.getElementById('btnNavPanel')?.addEventListener('click', ()=>{
     if(CURRENT_VIEW !== 'panel'){
       showView('panel');
-      // al volver al panel, se queda oculto hasta que el usuario lo abra
-      setPanelExtras(false);
+      setPanelExtras(false); // al volver, solo Mi cuenta
       return;
     }
     togglePanelExtras();
@@ -892,63 +1512,55 @@
   document.getElementById('btnNavWithdraw')?.addEventListener('click', ()=> showView('withdraw'));
   document.getElementById('btnBackPanel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(false); });
 
-  /* ===== Carga cuenta ===== */
-  async function loadHeader(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){
-      const bust=`no_session=${Date.now()}`;
-      const sep=LOGIN_URL.includes('?')?'&':'?';
-      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
-      return;
+  // Retiro (pestaña)
+  document.getElementById('optEarly')?.addEventListener('click', ()=> selectType('early'));
+  document.getElementById('optHealth')?.addEventListener('click', ()=> selectType('health'));
+  document.getElementById('switchAll')?.addEventListener('click', ()=> toggleSwitchAll());
+  document.getElementById('switchAll')?.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleSwitchAll(); }
+  });
+  document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
+  document.getElementById('wCancel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(false); });
+
+  // Modal mensajes
+  document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
+  document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
+
+  // Modal depósito
+  document.getElementById('btnOpenTopup')?.addEventListener('click', ()=>{
+    document.getElementById('txStep1')?.classList.remove('tx-step-active');
+    document.getElementById('txStep2')?.classList.add('tx-step-active');
+    tdlg?.showModal();
+  });
+  document.getElementById('tClose')?.addEventListener('click', ()=> tdlg?.close());
+  document.getElementById('tCancel')?.addEventListener('click', ()=> tdlg?.close());
+  document.getElementById('tSend')?.addEventListener('click', enviarTopupTransferencia);
+
+  // Copiar número de cuenta
+  document.getElementById('btnCopyAcct')?.addEventListener('click', async ()=>{
+    const txt = document.getElementById('acctNumber')?.textContent?.trim() || '';
+    if(!txt) return;
+    try{
+      await navigator.clipboard.writeText(txt);
+      showMessage('Número de cuenta copiado al portapapeles.');
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showMessage('Número de cuenta copiado al portapapeles.');
     }
-    const uid=session.user.id;
+  });
 
-    const [{ data: prof }, { data: acc }] = await Promise.all([
-      sb.from('profiles').select('full_name,email').eq('id',uid).single(),
-      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital').eq('user_id',uid).single()
-    ]);
+  // Password toggles
+  document.getElementById('pwdNewEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
+  document.getElementById('pwdConfirmEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
+  document.getElementById('pwdSave')?.addEventListener('click', handleSavePassword);
 
-    const vn = document.getElementById('valName');
-    if(vn) vn.textContent = (prof?.full_name || prof?.email || session.user.email || '—');
-
-    if(!acc) return;
-
-    const { data: approvedTopups } = await sb
-      .from('topups')
-      .select('amount, approved_at, status, account_id')
-      .eq('account_id', acc.id)
-      .eq('status', 'paid');
-
-    const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
-    const periods = buildPeriods(joinedForPeriods, acc.invest_months);
-    const events  = buildCapitalEvents(acc, approvedTopups||[]);
-
-    renderStatementTable({ acc, periods, events });
-    paintWeeks(acc, {});
-
-    const map = {
-      valAccountId: acc.id||'—',
-      valPlan: acc.plan||'—',
-      valCurrency: acc.currency||'—',
-      valMonths: acc.invest_months ?? '—'
-    };
-    for (const k in map){
-      const el=document.getElementById(k);
-      if(el) el.textContent=map[k];
-    }
-
-    const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
-
-    const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
-    const close  = addMonthsSameDay(joined, acc.invest_months||0);
-
-    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = joined.toLocaleDateString('es-GT');
-    const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = close.toLocaleDateString('es-GT');
-
-    const semPct=(acc.interest_pct||0)/100;
-    const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
-    const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
-  }
+  // Simulador
+  document.getElementById('btnCalc')?.addEventListener('click', handleCalc);
 
   /* ===== Bind inputs monetarios ===== */
   bindMoneyInput('wAmount');
@@ -962,11 +1574,18 @@
     else if(h === '#retirar') showView('withdraw');
     else showView('panel');
 
-    // ✅ Al iniciar sesión: SOLO Mi cuenta visible
+    // ✅ AL INICIAR SESIÓN: solo “Mi cuenta”
     setPanelExtras(false);
 
     await loadHeader();
+
+    const sp = document.getElementById('simPlan');
+    if(sp) sp.textContent = '—';
+    renderSim(0, 0);
+    const note = document.getElementById('simNote');
+    if(note) note.textContent = 'Ingrese un capital y presione Calcular.';
   })();
+
   </script>
 </body>
 </html>
