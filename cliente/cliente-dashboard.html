@@ -551,7 +551,6 @@
 
     <!-- =========================
          VISTA: DEPOSITAR
-         (NO tocada, solo renombrada)
     ========================== -->
     <div id="viewDeposit" style="display:none">
       <section class="panel section tx-wrap">
@@ -1011,15 +1010,18 @@
       stmtRange.textContent = '—';
     }
 
-    let accrued = 0; // ✅ intereses acumulados SOLO de meses ya cerrados
-    let saldo = capitalAtDate(acc.joined_at ? new Date(acc.joined_at) : new Date());
+    let accrued = 0; // intereses acumulados SOLO de meses ya cerrados (para modo acumulado)
 
     for(const p of visiblePeriods){
       const closeEffective = businessCloseDate(p.end);
       const ended = today >= closeEffective;
 
+      // ✅ Capital inicio: SIEMPRE capital base (sin intereses). Incluye topups si aplican.
       const baseCapStart = capitalAtDate(p.start);
-      const capStart = isCompound ? (baseCapStart + accrued) : baseCapStart;
+      const capitalInicioMostrar = baseCapStart;
+
+      // ✅ Para calcular el interés en modo acumulado, la base “real” es capital + intereses acumulados previos
+      const calcBaseAtStart = isCompound ? (baseCapStart + accrued) : baseCapStart;
 
       const adjEvents = isCompound
         ? events.map(e => ({ ...e, capital: Number(e.capital||0) + accrued }))
@@ -1034,24 +1036,25 @@
         estado = ended ? 'Pagado' : 'En curso';
       }
 
+      // ✅ Saldo: aquí SÍ se reflejan intereses (solo cuando corresponde)
+      let saldo = baseCapStart;
+
       if(isCompound){
         if(ended){
-          // ✅ al cerrar: suma interés y actualiza acumulado
-          accrued += interest;
-          saldo = baseCapStart + accrued;
+          accrued += interest;                 // al cerrar, se acumula el interés del mes
+          saldo = baseCapStart + accrued;      // saldo = capital base + acumulado
         }else{
-          // ✅ en curso: no suma interés del mes todavía
-          saldo = capStart;
+          saldo = baseCapStart + accrued;      // saldo muestra acumulado de meses cerrados (sin el interés del mes en curso)
         }
       }else{
-        // pago mensual
-        saldo = capStart;
+        // Pago mensual: NO se suma al saldo (el interés se paga por fuera)
+        saldo = baseCapStart;
       }
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${monthLabel(p.start, p.end, p.idx)}</td>
-        <td>${fmtQ(capStart)}</td>
+        <td>${fmtQ(capitalInicioMostrar)}</td>
         <td>${fmtQ(interest)}</td>
         <td><b>${estado}</b></td>
         <td>${fmtQ(saldo)}</td>
@@ -1066,7 +1069,7 @@
     const note = document.getElementById('stmtNote');
     if(note){
       note.innerHTML = isCompound
-        ? `Modo: <b>Interés acumulado</b>. El capital permanece fijo; el saldo aumenta al cierre de cada mes.`
+        ? `Modo: <b>Interés acumulado</b>. La columna <b>Capital inicio</b> no incluye intereses; los intereses se reflejan únicamente en <b>Saldo</b> al cierre de cada mes.`
         : `Modo: <b>Pago mensual</b>. El capital y el saldo se mantienen; al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
