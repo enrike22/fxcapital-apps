@@ -989,17 +989,15 @@
 
     const isCompound = !!acc.compound_interest;
 
-    let saldo = 0;
-
-    const firstCap = (()=>{
+    // helper: capital base a una fecha (incluye topups aprobados hasta esa fecha)
+    function capitalAtDate(date){
       let cap = 0;
-      const s0 = clampDate(new Date(acc.joined_at));
+      const d = clampDate(date);
       for(const ev of events){
-        if(ev.at <= s0) cap = ev.capital;
+        if(ev.at <= d) cap = Number(ev.capital||0);
       }
       return cap;
-    })();
-    saldo = firstCap;
+    }
 
     const today = clampDate(new Date());
 
@@ -1013,19 +1011,21 @@
       stmtRange.textContent = '—';
     }
 
+    let accrued = 0; // ✅ intereses acumulados SOLO de meses ya cerrados
+    let saldo = capitalAtDate(acc.joined_at ? new Date(acc.joined_at) : new Date());
+
     for(const p of visiblePeriods){
       const closeEffective = businessCloseDate(p.end);
       const ended = today >= closeEffective;
 
-      let capStart = firstCap;
-      for(const ev of events){
-        if(ev.at <= clampDate(p.start)) capStart = ev.capital;
-      }
+      const baseCapStart = capitalAtDate(p.start);
+      const capStart = isCompound ? (baseCapStart + accrued) : baseCapStart;
 
-      const interest = interestForPeriod(p.start, p.end, events, monthlyRate);
+      const adjEvents = isCompound
+        ? events.map(e => ({ ...e, capital: Number(e.capital||0) + accrued }))
+        : events;
 
-      const key = clampDate(p.start).toISOString().slice(0,10);
-      const st  = settlementsMap[key];
+      const interest = interestForPeriod(p.start, p.end, adjEvents, monthlyRate);
 
       let estado = 'En curso';
       if(isCompound){
@@ -1034,9 +1034,17 @@
         estado = ended ? 'Pagado' : 'En curso';
       }
 
-      if(isCompound && ended){
-        saldo += interest;
+      if(isCompound){
+        if(ended){
+          // ✅ al cerrar: suma interés y actualiza acumulado
+          accrued += interest;
+          saldo = baseCapStart + accrued;
+        }else{
+          // ✅ en curso: no suma interés del mes todavía
+          saldo = capStart;
+        }
       }else{
+        // pago mensual
         saldo = capStart;
       }
 
