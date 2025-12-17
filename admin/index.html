@@ -493,9 +493,9 @@ tbody tr:hover{
 </div>
 
 <script>
-/*** SUPABASE CONFIG ***/
+/*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
@@ -544,6 +544,7 @@ function parseCapitalFromInput(val){
   return Number.isFinite(n) ? n : 0;
 }
 function bindCapitalFormatter(inputEl){
+  if(!inputEl) return;
   inputEl.addEventListener("input", () => {
     const pos = inputEl.selectionStart ?? inputEl.value.length;
     const before = inputEl.value;
@@ -562,7 +563,7 @@ function setCapitalInputValue(n){
   $("u_capital").value = formatCapitalString(val);
 }
 
-/*** LOGIN (ARREGLADO 100%) ***/
+/*** LOGIN (ARREGLADO 100%: Authorization + sin código roto) ***/
 async function doLogin(e){
   e.preventDefault();
 
@@ -575,11 +576,14 @@ async function doLogin(e){
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
       method:"POST",
-      headers:{ apikey:ANON_KEY, "Content-Type":"application/json" },
+      headers:{
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,   // ✅ FIX CLAVE (evita Invalid API key)
+        "Content-Type":"application/json"
+      },
       body: JSON.stringify({ email, password })
     });
 
-    // parse seguro del JSON (aunque venga vacío)
     let data = null;
     try{ data = await r.json(); }catch{ data = null; }
 
