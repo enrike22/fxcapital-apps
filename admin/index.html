@@ -570,6 +570,9 @@ async function doLogin(e){
   const password = $("password").value;
   $("loginMsg").textContent = "";
   setLoading($("loginForm"), true);
+const data = await r.json();
+console.log("LOGIN STATUS:", r.status, data);
+if(!r.ok){ $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido"; return; }
 
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
@@ -1109,3 +1112,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
