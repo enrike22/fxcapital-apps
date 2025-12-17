@@ -59,7 +59,18 @@
   .brand-wrap{display:flex;flex-direction:column;gap:0}
   .brand-row{display:flex;align-items:center;gap:18px}
   .brand-logo{width:112px;height:112px;border-radius:16px;object-fit:contain;background:transparent;display:block}
-  .brand-title{margin:0;font-weight:900;letter-spacing:.4px;font-size:clamp(32px,6vw,72px);line-height:1}
+  .brand-title.brand-title{
+  margin:0;
+  font-weight:900;
+  letter-spacing:.4px;
+  font-size:clamp(32px,6vw,72px);
+  line-height:1;
+
+  /* ✅ evita que Android lo parta en 2 líneas */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
   .brand-sub{margin:10px 0 0 0;font-weight:700;color:#e7ecf6;font-size:clamp(16px,2.2vw,28px);opacity:.92}
 
   .btn{
