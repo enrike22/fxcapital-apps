@@ -430,6 +430,9 @@
     .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
     #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
   }
+
+  /* ✅ Utilidad */
+  .hidden{display:none !important;}
 </style>
 </head>
 
@@ -459,7 +462,6 @@
       <button class="btn secondary panelBtn icon" id="btnNavPanel" type="button">Mi Panel</button>
       <button class="btn cta icon" id="btnNavDeposit" type="button">Depositar</button>
       <button class="btn secondary withdrawBtn icon" id="btnNavWithdraw" type="button">Retirar</button>
-
       <button class="btn secondary backBtn icon" id="btnBackPanel" type="button" style="display:none">Volver a Mi Panel</button>
     </div>
 
@@ -467,7 +469,7 @@
          VISTA: MI PANEL
     ========================== -->
     <div id="viewPanel">
-      <!-- MI CUENTA -->
+      <!-- MI CUENTA (Siempre visible) -->
       <section class="panel section gray">
         <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
         <div class="grid cols-3">
@@ -485,68 +487,73 @@
         </div>
       </section>
 
-      <!-- RESULTADOS DEL MES -->
-      <section class="panel section gray" style="margin-top:18px">
-        <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
-        <div class="muted" id="monthRange">—</div>
-        <div style="overflow:auto;margin-top:8px">
-          <table class="table">
-            <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
-            <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
-            <tfoot><tr class="sum-row"><td>Acumulado del mes</td><td id="weekSum">—</td></tr></tfoot>
-          </table>
-        </div>
-        <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
-      </section>
+      <!-- ✅ Estas 3 secciones se despliegan/ocultan con "Mi Panel" -->
+      <div id="panelExtras">
 
-      <!-- ESTADO DE CUENTA -->
-      <section class="panel section gray" style="margin-top:18px">
-        <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
-        <div class="muted" id="stmtRange">—</div>
-
-        <div style="overflow:auto;margin-top:8px">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Mes</th>
-                <th>Capital inicio</th>
-                <th>Interés (beneficio)</th>
-                <th>Estado</th>
-                <th>Saldo</th>
-              </tr>
-            </thead>
-            <tbody id="stmtBody">
-              <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="note" id="stmtNote">—</div>
-      </section>
-
-      <!-- SIMULADOR -->
-      <section class="panel section" style="margin-top:18px">
-        <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
-        <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>. Plan automático según capital ingresado.</div>
-        <div class="grid cols-3">
-          <div class="group card"><span class="k">Capital a simular (Q)</span>
-            <input id="simCapital" class="input" type="text" inputmode="decimal" placeholder="Ej. 40,000" />
+        <!-- RESULTADOS DEL MES -->
+        <section class="panel section gray" style="margin-top:18px">
+          <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
+          <div class="muted" id="monthRange">—</div>
+          <div style="overflow:auto;margin-top:8px">
+            <table class="table">
+              <thead><tr><th>Viernes</th><th>Interés semanal</th></tr></thead>
+              <tbody id="weekBody"><tr><td>—</td><td>—</td></tr></tbody>
+              <tfoot><tr class="sum-row"><td>Acumulado del mes</td><td id="weekSum">—</td></tr></tfoot>
+            </table>
           </div>
-          <div class="group card"><span class="k">Plan y % (según monto)</span><div id="simPlan" class="v">—</div></div>
-          <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
-          <button class="btn" id="btnCalc">Calcular</button>
-          <span id="simNote" class="note"></span>
-        </div>
-        <div style="overflow:auto;margin-top:12px">
-          <table class="table" id="simTable">
-            <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
-            <tbody id="simBody"><tr><td>1</td><td>Q 0.00</td></tr></tbody>
-            <tfoot><tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr></tfoot>
-          </table>
-        </div>
-      </section>
+          <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
+        </section>
+
+        <!-- ESTADO DE CUENTA -->
+        <section class="panel section gray" style="margin-top:18px">
+          <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
+          <div class="muted" id="stmtRange">—</div>
+
+          <div style="overflow:auto;margin-top:8px">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Capital inicio</th>
+                  <th>Interés (beneficio)</th>
+                  <th>Estado</th>
+                  <th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="stmtBody">
+                <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note" id="stmtNote">—</div>
+        </section>
+
+        <!-- SIMULADOR -->
+        <section class="panel section" style="margin-top:18px">
+          <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
+          <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>. Plan automático según capital ingresado.</div>
+          <div class="grid cols-3">
+            <div class="group card"><span class="k">Capital a simular (Q)</span>
+              <input id="simCapital" class="input" type="text" inputmode="decimal" placeholder="Ej. 40,000" />
+            </div>
+            <div class="group card"><span class="k">Plan y % (según monto)</span><div id="simPlan" class="v">—</div></div>
+            <div class="group card"><span class="k">Capital final estimado</span><div id="simFinal" class="v">Q 0.00</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+            <button class="btn" id="btnCalc">Calcular</button>
+            <span id="simNote" class="note"></span>
+          </div>
+          <div style="overflow:auto;margin-top:12px">
+            <table class="table" id="simTable">
+              <thead><tr><th>Mes</th><th>Interés del mes</th></tr></thead>
+              <tbody id="simBody"><tr><td>1</td><td>Q 0.00</td></tr></tbody>
+              <tfoot><tr class="sum-row"><td>Interés total acumulado</td><td id="simSum">Q 0.00</td></tr></tfoot>
+            </table>
+          </div>
+        </section>
+
+      </div><!-- /#panelExtras -->
     </div><!-- /#viewPanel -->
 
     <!-- =========================
@@ -1010,24 +1017,22 @@
       stmtRange.textContent = '—';
     }
 
-    let accrued = 0; // intereses acumulados SOLO de meses ya cerrados (para modo acumulado)
+    let accrued = 0; // intereses acumulados (solo meses ya cerrados)
+    let saldo   = capitalAtDate(acc.joined_at ? new Date(acc.joined_at) : new Date());
 
     for(const p of visiblePeriods){
       const closeEffective = businessCloseDate(p.end);
       const ended = today >= closeEffective;
 
-      // ✅ Capital inicio: SIEMPRE capital base (sin intereses). Incluye topups si aplican.
-      const baseCapStart = capitalAtDate(p.start);
-      const capitalInicioMostrar = baseCapStart;
+      // ✅ Capital inicio SIEMPRE es el capital base (NO suma intereses)
+      const capStart = capitalAtDate(p.start);
 
-      // ✅ Para calcular el interés en modo acumulado, la base “real” es capital + intereses acumulados previos
-      const calcBaseAtStart = isCompound ? (baseCapStart + accrued) : baseCapStart;
-
-      const adjEvents = isCompound
+      // ✅ Para calcular interés, si es compuesto, “capital efectivo” = capital base + accrued (solo para cálculo)
+      const eventsForCalc = isCompound
         ? events.map(e => ({ ...e, capital: Number(e.capital||0) + accrued }))
         : events;
 
-      const interest = interestForPeriod(p.start, p.end, adjEvents, monthlyRate);
+      const interest = interestForPeriod(p.start, p.end, eventsForCalc, monthlyRate);
 
       let estado = 'En curso';
       if(isCompound){
@@ -1036,25 +1041,22 @@
         estado = ended ? 'Pagado' : 'En curso';
       }
 
-      // ✅ Saldo: aquí SÍ se reflejan intereses (solo cuando corresponde)
-      let saldo = baseCapStart;
-
+      // ✅ Saldo: aquí sí se reflejan intereses en modo acumulado
       if(isCompound){
         if(ended){
-          accrued += interest;                 // al cerrar, se acumula el interés del mes
-          saldo = baseCapStart + accrued;      // saldo = capital base + acumulado
+          accrued += interest;
+          saldo = capStart + accrued;
         }else{
-          saldo = baseCapStart + accrued;      // saldo muestra acumulado de meses cerrados (sin el interés del mes en curso)
+          saldo = capStart + accrued; // aún no suma el interés del mes en curso
         }
       }else{
-        // Pago mensual: NO se suma al saldo (el interés se paga por fuera)
-        saldo = baseCapStart;
+        saldo = capStart;
       }
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${monthLabel(p.start, p.end, p.idx)}</td>
-        <td>${fmtQ(capitalInicioMostrar)}</td>
+        <td>${fmtQ(capStart)}</td>
         <td>${fmtQ(interest)}</td>
         <td><b>${estado}</b></td>
         <td>${fmtQ(saldo)}</td>
@@ -1069,7 +1071,7 @@
     const note = document.getElementById('stmtNote');
     if(note){
       note.innerHTML = isCompound
-        ? `Modo: <b>Interés acumulado</b>. La columna <b>Capital inicio</b> no incluye intereses; los intereses se reflejan únicamente en <b>Saldo</b> al cierre de cada mes.`
+        ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se mantiene fijo; el <b>Saldo</b> refleja capital + intereses al cierre de cada mes.`
         : `Modo: <b>Pago mensual</b>. El capital y el saldo se mantienen; al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
@@ -1117,7 +1119,6 @@
 
     showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
 
-    // reset form
     if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
     if(document.getElementById('wReason')) document.getElementById('wReason').value='';
     toggleSwitchAll(false);
@@ -1438,6 +1439,8 @@
   }
 
   /* ===== Navegación Panel / Depositar / Retirar ===== */
+  let CURRENT_VIEW = 'panel';
+
   function setNavMode(mode){
     const btnPanel = document.getElementById('btnNavPanel');
     const btnDep   = document.getElementById('btnNavDeposit');
@@ -1456,6 +1459,8 @@
     const dep   = document.getElementById('viewDeposit');
     const wit   = document.getElementById('viewWithdraw');
 
+    CURRENT_VIEW = which;
+
     if(which === 'deposit'){
       if(panel) panel.style.display = 'none';
       if(dep)   dep.style.display   = 'block';
@@ -1471,13 +1476,11 @@
       if(wit)   wit.style.display   = 'block';
       setNavMode('sub');
       window.location.hash = '#retirar';
-      // Reset UI retiro al entrar
       selectType('early');
       toggleSwitchAll(false);
       return;
     }
 
-    // panel
     if(panel) panel.style.display = 'block';
     if(dep)   dep.style.display   = 'none';
     if(wit)   wit.style.display   = 'none';
@@ -1487,11 +1490,32 @@
     }
   }
 
+  /* ===== ✅ Toggle “Mi Panel” (oculta/despliega 3 secciones) ===== */
+  let PANEL_EXTRAS_OPEN = true;
+  function setPanelExtras(open){
+    const extras = document.getElementById('panelExtras');
+    const btn = document.getElementById('btnNavPanel');
+    PANEL_EXTRAS_OPEN = !!open;
+    if(extras) extras.classList.toggle('hidden', !PANEL_EXTRAS_OPEN);
+    if(btn) btn.textContent = PANEL_EXTRAS_OPEN ? 'Mi Panel' : 'Mi Panel (Mostrar)';
+  }
+  function togglePanelExtras(){
+    setPanelExtras(!PANEL_EXTRAS_OPEN);
+  }
+
   /* ===== Eventos UI ===== */
-  document.getElementById('btnNavPanel')?.addEventListener('click', ()=> showView('panel'));
+  document.getElementById('btnNavPanel')?.addEventListener('click', ()=>{
+    if(CURRENT_VIEW !== 'panel'){
+      showView('panel');
+      setPanelExtras(true);
+      return;
+    }
+    togglePanelExtras();
+  });
+
   document.getElementById('btnNavDeposit')?.addEventListener('click', ()=> showView('deposit'));
   document.getElementById('btnNavWithdraw')?.addEventListener('click', ()=> showView('withdraw'));
-  document.getElementById('btnBackPanel')?.addEventListener('click', ()=> showView('panel'));
+  document.getElementById('btnBackPanel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(true); });
 
   // Retiro (pestaña)
   document.getElementById('optEarly')?.addEventListener('click', ()=> selectType('early'));
@@ -1501,7 +1525,7 @@
     if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleSwitchAll(); }
   });
   document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
-  document.getElementById('wCancel')?.addEventListener('click', ()=> showView('panel'));
+  document.getElementById('wCancel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(true); });
 
   // Modal mensajes
   document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
@@ -1550,11 +1574,13 @@
 
   /* ===== Init ===== */
   (async function init(){
-    // Por defecto: Panel. Si viene con hash, respétalo.
     const h = (window.location.hash||'').toLowerCase();
     if(h === '#depositar') showView('deposit');
     else if(h === '#retirar') showView('withdraw');
     else showView('panel');
+
+    // ✅ por defecto, extras desplegados
+    setPanelExtras(true);
 
     await loadHeader();
 
