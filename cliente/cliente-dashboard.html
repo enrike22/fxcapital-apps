@@ -1277,8 +1277,11 @@
       }
 
       const { data:{ user } } = await sb.auth.getUser();
-      if(user?.id){
-        await sb.from('profiles').update({ must_change_password:false }).eq('id', user.id);
+           if(user?.id){
+        await sb
+          .from('profiles')
+          .update({ must_change_password:false, must_change_password_at: null })
+          .eq('id', user.id);
       }
 
       if(pwdDlg && pwdDlg.open) pwdDlg.close();
