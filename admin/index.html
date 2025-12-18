@@ -90,7 +90,7 @@ h2{
 .small{font-size:13px;color:var(--txtDim)}
 .error{font-size:13px;color:var(--danger)}
 .nowrap{white-space:nowrap}
-.hidden{display:none}
+.hidden{display:none !important}
 
 /* ---- cards (3D) ---- */
 .card{
@@ -333,6 +333,7 @@ tbody tr:hover{
   padding:18px;
   z-index:9999;
 }
+  .modal-backdrop.hidden{display:none !important}
 .modal{
   width:min(720px, 100%);
   border-radius:22px;
@@ -1581,3 +1582,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
