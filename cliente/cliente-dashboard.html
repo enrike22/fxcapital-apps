@@ -1216,8 +1216,8 @@
         return;
       }
 
-      // ✅ 2) EN VEZ de insertar directo en topups, llamamos la Edge Function:
-      //    create-topup (usa JWT) => guarda SIEMPRE user_id + account_id correcto
+      // ✅ 2) EN VEZ de insertar directo en topups, llamamos la Edge Function con JWT
+      //    ✅ FIX: mandamos Authorization: Bearer <access_token>
       const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
         body: {
           amount,
@@ -1227,6 +1227,9 @@
           reference_code,
           note: notes || null,
           deposit_datetime
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
