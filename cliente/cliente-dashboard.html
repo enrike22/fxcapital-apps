@@ -1170,95 +1170,96 @@
   }
   function safeParseMoney(str){ return Number((str || '').toString().replace(/[,\s]/g,'') || 0); }
 
-  async function enviarTopupTransferencia(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
+ async function enviarTopupTransferencia(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
 
-    const amount = safeParseMoney(document.getElementById('tAmount')?.value);
-    const bank   = (document.getElementById('tBank')?.value || '').trim();
-    const notes  = (document.getElementById('tNotes')?.value || '').trim();
-    const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
-    const fileEl = document.getElementById('tReceipt');
-    const file   = fileEl?.files?.[0];
+  const amount = safeParseMoney(document.getElementById('tAmount')?.value);
+  const bank   = (document.getElementById('tBank')?.value || '').trim();
+  const notes  = (document.getElementById('tNotes')?.value || '').trim();
+  const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
+  const fileEl = document.getElementById('tReceipt');
+  const file   = fileEl?.files?.[0];
 
-    if(amount <= 0){ alert('Ingrese un monto válido.'); return; }
-    if(!file){ alert('Debe adjuntar la boleta (JPG/PNG/PDF).'); return; }
+  if(amount <= 0){ alert('Ingrese un monto válido.'); return; }
+  if(!file){ alert('Debe adjuntar la boleta (JPG/PNG/PDF).'); return; }
 
-    const MAX_MB = 6;
-    if(file.size > MAX_MB * 1024 * 1024){
-      alert(`La boleta excede ${MAX_MB}MB. Comprímala o envíe una versión más ligera.`);
+  const MAX_MB = 6;
+  if(file.size > MAX_MB * 1024 * 1024){
+    alert(`La boleta excede ${MAX_MB}MB. Comprímala o envíe una versión más ligera.`);
+    return;
+  }
+
+  const okType = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
+  if(!okType){ alert('Formato no permitido. Use JPG/PNG o PDF.'); return; }
+
+  const btn = document.getElementById('tSend');
+  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+  const reference_code = genRefCode();
+  const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
+
+  try{
+    // 1) Subir boleta a Storage
+    const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
+    const ext = extFromFile(file);
+    const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
+
+    const up = await sb.storage.from('topup-receipts').upload(receipt_path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || undefined
+    });
+    if(up.error){
+      console.error(up.error);
+      alert('No se pudo subir la boleta. Intente de nuevo.');
       return;
     }
 
-    const okType = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
-    if(!okType){ alert('Formato no permitido. Use JPG/PNG o PDF.'); return; }
+    // ✅ 2) INVOCAR create-topup mandando SIEMPRE el JWT en Authorization
+    const accessToken = session.access_token;
 
-    const btn = document.getElementById('tSend');
-    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
-
-    const reference_code = genRefCode();
-    const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
-
-    try{
-      // 1) Subir boleta a Storage (igual que antes)
-      const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
-      const ext = extFromFile(file);
-      const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
-
-      const up = await sb.storage.from('topup-receipts').upload(receipt_path, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || undefined
-      });
-      if(up.error){
-        console.error(up.error);
-        alert('No se pudo subir la boleta. Intente de nuevo.');
-        return;
+    const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
+      body: {
+        amount,
+        currency: 'GTQ',
+        bank_name: bank || null,
+        receipt_path,
+        reference_code,
+        note: notes || null,
+        deposit_datetime
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`
       }
+    });
 
-      // ✅ 2) EN VEZ de insertar directo en topups, llamamos la Edge Function con JWT
-      //    ✅ FIX: mandamos Authorization: Bearer <access_token>
-      const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
-        body: {
-          amount,
-          currency: 'GTQ',
-          bank_name: bank || null,
-          receipt_path,
-          reference_code,
-          note: notes || null,
-          deposit_datetime
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
-      if(fnErr){
-        console.error(fnErr);
-        try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
-        alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || JSON.stringify(fnErr)));
-        return;
-      }
-
-      showMessage(
-        `Depósito enviado con éxito.<br><br>
-         <b>Código:</b> ${reference_code}<br>
-         Un administrador revisará su boleta y acreditará el capital.`
-      );
-
-      document.getElementById('txStep1')?.classList.remove('tx-step-active');
-      document.getElementById('txStep2')?.classList.add('tx-step-active');
-
-      tdlg?.close();
-      if(document.getElementById('tAmount')) document.getElementById('tAmount').value = '';
-      if(document.getElementById('tBank')) document.getElementById('tBank').value = '';
-      if(document.getElementById('tNotes')) document.getElementById('tNotes').value = '';
-      if(document.getElementById('tDate')) document.getElementById('tDate').value = '';
-      if(fileEl) fileEl.value = '';
-    } finally {
-      if(btn){ btn.disabled = false; btn.textContent = 'Enviar depósito'; }
+    if(fnErr){
+      console.error(fnErr);
+      try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
+      alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || JSON.stringify(fnErr)));
+      return;
     }
+
+    showMessage(
+      `Depósito enviado con éxito.<br><br>
+       <b>Código:</b> ${reference_code}<br>
+       Un administrador revisará su boleta y acreditará el capital.`
+    );
+
+    document.getElementById('txStep1')?.classList.remove('tx-step-active');
+    document.getElementById('txStep2')?.classList.add('tx-step-active');
+
+    tdlg?.close();
+    if(document.getElementById('tAmount')) document.getElementById('tAmount').value = '';
+    if(document.getElementById('tBank')) document.getElementById('tBank').value = '';
+    if(document.getElementById('tNotes')) document.getElementById('tNotes').value = '';
+    if(document.getElementById('tDate')) document.getElementById('tDate').value = '';
+    if(fileEl) fileEl.value = '';
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Enviar depósito'; }
   }
+}
 
   let pwdDlg;
   function openPwdDialog(){
