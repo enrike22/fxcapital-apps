@@ -443,6 +443,8 @@ tbody tr:hover{
       <p class="small" style="margin-top:10px">
         Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
       </p>
+      <!-- ✅ NUEVO: mensaje no-bloqueante (evita alert que “congela”) -->
+      <p id="topupsMsg" class="small"></p>
     </div>
 
     <!-- Crear/Editar -->
@@ -618,7 +620,6 @@ tbody tr:hover{
       <div class="small" id="resetClientInfo">—</div>
 
       <div class="row" style="margin-top:10px">
-        <!-- ✅ NUEVO: selector de cliente (cuando abres desde botón global) -->
         <div id="resetPickWrap" class="hidden">
           <label>Seleccionar cliente</label>
           <select id="resetPick"></select>
@@ -648,7 +649,7 @@ tbody tr:hover{
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY"; // <-- (te recomiendo NO dejarla hardcodeada en prod)
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
@@ -671,6 +672,33 @@ const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 function setLoading(el, isLoading){
   if(!el) return;
   el.classList.toggle("loading", !!isLoading);
+}
+
+/*** ✅ NUEVO: validar sesión/token antes de cargar panel ***/
+async function validateSession(){
+  const token = localStorage.token;
+  if(!token) return false;
+
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if(!r.ok){
+      // token vencido/incorrecto → forzar volver a login
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      return false;
+    }
+    return true;
+  }catch{
+    // si no hay red, no “rompemos” todo: dejamos que intente mostrar login
+    return false;
+  }
 }
 
 /*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
@@ -813,13 +841,13 @@ async function listUsers(){
   if (r.ok) {
     CACHED = await r.json();
     renderUsers(CACHED);
-    refreshResetPicker(); // ✅ NUEVO
+    refreshResetPicker();
     return;
   }
 
   CACHED = await loadUsersViaJoinFallback(h);
   renderUsers(CACHED);
-  refreshResetPicker(); // ✅ NUEVO
+  refreshResetPicker();
 }
 
 async function loadUsersViaJoinFallback(h){
@@ -898,6 +926,9 @@ $("q")?.addEventListener("input",(e)=>{
 
 /*** TOPUPS PENDIENTES ***/
 async function listTopups(){
+  const msgEl = $("topupsMsg");
+  if(msgEl) msgEl.textContent = "";
+
   const h = {
     apikey: ANON_KEY,
     Authorization: "Bearer "+localStorage.token,
@@ -909,8 +940,18 @@ async function listTopups(){
   const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`, { headers:h, cache:"no-store" });
 
   if(!r.ok){
-    console.error(await r.text());
-    alert("No se pudo cargar recargas pendientes.");
+    const t = await r.text().catch(()=> "");
+    console.error("listTopups error:", r.status, t);
+
+    // ✅ NO alert (bloquea). Mensaje no-bloqueante:
+    if(msgEl) msgEl.textContent = "No se pudieron cargar recargas pendientes (revisa conexión o permisos).";
+
+    // ✅ Si es token inválido (401/403), forzar login
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      await initApp();
+    }
     return;
   }
 
@@ -1152,8 +1193,7 @@ async function saveUser(){
     });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
-    // Guardar modo de interés (compound_interest) en accounts
-    const mode = $("u_interest_mode").value; // monthly | compound
+    const mode = $("u_interest_mode").value;
     const compound = (mode === "compound");
     const uidForAccount = uid || await getAuthUserIdByEmail(email);
 
@@ -1238,7 +1278,7 @@ async function deleteClient(x){
 }
 
 /* ============================================================
-   NUEVO: ACREDITAR CAPITAL (Manual)
+   ACREDITAR CAPITAL (Manual)
    ============================================================ */
 let ACCREDIT_CTX = null;
 
@@ -1324,11 +1364,10 @@ async function doAccreditCapital(){
 }
 
 /* ============================================================
-   RESET PASSWORD (ACTUALIZADO: elegir cliente)
+   RESET PASSWORD (CLIENTES)
    ============================================================ */
 let RESET_CTX = null;
 
-/** ✅ Rellena el selector con CACHED **/
 function refreshResetPicker(){
   const sel = $("resetPick");
   if(!sel) return;
@@ -1352,14 +1391,12 @@ function refreshResetPicker(){
     sel.appendChild(opt);
   });
 
-  // mantener selección previa si existe
   if(RESET_CTX?.user_id){
     sel.value = RESET_CTX.user_id;
   } else {
     sel.value = rows[0].user_id;
   }
 
-  // actualizar ctx según selector
   syncResetCtxFromPicker();
 }
 
@@ -1383,13 +1420,11 @@ function setResetInfoFromCtx(){
 }
 
 function openResetModal(client=null){
-  // Si viene desde fila
   if(client && client.email){
     RESET_CTX = client;
     show($("resetPickWrap"), false);
     setResetInfoFromCtx();
   }else{
-    // Si viene desde botón global
     RESET_CTX = null;
     show($("resetPickWrap"), true);
     refreshResetPicker();
@@ -1406,8 +1441,7 @@ function closeResetModal(){
 }
 
 async function doResetPassword(){
-  // si modal está en modo selector, asegurar ctx actualizado
-  if(!$("resetPickWrap").classList.contains("hidden")){
+  if(!$("resetPickWrap")?.classList.contains("hidden")){
     syncResetCtxFromPicker();
   }
 
@@ -1432,7 +1466,6 @@ async function doResetPassword(){
   setLoading($("resetMsg"), true);
 
   try{
-    // 1) Edge Function: actualiza contraseña en Auth (admin)
     const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-reset-password";
     const r = await fetch(url,{
       method:"POST",
@@ -1452,7 +1485,6 @@ async function doResetPassword(){
       throw new Error(t || "No se pudo resetear (Edge Function admin-reset-password).");
     }
 
-    // 2) Activar flag (solo si reset OK)
     if(RESET_CTX.user_id){
       const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(RESET_CTX.user_id)}`,{
         method:"PATCH",
@@ -1483,11 +1515,13 @@ async function doResetPassword(){
 
 /*** INIT ***/
 async function initApp(){
-  if(localStorage.token){
+  const ok = await validateSession();
+
+  if(ok){
     show($("unauth"), false);
     show($("app"), true);
     show($("logoutBtn"), true);
-    show($("btnOpenResetGlobal"), true); // ✅ NUEVO
+    show($("btnOpenResetGlobal"), true);
     await listUsers();
     await listTopups();
   }else{
@@ -1528,19 +1562,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnAccreditDo").addEventListener("click", doAccreditCapital);
   $("btnResetDo").addEventListener("click", doResetPassword);
 
-  // ✅ Nuevo botón global para reset
   $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
-
-  // ✅ Si cambias el selector, actualiza el contexto
   $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
 
-  // Cerrar modales con click afuera
-  $("modalAccredit").addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
-  $("modalReset").addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
+  $("modalAccredit")?.addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
+  $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
+
+  // ✅ NUEVO: ESC siempre cierra modales (anti-“congelado”)
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){
+      try{ closeResetModal(); }catch{}
+      try{ closeAccreditModal(); }catch{}
+    }
+  });
 
   initApp();
 });
 </script>
 </body>
 </html>
-
