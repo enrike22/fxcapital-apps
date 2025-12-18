@@ -482,7 +482,7 @@
   }
 
   /* ✅ Espacio de respeto bajo “Mi cuenta” cuando NO hay extras */
-  #accountSection.space-after{ margin-bottom:14px; } /* extra pequeño y elegante */
+  #accountSection.space-after{ margin-bottom:14px; }
   #accountSection.tight-after{ margin-bottom:0; }
 
   /* ✅ Utilidad */
@@ -848,6 +848,10 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
+  // ✅ Guardar nombre/email del usuario logueado (para UI / logs / apoyo)
+  let CURRENT_USER_NAME = '';
+  let CURRENT_USER_EMAIL = '';
+
   async function forceLogout(){
     try {
       const { error } = await sb.auth.signOut({ scope:'global' });
@@ -905,42 +909,6 @@
     el.addEventListener('focus', ()=> el.select());
   }
 
-  function paintWeeks(acc, opts={}){
-    const today=clampDate(new Date());
-    const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
-
-    let todayForCalc = today;
-    if (opts.freezeAtClose){
-      const freeze = clampDate(opts.freezeAtClose);
-      const prev = new Date(freeze); prev.setDate(prev.getDate()-1);
-      todayForCalc = prev;
-    }
-
-    const {start,end}=currentWindow(joined,todayForCalc);
-    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    $('#monthNote').textContent  = `Periodo de cierre fin de mes: ${end.toLocaleDateString('es-GT')}.`;
-
-    const cap=Number(acc.capital||0), semRate=Number(acc.interest_pct||0)/100, monthly=cap*(semRate/6);
-    const allFridays=fridaysInRange(start,end), weekly=allFridays.length? (monthly/allFridays.length) : 0;
-
-    const tbody=$('#weekBody'); tbody.innerHTML='';
-    const cutoff = todayForCalc < end ? todayForCalc : end;
-    const shown = allFridays.filter(f => f < cutoff);
-
-    if(shown.length===0){
-      tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
-      $('#weekSum').textContent = '—';
-    }else{
-      shown.forEach(f=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
-        tbody.appendChild(tr);
-      });
-      const partial = weekly * shown.length;
-      $('#weekSum').textContent = fmtQ(partial);
-    }
-  }
-
   function addMonthsSameDay(d, months){
     let x = clampDate(d);
     for(let i=0;i<months;i++) x = nextMonthSameDay(x);
@@ -959,11 +927,6 @@
     return periods;
   }
 
-  function daysBetween(a,b){
-    const ms = 24*60*60*1000;
-    return Math.max(0, Math.round((clampDate(b) - clampDate(a))/ms));
-  }
-
   function businessCloseDate(endDate){
     const d = clampDate(endDate);
     const dow = d.getDay();
@@ -973,60 +936,59 @@
     return d;
   }
 
-  function buildCapitalEvents(acc, approvedTopups){
-    const joined = acc?.joined_at ? new Date(acc.joined_at) : new Date();
-
-    const sumTopups = (approvedTopups||[]).reduce((s,t)=>s + Number(t.amount||0), 0);
-    const initial = Number(acc.initial_capital ?? (Number(acc.capital||0) - sumTopups) ?? 0);
-
-    let running = initial;
-    const ev = [{ at: clampDate(joined), capital: running }];
-
-    const sorted = (approvedTopups||[])
-      .filter(t => t.approved_at)
-      .slice()
-      .sort((a,b)=> new Date(a.approved_at)-new Date(b.approved_at));
-
-    for(const t of sorted){
-      running += Number(t.amount||0);
-      ev.push({ at: clampDate(new Date(t.approved_at)), capital: running });
-    }
-    return ev;
+  /* ===========================
+     ✅ NUEVO CORE: recargas aplican "desde ese mes" (no prorrateo)
+     - Se asigna cada topup aprobado al período mensual donde cae su approved_at
+     - Se aplica al CAPITAL de inicio de ese mes
+  ============================ */
+  function normalizeTopups(list){
+    return (list||[])
+      .filter(t => t && (t.approved_at || t.paid_at || t.created_at) )
+      .map(t => ({
+        amount: Number(t.amount||0),
+        at: clampDate(new Date(t.approved_at || t.paid_at || t.created_at))
+      }))
+      .filter(t => t.amount > 0);
   }
 
-  function interestForPeriod(periodStart, periodEnd, events, monthlyRate){
-    const start = clampDate(periodStart);
-    const end   = clampDate(periodEnd);
-    const totalDays = daysBetween(start, end) || 1;
-
-    const pts = events
-      .filter(e => e.at < end)
-      .map(e => ({ at: clampDate(e.at), capital: Number(e.capital||0) }))
-      .sort((a,b)=>a.at-b.at);
-
-    let currentCapital = pts[0]?.capital ?? 0;
-    for(const p of pts){
-      if(p.at <= start) currentCapital = p.capital;
+  function findPeriodIndexByDate(periods, dt){
+    const d = clampDate(dt);
+    for(const p of periods){
+      const ps = clampDate(p.start);
+      const pe = clampDate(p.end);
+      if(d >= ps && d < pe) return p.idx;
     }
+    return null;
+  }
 
-    const segs = [];
-    let cursor = new Date(start);
-    const inside = pts.filter(e => e.at > start && e.at < end);
+  function buildTopupBuckets(periods, topups){
+    const buckets = {};
+    for(const p of periods) buckets[p.idx] = 0;
 
-    for(const e of inside){
-      segs.push({ from:new Date(cursor), to:new Date(e.at), capital: currentCapital });
-      currentCapital = e.capital;
-      cursor = new Date(e.at);
+    const norm = normalizeTopups(topups);
+    for(const t of norm){
+      const idx = findPeriodIndexByDate(periods, t.at);
+      if(idx != null){
+        buckets[idx] = (buckets[idx]||0) + t.amount;
+      }
     }
-    segs.push({ from:new Date(cursor), to:new Date(end), capital: currentCapital });
+    return buckets;
+  }
 
-    let interest = 0;
-    for(const s of segs){
-      const d = daysBetween(s.from, s.to);
-      const portion = d / totalDays;
-      interest += (Number(s.capital||0) * Number(monthlyRate||0)) * portion;
+  function deriveInitialCapital(acc, approvedTopups){
+    const sumTopups = (approvedTopups||[]).reduce((s,t)=> s + Number(t.amount||0), 0);
+    const ic = (acc && acc.initial_capital != null) ? Number(acc.initial_capital||0) : null;
+    if(ic != null && !Number.isNaN(ic)) return ic;
+    return Math.max(0, Number(acc?.capital||0) - sumTopups);
+  }
+
+  function capitalAtPeriodStart(periods, topupBuckets, initialCapital, periodIdx){
+    let cap = Number(initialCapital||0);
+    for(const p of periods){
+      if(p.idx > periodIdx) break;
+      cap += Number(topupBuckets[p.idx]||0);
     }
-    return interest;
+    return cap;
   }
 
   function monthLabel(start, end, idx){
@@ -1037,24 +999,17 @@
     return `Mes ${n} (${s} — ${ee})`;
   }
 
-  function renderStatementTable({ acc, periods, events, settlementsMap }){
+  function renderStatementTable({ acc, periods, approvedTopups, settlementsMap }){
     const tbody = document.getElementById('stmtBody');
     if(!tbody) return;
     tbody.innerHTML = '';
 
     const semRate = Number(acc.interest_pct||0)/100;
     const monthlyRate = semRate/6;
-
     const isCompound = !!acc.compound_interest;
 
-    function capitalAtDate(date){
-      let cap = 0;
-      const d = clampDate(date);
-      for(const ev of events){
-        if(ev.at <= d) cap = Number(ev.capital||0);
-      }
-      return cap;
-    }
+    const initialCapital = deriveInitialCapital(acc, approvedTopups||[]);
+    const buckets = buildTopupBuckets(periods, approvedTopups||[]);
 
     const today = clampDate(new Date());
     const visiblePeriods = periods.filter(p => clampDate(p.start) <= today);
@@ -1072,10 +1027,8 @@
       const closeEffective = businessCloseDate(p.end);
       const ended = today >= closeEffective;
 
-      const capStart = capitalAtDate(p.start);
-
-      /* ✅✅✅ FIX: el interés se calcula SOLO sobre capital base (events), NO sobre saldo */
-      const interest = interestForPeriod(p.start, p.end, events, monthlyRate);
+      const capStart = capitalAtPeriodStart(periods, buckets, initialCapital, p.idx);
+      const interest = capStart * monthlyRate;
 
       let estado = 'En curso';
       if(isCompound){
@@ -1110,8 +1063,44 @@
     const note = document.getElementById('stmtNote');
     if(note){
       note.innerHTML = isCompound
-        ? `Modo: <b>Interés acumulado</b>. El <b>Interés (beneficio)</b> se calcula únicamente sobre el <b>capital base</b> del período (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre de cada mes.`
-        : `Modo: <b>Pago mensual</b>. El capital se mantiene (salvo ajustes del admin en meses futuros). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
+        ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre de cada mes.`
+        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
+    }
+  }
+
+  function paintWeeks(acc, opts={}){
+    const today=clampDate(new Date());
+    const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
+
+    let todayForCalc = today;
+    if (opts.freezeAtClose){
+      const freeze = clampDate(opts.freezeAtClose);
+      const prev = new Date(freeze); prev.setDate(prev.getDate()-1);
+      todayForCalc = prev;
+    }
+
+    const {start,end}=currentWindow(joined,todayForCalc);
+    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
+    $('#monthNote').textContent  = `Periodo de cierre fin de mes: ${end.toLocaleDateString('es-GT')}.`;
+
+    const cap=Number(acc.capital||0), semRate=Number(acc.interest_pct||0)/100, monthly=cap*(semRate/6);
+    const allFridays=fridaysInRange(start,end), weekly=allFridays.length? (monthly/allFridays.length) : 0;
+
+    const tbody=$('#weekBody'); tbody.innerHTML='';
+    const cutoff = todayForCalc < end ? todayForCalc : end;
+    const shown = allFridays.filter(f => f < cutoff);
+
+    if(shown.length===0){
+      tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
+      $('#weekSum').textContent = '—';
+    }else{
+      shown.forEach(f=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
+        tbody.appendChild(tr);
+      });
+      const partial = weekly * shown.length;
+      $('#weekSum').textContent = fmtQ(partial);
     }
   }
 
@@ -1184,7 +1173,6 @@
   async function enviarTopupTransferencia(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
-    if(!CURRENT_ACCOUNT_ID){ showMessage('No se encontró su cuenta. Intente recargar la página.'); return; }
 
     const amount = safeParseMoney(document.getElementById('tAmount')?.value);
     const bank   = (document.getElementById('tBank')?.value || '').trim();
@@ -1212,6 +1200,7 @@
     const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
 
     try{
+      // 1) Subir boleta a Storage (igual que antes)
       const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
       const ext = extFromFile(file);
       const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
@@ -1227,28 +1216,24 @@
         return;
       }
 
-      const ins = await sb.from('topups').insert({
-        user_id: session.user.id,
-        account_id: CURRENT_ACCOUNT_ID,
-        amount,
-        currency: 'GTQ',
-        provider: 'bank_transfer',
-        status: 'pending',
-        reference_code,
-        bank_name: bank || null,
-        deposit_datetime,
-        receipt_path,
-        notes: notes || null,
-        provider_ref: null,
-        checkout_url: null,
-        idempotency_key: null,
-        webhook_event_id: null
+      // ✅ 2) EN VEZ de insertar directo en topups, llamamos la Edge Function:
+      //    create-topup (usa JWT) => guarda SIEMPRE user_id + account_id correcto
+      const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
+        body: {
+          amount,
+          currency: 'GTQ',
+          bank_name: bank || null,
+          receipt_path,
+          reference_code,
+          note: notes || null,
+          deposit_datetime
+        }
       });
 
-      if(ins.error){
-        console.error(ins.error);
+      if(fnErr){
+        console.error(fnErr);
         try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
-        alert('No se pudo registrar el depósito. Intente de nuevo.');
+        alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || JSON.stringify(fnErr)));
         return;
       }
 
@@ -1402,8 +1387,11 @@
       sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital').eq('user_id',uid).single()
     ]);
 
+    CURRENT_USER_NAME  = (prof?.full_name || prof?.email || session.user.email || '—');
+    CURRENT_USER_EMAIL = (prof?.email || session.user.email || '');
+
     const vn = document.getElementById('valName');
-    if(vn) vn.textContent = (prof?.full_name || prof?.email || session.user.email || '—');
+    if(vn) vn.textContent = CURRENT_USER_NAME;
 
     if(!acc){
       ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{
@@ -1423,7 +1411,7 @@
 
     const { data: approvedTopups } = await sb
       .from('topups')
-      .select('amount, approved_at, status, account_id')
+      .select('amount, approved_at, paid_at, created_at, status, account_id')
       .eq('account_id', acc.id)
       .eq('status', 'paid');
 
@@ -1440,8 +1428,8 @@
 
     const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const periods = buildPeriods(joinedForPeriods, acc.invest_months);
-    const events  = buildCapitalEvents(acc, approvedTopups||[]);
-    renderStatementTable({ acc, periods, events, settlementsMap });
+
+    renderStatementTable({ acc, periods, approvedTopups: approvedTopups||[], settlementsMap });
 
     const map = {
       valAccountId: acc.id||'—',
@@ -1552,13 +1540,11 @@
 
     if(extras) extras.classList.toggle('hidden', !PANEL_EXTRAS_OPEN);
 
-    /* ✅ Sin extras: deja espacio abajo de “Mi cuenta” */
     if(accSec){
       accSec.classList.toggle('space-after', !PANEL_EXTRAS_OPEN);
       accSec.classList.toggle('tight-after',  PANEL_EXTRAS_OPEN);
     }
 
-    /* ✅ Reflejar estado en la palanca */
     if(sw){
       sw.classList.toggle('on', PANEL_EXTRAS_OPEN);
       sw.setAttribute('aria-checked', String(PANEL_EXTRAS_OPEN));
@@ -1567,7 +1553,6 @@
 
   function togglePanelExtras(){ setPanelExtras(!PANEL_EXTRAS_OPEN); }
 
-  /* ✅ Palanca (click + teclado) */
   document.getElementById('switchPanelExtras')?.addEventListener('click', ()=>{
     if(CURRENT_VIEW !== 'panel'){ showView('panel'); }
     togglePanelExtras();
@@ -1638,7 +1623,6 @@
     else if(h === '#retirar') showView('withdraw');
     else showView('panel');
 
-    /* ✅ Por defecto: solo “Mi cuenta” y con espacio abajo */
     setPanelExtras(false);
 
     await loadHeader();
