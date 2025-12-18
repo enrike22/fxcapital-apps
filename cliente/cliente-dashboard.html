@@ -121,16 +121,6 @@
   }
   .btn.cta:hover{filter:brightness(.98)}
 
-  /* ✅ Estado activo en navegación */
-  .nav-actions .btn.active{
-    background: linear-gradient(180deg, rgba(45,212,191,.95), rgba(45,212,191,.75));
-    color:#02110f;
-    border:1px solid rgba(45,212,191,.9);
-    box-shadow:
-      0 10px 30px rgba(45,212,191,.35),
-      inset 0 1px 0 rgba(255,255,255,.55);
-  }
-
   /* ✅ Ajuste solo en móviles */
   @media (max-width:560px){
     .brand-title{font-size: clamp(24px, 8.2vw, 34px);}
@@ -421,7 +411,45 @@
   }
 
   /* ===== Nav ===== */
-  .nav-actions{display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap}
+  .nav-actions{display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap; align-items:center}
+
+  /* ✅ Nuevo: “Mi Panel” con palanca */
+  .nav-panel-toggle{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);
+    box-shadow:var(--shadow-1),var(--shadow-inset);
+    user-select:none;
+  }
+  .nav-panel-toggle .label{
+    font-weight:900;
+    letter-spacing:.2px;
+    color:#fff;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    line-height:1;
+  }
+  .nav-panel-toggle .label::before{
+    content:"▦";
+    width:18px;height:18px;border-radius:8px;
+    display:grid;place-items:center;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+    font-size:13px;
+  }
+  .nav-panel-toggle.active{
+    border-color:rgba(45,212,191,.65);
+    box-shadow:
+      0 10px 30px rgba(45,212,191,.25),
+      inset 0 1px 0 rgba(255,255,255,.12);
+  }
+
   .nav-actions .btn{display:inline-flex;align-items:center;gap:10px}
   .btn.icon::before{
     content:"⬤";
@@ -431,9 +459,18 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.55);
     display:inline-block;
   }
-  .btn.panelBtn::before{content:"▦";}
   .btn.withdrawBtn::before{content:"⇣";}
   .btn.backBtn::before{content:"←";}
+
+  /* ✅ Estado activo en navegación (depositar/retirar) */
+  .nav-actions .btn.active{
+    background: linear-gradient(180deg, rgba(45,212,191,.95), rgba(45,212,191,.75));
+    color:#02110f;
+    border:1px solid rgba(45,212,191,.9);
+    box-shadow:
+      0 10px 30px rgba(45,212,191,.35),
+      inset 0 1px 0 rgba(255,255,255,.55);
+  }
 
   @media (max-width:560px){
     header{padding-top:64px}
@@ -443,6 +480,10 @@
     .brand-sub{font-size:clamp(13px,3.6vw,18px);margin-top:8px}
     #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
   }
+
+  /* ✅ Espacio de respeto bajo “Mi cuenta” cuando NO hay extras */
+  #accountSection.space-after{ margin-bottom:14px; } /* extra pequeño y elegante */
+  #accountSection.tight-after{ margin-bottom:0; }
 
   /* ✅ Utilidad */
   .hidden{display:none !important;}
@@ -472,7 +513,12 @@
 
     <!-- NAV / ACCIONES -->
     <div class="nav-actions">
-      <button class="btn secondary panelBtn icon" id="btnNavPanel" type="button">Mi Panel</button>
+      <!-- ✅ “Mi Panel” ahora es palanca -->
+      <div id="navPanelToggleWrap" class="nav-panel-toggle active" role="group" aria-label="Mi Panel">
+        <span class="label">Mi Panel</span>
+        <div id="switchPanelExtras" class="switch" role="switch" aria-checked="false" tabindex="0" title="Mostrar / ocultar secciones adicionales"></div>
+      </div>
+
       <button class="btn cta icon" id="btnNavDeposit" type="button">Depositar</button>
       <button class="btn secondary withdrawBtn icon" id="btnNavWithdraw" type="button">Retirar</button>
       <button class="btn secondary backBtn icon" id="btnBackPanel" type="button" style="display:none">Volver a Mi Panel</button>
@@ -482,7 +528,7 @@
          VISTA: MI PANEL
     ========================== -->
     <div id="viewPanel">
-      <section class="panel section gray">
+      <section class="panel section gray" id="accountSection">
         <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
         <div class="grid cols-3">
           <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
@@ -1428,23 +1474,24 @@
   let CURRENT_VIEW = 'panel';
 
   function setNavMode(mode){
-    const btnPanel = document.getElementById('btnNavPanel');
+    const toggleWrap = document.getElementById('navPanelToggleWrap');
     const btnDep   = document.getElementById('btnNavDeposit');
     const btnW     = document.getElementById('btnNavWithdraw');
     const btnBack  = document.getElementById('btnBackPanel');
 
     const showMainNav = (mode === 'panel');
-    if(btnPanel) btnPanel.style.display = showMainNav ? 'inline-flex' : 'none';
-    if(btnDep)   btnDep.style.display   = showMainNav ? 'inline-flex' : 'none';
-    if(btnW)     btnW.style.display     = showMainNav ? 'inline-flex' : 'none';
-    if(btnBack)  btnBack.style.display  = showMainNav ? 'none' : 'inline-flex';
+    if(toggleWrap) toggleWrap.style.display = showMainNav ? 'inline-flex' : 'none';
+    if(btnDep)     btnDep.style.display     = showMainNav ? 'inline-flex' : 'none';
+    if(btnW)       btnW.style.display       = showMainNav ? 'inline-flex' : 'none';
+    if(btnBack)    btnBack.style.display    = showMainNav ? 'none' : 'inline-flex';
   }
 
   function setActiveNav(which){
-    const b1=document.getElementById('btnNavPanel');
+    const toggleWrap = document.getElementById('navPanelToggleWrap');
     const b2=document.getElementById('btnNavDeposit');
     const b3=document.getElementById('btnNavWithdraw');
-    b1?.classList.toggle('active', which==='panel');
+
+    toggleWrap?.classList.toggle('active', which==='panel');
     b2?.classList.toggle('active', which==='deposit');
     b3?.classList.toggle('active', which==='withdraw');
   }
@@ -1495,23 +1542,42 @@
   }
 
   let PANEL_EXTRAS_OPEN = false;
+
   function setPanelExtras(open){
     const extras = document.getElementById('panelExtras');
+    const sw = document.getElementById('switchPanelExtras');
+    const accSec = document.getElementById('accountSection');
+
     PANEL_EXTRAS_OPEN = !!open;
+
     if(extras) extras.classList.toggle('hidden', !PANEL_EXTRAS_OPEN);
 
-    const btn = document.getElementById('btnNavPanel');
-    if(btn) btn.textContent = 'Mi Panel';
+    /* ✅ Sin extras: deja espacio abajo de “Mi cuenta” */
+    if(accSec){
+      accSec.classList.toggle('space-after', !PANEL_EXTRAS_OPEN);
+      accSec.classList.toggle('tight-after',  PANEL_EXTRAS_OPEN);
+    }
+
+    /* ✅ Reflejar estado en la palanca */
+    if(sw){
+      sw.classList.toggle('on', PANEL_EXTRAS_OPEN);
+      sw.setAttribute('aria-checked', String(PANEL_EXTRAS_OPEN));
+    }
   }
+
   function togglePanelExtras(){ setPanelExtras(!PANEL_EXTRAS_OPEN); }
 
-  document.getElementById('btnNavPanel')?.addEventListener('click', ()=>{
-    if(CURRENT_VIEW !== 'panel'){
-      showView('panel');
-      setPanelExtras(false);
-      return;
-    }
+  /* ✅ Palanca (click + teclado) */
+  document.getElementById('switchPanelExtras')?.addEventListener('click', ()=>{
+    if(CURRENT_VIEW !== 'panel'){ showView('panel'); }
     togglePanelExtras();
+  });
+  document.getElementById('switchPanelExtras')?.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      if(CURRENT_VIEW !== 'panel'){ showView('panel'); }
+      togglePanelExtras();
+    }
   });
 
   document.getElementById('btnNavDeposit')?.addEventListener('click', ()=> showView('deposit'));
@@ -1572,7 +1638,9 @@
     else if(h === '#retirar') showView('withdraw');
     else showView('panel');
 
+    /* ✅ Por defecto: solo “Mi cuenta” y con espacio abajo */
     setPanelExtras(false);
+
     await loadHeader();
 
     const sp = document.getElementById('simPlan');
