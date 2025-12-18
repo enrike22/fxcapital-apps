@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FX | CAPITAL R.L. — Panel del Cliente</title>
 
-<!-- Evitar cache del dashboard (especialmente tras cerrar sesión) -->
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -26,6 +25,7 @@
 
     /* ✅ Mejor legibilidad */
     --txt:#ffffff;
+    --fg:#ffffff;         /* ✅ alias para compatibilidad */
     --muted:#d6dceb;
     --line:rgba(255,255,255,.14);
 
@@ -35,8 +35,10 @@
     --shadow-1: 0 10px 25px rgba(0,0,0,.45);
     --shadow-2: 0 18px 40px rgba(0,0,0,.55);
     --shadow-inset: inset 0 1px 0 rgba(255,255,255,.05), inset 0 -1px 0 rgba(0,0,0,.7);
-    --radius:18px; --gloss: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 35%);
-    --chip:#171b20; --danger:#ff4d4f;
+    --radius:18px;
+    --gloss: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 35%);
+    --chip:#171b20;
+    --danger:#ff4d4f;
 
     /* ✅ Gris “premium 3D” */
     --panel-gray-bg1:#4b515b;
@@ -50,7 +52,9 @@
     margin:0;
     color:var(--txt);
     background:var(--grad-app) fixed, var(--bg0);
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
   }
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
@@ -77,8 +81,10 @@
     appearance:none;border:0;border-radius:999px;
     padding:12px 18px;font-weight:900;cursor:pointer;
     color:#0b0c0e;background:#fff;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 22px rgba(0,0,0,.45)
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 22px rgba(0,0,0,.45);
+    transition:transform .12s ease, filter .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
   }
+  .btn:active{transform:translateY(1px)}
   .btn.secondary{
     color:var(--txt);
     background:var(--gloss),linear-gradient(180deg,#1a1d23,#0f1216);
@@ -86,17 +92,10 @@
     box-shadow:var(--shadow-1),var(--shadow-inset)
   }
 
-  /* ✅ Ajuste solo en móviles */
-  @media (max-width:560px){
-    .brand-title{
-      font-size: clamp(24px, 8.2vw, 34px);
-    }
-  }
-
   /* ✅ BOTÓN CTA */
   .btn.cta{
     padding:13px 20px;
-    font-weight:1000;
+    font-weight:900;
     letter-spacing:.2px;
     background:
       radial-gradient(140% 180% at 30% 0%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 55%),
@@ -118,10 +117,24 @@
     background:rgba(0,0,0,.08);
     border:1px solid rgba(0,0,0,.10);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
-    font-weight:1000;
+    font-weight:900;
   }
   .btn.cta:hover{filter:brightness(.98)}
-  .btn.cta:active{transform:translateY(1px)}
+
+  /* ✅ Estado activo en navegación */
+  .nav-actions .btn.active{
+    background: linear-gradient(180deg, rgba(45,212,191,.95), rgba(45,212,191,.75));
+    color:#02110f;
+    border:1px solid rgba(45,212,191,.9);
+    box-shadow:
+      0 10px 30px rgba(45,212,191,.35),
+      inset 0 1px 0 rgba(255,255,255,.55);
+  }
+
+  /* ✅ Ajuste solo en móviles */
+  @media (max-width:560px){
+    .brand-title{font-size: clamp(24px, 8.2vw, 34px);}
+  }
 
   /* ======= PANEL ======= */
   .panel{
@@ -390,7 +403,7 @@
     border:1px solid rgba(255,255,255,.18);
     background:#fff;
     color:#0b0c0e;
-    font-weight:1000;
+    font-weight:900;
     cursor:pointer;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 12px 26px rgba(0,0,0,.38);
   }
@@ -469,7 +482,6 @@
          VISTA: MI PANEL
     ========================== -->
     <div id="viewPanel">
-      <!-- MI CUENTA (Siempre visible) -->
       <section class="panel section gray">
         <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
         <div class="grid cols-3">
@@ -487,10 +499,7 @@
         </div>
       </section>
 
-      <!-- ✅ Estas 3 secciones se despliegan/ocultan con "Mi Panel" -->
       <div id="panelExtras">
-
-        <!-- RESULTADOS DEL MES -->
         <section class="panel section gray" style="margin-top:18px">
           <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
           <div class="muted" id="monthRange">—</div>
@@ -504,7 +513,6 @@
           <div id="monthNote" class="note">Periodo de cierre fin de mes: —</div>
         </section>
 
-        <!-- ESTADO DE CUENTA -->
         <section class="panel section gray" style="margin-top:18px">
           <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
           <div class="muted" id="stmtRange">—</div>
@@ -529,7 +537,6 @@
           <div class="note" id="stmtNote">—</div>
         </section>
 
-        <!-- SIMULADOR -->
         <section class="panel section" style="margin-top:18px">
           <h2 style="margin:0 0 4px 0">Simulador de crecimiento</h2>
           <div class="muted" style="margin-bottom:14px">Interés simple por <b>6 meses</b>. Plan automático según capital ingresado.</div>
@@ -552,7 +559,6 @@
             </table>
           </div>
         </section>
-
       </div><!-- /#panelExtras -->
     </div><!-- /#viewPanel -->
 
@@ -595,9 +601,9 @@
               </div>
 
               <div class="tx-row">
-              <span class="tx-k">Banco</span>
-              <span class="tx-v">Banco Industrial</span>
-            </div>
+                <span class="tx-k">Banco</span>
+                <span class="tx-v">Banco Industrial</span>
+              </div>
 
               <div class="tx-row tx-row-strong">
                 <span class="tx-k">Número de cuenta</span>
@@ -796,7 +802,6 @@
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
 
-  /* ===== Logout robusto ===== */
   async function forceLogout(){
     try {
       const { error } = await sb.auth.signOut({ scope:'global' });
@@ -824,7 +829,6 @@
     }
   });
 
-  /* ===== Helpers fechas ===== */
   function nextMonthSameDay(d){
     const x=clampDate(d);
     const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
@@ -891,7 +895,6 @@
     }
   }
 
-  /* ===== Estado de cuenta (mes a mes) ===== */
   function addMonthsSameDay(d, months){
     let x = clampDate(d);
     for(let i=0;i<months;i++) x = nextMonthSameDay(x);
@@ -915,10 +918,9 @@
     return Math.max(0, Math.round((clampDate(b) - clampDate(a))/ms));
   }
 
-  // ✅ Si el cierre cae sábado/domingo, se considera “cerrado” hasta lunes
   function businessCloseDate(endDate){
     const d = clampDate(endDate);
-    const dow = d.getDay(); // 0=Dom, 6=Sab
+    const dow = d.getDay();
     if(dow === 6){ d.setDate(d.getDate()+2); }
     else if(dow === 0){ d.setDate(d.getDate()+1); }
     d.setHours(0,0,0,0);
@@ -963,7 +965,6 @@
 
     const segs = [];
     let cursor = new Date(start);
-
     const inside = pts.filter(e => e.at > start && e.at < end);
 
     for(const e of inside){
@@ -990,7 +991,6 @@
     return `Mes ${n} (${s} — ${ee})`;
   }
 
-  /* ✅✅✅ FIX: interés en acumulado se calcula SOLO sobre capital base (NO sobre saldo) */
   function renderStatementTable({ acc, periods, events, settlementsMap }){
     const tbody = document.getElementById('stmtBody');
     if(!tbody) return;
@@ -1020,8 +1020,7 @@
       stmtRange.textContent = '—';
     }
 
-    let accrued = 0; // intereses acumulados (solo meses cerrados)
-    let saldoBase = capitalAtDate(acc.joined_at ? new Date(acc.joined_at) : new Date());
+    let accrued = 0;
 
     for(const p of visiblePeriods){
       const closeEffective = businessCloseDate(p.end);
@@ -1029,7 +1028,7 @@
 
       const capStart = capitalAtDate(p.start);
 
-      // ✅ IMPORTANTE: el interés siempre sale de EVENTS BASE (no sumamos accrued)
+      /* ✅✅✅ FIX: el interés se calcula SOLO sobre capital base (events), NO sobre saldo */
       const interest = interestForPeriod(p.start, p.end, events, monthlyRate);
 
       let estado = 'En curso';
@@ -1039,16 +1038,10 @@
         estado = ended ? 'Pagado' : 'En curso';
       }
 
-      // ✅ Saldo:
-      // - mensual: solo capital base
-      // - acumulado: capital base + accrued (pero accrued solo suma cuando el mes termina)
       let saldo = capStart;
-
       if(isCompound){
-        if(ended){
-          accrued += interest;            // suma interés al cierre
-        }
-        saldo = capStart + accrued;       // saldo refleja capital + intereses ya acumulados
+        if(ended) accrued += interest;
+        saldo = capStart + accrued;
       }else{
         saldo = capStart;
       }
@@ -1076,7 +1069,6 @@
     }
   }
 
-  /* ===== Retiro (pestaña) ===== */
   function selectType(t){
     document.getElementById('optEarly')?.classList.toggle('selected',t==='early');
     document.getElementById('optHealth')?.classList.toggle('selected',t==='health');
@@ -1125,7 +1117,6 @@
     selectType('early');
   }
 
-  /* ===== Mensajes ===== */
   const msgDlg = document.getElementById('msgDlg');
   function showMessage(html){
     const mt = document.getElementById('msgText');
@@ -1133,7 +1124,6 @@
     if(msgDlg && !msgDlg.open) msgDlg.showModal();
   }
 
-  /* ===== Recarga por transferencia ===== */
   const tdlg = document.getElementById('tdlg');
   let CURRENT_ACCOUNT_ID = null;
 
@@ -1236,7 +1226,6 @@
     }
   }
 
-  /* === LÓGICA CAMBIO DE CONTRASEÑA OBLIGATORIO === */
   let pwdDlg;
   function openPwdDialog(){
     if(!pwdDlg) pwdDlg = document.getElementById('pwdDlg');
@@ -1277,9 +1266,8 @@
       }
 
       const { data:{ user } } = await sb.auth.getUser();
-           if(user?.id){
-        await sb
-          .from('profiles')
+      if(user?.id){
+        await sb.from('profiles')
           .update({ must_change_password:false, must_change_password_at: null })
           .eq('id', user.id);
       }
@@ -1291,15 +1279,12 @@
     }
   }
 
-  function togglePwdVisibility(inputId, btnId){
+  function togglePwdVisibility(inputId){
     const input = document.getElementById(inputId);
-    const btn   = document.getElementById(btnId);
-    if(!input || !btn) return;
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
+    if(!input) return;
+    input.type = (input.type === 'password') ? 'text' : 'password';
   }
 
-  /* ===== Simulador ===== */
   function getSimPlanForCapital(cap){
     cap = Number(cap||0);
     if(cap >= 250000) return { plan:'PLATINUM', semPct:20 };
@@ -1361,7 +1346,6 @@
     renderSim(cap, semPct);
   }
 
-  /* ===== Carga cuenta ===== */
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
@@ -1441,7 +1425,6 @@
     if(prof?.must_change_password){ openPwdDialog(); }
   }
 
-  /* ===== Navegación Panel / Depositar / Retirar ===== */
   let CURRENT_VIEW = 'panel';
 
   function setNavMode(mode){
@@ -1457,6 +1440,20 @@
     if(btnBack)  btnBack.style.display  = showMainNav ? 'none' : 'inline-flex';
   }
 
+  function setActiveNav(which){
+    const b1=document.getElementById('btnNavPanel');
+    const b2=document.getElementById('btnNavDeposit');
+    const b3=document.getElementById('btnNavWithdraw');
+    b1?.classList.toggle('active', which==='panel');
+    b2?.classList.toggle('active', which==='deposit');
+    b3?.classList.toggle('active', which==='withdraw');
+  }
+
+  function resetDepositSteps(){
+    document.getElementById('txStep1')?.classList.add('tx-step-active');
+    document.getElementById('txStep2')?.classList.remove('tx-step-active');
+  }
+
   function showView(which){
     const panel = document.getElementById('viewPanel');
     const dep   = document.getElementById('viewDeposit');
@@ -1469,6 +1466,8 @@
       if(dep)   dep.style.display   = 'block';
       if(wit)   wit.style.display   = 'none';
       setNavMode('sub');
+      setActiveNav('deposit');
+      resetDepositSteps();
       window.location.hash = '#depositar';
       return;
     }
@@ -1478,6 +1477,7 @@
       if(dep)   dep.style.display   = 'none';
       if(wit)   wit.style.display   = 'block';
       setNavMode('sub');
+      setActiveNav('withdraw');
       window.location.hash = '#retirar';
       selectType('early');
       toggleSwitchAll(false);
@@ -1488,29 +1488,27 @@
     if(dep)   dep.style.display   = 'none';
     if(wit)   wit.style.display   = 'none';
     setNavMode('panel');
+    setActiveNav('panel');
     if(window.location.hash === '#depositar' || window.location.hash === '#retirar'){
       history.replaceState(null,'', window.location.pathname);
     }
   }
 
-  /* ✅✅✅ Toggle “Mi Panel” (solo muestra/oculta panelExtras). Por defecto: OCULTO */
   let PANEL_EXTRAS_OPEN = false;
   function setPanelExtras(open){
     const extras = document.getElementById('panelExtras');
     PANEL_EXTRAS_OPEN = !!open;
     if(extras) extras.classList.toggle('hidden', !PANEL_EXTRAS_OPEN);
 
-    // ✅ Texto siempre igual (como pediste)
     const btn = document.getElementById('btnNavPanel');
     if(btn) btn.textContent = 'Mi Panel';
   }
   function togglePanelExtras(){ setPanelExtras(!PANEL_EXTRAS_OPEN); }
 
-  /* ===== Eventos UI ===== */
   document.getElementById('btnNavPanel')?.addEventListener('click', ()=>{
     if(CURRENT_VIEW !== 'panel'){
       showView('panel');
-      setPanelExtras(false); // al volver, solo Mi cuenta
+      setPanelExtras(false);
       return;
     }
     togglePanelExtras();
@@ -1520,7 +1518,6 @@
   document.getElementById('btnNavWithdraw')?.addEventListener('click', ()=> showView('withdraw'));
   document.getElementById('btnBackPanel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(false); });
 
-  // Retiro (pestaña)
   document.getElementById('optEarly')?.addEventListener('click', ()=> selectType('early'));
   document.getElementById('optHealth')?.addEventListener('click', ()=> selectType('health'));
   document.getElementById('switchAll')?.addEventListener('click', ()=> toggleSwitchAll());
@@ -1530,11 +1527,9 @@
   document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
   document.getElementById('wCancel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(false); });
 
-  // Modal mensajes
   document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
   document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
 
-  // Modal depósito
   document.getElementById('btnOpenTopup')?.addEventListener('click', ()=>{
     document.getElementById('txStep1')?.classList.remove('tx-step-active');
     document.getElementById('txStep2')?.classList.add('tx-step-active');
@@ -1544,7 +1539,6 @@
   document.getElementById('tCancel')?.addEventListener('click', ()=> tdlg?.close());
   document.getElementById('tSend')?.addEventListener('click', enviarTopupTransferencia);
 
-  // Copiar número de cuenta
   document.getElementById('btnCopyAcct')?.addEventListener('click', async ()=>{
     const txt = document.getElementById('acctNumber')?.textContent?.trim() || '';
     if(!txt) return;
@@ -1562,29 +1556,23 @@
     }
   });
 
-  // Password toggles
-  document.getElementById('pwdNewEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdNew','pwdNewEye'));
-  document.getElementById('pwdConfirmEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm','pwdConfirmEye'));
+  document.getElementById('pwdNewEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdNew'));
+  document.getElementById('pwdConfirmEye')?.addEventListener('click', ()=> togglePwdVisibility('pwdConfirm'));
   document.getElementById('pwdSave')?.addEventListener('click', handleSavePassword);
 
-  // Simulador
   document.getElementById('btnCalc')?.addEventListener('click', handleCalc);
 
-  /* ===== Bind inputs monetarios ===== */
   bindMoneyInput('wAmount');
   bindMoneyInput('simCapital');
   bindMoneyInput('tAmount');
 
-  /* ===== Init ===== */
   (async function init(){
     const h = (window.location.hash||'').toLowerCase();
     if(h === '#depositar') showView('deposit');
     else if(h === '#retirar') showView('withdraw');
     else showView('panel');
 
-    // ✅ AL INICIAR SESIÓN: solo “Mi cuenta”
     setPanelExtras(false);
-
     await loadHeader();
 
     const sp = document.getElementById('simPlan');
@@ -1593,7 +1581,6 @@
     const note = document.getElementById('simNote');
     if(note) note.textContent = 'Ingrese un capital y presione Calcular.';
   })();
-
   </script>
 </body>
 </html>
