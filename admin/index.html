@@ -1500,7 +1500,7 @@ async function doResetPassword(){
   setLoading($("resetMsg"), true);
 
   try{
-    const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-reset-password";
+    const url = `${PROJECT_URL}/functions/v1/admin-reset-password`;
     const r = await fetch(url,{
       method:"POST",
       headers:{
@@ -1615,5 +1615,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
 
