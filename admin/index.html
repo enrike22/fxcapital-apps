@@ -333,7 +333,7 @@ tbody tr:hover{
   padding:18px;
   z-index:9999;
 }
-  .modal-backdrop.hidden{display:none !important}
+.modal-backdrop.hidden{display:none !important}
 .modal{
   width:min(720px, 100%);
   border-radius:22px;
@@ -396,9 +396,7 @@ tbody tr:hover{
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
 
-      <!-- ✅ NUEVO: Reset global (selecciona cliente dentro del modal) -->
       <button id="btnOpenResetGlobal" type="button" class="ghost hidden">Reset contraseña</button>
-
       <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
     </div>
   </div>
@@ -444,7 +442,6 @@ tbody tr:hover{
       <p class="small" style="margin-top:10px">
         Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
       </p>
-      <!-- ✅ NUEVO: mensaje no-bloqueante (evita alert que “congela”) -->
       <p id="topupsMsg" class="small"></p>
     </div>
 
@@ -468,7 +465,6 @@ tbody tr:hover{
         </div>
 
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
-
         <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555"></div>
 
         <div>
@@ -610,7 +606,7 @@ tbody tr:hover{
   </div>
 </div>
 
-<!-- ===== MODAL: RESET PASSWORD (ACTUALIZADO) ===== -->
+<!-- ===== MODAL: RESET PASSWORD ===== -->
 <div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
@@ -676,7 +672,7 @@ function setLoading(el, isLoading){
   el.classList.toggle("loading", !!isLoading);
 }
 
-/*** ✅ NUEVO: validar sesión/token antes de cargar panel ***/
+/*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
   const token = localStorage.token;
   if(!token) return false;
@@ -691,14 +687,12 @@ async function validateSession(){
     });
 
     if(!r.ok){
-      // token vencido/incorrecto → forzar volver a login
       localStorage.removeItem("token");
       localStorage.removeItem("uid");
       return false;
     }
     return true;
   }catch{
-    // si no hay red, no “rompemos” todo: dejamos que intente mostrar login
     return false;
   }
 }
@@ -852,7 +846,6 @@ async function listUsers(){
       return;
     }
 
-    // si falla la vista, intentamos fallback
     const t = await r.text().catch(()=> "");
     console.error("v_admin_users_filtered error:", r.status, t);
     if(msgEl) msgEl.textContent = `No se pudo cargar la vista (HTTP ${r.status}). Probando método alterno…`;
@@ -862,7 +855,6 @@ async function listUsers(){
     renderUsers(CACHED);
     refreshResetPicker();
 
-    // si es token inválido
     if(r.status === 401 || r.status === 403){
       localStorage.removeItem("token");
       localStorage.removeItem("uid");
@@ -958,7 +950,45 @@ $("q")?.addEventListener("input",(e)=>{
   renderUsers(filt);
 });
 
-/*** TOPUPS PENDIENTES ***/
+/* ============================================================
+   ✅ TOPUPS PENDIENTES (FIX: resuelve nombre aunque user_id venga null)
+   ============================================================ */
+
+/** Helper: arma mapas locales desde CACHED para fallback rápido */
+function buildCachedMaps(){
+  const byUserId = new Map();
+  const byAccountId = new Map();
+  (CACHED||[]).forEach(c=>{
+    if(c?.user_id) byUserId.set(c.user_id, c);
+    if(c?.account_id) byAccountId.set(c.account_id, c);
+  });
+  return { byUserId, byAccountId };
+}
+
+/** Helper: trae accounts.user_id para account_ids */
+async function fetchAccountsUserIds(accountIds, h){
+  if(!accountIds?.length) return new Map();
+  const unique = [...new Set(accountIds.filter(Boolean))];
+  const map = new Map();
+  const url = `${BASE}/accounts?select=id,user_id&id=in.(${unique.join(",")})`;
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok) return map;
+  const rows = await r.json();
+  rows.forEach(a=>{ if(a?.id && a?.user_id) map.set(a.id, a.user_id); });
+  return map;
+}
+
+/** Helper: trae profiles para user_ids */
+async function fetchProfiles(userIds, h){
+  if(!userIds?.length) return new Map();
+  const unique = [...new Set(userIds.filter(Boolean))];
+  const url = `${BASE}/profiles?select=id,full_name,email&id=in.(${unique.join(",")})`;
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok) return new Map();
+  const profs = await r.json();
+  return new Map(profs.map(p=>[p.id,p]));
+}
+
 async function listTopups(){
   const msgEl = $("topupsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -976,11 +1006,7 @@ async function listTopups(){
   if(!r.ok){
     const t = await r.text().catch(()=> "");
     console.error("listTopups error:", r.status, t);
-
-    // ✅ NO alert (bloquea). Mensaje no-bloqueante:
     if(msgEl) msgEl.textContent = "No se pudieron cargar recargas pendientes (revisa conexión o permisos).";
-
-    // ✅ Si es token inválido (401/403), forzar login
     if(r.status === 401 || r.status === 403){
       localStorage.removeItem("token");
       localStorage.removeItem("uid");
@@ -990,29 +1016,64 @@ async function listTopups(){
   }
 
   const rows = await r.json();
-  const uids = [...new Set(rows.map(x=>x.user_id).filter(Boolean))];
-  let profMap = new Map();
 
-  if(uids.length){
-    const pr = await fetch(`${BASE}/profiles?select=id,full_name,email&id=in.(${uids.join(",")})`, { headers:h, cache:"no-store" });
-    if(pr.ok){
-      const profs = await pr.json();
-      profMap = new Map(profs.map(p=>[p.id,p]));
-    }
+  // ✅ Fallback 1: usar CACHED (ya trae nombre/email)
+  const { byUserId, byAccountId } = buildCachedMaps();
+
+  // 1) user_ids directos
+  const directUserIds = rows.map(x=>x.user_id).filter(Boolean);
+
+  // 2) account_ids sin user_id (resolver en accounts)
+  const missingUidAccountIds = rows.filter(x=>!x.user_id && x.account_id).map(x=>x.account_id);
+
+  // Resolver account_id -> user_id (desde CACHED primero, luego accounts)
+  const acctToUid = new Map();
+  missingUidAccountIds.forEach(aid=>{
+    const c = byAccountId.get(aid);
+    if(c?.user_id) acctToUid.set(aid, c.user_id);
+  });
+
+  const stillMissing = missingUidAccountIds.filter(aid=> !acctToUid.get(aid));
+  const acctToUidFromDb = await fetchAccountsUserIds(stillMissing, h);
+  acctToUidFromDb.forEach((uid, aid)=> acctToUid.set(aid, uid));
+
+  // Ahora lista final de user_ids a pedir en profiles
+  const resolvedUserIds = rows.map(x=>{
+    if(x.user_id) return x.user_id;
+    if(x.account_id && acctToUid.get(x.account_id)) return acctToUid.get(x.account_id);
+    return null;
+  }).filter(Boolean);
+
+  const allUserIds = [...new Set([...directUserIds, ...resolvedUserIds])];
+
+  // Traer profiles (si falla por RLS o no existen, igual seguimos por fallback con CACHED)
+  let profMap = new Map();
+  try{
+    profMap = await fetchProfiles(allUserIds, h);
+  }catch{
+    profMap = new Map();
   }
 
-  renderTopups(rows, profMap);
+  // Render con estrategia:
+  // profile -> cachedUser -> cachedAccount -> "—"
+  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
 }
 
-function renderTopups(rows, profMap){
+function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
   const tb = $("topups");
   if(!tb) return;
   tb.innerHTML = "";
 
   rows.forEach(x=>{
-    const p = profMap.get(x.user_id) || {};
-    const name = p.full_name || "—";
-    const email = p.email || "—";
+    const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
+
+    const p = (inferredUid && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
+    const c1 = (inferredUid && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
+    const c2 = (x.account_id && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
+
+    const name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
+    const email = (p?.email || c1?.email || c2?.email || "—");
+
     const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
@@ -1556,6 +1617,8 @@ async function initApp(){
     show($("app"), true);
     show($("logoutBtn"), true);
     show($("btnOpenResetGlobal"), true);
+
+    // ✅ Importante: primero listUsers (para llenar CACHED), luego listTopups
     await listUsers();
     await listTopups();
   }else{
@@ -1588,8 +1651,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
     validateRatePlan();
   });
 
-  $("btnRefreshUsers").addEventListener("click", listUsers);
-  $("btnRefreshTopups")?.addEventListener("click", listTopups);
+  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); });
+  $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); });
 
   bindCapitalFormatter($("u_capital"));
 
@@ -1602,7 +1665,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("modalAccredit")?.addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
   $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
 
-  // ✅ NUEVO: ESC siempre cierra modales (anti-“congelado”)
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
       try{ closeResetModal(); }catch{}
@@ -1615,6 +1677,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-
-
