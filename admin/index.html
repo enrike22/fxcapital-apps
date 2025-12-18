@@ -377,6 +377,9 @@ tbody tr:hover{
   box-shadow:none;
 }
 .xbtn:hover{ border-color: rgba(255,255,255,.18); box-shadow: var(--shadow2); transform: translateY(-1px); }
+
+/* ✅ mini btn header */
+.header-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
 </style>
 </head>
 
@@ -385,11 +388,16 @@ tbody tr:hover{
 
   <div class="header">
     <h1>FX | CAPITAL R.L. — Panel Admin</h1>
-    <div class="inline">
+
+    <div class="header-actions">
       <div class="searchbar">
         <input id="q" type="search" placeholder="Buscar (nombre, email, teléfono, plan, banco…)" aria-label="Buscar cliente">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
+
+      <!-- ✅ NUEVO: Reset global (selecciona cliente dentro del modal) -->
+      <button id="btnOpenResetGlobal" type="button" class="ghost hidden">Reset contraseña</button>
+
       <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
     </div>
   </div>
@@ -598,22 +606,29 @@ tbody tr:hover{
   </div>
 </div>
 
-<!-- ===== MODAL: RESET PASSWORD (CLIENTE) ===== -->
+<!-- ===== MODAL: RESET PASSWORD (ACTUALIZADO) ===== -->
 <div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
       <div class="modal-title">
-        <h3>Restablecer contraseña (Cliente)</h3>
+        <h3>Forzar cambio de contraseña</h3>
         <button class="xbtn" type="button" onclick="closeResetModal()">✕</button>
       </div>
 
       <div class="small" id="resetClientInfo">—</div>
 
       <div class="row" style="margin-top:10px">
+        <!-- ✅ NUEVO: selector de cliente (cuando abres desde botón global) -->
+        <div id="resetPickWrap" class="hidden">
+          <label>Seleccionar cliente</label>
+          <select id="resetPick"></select>
+          <div class="small">Elige el cliente al que le asignarás una contraseña temporal.</div>
+        </div>
+
         <div>
-          <label>Nueva contraseña temporal</label>
+          <label>Nueva contraseña</label>
           <input id="resetNewPass" type="text" placeholder="Mínimo 8 caracteres">
-          <div class="small">El cliente iniciará sesión con esta contraseña y luego deberá cambiarla dentro del panel del cliente.</div>
+          <div class="small">Luego el cliente deberá iniciar sesión y cambiarla en su modal obligatorio.</div>
         </div>
       </div>
 
@@ -623,7 +638,7 @@ tbody tr:hover{
         <div class="small" id="resetMsg"></div>
         <div class="modal-actions">
           <button class="ghost" type="button" onclick="closeResetModal()">Cancelar</button>
-          <button class="ok" type="button" id="btnResetDo">Restablecer</button>
+          <button class="ok" type="button" id="btnResetDo">Aplicar reset</button>
         </div>
       </div>
     </div>
@@ -631,9 +646,9 @@ tbody tr:hover{
 </div>
 
 <script>
-/*** SUPABASE CONFIG ***/
+/*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "REEMPLAZA_TU_ANON_KEY_AQUI";
+const ANON_KEY    = "REEMPLAZA_TU_ANON_KEY_AQUI"; // <-- (te recomiendo NO dejarla hardcodeada en prod)
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
@@ -798,11 +813,13 @@ async function listUsers(){
   if (r.ok) {
     CACHED = await r.json();
     renderUsers(CACHED);
+    refreshResetPicker(); // ✅ NUEVO
     return;
   }
 
   CACHED = await loadUsersViaJoinFallback(h);
   renderUsers(CACHED);
+  refreshResetPicker(); // ✅ NUEVO
 }
 
 async function loadUsersViaJoinFallback(h){
@@ -868,12 +885,6 @@ function renderUsers(rows){
       </td>`;
     tb.appendChild(tr);
   });
-
-  if(!rows.length){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="13" class="small">No hay clientes.</td>`;
-    tb.appendChild(tr);
-  }
 }
 
 /*** BUSCAR ***/
@@ -1141,6 +1152,7 @@ async function saveUser(){
     });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
+    // Guardar modo de interés (compound_interest) en accounts
     const mode = $("u_interest_mode").value; // monthly | compound
     const compound = (mode === "compound");
     const uidForAccount = uid || await getAuthUserIdByEmail(email);
@@ -1226,11 +1238,13 @@ async function deleteClient(x){
 }
 
 /* ============================================================
-   ACREDITAR CAPITAL (Manual)
+   NUEVO: ACREDITAR CAPITAL (Manual)
    ============================================================ */
 let ACCREDIT_CTX = null;
 
-function todayISO(){ return new Date().toISOString().slice(0,10); }
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
 
 function openAccreditModal(client){
   ACCREDIT_CTX = client;
@@ -1310,16 +1324,76 @@ async function doAccreditCapital(){
 }
 
 /* ============================================================
-   RESET PASSWORD (CLIENTE) + FORZAR CAMBIO SOLO SI ADMIN LO HIZO
+   RESET PASSWORD (ACTUALIZADO: elegir cliente)
    ============================================================ */
 let RESET_CTX = null;
 
-function openResetModal(client){
-  RESET_CTX = client;
+/** ✅ Rellena el selector con CACHED **/
+function refreshResetPicker(){
+  const sel = $("resetPick");
+  if(!sel) return;
 
+  sel.innerHTML = "";
+  const rows = (CACHED||[]).filter(x=>x.email && x.user_id);
+
+  if(!rows.length){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No hay clientes cargados";
+    sel.appendChild(opt);
+    return;
+  }
+
+  rows.forEach(x=>{
+    const opt = document.createElement("option");
+    opt.value = x.user_id;
+    opt.textContent = `${x.full_name || x.email} — ${x.email}`;
+    opt.dataset.email = x.email || "";
+    sel.appendChild(opt);
+  });
+
+  // mantener selección previa si existe
+  if(RESET_CTX?.user_id){
+    sel.value = RESET_CTX.user_id;
+  } else {
+    sel.value = rows[0].user_id;
+  }
+
+  // actualizar ctx según selector
+  syncResetCtxFromPicker();
+}
+
+function syncResetCtxFromPicker(){
+  const sel = $("resetPick");
+  if(!sel) return;
+
+  const uid = sel.value;
+  const x = (CACHED||[]).find(r=>r.user_id === uid);
+  if(x){
+    RESET_CTX = x;
+    setResetInfoFromCtx();
+  }
+}
+
+function setResetInfoFromCtx(){
+  const c = RESET_CTX || {};
   $("resetClientInfo").innerHTML =
-    `<b>${client.full_name||'—'}</b> — ${client.email||'—'}<br>`+
-    `Asignarás una contraseña temporal y se activará “forzar cambio” en el panel del cliente.`;
+    `<b>${c.full_name||'—'}</b> — ${c.email||'—'}<br>`+
+    `Al aplicar, se asigna contraseña y se fuerza modal de cambio en el panel del cliente.`;
+}
+
+function openResetModal(client=null){
+  // Si viene desde fila
+  if(client && client.email){
+    RESET_CTX = client;
+    show($("resetPickWrap"), false);
+    setResetInfoFromCtx();
+  }else{
+    // Si viene desde botón global
+    RESET_CTX = null;
+    show($("resetPickWrap"), true);
+    refreshResetPicker();
+  }
 
   $("resetNewPass").value = "";
   $("resetMsg").textContent = "";
@@ -1329,12 +1403,18 @@ function openResetModal(client){
 function closeResetModal(){
   show($("modalReset"), false);
   RESET_CTX = null;
-  $("resetMsg").textContent = "";
-  $("resetNewPass").value = "";
 }
 
 async function doResetPassword(){
-  if(!RESET_CTX) return;
+  // si modal está en modo selector, asegurar ctx actualizado
+  if(!$("resetPickWrap").classList.contains("hidden")){
+    syncResetCtxFromPicker();
+  }
+
+  if(!RESET_CTX){
+    $("resetMsg").textContent = "Seleccione un cliente.";
+    return;
+  }
 
   const newPass = ($("resetNewPass").value || "").trim();
   if(newPass.length < 8){
@@ -1346,9 +1426,9 @@ async function doResetPassword(){
     return;
   }
 
-  if(!confirm(`¿Restablecer contraseña a ${RESET_CTX.email}?\n\nEl cliente iniciará sesión con la nueva contraseña temporal y luego deberá cambiarla.`)) return;
+  if(!confirm(`¿Asignar nueva contraseña a ${RESET_CTX.email}?\n\nEsto activará el modal obligatorio en el panel cliente.`)) return;
 
-  $("resetMsg").textContent = "Restableciendo…";
+  $("resetMsg").textContent = "Aplicando reset…";
   setLoading($("resetMsg"), true);
 
   try{
@@ -1372,8 +1452,7 @@ async function doResetPassword(){
       throw new Error(t || "No se pudo resetear (Edge Function admin-reset-password).");
     }
 
-    // 2) Marcar flag para que el cliente vea el modal de “cambiar contraseña”
-    //    (Esto NO debe afectar a admins, porque en la lista solo estás mostrando clientes)
+    // 2) Activar flag (solo si reset OK)
     if(RESET_CTX.user_id){
       const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(RESET_CTX.user_id)}`,{
         method:"PATCH",
@@ -1383,6 +1462,7 @@ async function doResetPassword(){
           must_change_password_at: new Date().toISOString()
         })
       });
+
       if(!pr.ok){
         console.warn("No se pudo marcar must_change_password en profiles:", await pr.text().catch(()=> ""));
       }
@@ -1407,11 +1487,13 @@ async function initApp(){
     show($("unauth"), false);
     show($("app"), true);
     show($("logoutBtn"), true);
+    show($("btnOpenResetGlobal"), true); // ✅ NUEVO
     await listUsers();
     await listTopups();
   }else{
     show($("app"), false);
     show($("logoutBtn"), false);
+    show($("btnOpenResetGlobal"), false);
     show($("unauth"), true);
   }
 }
@@ -1446,17 +1528,15 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnAccreditDo").addEventListener("click", doAccreditCapital);
   $("btnResetDo").addEventListener("click", doResetPassword);
 
+  // ✅ Nuevo botón global para reset
+  $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
+
+  // ✅ Si cambias el selector, actualiza el contexto
+  $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
+
   // Cerrar modales con click afuera
   $("modalAccredit").addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
   $("modalReset").addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
-
-  // ✅ Cerrar modales con ESC (evita quedar “atrapado”)
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape"){
-      if(!$("modalReset").classList.contains("hidden")) closeResetModal();
-      if(!$("modalAccredit").classList.contains("hidden")) closeAccreditModal();
-    }
-  });
 
   initApp();
 });
