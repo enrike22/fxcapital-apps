@@ -322,7 +322,7 @@ tbody tr:hover{
   .searchbar{max-width:100%;min-width:0;width:100%}
 }
 
-/* ===== Modal (nuevo) ===== */
+/* ===== Modal ===== */
 .modal-backdrop{
   position:fixed; inset:0;
   background: rgba(0,0,0,.62);
@@ -598,12 +598,12 @@ tbody tr:hover{
   </div>
 </div>
 
-<!-- ===== MODAL: RESET PASSWORD ===== -->
+<!-- ===== MODAL: RESET PASSWORD (CLIENTE) ===== -->
 <div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
       <div class="modal-title">
-        <h3>Restablecer contraseña (Admin)</h3>
+        <h3>Restablecer contraseña (Cliente)</h3>
         <button class="xbtn" type="button" onclick="closeResetModal()">✕</button>
       </div>
 
@@ -611,9 +611,9 @@ tbody tr:hover{
 
       <div class="row" style="margin-top:10px">
         <div>
-          <label>Nueva contraseña</label>
+          <label>Nueva contraseña temporal</label>
           <input id="resetNewPass" type="text" placeholder="Mínimo 8 caracteres">
-          <div class="small">Esto forzará al cliente a iniciar sesión nuevamente y cambiarla (según tu flujo de cliente).</div>
+          <div class="small">El cliente iniciará sesión con esta contraseña y luego deberá cambiarla dentro del panel del cliente.</div>
         </div>
       </div>
 
@@ -631,9 +631,9 @@ tbody tr:hover{
 </div>
 
 <script>
-/*** SUPABASE CONFIG (CORRECTO) ***/
+/*** SUPABASE CONFIG ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "REEMPLAZA_TU_ANON_KEY_AQUI"; // <-- (te recomiendo NO dejarla hardcodeada en prod)
+const ANON_KEY    = "REEMPLAZA_TU_ANON_KEY_AQUI";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
@@ -868,6 +868,12 @@ function renderUsers(rows){
       </td>`;
     tb.appendChild(tr);
   });
+
+  if(!rows.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="13" class="small">No hay clientes.</td>`;
+    tb.appendChild(tr);
+  }
 }
 
 /*** BUSCAR ***/
@@ -1135,7 +1141,6 @@ async function saveUser(){
     });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
-    // Guardar modo de interés (compound_interest) en accounts
     const mode = $("u_interest_mode").value; // monthly | compound
     const compound = (mode === "compound");
     const uidForAccount = uid || await getAuthUserIdByEmail(email);
@@ -1221,14 +1226,11 @@ async function deleteClient(x){
 }
 
 /* ============================================================
-   NUEVO: ACREDITAR CAPITAL (Manual)
-   Recomendado: RPC admin_accredit_capital
+   ACREDITAR CAPITAL (Manual)
    ============================================================ */
 let ACCREDIT_CTX = null;
 
-function todayISO(){
-  return new Date().toISOString().slice(0,10);
-}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 
 function openAccreditModal(client){
   ACCREDIT_CTX = client;
@@ -1275,8 +1277,6 @@ async function doAccreditCapital(){
   setLoading($("accreditMsg"), true);
 
   try{
-    // ✅ RPC recomendado (transaccional)
-    // Debe existir en Supabase como: public.admin_accredit_capital(p_account_id uuid, p_user_id uuid, p_amount numeric, p_effective_date date, p_bank_name text)
     const r = await fetch(`${RPC}/admin_accredit_capital`,{
       method:"POST",
       headers: headersJSON(),
@@ -1310,17 +1310,16 @@ async function doAccreditCapital(){
 }
 
 /* ============================================================
-   NUEVO: RESET PASSWORD + FORZAR CAMBIO
-   - Edge Function: /functions/v1/admin-reset-password (Service Role)
-   - y set flag en profiles: must_change_password=true (o el nombre que uses)
+   RESET PASSWORD (CLIENTE) + FORZAR CAMBIO SOLO SI ADMIN LO HIZO
    ============================================================ */
 let RESET_CTX = null;
 
 function openResetModal(client){
   RESET_CTX = client;
+
   $("resetClientInfo").innerHTML =
     `<b>${client.full_name||'—'}</b> — ${client.email||'—'}<br>`+
-    `Esto asignará una contraseña nueva y marcará “forzar cambio”.`;
+    `Asignarás una contraseña temporal y se activará “forzar cambio” en el panel del cliente.`;
 
   $("resetNewPass").value = "";
   $("resetMsg").textContent = "";
@@ -1330,6 +1329,8 @@ function openResetModal(client){
 function closeResetModal(){
   show($("modalReset"), false);
   RESET_CTX = null;
+  $("resetMsg").textContent = "";
+  $("resetNewPass").value = "";
 }
 
 async function doResetPassword(){
@@ -1345,7 +1346,7 @@ async function doResetPassword(){
     return;
   }
 
-  if(!confirm(`¿Restablecer contraseña a ${RESET_CTX.email}?\n\nEsto forzará al cliente a iniciar sesión otra vez y cambiarla.`)) return;
+  if(!confirm(`¿Restablecer contraseña a ${RESET_CTX.email}?\n\nEl cliente iniciará sesión con la nueva contraseña temporal y luego deberá cambiarla.`)) return;
 
   $("resetMsg").textContent = "Restableciendo…";
   setLoading($("resetMsg"), true);
@@ -1371,9 +1372,8 @@ async function doResetPassword(){
       throw new Error(t || "No se pudo resetear (Edge Function admin-reset-password).");
     }
 
-    // 2) Marcar flag para que el panel cliente muestre “cambiar contraseña”
-    //    (Ajustá el nombre del campo según tu tabla real)
-    //    Recomendado: profiles.must_change_password boolean
+    // 2) Marcar flag para que el cliente vea el modal de “cambiar contraseña”
+    //    (Esto NO debe afectar a admins, porque en la lista solo estás mostrando clientes)
     if(RESET_CTX.user_id){
       const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(RESET_CTX.user_id)}`,{
         method:"PATCH",
@@ -1383,8 +1383,6 @@ async function doResetPassword(){
           must_change_password_at: new Date().toISOString()
         })
       });
-
-      // Si tu profiles no tiene esos campos, este PATCH fallará: en ese caso, quitá el PATCH o cambiá el campo.
       if(!pr.ok){
         console.warn("No se pudo marcar must_change_password en profiles:", await pr.text().catch(()=> ""));
       }
@@ -1451,6 +1449,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
   // Cerrar modales con click afuera
   $("modalAccredit").addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
   $("modalReset").addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
+
+  // ✅ Cerrar modales con ESC (evita quedar “atrapado”)
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){
+      if(!$("modalReset").classList.contains("hidden")) closeResetModal();
+      if(!$("modalAccredit").classList.contains("hidden")) closeAccreditModal();
+    }
+  });
 
   initApp();
 });
