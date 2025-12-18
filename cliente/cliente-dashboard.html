@@ -1234,12 +1234,17 @@
       }
     });
 
-    if(fnErr){
-      console.error(fnErr);
-      try{ await sb.storage.from('topup-receipts').remove([receipt_path]); }catch(e){}
-      alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || JSON.stringify(fnErr)));
-      return;
+if(fnErr){
+  let extra = '';
+  try{
+    if(fnErr.context){
+      const t = await fnErr.context.text();
+      extra = '\n\nDetalles:\n' + t;
     }
+  }catch(e){}
+  alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || '') + extra);
+  return;
+}
 
     showMessage(
       `Depósito enviado con éxito.<br><br>
