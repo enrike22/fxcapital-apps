@@ -563,6 +563,7 @@ tbody tr:hover{
       <p class="small" style="margin-top:10px">
         <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
       </p>
+      <p id="usersMsg" class="small" style="margin-top:6px"></p>
     </div>
 
   </div>
@@ -828,6 +829,9 @@ async function getAuthUserIdByEmail(email){
 /*** LISTA ***/
 let CACHED = [];
 async function listUsers(){
+  const msgEl = $("usersMsg");
+  if(msgEl) msgEl.textContent = "";
+
   const h = {
     apikey: ANON_KEY,
     Authorization: "Bearer "+localStorage.token,
@@ -837,18 +841,39 @@ async function listUsers(){
 
   const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at,compound_interest`;
 
-  let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
+  try{
+    let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
 
-  if (r.ok) {
-    CACHED = await r.json();
+    if (r.ok) {
+      CACHED = await r.json();
+      if(msgEl) msgEl.textContent = `Clientes cargados: ${CACHED.length}`;
+      renderUsers(CACHED);
+      refreshResetPicker();
+      return;
+    }
+
+    // si falla la vista, intentamos fallback
+    const t = await r.text().catch(()=> "");
+    console.error("v_admin_users_filtered error:", r.status, t);
+    if(msgEl) msgEl.textContent = `No se pudo cargar la vista (HTTP ${r.status}). Probando método alterno…`;
+
+    CACHED = await loadUsersViaJoinFallback(h);
+    if(msgEl) msgEl.textContent = `Clientes cargados (fallback): ${CACHED.length}`;
     renderUsers(CACHED);
     refreshResetPicker();
-    return;
-  }
 
-  CACHED = await loadUsersViaJoinFallback(h);
-  renderUsers(CACHED);
-  refreshResetPicker();
+    // si es token inválido
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      await initApp();
+    }
+  }catch(e){
+    console.error(e);
+    if(msgEl) msgEl.textContent = "Error cargando clientes (revisa conexión, permisos o RLS).";
+    CACHED = [];
+    renderUsers(CACHED);
+  }
 }
 
 async function loadUsersViaJoinFallback(h){
@@ -891,6 +916,14 @@ async function loadUsersViaJoinFallback(h){
 function renderUsers(rows){
   const tb = $("users");
   tb.innerHTML = "";
+
+  if(!rows || !rows.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="13" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
+    tb.appendChild(tr);
+    return;
+  }
+
   rows.forEach(x=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1582,4 +1615,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
