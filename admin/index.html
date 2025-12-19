@@ -107,7 +107,6 @@ h2{
   transform: translateZ(0);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-
 .card:before{
   content:"";
   position:absolute;
@@ -117,7 +116,6 @@ h2{
   pointer-events:none;
   mask: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,.55) 45%, rgba(0,0,0,0));
 }
-
 .card:after{
   content:"";
   position:absolute;
@@ -130,12 +128,10 @@ h2{
   pointer-events:none;
   animation: floatGlow 8s ease-in-out infinite;
 }
-
 @keyframes floatGlow{
   0%,100%{ transform: translate3d(0,0,0) rotate(0deg); }
   50%{ transform: translate3d(10px,-8px,0) rotate(10deg); }
 }
-
 .card:hover{
   transform: translateY(-2px);
   border-color: var(--border2);
@@ -150,7 +146,6 @@ label{
   font-size:13px;
   letter-spacing:.2px;
 }
-
 input,select{
   width:100%;
   background: rgba(8,10,14,.9);
@@ -163,15 +158,12 @@ input,select{
   transition: box-shadow .15s ease, border-color .15s ease, transform .12s ease, background .15s ease;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
-
 input::placeholder{ color: rgba(245,247,250,.35); }
-
 input:focus,select:focus{
   border-color: rgba(45,212,191,.40);
   box-shadow: var(--glow2);
   background: rgba(10,12,16,.95);
 }
-
 input:hover,select:hover{
   border-color: rgba(255,255,255,.14);
 }
@@ -189,13 +181,11 @@ button{
   box-shadow: 0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.55);
   transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
 }
-
 button:hover{
   transform: translateY(-1px);
   box-shadow: 0 18px 44px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.65);
   filter: brightness(1.02);
 }
-
 button:active{ transform: translateY(0px) scale(.99); }
 
 button.ghost{
@@ -204,22 +194,18 @@ button.ghost{
   border:1px solid var(--border);
   box-shadow: 0 10px 26px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
 }
-
 button.ghost:hover{
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 14px 36px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
 }
-
 button.danger{
   background: linear-gradient(180deg, #ff6b6c, #ff3f40);
   color:#fff;
   box-shadow: 0 14px 34px rgba(255,77,79,.20), 0 12px 30px rgba(0,0,0,.35);
 }
-
 button.danger:hover{
   box-shadow: 0 18px 44px rgba(255,77,79,.24), 0 16px 40px rgba(0,0,0,.45);
 }
-
 button.ok{
   background: linear-gradient(180deg, rgba(45,212,191,1), rgba(45,212,191,.75));
   color:#02110f;
@@ -246,7 +232,6 @@ hr.sep{border:0;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
   background: rgba(0,0,0,.16);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
-
 table{width:100%;border-collapse:separate;border-spacing:0}
 th,td{
   padding:14px 16px;
@@ -255,7 +240,6 @@ th,td{
   font-size:15px;
   color: var(--txtSoft);
 }
-
 th{
   text-align:left;
   color: rgba(245,247,250,.92);
@@ -265,14 +249,8 @@ th{
   z-index:2;
   backdrop-filter: blur(8px);
 }
-
-tbody tr{
-  transition: background .12s ease, transform .12s ease;
-}
-
-tbody tr:hover{
-  background: rgba(255,255,255,.035);
-}
+tbody tr{ transition: background .12s ease, transform .12s ease; }
+tbody tr:hover{ background: rgba(255,255,255,.035); }
 
 .chip{
   display:inline-flex;
@@ -286,25 +264,23 @@ tbody tr:hover{
   color: rgba(245,247,250,.86);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
-
 .dot{
   width:8px;height:8px;border-radius:99px;
   background: rgba(45,212,191,.9);
   box-shadow: 0 0 0 3px rgba(45,212,191,.12);
 }
+.dot.pending{ background: rgba(255,255,255,.75); box-shadow: 0 0 0 3px rgba(255,255,255,.10); }
+.dot.scheduled{ background: rgba(253, 224, 71, .95); box-shadow: 0 0 0 3px rgba(253,224,71,.14); }
+.dot.approved{ background: rgba(45,212,191,.9); }
+.dot.rejected{ background: rgba(255,77,79,.95); }
 
-/* ---- subtle page fade in ---- */
 @keyframes fadeUp{
   from{ opacity:0; transform: translateY(10px); }
   to{ opacity:1; transform: translateY(0); }
 }
 .container{ animation: fadeUp .32s ease both; }
 
-/* ---- small loader (optional) ---- */
-.loading{
-  opacity:.85;
-  position:relative;
-}
+.loading{opacity:.85;position:relative;}
 .loading:after{
   content:"";
   width:10px;height:10px;border-radius:50%;
@@ -335,7 +311,7 @@ tbody tr:hover{
 }
 .modal-backdrop.hidden{display:none !important}
 .modal{
-  width:min(760px, 100%);
+  width:min(720px, 100%);
   border-radius:22px;
   border:1px solid rgba(255,255,255,.10);
   box-shadow: 0 30px 90px rgba(0,0,0,.65);
@@ -353,22 +329,10 @@ tbody tr:hover{
   pointer-events:none;
   mask: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,.55) 45%, rgba(0,0,0,0));
 }
-.modal-inner{
-  position:relative;
-  padding:20px 18px 18px;
-}
-.modal-title{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  margin-bottom:10px;
-}
-.modal-title h3{
-  margin:0;
-  font-size:18px;
-  letter-spacing:.2px;
-}
-.modal-actions{
-  display:flex; gap:10px; justify-content:flex-end; margin-top:14px;
-}
+.modal-inner{ position:relative; padding:20px 18px 18px; }
+.modal-title{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.modal-title h3{ margin:0; font-size:18px; letter-spacing:.2px; }
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; }
 .xbtn{
   background: transparent;
   border:1px solid rgba(255,255,255,.12);
@@ -379,28 +343,7 @@ tbody tr:hover{
 }
 .xbtn:hover{ border-color: rgba(255,255,255,.18); box-shadow: var(--shadow2); transform: translateY(-1px); }
 
-/* ✅ mini btn header */
 .header-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-
-/* ✅ pills */
-.pills{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-.pill{
-  padding:8px 12px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-  color: rgba(245,247,250,.9);
-  cursor:pointer;
-  font-weight:800;
-  font-size:13px;
-  user-select:none;
-  transition:.12s ease;
-}
-.pill:hover{ border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.06); transform: translateY(-1px); }
-.pill.active{
-  border-color: rgba(45,212,191,.35);
-  box-shadow: 0 0 0 3px rgba(45,212,191,.10);
-}
 </style>
 </head>
 
@@ -438,16 +381,8 @@ tbody tr:hover{
     <!-- TOPUPS -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <h2 style="margin:0">Recargas</h2>
-          <div class="pills">
-            <div id="pillPending" class="pill active" role="button" tabindex="0">Pendientes</div>
-            <div id="pillScheduled" class="pill" role="button" tabindex="0">Programadas</div>
-          </div>
-        </div>
-        <div class="inline" style="gap:10px">
-          <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
-        </div>
+        <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
+        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
       </div>
 
       <div class="table-wrap">
@@ -460,7 +395,8 @@ tbody tr:hover{
               <th>Monto</th>
               <th>Banco</th>
               <th>Boleta</th>
-              <th class="nowrap">Fecha efectiva</th>
+              <th class="nowrap">Estado</th>
+              <th class="nowrap">Efectiva</th>
               <th class="nowrap">Acciones</th>
             </tr>
           </thead>
@@ -469,8 +405,8 @@ tbody tr:hover{
       </div>
 
       <p class="small" style="margin-top:10px">
-        <b>Aprobar ahora</b> acredita el capital inmediatamente (como antes).<br>
-        <b>Programar</b> guarda una <b>fecha efectiva</b> para que la recarga afecte el capital en el inicio del ciclo (según el día de ingreso del cliente).
+        ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
+        📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
       </p>
       <p id="topupsMsg" class="small"></p>
     </div>
@@ -596,77 +532,35 @@ tbody tr:hover{
 </div>
 
 <!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
-<div id="modalSchedule" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+<div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
       <div class="modal-title">
         <h3>Programar acreditación</h3>
-        <button class="xbtn" type="button" onclick="closeScheduleModal()">✕</button>
+        <button class="xbtn" type="button" onclick="closeScheduleTopupModal()">✕</button>
       </div>
 
-      <div class="small" id="scheduleInfo">—</div>
+      <div class="small" id="schedInfo">—</div>
 
       <div class="row" style="margin-top:10px">
         <div>
-          <label>Fecha efectiva</label>
-          <input id="scheduleDate" type="date">
-          <div class="small">Sugerida = próximo inicio de ciclo del cliente (según su <b>fecha de ingreso</b>).</div>
+          <label>Fecha efectiva (se acredita a las 9:00 AM GT)</label>
+          <input id="schedDate" type="date">
+          <div class="small">🔒 No se permiten fechas pasadas.</div>
         </div>
         <div>
           <label>Nota (opcional)</label>
-          <input id="scheduleNote" placeholder="Ej. Acreditar al inicio del ciclo">
-          <div class="small">Si tu tabla no tiene campo para nota, se ignora.</div>
+          <input id="schedNote" placeholder="Ej: Se acredita al inicio del ciclo">
         </div>
       </div>
 
       <hr class="sep">
 
       <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" id="scheduleMsg"></div>
+        <div class="small" id="schedMsg"></div>
         <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeScheduleModal()">Cancelar</button>
-          <button class="ok" type="button" id="btnScheduleDo">Programar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== MODAL: ACREDITAR CAPITAL ===== -->
-<div id="modalAccredit" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Acreditar capital</h3>
-        <button class="xbtn" type="button" onclick="closeAccreditModal()">✕</button>
-      </div>
-
-      <div class="small" id="accreditClientInfo">—</div>
-
-      <div class="row" style="margin-top:10px">
-        <div>
-          <label>Monto a acreditar</label>
-          <input id="accreditAmount" type="text" inputmode="decimal" placeholder="0.00">
-          <div class="small">Se registrará como <b>topup paid</b> + <b>approved_at</b>.</div>
-        </div>
-        <div>
-          <label>Fecha efectiva</label>
-          <input id="accreditDate" type="date">
-          <div class="small">Afecta intereses <b>desde este mes</b> en adelante (sin tocar meses anteriores).</div>
-        </div>
-        <div>
-          <label>Banco (opcional)</label>
-          <input id="accreditBank" placeholder="Banco Industrial">
-        </div>
-      </div>
-
-      <hr class="sep">
-
-      <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" id="accreditMsg"></div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeAccreditModal()">Cancelar</button>
-          <button class="ok" type="button" id="btnAccreditDo">Acreditar</button>
+          <button class="ghost" type="button" onclick="closeScheduleTopupModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnDoSchedule">Programar</button>
         </div>
       </div>
     </div>
@@ -733,35 +627,24 @@ const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
-
-function setLoading(el, isLoading){
-  if(!el) return;
-  el.classList.toggle("loading", !!isLoading);
-}
+function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
 
 /*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
   const token = localStorage.token;
   if(!token) return false;
-
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
       method: "GET",
-      headers: {
-        apikey: ANON_KEY,
-        Authorization: "Bearer " + token
-      }
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
     });
-
     if(!r.ok){
       localStorage.removeItem("token");
       localStorage.removeItem("uid");
       return false;
     }
     return true;
-  }catch{
-    return false;
-  }
+  }catch{ return false; }
 }
 
 /*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
@@ -775,9 +658,7 @@ function formatCapitalString(raw){
   }
   let [intPart, decPart] = raw.split(".");
   intPart = intPart ? intPart.replace(/^0+(?=\d)/, "") : "";
-  if (intPart){
-    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
+  if (intPart){ intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   if (decPart !== undefined) decPart = decPart.slice(0, 2);
   return decPart !== undefined ? `${intPart || "0"}.${decPart}` : (intPart || "");
 }
@@ -806,11 +687,11 @@ function setCapitalInputValue(n){
   const val = (n === null || n === undefined) ? "" : String(n);
   $("u_capital").value = formatCapitalString(val);
 }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 
 /*** LOGIN ***/
 async function doLogin(e){
   e.preventDefault();
-
   const email = $("email").value.trim();
   const password = $("password").value;
 
@@ -835,7 +716,6 @@ async function doLogin(e){
       $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido";
       return;
     }
-
     if(!data?.access_token){
       $("loginMsg").textContent = "Login inválido (sin token).";
       return;
@@ -852,7 +732,6 @@ async function doLogin(e){
     setLoading($("loginForm"), false);
   }
 }
-
 function logout(){
   localStorage.removeItem("token");
   localStorage.removeItem("uid");
@@ -873,7 +752,6 @@ async function createAuthUserIfNeeded(email, password, fullName) {
     body: JSON.stringify({ email, password, full_name: fullName })
   });
 }
-
 async function getAuthUserIdByEmail(email){
   try{
     const r = await fetch(`${RPC}/get_user_id_by_email`, {
@@ -1000,7 +878,6 @@ function renderUsers(rows){
       <td>${x.compound_interest ? "Acumulado" : "Mensual"}</td>
       <td class="nowrap">
         <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
-        <button class="ghost" onclick='openAccreditModal(${JSON.stringify(x)})'>Acreditar capital</button>
         <button class="ghost" onclick='openResetModal(${JSON.stringify(x)})'>Reset contraseña</button>
         <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
       </td>`;
@@ -1018,16 +895,8 @@ $("q")?.addEventListener("input",(e)=>{
 });
 
 /* ============================================================
-   ✅ TOPUPS (PENDIENTES / PROGRAMADAS)
+   TOPUPS (PENDING + SCHEDULED) + PROGRAMAR
    ============================================================ */
-let TOPUP_VIEW = "pending"; // "pending" | "scheduled"
-
-function setTopupView(v){
-  TOPUP_VIEW = v;
-  $("pillPending").classList.toggle("active", v==="pending");
-  $("pillScheduled").classList.toggle("active", v==="scheduled");
-  listTopups();
-}
 
 function buildCachedMaps(){
   const byUserId = new Map();
@@ -1061,19 +930,6 @@ async function fetchProfiles(userIds, h){
   return new Map(profs.map(p=>[p.id,p]));
 }
 
-async function tryLoadTopupsWithJoin(h){
-  const selJoin =
-    `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,`+
-    `profiles:profiles(full_name,email),`+
-    `accounts:accounts(user_id,profiles:profiles(full_name,email))`;
-
-  const url = `${BASE}/topups?select=${encodeURIComponent(selJoin)}&status=eq.${encodeURIComponent(TOPUP_VIEW)}&order=created_at.desc`;
-  const r = await fetch(url, { headers:h, cache:"no-store" });
-  if(!r.ok) return { ok:false, rows:[], status:r.status, text: await r.text().catch(()=> "") };
-  const rows = await r.json();
-  return { ok:true, rows, status:r.status, text:"" };
-}
-
 async function listTopups(){
   const msgEl = $("topupsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -1085,21 +941,11 @@ async function listTopups(){
     Pragma:"no-cache"
   };
 
-  try{
-    const joinTry = await tryLoadTopupsWithJoin(h);
-    if(joinTry.ok){
-      renderTopups(joinTry.rows, null, null, null, null, true);
-      if(msgEl) msgEl.textContent = `Recargas ${TOPUP_VIEW === "pending" ? "pendientes" : "programadas"}: ${joinTry.rows.length}`;
-      return;
-    }else{
-      console.warn("JOIN topups no disponible, usando fallback:", joinTry.status, joinTry.text);
-    }
-  }catch(e){
-    console.warn("JOIN topups falló (exception), usando fallback:", e);
-  }
+  // ✅ incluir pending y scheduled
+  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,scheduled_note`;
+  const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=in.(pending,scheduled)&order=created_at.desc`;
 
-  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date`;
-  const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.${encodeURIComponent(TOPUP_VIEW)}&order=created_at.desc`, { headers:h, cache:"no-store" });
+  const r = await fetch(url, { headers:h, cache:"no-store" });
 
   if(!r.ok){
     const t = await r.text().catch(()=> "");
@@ -1114,6 +960,7 @@ async function listTopups(){
   }
 
   const rows = await r.json();
+
   const { byUserId, byAccountId } = buildCachedMaps();
 
   const directUserIds = rows.map(x=>x.user_id).filter(Boolean);
@@ -1138,17 +985,56 @@ async function listTopups(){
   const allUserIds = [...new Set([...directUserIds, ...resolvedUserIds])];
 
   let profMap = new Map();
-  try{
-    profMap = await fetchProfiles(allUserIds, h);
-  }catch{
-    profMap = new Map();
-  }
+  try{ profMap = await fetchProfiles(allUserIds, h); }catch{ profMap = new Map(); }
 
-  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid, false);
-  if(msgEl) msgEl.textContent = `Recargas ${TOPUP_VIEW === "pending" ? "pendientes" : "programadas"}: ${rows.length}`;
+  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
+
+  if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + scheduled)`;
 }
 
-function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid, joinMode){
+function statusChip(status){
+  const s = String(status||"").toLowerCase();
+  const dotClass = (s==="pending")?"pending":(s==="scheduled")?"scheduled":(s==="approved")?"approved":(s==="rejected")?"rejected":"pending";
+  const label = (s==="pending")?"Pendiente":(s==="scheduled")?"Programada":(s==="approved")?"Aprobada":(s==="rejected")?"Rechazada":(status||"—");
+  return `<span class="chip"><span class="dot ${dotClass}"></span>${label}</span>`;
+}
+
+/** ✅ Calcula “inicio del siguiente ciclo” según joined_at (día del mes) */
+function nextCycleStartISO(joinedAt){
+  // si no hay joinedAt, proponemos mañana (o hoy)
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if(!joinedAt){
+    // por seguridad, proponemos hoy (pero el RPC bloqueará si fuese pasado)
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0,10);
+  }
+
+  const j = new Date(joinedAt);
+  const day = j.getDate(); // día del mes del ciclo
+
+  // helper: clamp al último día del mes
+  const clampDate = (y,m,d)=>{
+    const last = new Date(y, m+1, 0).getDate();
+    const dd = Math.min(d, last);
+    return new Date(y,m,dd);
+  };
+
+  // candidate en mes actual
+  let cand = clampDate(today.getFullYear(), today.getMonth(), day);
+
+  // si hoy ya pasó o es el mismo día (y tú quieres que sea “siguiente ciclo”),
+  // nos vamos al siguiente mes
+  if (today >= cand){
+    const y = today.getFullYear();
+    const m = today.getMonth()+1;
+    cand = clampDate(y + Math.floor(m/12), (m%12), day);
+  }
+
+  return cand.toISOString().slice(0,10);
+}
+
+function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
   const tb = $("topups");
   if(!tb) return;
   tb.innerHTML = "";
@@ -1156,29 +1042,18 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
   const BUCKET = "topup-receipts";
 
   rows.forEach(x=>{
-    let name = "—";
-    let email = "—";
-    let joined_at = null;
+    const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
 
-    if(joinMode){
-      name = x?.profiles?.full_name || x?.accounts?.profiles?.full_name || "—";
-      email = x?.profiles?.email || x?.accounts?.profiles?.email || "—";
-    }else{
-      const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
+    const p = (inferredUid && profMap && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
+    const c1 = (inferredUid && cachedByUserId && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
+    const c2 = (x.account_id && cachedByAccountId && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
 
-      const p = (inferredUid && profMap && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
-      const c1 = (inferredUid && cachedByUserId && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
-      const c2 = (x.account_id && cachedByAccountId && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
-
-      name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
-      email = (p?.email || c1?.email || c2?.email || "—");
-      joined_at = c1?.joined_at || c2?.joined_at || null;
-    }
+    const name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
+    const email = (p?.email || c1?.email || c2?.email || "—");
 
     const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
-    const eff  = x.effective_date ? fmtDate(x.effective_date) : "—";
 
     const receipt = x.receipt_path
       ? `<button class="ghost" type="button"
@@ -1187,15 +1062,12 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
          </button>`
       : "—";
 
-    const canActions = (TOPUP_VIEW === "pending");
-    const actions = canActions ? `
-        <button class="ghost" onclick='approveTopup("${x.id}")'>Aprobar ahora</button>
-        <button class="ghost" onclick='openScheduleModal(${JSON.stringify({id:x.id, amount:x.amount, currency:x.currency, bank_name:x.bank_name, created_at:x.created_at, name, email, joined_at})})'>Programar</button>
-        <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
-    ` : `
-        <button class="ghost" onclick='openScheduleModal(${JSON.stringify({id:x.id, amount:x.amount, currency:x.currency, bank_name:x.bank_name, created_at:x.created_at, name, email, joined_at, effective_date:x.effective_date})})'>Cambiar fecha</button>
-        <button class="danger" onclick="unscheduleTopupPrompt('${x.id}')">Quitar programación</button>
-    `;
+    const st = String(x.status||"pending").toLowerCase();
+    const eff = x.effective_date ? x.effective_date : "—";
+
+    // Para default de programación: usar joined_at del cliente (si lo tenemos)
+    const joined = c1?.joined_at || c2?.joined_at || null;
+    const defNextCycle = nextCycleStartISO(joined);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1205,21 +1077,38 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
       <td>${amt}</td>
       <td>${bank}</td>
       <td>${receipt}</td>
+      <td class="nowrap">${statusChip(st)}</td>
       <td class="nowrap">${eff}</td>
-      <td class="nowrap">${actions}</td>
+      <td class="nowrap">
+        <button class="ok" onclick="approveTopup('${x.id}')">Aprobar ahora</button>
+        <button class="ghost" onclick='openScheduleTopupModal(${JSON.stringify({
+          id:x.id,
+          amount:x.amount,
+          currency:x.currency,
+          status:x.status,
+          effective_date:x.effective_date,
+          user_id: inferredUid,
+          account_id:x.account_id,
+          name, email,
+          default_date: defNextCycle
+        })})'>Programar</button>
+        ${st==="scheduled" ? `<button class="ghost" onclick="unscheduleTopup('${x.id}')">Quitar programación</button>` : ``}
+        <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
+      </td>
     `;
     tb.appendChild(tr);
   });
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="8" class="small">No hay recargas ${TOPUP_VIEW === "pending" ? "pendientes" : "programadas"}.</td>`;
+    tr.innerHTML = `<td colspan="9" class="small">No hay recargas pending/scheduled.</td>`;
     tb.appendChild(tr);
   }
 }
 
+/*** ✅ Aprobar ahora (NO CAMBIADO) ***/
 async function approveTopup(topupId){
-  if(!confirm("¿Aprobar esta recarga?\n\nEsto sumará el monto al capital del cliente inmediatamente.")) return;
+  if(!confirm("¿Aprobar ahora?\n\nEsto sumará el monto al capital del cliente inmediatamente.")) return;
 
   const r = await fetch(`${RPC}/approve_topup`, {
     method:"POST",
@@ -1242,7 +1131,6 @@ function rejectTopupPrompt(topupId){
   const reason = prompt("Motivo del rechazo (opcional):") || "";
   rejectTopup(topupId, reason);
 }
-
 async function rejectTopup(topupId, reason){
   if(!confirm("¿Rechazar esta recarga?")) return;
 
@@ -1262,7 +1150,25 @@ async function rejectTopup(topupId, reason){
   await listTopups();
 }
 
-/*** ✅ abrir boleta ***/
+async function unscheduleTopup(topupId){
+  if(!confirm("¿Quitar programación?\n\nVolverá a estado Pendiente.")) return;
+
+  const r = await fetch(`${RPC}/unschedule_topup`,{
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId })
+  });
+
+  if(!r.ok){
+    console.error(await r.text().catch(()=> ""));
+    alert("No se pudo quitar la programación.");
+    return;
+  }
+
+  alert("Programación eliminada. La recarga volvió a Pendiente.");
+  await listTopups();
+}
+
 async function openReceipt(bucket, path){
   try{
     const r = await fetch(`${PROJECT_URL}/functions/v1/admin-signed-receipt`,{
@@ -1290,178 +1196,82 @@ async function openReceipt(bucket, path){
 }
 
 /* ============================================================
-   ✅ PROGRAMAR TOPUP (MODAL)
+   MODAL PROGRAMAR TOPUP
    ============================================================ */
-let SCHEDULE_CTX = null;
+let SCHED_CTX = null;
 
-function todayISO(){
-  return new Date().toISOString().slice(0,10);
+function openScheduleTopupModal(ctx){
+  SCHED_CTX = ctx;
+
+  $("schedInfo").innerHTML =
+    `<b>${ctx.name||'—'}</b> — ${ctx.email||'—'}<br>`+
+    `Monto: <b>${fmtMoney(ctx.amount, ctx.currency||'GTQ')}</b><br>`+
+    `Regla: Se acreditará automáticamente a las <b>9:00 AM (Guatemala)</b> del día efectivo.`;
+
+  // default: inicio del siguiente ciclo según joined_at
+  const d = ctx.effective_date || ctx.default_date || todayISO();
+  $("schedDate").value = d;
+  $("schedNote").value = "";
+  $("schedMsg").textContent = "";
+
+  show($("modalScheduleTopup"), true);
 }
 
-// calcula la próxima fecha de inicio de ciclo basada en joined_at
-function nextCycleDateFromJoined(joinedAt, baseDate=new Date()){
-  if(!joinedAt){
-    return todayISO();
-  }
-  const j = new Date(joinedAt);
-  if(isNaN(j.getTime())) return todayISO();
-
-  const cycleDay = j.getDate(); // día del mes del ingreso
-  const y = baseDate.getFullYear();
-  const m = baseDate.getMonth(); // 0-11
-  const d = baseDate.getDate();
-
-  function lastDayOfMonth(year, month0){
-    return new Date(year, month0+1, 0).getDate();
-  }
-
-  // si hoy aún no pasó el día del ciclo, usar este mes; si ya pasó, usar próximo mes
-  let targetYear = y;
-  let targetMonth = m;
-  if(d > cycleDay){
-    targetMonth = m + 1;
-    if(targetMonth > 11){ targetMonth = 0; targetYear = y + 1; }
-  }
-
-  const last = lastDayOfMonth(targetYear, targetMonth);
-  const day = Math.min(cycleDay, last);
-  const dt = new Date(targetYear, targetMonth, day);
-  return dt.toISOString().slice(0,10);
-}
-
-function openScheduleModal(payload){
-  SCHEDULE_CTX = payload;
-
-  const amountTxt = fmtMoney(payload.amount, payload.currency||"GTQ");
-  const createdTxt = payload.created_at ? new Date(payload.created_at).toLocaleString('es-GT') : "—";
-  const cycleSuggest = nextCycleDateFromJoined(payload.joined_at, new Date());
-
-  $("scheduleInfo").innerHTML =
-    `<b>${payload.name||'—'}</b> — ${payload.email||'—'}<br>`+
-    `Recarga: <b>${amountTxt}</b> · Creada: ${createdTxt}<br>`+
-    `Sugerencia inicio de ciclo: <b>${cycleSuggest}</b>`;
-
-  $("scheduleDate").value = payload.effective_date ? String(payload.effective_date).slice(0,10) : cycleSuggest;
-  $("scheduleNote").value = "";
-  $("scheduleMsg").textContent = "";
-
-  show($("modalSchedule"), true);
-}
-
-function closeScheduleModal(){
-  show($("modalSchedule"), false);
-  SCHEDULE_CTX = null;
+function closeScheduleTopupModal(){
+  show($("modalScheduleTopup"), false);
+  SCHED_CTX = null;
 }
 
 async function doScheduleTopup(){
-  if(!SCHEDULE_CTX?.id) return;
+  if(!SCHED_CTX) return;
 
-  const eff = $("scheduleDate").value || todayISO();
-  const note = ($("scheduleNote").value || "").trim();
+  const date = $("schedDate").value;
+  const note = ($("schedNote").value || "").trim();
 
-  const msg =
-    `¿Programar esta recarga?\n\n`+
-    `Fecha efectiva: ${eff}\n\n`+
-    `Esto NO acreditará el capital hoy. Se guardará como "scheduled" con fecha efectiva.`;
+  if(!date){
+    $("schedMsg").textContent = "Fecha requerida.";
+    return;
+  }
 
-  if(!confirm(msg)) return;
+  // UI warning (la DB también lo bloquea)
+  const today = todayISO();
+  if(date < today){
+    $("schedMsg").textContent = "No se permiten fechas pasadas.";
+    return;
+  }
 
-  $("scheduleMsg").textContent = "Programando…";
-  setLoading($("scheduleMsg"), true);
+  if(!confirm(`¿Programar esta recarga?\n\nFecha efectiva: ${date}\n\nSe acreditará a las 9:00 AM (GT) de ese día.`)) return;
+
+  $("schedMsg").textContent = "Programando…";
+  setLoading($("schedMsg"), true);
 
   try{
-    // 1) Intento RPC (recomendado)
-    let ok = false;
-    try{
-      const r = await fetch(`${RPC}/schedule_topup`,{
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ p_topup_id: SCHEDULE_CTX.id, p_effective_date: eff, p_note: note || null })
-      });
-      if(r.ok) ok = true;
-      else {
-        const t = await r.text().catch(()=> "");
-        console.warn("RPC schedule_topup no ok:", r.status, t);
-      }
-    }catch(e){
-      console.warn("RPC schedule_topup no disponible:", e);
+    const r = await fetch(`${RPC}/schedule_topup`,{
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_topup_id: SCHED_CTX.id,
+        p_effective_date: date,
+        p_note: note || null
+      })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || "No se pudo programar.");
     }
 
-    // 2) Fallback PATCH (si existe effective_date + status)
-    if(!ok){
-      const r2 = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(SCHEDULE_CTX.id)}`,{
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({
-          status: "scheduled",
-          effective_date: eff,
-          note: note || null
-        })
-      });
-      if(!r2.ok){
-        const t2 = await r2.text().catch(()=> "");
-        throw new Error(
-          "No se pudo programar.\n\n" +
-          "Necesitas agregar en tu DB:\n" +
-          "1) topups.effective_date (date)\n" +
-          "2) permitir status='scheduled'\n" +
-          "y/o crear RPC schedule_topup.\n\n" +
-          "Detalle: " + (t2 || r2.status)
-        );
-      }
-      ok = true;
-    }
-
-    $("scheduleMsg").textContent = "Programada.";
-    closeScheduleModal();
-    alert("Recarga programada.");
+    $("schedMsg").textContent = "Listo.";
+    closeScheduleTopupModal();
+    alert("Recarga programada correctamente.");
     await listTopups();
 
   }catch(e){
     console.error(e);
-    $("scheduleMsg").textContent = "Error.";
+    $("schedMsg").textContent = "Error.";
     alert("No se pudo programar: " + (e.message||e));
   }finally{
-    setLoading($("scheduleMsg"), false);
-  }
-}
-
-function unscheduleTopupPrompt(topupId){
-  if(!confirm("¿Quitar programación?\n\nVolverá a estado PENDING.")) return;
-  unscheduleTopup(topupId);
-}
-
-async function unscheduleTopup(topupId){
-  try{
-    // intenta RPC si existe
-    let ok = false;
-    try{
-      const r = await fetch(`${RPC}/unschedule_topup`,{
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ p_topup_id: topupId })
-      });
-      if(r.ok) ok = true;
-    }catch{}
-
-    if(!ok){
-      // fallback patch
-      const r2 = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({
-          status: "pending",
-          effective_date: null
-        })
-      });
-      if(!r2.ok) throw new Error(await r2.text().catch(()=> "No se pudo quitar programación."));
-    }
-
-    alert("Programación quitada.");
-    await listTopups();
-  }catch(e){
-    console.error(e);
-    alert("No se pudo quitar: " + (e.message||e));
+    setLoading($("schedMsg"), false);
   }
 }
 
@@ -1656,88 +1466,6 @@ async function deleteClient(x){
   renderUsers(CACHED);
   await listUsers();
   alert("Cliente eliminado correctamente.");
-}
-
-/* ============================================================
-   ACREDITAR CAPITAL (Manual)
-   ============================================================ */
-let ACCREDIT_CTX = null;
-
-function openAccreditModal(client){
-  ACCREDIT_CTX = client;
-
-  $("accreditClientInfo").innerHTML =
-    `<b>${client.full_name||'—'}</b> — ${client.email||'—'}<br>`+
-    `Capital actual: <b>${fmtMoney(client.capital, client.currency)}</b> · Modo: <b>${client.compound_interest ? "Acumulado" : "Mensual"}</b>`;
-
-  $("accreditAmount").value = "0";
-  $("accreditDate").value = todayISO();
-  $("accreditBank").value = (client.bank_name || "Banco Industrial");
-  $("accreditMsg").textContent = "";
-
-  show($("modalAccredit"), true);
-}
-
-function closeAccreditModal(){
-  show($("modalAccredit"), false);
-  ACCREDIT_CTX = null;
-}
-
-bindCapitalFormatter($("accreditAmount"));
-
-async function doAccreditCapital(){
-  if(!ACCREDIT_CTX) return;
-
-  const amount = parseCapitalFromInput($("accreditAmount").value);
-  const date = $("accreditDate").value || todayISO();
-  const bank = ($("accreditBank").value || "").trim() || null;
-
-  if(!amount || amount <= 0){
-    $("accreditMsg").textContent = "Monto inválido.";
-    return;
-  }
-  if(!ACCREDIT_CTX.account_id || !ACCREDIT_CTX.user_id){
-    $("accreditMsg").textContent = "Falta account_id / user_id en el cliente (revisa vista v_admin_users_filtered).";
-    return;
-  }
-
-  const msg = `¿Acreditar ${fmtMoney(amount, ACCREDIT_CTX.currency)} a ${ACCREDIT_CTX.full_name||'cliente'}?\n\nFecha efectiva: ${date}\n\nEsto creará un topup como PAID + approved_at, y recalculará intereses desde ese mes (sin tocar meses anteriores).`;
-  if(!confirm(msg)) return;
-
-  $("accreditMsg").textContent = "Acreditando…";
-  setLoading($("accreditMsg"), true);
-
-  try{
-    const r = await fetch(`${RPC}/admin_accredit_capital`,{
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        p_account_id: ACCREDIT_CTX.account_id,
-        p_user_id: ACCREDIT_CTX.user_id,
-        p_amount: amount,
-        p_effective_date: date,
-        p_bank_name: bank
-      })
-    });
-
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      throw new Error(t || "No se pudo acreditar (RPC admin_accredit_capital).");
-    }
-
-    $("accreditMsg").textContent = "Acreditado.";
-    await listUsers();
-    await listTopups();
-    closeAccreditModal();
-    alert("Capital acreditado correctamente.");
-
-  }catch(e){
-    console.error(e);
-    $("accreditMsg").textContent = "Error.";
-    alert("No se pudo acreditar: " + (e.message||e));
-  }finally{
-    setLoading($("accreditMsg"), false);
-  }
 }
 
 /* ============================================================
@@ -1937,29 +1665,19 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   bindCapitalFormatter($("u_capital"));
 
-  $("btnAccreditDo").addEventListener("click", doAccreditCapital);
   $("btnResetDo").addEventListener("click", doResetPassword);
-
   $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
   $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
 
-  $("modalAccredit")?.addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
+  $("btnDoSchedule")?.addEventListener("click", doScheduleTopup);
+
+  $("modalScheduleTopup")?.addEventListener("click", (e)=>{ if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal(); });
   $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
-
-  $("modalSchedule")?.addEventListener("click", (e)=>{ if(e.target === $("modalSchedule")) closeScheduleModal(); });
-  $("btnScheduleDo")?.addEventListener("click", doScheduleTopup);
-
-  // pills
-  $("pillPending")?.addEventListener("click", ()=> setTopupView("pending"));
-  $("pillScheduled")?.addEventListener("click", ()=> setTopupView("scheduled"));
-  $("pillPending")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") setTopupView("pending"); });
-  $("pillScheduled")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") setTopupView("scheduled"); });
 
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
       try{ closeResetModal(); }catch{}
-      try{ closeAccreditModal(); }catch{}
-      try{ closeScheduleModal(); }catch{}
+      try{ closeScheduleTopupModal(); }catch{}
     }
   });
 
