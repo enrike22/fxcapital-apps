@@ -493,43 +493,44 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     </div>
 
     <!-- RETIRAR CAPITAL -->
-<div class="card">
-  <div class="header" style="margin:0 0 10px">
-    <h2 style="margin:0">Retirar capital (Admin)</h2>
-  </div>
+    <div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Retirar capital (Admin)</h2>
+      </div>
 
-  <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-    <div>
-      <label class="label">Cliente / Cuenta</label>
-      <select id="wdAccount" class="input"></select>
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="wdAccount"></select>
+          <div class="small" id="wdHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a retirar</label>
+          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00">
+        </div>
+
+        <div>
+          <label>Referencia (opcional)</label>
+          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta">
+        </div>
+
+        <div>
+          <label>Nota interna (opcional)</label>
+          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
+        <span id="wdMsg" class="small" style="opacity:.9"></span>
+      </div>
+
+      <p class="small" style="margin-top:10px;opacity:.8">
+        Esto crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b> sin modificar meses anteriores.
+      </p>
     </div>
 
-    <div>
-      <label class="label">Monto a retirar</label>
-      <input id="wdAmount" class="input" type="number" step="0.01" min="0" placeholder="Ej: 500.00">
-    </div>
-
-    <div>
-      <label class="label">Referencia (opcional)</label>
-      <input id="wdRef" class="input" type="text" placeholder="Boleta / Banco / Nota corta">
-    </div>
-
-    <div>
-      <label class="label">Nota interna (opcional)</label>
-      <input id="wdNote" class="input" type="text" placeholder="Motivo / solicitud / observación">
-    </div>
-  </div>
-
-  <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-    <button id="btnWithdraw" class="danger" type="button">Retirar</button>
-    <span id="wdMsg" class="small" style="opacity:.9"></span>
-  </div>
-
-  <p class="small" style="margin-top:10px;opacity:.8">
-    Esto crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b> sin modificar meses anteriores.
-  </p>
-</div>
-    
     <!-- Lista -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
@@ -826,6 +827,7 @@ async function listUsers(){
       if(msgEl) msgEl.textContent = `Clientes cargados: ${CACHED.length}`;
       renderUsers(CACHED);
       refreshResetPicker();
+      refreshWithdrawPicker(); // ✅
       return;
     }
 
@@ -837,6 +839,7 @@ async function listUsers(){
     if(msgEl) msgEl.textContent = `Clientes cargados (fallback): ${CACHED.length}`;
     renderUsers(CACHED);
     refreshResetPicker();
+    refreshWithdrawPicker(); // ✅
 
     if(r.status === 401 || r.status === 403){
       localStorage.removeItem("token");
@@ -848,6 +851,8 @@ async function listUsers(){
     if(msgEl) msgEl.textContent = "Error cargando clientes (revisa conexión, permisos o RLS).";
     CACHED = [];
     renderUsers(CACHED);
+    refreshResetPicker();
+    refreshWithdrawPicker(); // ✅
   }
 }
 
@@ -931,6 +936,139 @@ $("q")?.addEventListener("input",(e)=>{
     .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   renderUsers(filt);
 });
+
+/* ============================================================
+   ✅ RETIRAR CAPITAL (Admin) — integra con tu RPC withdraw_capital
+   ============================================================ */
+
+function refreshWithdrawPicker(){
+  const sel = $("wdAccount");
+  const hint = $("wdHint");
+  const msg = $("wdMsg");
+  if(!sel) return;
+
+  if(msg) msg.textContent = "";
+  sel.innerHTML = "";
+
+  const rows = (CACHED||[]).filter(x=>x.account_id && (x.email || x.full_name));
+  if(!rows.length){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No hay clientes cargados";
+    sel.appendChild(opt);
+    if(hint) hint.textContent = "—";
+    return;
+  }
+
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "Selecciona una cuenta";
+  sel.appendChild(opt0);
+
+  rows.forEach(x=>{
+    const opt = document.createElement("option");
+    opt.value = x.account_id;
+    const name = (x.full_name || x.email || "—");
+    opt.textContent = `${name} — ${x.email || "—"} — Capital: ${fmtMoney(x.capital, x.currency || "GTQ")}`;
+    opt.dataset.capital = String(x.capital ?? 0);
+    opt.dataset.currency = x.currency || "GTQ";
+    opt.dataset.name = x.full_name || "";
+    opt.dataset.email = x.email || "";
+    sel.appendChild(opt);
+  });
+
+  if(hint) hint.textContent = "Selecciona una cuenta para ver el capital y retirar.";
+}
+
+function updateWithdrawHint(){
+  const sel = $("wdAccount");
+  const hint = $("wdHint");
+  if(!sel || !hint) return;
+
+  const opt = sel.options[sel.selectedIndex];
+  const name = opt?.dataset?.name || "";
+  const email = opt?.dataset?.email || "";
+  const cap = Number(opt?.dataset?.capital || 0);
+  const ccy = opt?.dataset?.currency || "GTQ";
+
+  if(!sel.value){
+    hint.textContent = "—";
+    return;
+  }
+  hint.innerHTML = `<b>${name || "Cliente"}</b> — ${email || "—"}<br>Capital actual: <b>${fmtMoney(cap, ccy)}</b>`;
+}
+
+async function doWithdraw(){
+  const msg = $("wdMsg");
+  const sel = $("wdAccount");
+  const amount = Number($("wdAmount")?.value || 0);
+  const reference = ($("wdRef")?.value || "").trim() || null;
+  const note = ($("wdNote")?.value || "").trim() || null;
+
+  if(msg) msg.textContent = "";
+  if(!sel?.value){
+    if(msg) msg.textContent = "Selecciona una cuenta.";
+    return;
+  }
+  if(!amount || amount <= 0){
+    if(msg) msg.textContent = "Monto inválido.";
+    return;
+  }
+
+  const opt = sel.options[sel.selectedIndex];
+  const cap = Number(opt?.dataset?.capital || 0);
+  const ccy = opt?.dataset?.currency || "GTQ";
+  const who = opt?.textContent?.split("—")?.[0]?.trim() || "cliente";
+
+  if(amount > cap){
+    if(msg) msg.textContent = `Fondos insuficientes. Capital actual: ${fmtMoney(cap, ccy)}`;
+    return;
+  }
+
+  if(!confirm(`¿Aplicar retiro de capital?\n\nCliente: ${who}\nMonto: ${fmtMoney(amount, ccy)}\n\nEsto descuenta el capital actual y registra el movimiento.`)) return;
+
+  const btn = $("btnWithdraw");
+  if(btn){ btn.disabled = true; btn.textContent = "Procesando..."; }
+
+  try{
+    const r = await fetch(`${RPC}/withdraw_capital`,{
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_account_id: sel.value,
+        p_amount: amount,
+        p_note: note,
+        p_reference: reference
+      })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || `HTTP ${r.status}`);
+    }
+
+    // puede venir como [{ new_capital: ... }]
+    let data = null;
+    try{ data = await r.json(); }catch{ data = null; }
+    const newCap = data?.[0]?.new_capital;
+
+    if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
+
+    // refrescar datos / UI
+    await listUsers(); // esto refresca CACHED y vuelve a pintar withdraw picker
+
+    // limpiar inputs
+    if($("wdAmount")) $("wdAmount").value = "";
+    if($("wdRef")) $("wdRef").value = "";
+    if($("wdNote")) $("wdNote").value = "";
+  }catch(e){
+    console.error(e);
+    if(msg) msg.textContent = `❌ Error: ${e.message || e}`;
+    alert("No se pudo retirar: " + (e.message || e));
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = "Retirar"; }
+  }
+}
 
 /* ============================================================
    TOPUPS (PENDING + SCHEDULED) + PROGRAMAR
@@ -1039,30 +1177,24 @@ function statusChip(status){
 
 /** ✅ Calcula “inicio del siguiente ciclo” según joined_at (día del mes) */
 function nextCycleStartISO(joinedAt){
-  // si no hay joinedAt, proponemos mañana (o hoy)
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   if(!joinedAt){
-    // por seguridad, proponemos hoy (pero el RPC bloqueará si fuese pasado)
     return new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0,10);
   }
 
   const j = new Date(joinedAt);
-  const day = j.getDate(); // día del mes del ciclo
+  const day = j.getDate();
 
-  // helper: clamp al último día del mes
   const clampDate = (y,m,d)=>{
     const last = new Date(y, m+1, 0).getDate();
     const dd = Math.min(d, last);
     return new Date(y,m,dd);
   };
 
-  // candidate en mes actual
   let cand = clampDate(today.getFullYear(), today.getMonth(), day);
 
-  // si hoy ya pasó o es el mismo día (y tú quieres que sea “siguiente ciclo”),
-  // nos vamos al siguiente mes
   if (today >= cand){
     const y = today.getFullYear();
     const m = today.getMonth()+1;
@@ -1103,7 +1235,6 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
     const st = String(x.status||"pending").toLowerCase();
     const eff = x.effective_date ? x.effective_date : "—";
 
-    // Para default de programación: usar joined_at del cliente (si lo tenemos)
     const joined = c1?.joined_at || c2?.joined_at || null;
     const defNextCycle = nextCycleStartISO(joined);
 
@@ -1144,7 +1275,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
   }
 }
 
-/*** ✅ Aprobar ahora (NO CAMBIADO) ***/
+/*** ✅ Aprobar ahora ***/
 async function approveTopup(topupId){
   if(!confirm("¿Aprobar ahora?\n\nEsto sumará el monto al capital del cliente inmediatamente.")) return;
 
@@ -1162,7 +1293,7 @@ async function approveTopup(topupId){
 
   alert("Recarga aprobada y capital acreditado.");
   await listTopups();
-  await listUsers();
+  await listUsers(); // refresca capital
 }
 
 function rejectTopupPrompt(topupId){
@@ -1246,7 +1377,6 @@ function openScheduleTopupModal(ctx){
     `Monto: <b>${fmtMoney(ctx.amount, ctx.currency||'GTQ')}</b><br>`+
     `Regla: Se acreditará automáticamente a las <b>9:00 AM (Guatemala)</b> del día efectivo.`;
 
-  // default: inicio del siguiente ciclo según joined_at
   const d = ctx.effective_date || ctx.default_date || todayISO();
   $("schedDate").value = d;
   $("schedNote").value = "";
@@ -1271,7 +1401,6 @@ async function doScheduleTopup(){
     return;
   }
 
-  // UI warning (la DB también lo bloquea)
   const today = todayISO();
   if(date < today){
     $("schedMsg").textContent = "No se permiten fechas pasadas.";
@@ -1668,6 +1797,10 @@ async function initApp(){
 
     await listUsers();
     await listTopups();
+
+    // ✅ aseguramos que el selector de retiros tenga data
+    refreshWithdrawPicker();
+    updateWithdrawHint();
   }else{
     show($("app"), false);
     show($("logoutBtn"), false);
@@ -1712,6 +1845,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("modalScheduleTopup")?.addEventListener("click", (e)=>{ if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal(); });
   $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
 
+  // ✅ Retiro capital bindings
+  $("wdAccount")?.addEventListener("change", updateWithdrawHint);
+  $("btnWithdraw")?.addEventListener("click", doWithdraw);
+
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
       try{ closeResetModal(); }catch{}
@@ -1724,4 +1861,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
