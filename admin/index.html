@@ -1164,7 +1164,6 @@ async function loadWithdrawHistory(){
   };
 
   try{
-    // Ajuste robusto: no usamos w.currency (te dio error). Currency la resolvemos por account desde CACHED.
     const sel = `id,created_at,account_id,amount,reference,note`;
     const url = `${BASE}/withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc&limit=500`;
 
@@ -1272,7 +1271,8 @@ function printWithdrawalsPDF(){
       </thead>
       <tbody>${rowsHtml}</tbody>
     </table>
-    <script>window.print();</script>
+    <!-- ✅ FIX: NO ROMPER EL <script> PRINCIPAL -->
+    <script>window.print();<\/script>
   </body>
   </html>
   `;
@@ -1296,7 +1296,6 @@ async function deleteWithdrawalsShown(){
 
   const ids = WDH_CACHE.map(x=>x.id).filter(Boolean);
   try{
-    // ✅ Opción A (recomendada): RPC si existe
     let ok = false;
 
     try{
@@ -1308,7 +1307,6 @@ async function deleteWithdrawalsShown(){
       if(r1.ok) ok = true;
     }catch{}
 
-    // ✅ Opción B fallback: DELETE directo (puede fallar por RLS)
     if(!ok){
       const idsCsv = ids.join(",");
       const r2 = await fetch(`${BASE}/withdrawals?id=in.(${idsCsv})`,{
@@ -1573,7 +1571,6 @@ async function openReceipt(bucket, path){
 async function approveTopup(topupId){
   if(!confirm("¿Aprobar ahora?\n\nEsto sumará el monto al capital del cliente inmediatamente.\n\nLuego se intentará borrar la boleta para que no ocupe espacio.")) return;
 
-  // 1) Obtiene receipt_path antes de aprobar (por si luego cambia estado)
   let receiptPath = null;
   try{
     const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
@@ -1591,7 +1588,6 @@ async function approveTopup(topupId){
     }
   }catch{}
 
-  // 2) Aprueba
   const r = await fetch(`${RPC}/approve_topup`, {
     method:"POST",
     headers: headersJSON(),
@@ -1604,9 +1600,6 @@ async function approveTopup(topupId){
     return;
   }
 
-  // 3) Intenta borrar boleta en Storage vía Edge Function (si existe)
-  //    Esta función debe usar SERVICE_ROLE para poder borrar del bucket.
-  //    Si no existe, no rompe.
   if(receiptPath){
     try{
       const del = await fetch(`${PROJECT_URL}/functions/v1/admin-delete-receipt`,{
@@ -1622,14 +1615,12 @@ async function approveTopup(topupId){
         })
       });
 
-      // 4) Limpia receipt_path (aunque no haya podido borrar del bucket, al menos se “desvincula”)
       await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
         method:"PATCH",
         headers: headersJSON(),
         body: JSON.stringify({ receipt_path: null })
       });
 
-      // si del falla, igual no rompemos
       if(!del.ok){
         console.warn("admin-delete-receipt no respondió OK:", await del.text().catch(()=> ""));
       }
