@@ -492,6 +492,44 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
     </div>
 
+    <!-- RETIRAR CAPITAL -->
+<div class="card">
+  <div class="header" style="margin:0 0 10px">
+    <h2 style="margin:0">Retirar capital (Admin)</h2>
+  </div>
+
+  <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+    <div>
+      <label class="label">Cliente / Cuenta</label>
+      <select id="wdAccount" class="input"></select>
+    </div>
+
+    <div>
+      <label class="label">Monto a retirar</label>
+      <input id="wdAmount" class="input" type="number" step="0.01" min="0" placeholder="Ej: 500.00">
+    </div>
+
+    <div>
+      <label class="label">Referencia (opcional)</label>
+      <input id="wdRef" class="input" type="text" placeholder="Boleta / Banco / Nota corta">
+    </div>
+
+    <div>
+      <label class="label">Nota interna (opcional)</label>
+      <input id="wdNote" class="input" type="text" placeholder="Motivo / solicitud / observación">
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+    <button id="btnWithdraw" class="danger" type="button">Retirar</button>
+    <span id="wdMsg" class="small" style="opacity:.9"></span>
+  </div>
+
+  <p class="small" style="margin-top:10px;opacity:.8">
+    Esto crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b> sin modificar meses anteriores.
+  </p>
+</div>
+    
     <!-- Lista -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
@@ -1686,3 +1724,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
