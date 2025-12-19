@@ -951,7 +951,7 @@ $("q")?.addEventListener("input",(e)=>{
 });
 
 /* ============================================================
-   ✅ TOPUPS PENDIENTES (FIX: resuelve nombre aunque user_id venga null)
+   ✅ TOPUPS PENDIENTES (ACTUALIZADO: JOIN + FALLBACKS)
    ============================================================ */
 
 /** Helper: arma mapas locales desde CACHED para fallback rápido */
@@ -989,6 +989,20 @@ async function fetchProfiles(userIds, h){
   return new Map(profs.map(p=>[p.id,p]));
 }
 
+/** ✅ Intento 1: traer topups ya con joins (si tu DB tiene relaciones) */
+async function tryLoadTopupsWithJoin(h){
+  const selJoin =
+    `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,`+
+    `profiles:profiles(full_name,email),`+
+    `accounts:accounts(user_id,profiles:profiles(full_name,email))`;
+
+  const url = `${BASE}/topups?select=${encodeURIComponent(selJoin)}&status=eq.pending&order=created_at.desc`;
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok) return { ok:false, rows:[], status:r.status, text: await r.text().catch(()=> "") };
+  const rows = await r.json();
+  return { ok:true, rows, status:r.status, text:"" };
+}
+
 async function listTopups(){
   const msgEl = $("topupsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -1000,7 +1014,23 @@ async function listTopups(){
     Pragma:"no-cache"
   };
 
-  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code`;
+  // ✅ 1) Intentar JOIN directo (si existe relación)
+  try{
+    const joinTry = await tryLoadTopupsWithJoin(h);
+    if(joinTry.ok){
+      renderTopups(joinTry.rows, null, null, null, null, true); // joinMode=true
+      if(msgEl) msgEl.textContent = `Recargas pendientes: ${joinTry.rows.length}`;
+      return;
+    }else{
+      // Si falla el join, seguimos con el fallback robusto (no rompemos nada)
+      console.warn("JOIN topups no disponible, usando fallback:", joinTry.status, joinTry.text);
+    }
+  }catch(e){
+    console.warn("JOIN topups falló (exception), usando fallback:", e);
+  }
+
+  // ✅ 2) Fallback: traer topups plano y resolver por accounts/profiles/CACHED
+  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider`;
   const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`, { headers:h, cache:"no-store" });
 
   if(!r.ok){
@@ -1017,16 +1047,12 @@ async function listTopups(){
 
   const rows = await r.json();
 
-  // ✅ Fallback 1: usar CACHED (ya trae nombre/email)
+  // ✅ Fallback 2A: usar CACHED
   const { byUserId, byAccountId } = buildCachedMaps();
 
-  // 1) user_ids directos
   const directUserIds = rows.map(x=>x.user_id).filter(Boolean);
-
-  // 2) account_ids sin user_id (resolver en accounts)
   const missingUidAccountIds = rows.filter(x=>!x.user_id && x.account_id).map(x=>x.account_id);
 
-  // Resolver account_id -> user_id (desde CACHED primero, luego accounts)
   const acctToUid = new Map();
   missingUidAccountIds.forEach(aid=>{
     const c = byAccountId.get(aid);
@@ -1037,7 +1063,6 @@ async function listTopups(){
   const acctToUidFromDb = await fetchAccountsUserIds(stillMissing, h);
   acctToUidFromDb.forEach((uid, aid)=> acctToUid.set(aid, uid));
 
-  // Ahora lista final de user_ids a pedir en profiles
   const resolvedUserIds = rows.map(x=>{
     if(x.user_id) return x.user_id;
     if(x.account_id && acctToUid.get(x.account_id)) return acctToUid.get(x.account_id);
@@ -1046,7 +1071,6 @@ async function listTopups(){
 
   const allUserIds = [...new Set([...directUserIds, ...resolvedUserIds])];
 
-  // Traer profiles (si falla por RLS o no existen, igual seguimos por fallback con CACHED)
   let profMap = new Map();
   try{
     profMap = await fetchProfiles(allUserIds, h);
@@ -1054,31 +1078,43 @@ async function listTopups(){
     profMap = new Map();
   }
 
-  // Render con estrategia:
-  // profile -> cachedUser -> cachedAccount -> "—"
-  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
+  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid, false);
+
+  if(msgEl) msgEl.textContent = `Recargas pendientes: ${rows.length}`;
 }
 
-function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
+function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid, joinMode){
   const tb = $("topups");
   if(!tb) return;
   tb.innerHTML = "";
 
+  const BUCKET = "topup-receipts";
+
   rows.forEach(x=>{
-    const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
+    // ✅ Si viene por JOIN:
+    // x.profiles.full_name / x.profiles.email
+    // x.accounts.profiles.full_name / x.accounts.profiles.email
+    let name = "—";
+    let email = "—";
 
-    const p = (inferredUid && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
-    const c1 = (inferredUid && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
-    const c2 = (x.account_id && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
+    if(joinMode){
+      name = x?.profiles?.full_name || x?.accounts?.profiles?.full_name || "—";
+      email = x?.profiles?.email || x?.accounts?.profiles?.email || "—";
+    }else{
+      const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
 
-    const name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
-    const email = (p?.email || c1?.email || c2?.email || "—");
+      const p = (inferredUid && profMap && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
+      const c1 = (inferredUid && cachedByUserId && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
+      const c2 = (x.account_id && cachedByAccountId && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
+
+      name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
+      email = (p?.email || c1?.email || c2?.email || "—");
+    }
 
     const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
 
-    const BUCKET = "topup-receipts";
     const receipt = x.receipt_path
       ? `<button class="ghost" type="button"
             onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
