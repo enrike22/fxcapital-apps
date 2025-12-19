@@ -311,7 +311,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 }
 .modal-backdrop.hidden{display:none !important}
 .modal{
-  width:min(980px, 100%);
+  width:min(900px, 100%);
   border-radius:22px;
   border:1px solid rgba(255,255,255,.10);
   box-shadow: 0 30px 90px rgba(0,0,0,.65);
@@ -332,7 +332,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .modal-inner{ position:relative; padding:20px 18px 18px; }
 .modal-title{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
 .modal-title h3{ margin:0; font-size:18px; letter-spacing:.2px; }
-.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; }
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
 .xbtn{
   background: transparent;
   border:1px solid rgba(255,255,255,.12);
@@ -494,10 +494,18 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
     <!-- RETIRAR CAPITAL -->
     <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Retirar capital (Admin)</h2>
-        <!-- ✅ NUEVO: botón historial -->
-        <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Retirar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
+          </div>
+        </div>
+
+        <!-- ✅ BOTÓN HISTORIAL -->
+        <div class="inline" style="gap:10px">
+          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
+        </div>
       </div>
 
       <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
@@ -527,10 +535,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <button id="btnWithdraw" class="danger" type="button">Retirar</button>
         <span id="wdMsg" class="small" style="opacity:.9"></span>
       </div>
-
-      <p class="small" style="margin-top:10px;opacity:.8">
-        Esto crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b> sin modificar meses anteriores.
-      </p>
     </div>
 
     <!-- Lista -->
@@ -646,7 +650,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   </div>
 </div>
 
-<!-- ✅ NUEVO ===== MODAL: HISTORIAL DE RETIROS ===== -->
+<!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
 <div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
@@ -656,50 +660,37 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
 
       <div class="small" id="wdhInfo">
-        Aquí ves el historial. Puedes <b>imprimir a PDF</b> y luego <b>borrar lo mostrado</b> (si tu BD lo permite con RPC).
+        Aquí puedes imprimir/guardar en PDF y luego (si quieres) borrar lo mostrado.
       </div>
 
-      <div class="row" style="margin-top:10px; grid-template-columns:2fr 1fr 1fr">
-        <div>
-          <label>Buscar</label>
-          <input id="wdhQ" type="text" placeholder="Nombre / email / referencia / nota">
-        </div>
-        <div>
-          <label>Desde</label>
-          <input id="wdhFrom" type="date">
-        </div>
-        <div>
-          <label>Hasta</label>
-          <input id="wdhTo" type="date">
-        </div>
-      </div>
-
-      <div class="inline" style="justify-content:space-between; gap:12px; margin-top:12px; flex-wrap:wrap">
+      <div class="inline" style="justify-content:space-between; margin-top:12px; gap:10px; flex-wrap:wrap">
         <div class="inline" style="gap:10px; flex-wrap:wrap">
-          <button id="btnWdhRefresh" type="button" class="ghost">Refrescar</button>
-          <button id="btnWdhPrint" type="button">Imprimir PDF</button>
-          <button id="btnWdhDeleteShown" type="button" class="danger">Borrar mostrados</button>
+          <button id="btnLoadWithdrawHistory" type="button" class="ghost">Refrescar historial</button>
+          <button id="btnPrintWithdrawHistory" type="button">Imprimir / Guardar PDF</button>
+          <button id="btnDeleteWithdrawalsShown" type="button" class="danger">Borrar historial mostrado</button>
         </div>
-        <div class="small" id="wdhMsg"></div>
+        <div class="small" id="wdhMsg">—</div>
       </div>
 
-      <div class="table-wrap" style="margin-top:14px">
+      <div class="table-wrap" style="margin-top:12px">
         <table>
           <thead>
             <tr>
-              <th>Fecha</th>
+              <th class="nowrap">Fecha</th>
               <th>Cliente</th>
               <th>Email</th>
               <th>Monto</th>
-              <th>Moneda</th>
               <th>Referencia</th>
-              <th>Nota / Motivo</th>
-              <th>Admin</th>
+              <th>Motivo / Nota</th>
             </tr>
           </thead>
           <tbody id="wdhBody"></tbody>
         </table>
       </div>
+
+      <p class="small" style="margin-top:10px; opacity:.85">
+        ⚠️ <b>“Borrar historial mostrado”</b> elimina filas de la base de datos. Úsalo solo si ya guardaste el PDF.
+      </p>
     </div>
   </div>
 </div>
@@ -725,6 +716,7 @@ const $ = (id)=> document.getElementById(id);
 const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
+const fmtDateTime = (s)=> s ? new Date(s).toLocaleString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
 
@@ -777,8 +769,7 @@ function bindCapitalFormatter(inputEl){
     const diff = inputEl.value.length - before.length;
     const newPos = Math.max(0, pos + diff);
     const newPosSafe = Math.min(newPos, inputEl.value.length);
-    const newPosSafe2 = Math.max(0, newPosSafe);
-    inputEl.setSelectionRange?.(newPosSafe2, newPosSafe2);
+    inputEl.setSelectionRange?.(newPosSafe, newPosSafe);
   });
   inputEl.addEventListener("blur", () => {
     if (!inputEl.value.replace(/[^\d]/g, "")) inputEl.value = "0";
@@ -866,7 +857,7 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
-/*** LISTA ***/
+/*** LISTA CLIENTES ***/
 let CACHED = [];
 async function listUsers(){
   const msgEl = $("usersMsg");
@@ -1000,7 +991,7 @@ $("q")?.addEventListener("input",(e)=>{
 });
 
 /* ============================================================
-   ✅ RETIRAR CAPITAL (Admin) — integra con tu RPC withdraw_capital
+   ✅ RETIRAR CAPITAL (Admin)
    ============================================================ */
 
 function refreshWithdrawPicker(){
@@ -1130,239 +1121,205 @@ async function doWithdraw(){
 }
 
 /* ============================================================
-   ✅ HISTORIAL RETIROS (Modal + imprimir + borrar mostrados)
+   ✅ HISTORIAL DE RETIROS (Modal + PDF + Borrar mostrado)
    ============================================================ */
-let WDH_CACHE = []; // lo que está renderizado
+let WDH_CACHE = []; // filas mostradas (para imprimir/borrar)
+
 function openWithdrawHistory(){
-  $("wdhMsg").textContent = "";
-  $("wdhQ").value = "";
-  const today = todayISO();
-  $("wdhFrom").value = today;
-  $("wdhTo").value = today;
   show($("modalWithdrawHistory"), true);
-  loadWithdrawHistory();
+  loadWithdrawHistory(); // carga al abrir
 }
 function closeWithdrawHistory(){
   show($("modalWithdrawHistory"), false);
 }
 
+function resolveClientByAccountId(accountId){
+  const x = (CACHED||[]).find(r => r.account_id === accountId);
+  return {
+    name: x?.full_name || "—",
+    email: x?.email || "—",
+    currency: x?.currency || "GTQ"
+  };
+}
+
+/**
+ * Intenta cargar withdrawals con REST.
+ * Si tu tabla tiene otras columnas, esto NO rompe: cae a fallback de mapeo.
+ */
 async function loadWithdrawHistory(){
   const msg = $("wdhMsg");
-  msg.textContent = "Cargando…";
+  const body = $("wdhBody");
+  if(!body) return;
+
+  if(msg) msg.textContent = "Cargando…";
   setLoading(msg, true);
+  body.innerHTML = "";
+  WDH_CACHE = [];
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
 
   try{
-    // ✅ 1) Intentar vista (recomendado)
-    // Campos esperados en la vista:
-    // created_at, full_name, email, amount, currency, reference, note, created_by_email, id
-    const sel = `id,created_at,full_name,email,amount,currency,reference,note,created_by_email`;
-    let r = await fetch(`${BASE}/v_admin_withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc`,{
-      headers: headersJSON(),
-      cache:"no-store"
-    });
+    // Ajuste robusto: no usamos w.currency (te dio error). Currency la resolvemos por account desde CACHED.
+    const sel = `id,created_at,account_id,amount,reference,note`;
+    const url = `${BASE}/withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc&limit=500`;
 
-    let rows = [];
-    if(r.ok){
-      rows = await r.json();
-    }else{
-      // ✅ 2) fallback: tabla withdrawals simple (si existe y permite)
+    const r = await fetch(url, { headers:h, cache:"no-store" });
+
+    if(!r.ok){
       const t = await r.text().catch(()=> "");
-      console.warn("v_admin_withdrawals no disponible:", r.status, t);
-
-      r = await fetch(`${BASE}/withdrawals?select=id,created_at,amount,currency,reference,note,account_id,created_by&order=created_at.desc`,{
-        headers: headersJSON(),
-        cache:"no-store"
-      });
-
-      if(!r.ok){
-        const t2 = await r.text().catch(()=> "");
-        throw new Error(t2 || `No se pudo cargar historial (HTTP ${r.status})`);
-      }
-      const w = await r.json();
-
-      // si NO hay join permitido, mostramos mínimo
-      rows = w.map(x=>({
-        id:x.id,
-        created_at:x.created_at,
-        full_name:"—",
-        email:"—",
-        amount:x.amount,
-        currency:x.currency,
-        reference:x.reference,
-        note:x.note,
-        created_by_email: x.created_by || ""
-      }));
+      throw new Error(t || `HTTP ${r.status}`);
     }
 
-    // filtros UI
-    const q = ($("wdhQ").value || "").trim().toLowerCase();
-    const from = $("wdhFrom").value || "";
-    const to   = $("wdhTo").value || "";
+    const rows = await r.json();
+    WDH_CACHE = Array.isArray(rows) ? rows : [];
 
-    let filtered = rows;
+    renderWithdrawHistory();
 
-    if(from){
-      const f = new Date(from+"T00:00:00");
-      filtered = filtered.filter(x=> x.created_at ? new Date(x.created_at) >= f : true);
-    }
-    if(to){
-      const t = new Date(to+"T23:59:59");
-      filtered = filtered.filter(x=> x.created_at ? new Date(x.created_at) <= t : true);
-    }
-    if(q){
-      filtered = filtered.filter(x=>{
-        const hay = [
-          x.full_name, x.email, x.reference, x.note, x.created_by_email
-        ].filter(Boolean).join(" ").toLowerCase();
-        return hay.includes(q);
-      });
-    }
-
-    WDH_CACHE = filtered;
-    renderWithdrawHistory(filtered);
-
-    msg.textContent = `Mostrando: ${filtered.length}`;
+    if(msg) msg.textContent = `Retiros cargados: ${WDH_CACHE.length}`;
   }catch(e){
     console.error(e);
-    msg.textContent = "Error cargando historial (revisa vista/tabla y RLS).";
-    alert("No se pudo cargar historial: " + (e.message||e));
-    WDH_CACHE = [];
-    renderWithdrawHistory([]);
+    if(msg) msg.textContent = "No se pudo cargar el historial (revisa RLS/permiso o estructura de tabla).";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" class="small">No se pudo cargar el historial. (Error: ${String(e.message||e)})</td>`;
+    body.appendChild(tr);
   }finally{
     setLoading(msg, false);
   }
 }
 
-function renderWithdrawHistory(rows){
-  const tb = $("wdhBody");
-  tb.innerHTML = "";
-  if(!rows.length){
+function renderWithdrawHistory(){
+  const body = $("wdhBody");
+  if(!body) return;
+  body.innerHTML = "";
+
+  if(!WDH_CACHE.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="8" class="small">No hay retiros para mostrar con esos filtros.</td>`;
-    tb.appendChild(tr);
+    tr.innerHTML = `<td colspan="6" class="small">No hay retiros para mostrar.</td>`;
+    body.appendChild(tr);
     return;
   }
-  rows.forEach(x=>{
+
+  WDH_CACHE.forEach(w=>{
+    const accId = w.account_id || "";
+    const cli = resolveClientByAccountId(accId);
+    const ccy = cli.currency || "GTQ";
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="nowrap">${x.created_at ? new Date(x.created_at).toLocaleString("es-GT") : "—"}</td>
-      <td>${x.full_name ?? "—"}</td>
-      <td>${x.email ?? "—"}</td>
-      <td>${fmtMoney(x.amount, x.currency || "GTQ")}</td>
-      <td>${x.currency || "—"}</td>
-      <td>${x.reference || "—"}</td>
-      <td>${x.note || "—"}</td>
-      <td>${x.created_by_email || "—"}</td>
+      <td class="nowrap">${fmtDateTime(w.created_at)}</td>
+      <td>${cli.name}</td>
+      <td>${cli.email}</td>
+      <td>${fmtMoney(w.amount, ccy)}</td>
+      <td>${(w.reference || "—")}</td>
+      <td>${(w.note || "—")}</td>
     `;
-    tb.appendChild(tr);
+    body.appendChild(tr);
   });
 }
 
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, (m)=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-  }[m]));
-}
+function printWithdrawalsPDF(){
+  if(!WDH_CACHE.length){
+    alert("No hay retiros cargados para imprimir.");
+    return;
+  }
 
-function printWithdrawHistory(){
-  // imprime SOLO lo renderizado (WDH_CACHE)
-  const rows = WDH_CACHE || [];
-  const from = $("wdhFrom").value || "";
-  const to   = $("wdhTo").value || "";
-  const q    = $("wdhQ").value || "";
+  const rowsHtml = WDH_CACHE.map(w=>{
+    const cli = resolveClientByAccountId(w.account_id || "");
+    const ccy = cli.currency || "GTQ";
+    return `
+      <tr>
+        <td>${fmtDateTime(w.created_at)}</td>
+        <td>${escapeHtml(cli.name)}</td>
+        <td>${escapeHtml(cli.email)}</td>
+        <td>${escapeHtml(fmtMoney(w.amount, ccy))}</td>
+        <td>${escapeHtml(w.reference || "—")}</td>
+        <td>${escapeHtml(w.note || "—")}</td>
+      </tr>
+    `;
+  }).join("");
 
-  const htmlRows = rows.map(x=>`
-    <tr>
-      <td>${escapeHtml(x.created_at ? new Date(x.created_at).toLocaleString("es-GT") : "—")}</td>
-      <td>${escapeHtml(x.full_name || "—")}</td>
-      <td>${escapeHtml(x.email || "—")}</td>
-      <td>${escapeHtml(fmtMoney(x.amount, x.currency || "GTQ"))}</td>
-      <td>${escapeHtml(x.currency || "—")}</td>
-      <td>${escapeHtml(x.reference || "—")}</td>
-      <td>${escapeHtml(x.note || "—")}</td>
-      <td>${escapeHtml(x.created_by_email || "—")}</td>
-    </tr>
-  `).join("");
+  const html = `
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Historial de retiros — FX | CAPITAL R.L.</title>
+    <style>
+      body{font-family:Arial, sans-serif; padding:20px; color:#111;}
+      h1{margin:0 0 8px; font-size:18px;}
+      .meta{font-size:12px; color:#444; margin-bottom:12px;}
+      table{width:100%; border-collapse:collapse; font-size:12px;}
+      th,td{border:1px solid #ddd; padding:8px; vertical-align:top;}
+      th{background:#f2f2f2; text-align:left;}
+      @media print{
+        button{display:none}
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Historial de retiros — FX | CAPITAL R.L.</h1>
+    <div class="meta">Generado: ${new Date().toLocaleString("es-GT")}</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Cliente</th><th>Email</th><th>Monto</th><th>Referencia</th><th>Motivo / Nota</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <script>window.print();</script>
+  </body>
+  </html>
+  `;
 
   const w = window.open("", "_blank");
-  w.document.write(`
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<title>Historial de retiros — FX | CAPITAL R.L.</title>
-<style>
-  body{font-family:Arial, sans-serif; padding:18px; color:#111;}
-  h1{font-size:18px; margin:0 0 8px;}
-  .meta{font-size:12px; margin:0 0 12px; color:#333;}
-  table{width:100%; border-collapse:collapse; font-size:12px;}
-  th,td{border:1px solid #ccc; padding:8px; text-align:left; vertical-align:top;}
-  th{background:#f3f3f3;}
-  @media print{ button{display:none} }
-</style>
-</head>
-<body>
-  <h1>Historial de retiros — FX | CAPITAL R.L.</h1>
-  <div class="meta">
-    Filtro fecha: <b>${escapeHtml(from||"—")}</b> a <b>${escapeHtml(to||"—")}</b> |
-    Búsqueda: <b>${escapeHtml(q||"—")}</b> |
-    Total: <b>${rows.length}</b>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Fecha</th><th>Cliente</th><th>Email</th><th>Monto</th><th>Moneda</th><th>Referencia</th><th>Nota / Motivo</th><th>Admin</th>
-      </tr>
-    </thead>
-    <tbody>${htmlRows || `<tr><td colspan="8">Sin datos</td></tr>`}</tbody>
-  </table>
-
-  <script>
-    window.focus();
-    window.print();
-  </script>
-</body>
-</html>
-  `);
+  w.document.open();
+  w.document.write(html);
   w.document.close();
 }
 
 async function deleteWithdrawalsShown(){
-  if(!(WDH_CACHE||[]).length){
+  if(!WDH_CACHE.length){
     alert("No hay filas mostradas para borrar.");
     return;
   }
-  if(!confirm("¿Borrar los retiros MOSTRADOS?\n\nEsto es permanente.\n(Recomendado: imprime a PDF antes.)")) return;
+  if(!confirm(`¿Borrar los retiros MOSTRADOS?\n\nEsto es permanente.\n(Recomendado: imprime/guarda PDF antes.)`)) return;
 
   const msg = $("wdhMsg");
   msg.textContent = "Borrando…";
   setLoading(msg, true);
 
+  const ids = WDH_CACHE.map(x=>x.id).filter(Boolean);
   try{
-    // ✅ Opción A (recomendada): RPC que borra por IDs
-    // Crea un RPC en tu DB: admin_delete_withdrawals(p_ids uuid[])
-    const ids = WDH_CACHE.map(x=>x.id).filter(Boolean);
-    if(!ids.length) throw new Error("Faltan IDs para borrar. Revisa tu vista/tabla.");
+    // ✅ Opción A (recomendada): RPC si existe
+    let ok = false;
 
-    let r = await fetch(`${RPC}/admin_delete_withdrawals`,{
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_ids: ids })
-    });
+    try{
+      const r1 = await fetch(`${RPC}/admin_delete_withdrawals`,{
+        method:"POST",
+        headers: headersJSON(),
+        body: JSON.stringify({ p_ids: ids })
+      });
+      if(r1.ok) ok = true;
+    }catch{}
 
-    if(!r.ok){
-      // ✅ Opción B (fallback): intentar DELETE directo (puede fallar por RLS)
-      console.warn("RPC admin_delete_withdrawals no disponible, intentando DELETE directo…");
+    // ✅ Opción B fallback: DELETE directo (puede fallar por RLS)
+    if(!ok){
       const idsCsv = ids.join(",");
-      r = await fetch(`${BASE}/withdrawals?id=in.(${idsCsv})`,{
+      const r2 = await fetch(`${BASE}/withdrawals?id=in.(${idsCsv})`,{
         method:"DELETE",
         headers: headersJSON()
       });
-      if(!r.ok){
-        const t = await r.text().catch(()=> "");
+      if(!r2.ok){
+        const t = await r2.text().catch(()=> "");
         throw new Error(t || "No se pudo borrar (RLS o falta RPC).");
       }
+      ok = true;
     }
 
     alert("Historial borrado (mostrado).");
@@ -1376,8 +1333,14 @@ async function deleteWithdrawalsShown(){
   }
 }
 
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, (m)=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
 /* ============================================================
-   TOPUPS (PENDING + SCHEDULED) + PROGRAMAR + BORRAR BOLETA AL APROBAR
+   TOPUPS (PENDING + SCHEDULED) + PROGRAMAR + BORRAR BOLETA
    ============================================================ */
 
 function buildCachedMaps(){
@@ -1412,8 +1375,6 @@ async function fetchProfiles(userIds, h){
   return new Map(profs.map(p=>[p.id,p]));
 }
 
-let TOPUPS_CACHE_BY_ID = new Map(); // ✅ para saber receipt_path al aprobar
-
 async function listTopups(){
   const msgEl = $("topupsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -1443,9 +1404,6 @@ async function listTopups(){
   }
 
   const rows = await r.json();
-
-  // ✅ cache por id
-  TOPUPS_CACHE_BY_ID = new Map(rows.map(x=>[x.id,x]));
 
   const { byUserId, byAccountId } = buildCachedMaps();
 
@@ -1585,10 +1543,55 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
   }
 }
 
-/*** ✅ Aprobar ahora + ✅ borrar boleta en Storage y limpiar receipt_path ***/
-async function approveTopup(topupId){
-  if(!confirm("¿Aprobar ahora?\n\nEsto sumará el monto al capital del cliente inmediatamente.\n\n✅ Luego se intentará borrar la boleta para que no quede ocupando espacio.")) return;
+async function openReceipt(bucket, path){
+  try{
+    const r = await fetch(`${PROJECT_URL}/functions/v1/admin-signed-receipt`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + (localStorage.token || "")
+      },
+      body: JSON.stringify({ bucket, path })
+    });
 
+    if(!r.ok){
+      console.error(await r.text().catch(()=> ""));
+      alert("No se pudo abrir la boleta.");
+      return;
+    }
+
+    const { signedUrl } = await r.json();
+    window.open(signedUrl, "_blank");
+  }catch(e){
+    console.error(e);
+    alert("Error al abrir la boleta.");
+  }
+}
+
+/*** ✅ Aprobar ahora + ✅ borrar boleta del Storage + limpiar receipt_path ***/
+async function approveTopup(topupId){
+  if(!confirm("¿Aprobar ahora?\n\nEsto sumará el monto al capital del cliente inmediatamente.\n\nLuego se intentará borrar la boleta para que no ocupe espacio.")) return;
+
+  // 1) Obtiene receipt_path antes de aprobar (por si luego cambia estado)
+  let receiptPath = null;
+  try{
+    const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: "Bearer "+localStorage.token,
+        "Cache-Control":"no-cache, no-store, must-revalidate",
+        Pragma:"no-cache"
+      },
+      cache:"no-store"
+    });
+    if(r0.ok){
+      const rows = await r0.json();
+      receiptPath = rows?.[0]?.receipt_path || null;
+    }
+  }catch{}
+
+  // 2) Aprueba
   const r = await fetch(`${RPC}/approve_topup`, {
     method:"POST",
     headers: headersJSON(),
@@ -1601,39 +1604,45 @@ async function approveTopup(topupId){
     return;
   }
 
-  // ✅ intentar borrar boleta si existe
-  try{
-    const row = TOPUPS_CACHE_BY_ID.get(topupId);
-    const bucket = "topup-receipts";
-    const path = row?.receipt_path || null;
-
-    if(path){
-      // 1) llamar edge function con service role (recomendado)
-      // Debes crear esta Edge Function: admin-delete-receipt
-      // que haga: supabase.storage.from(bucket).remove([path])
+  // 3) Intenta borrar boleta en Storage vía Edge Function (si existe)
+  //    Esta función debe usar SERVICE_ROLE para poder borrar del bucket.
+  //    Si no existe, no rompe.
+  if(receiptPath){
+    try{
       const del = await fetch(`${PROJECT_URL}/functions/v1/admin-delete-receipt`,{
         method:"POST",
         headers:{
           "Content-Type":"application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + (localStorage.token||"")
+          Authorization: "Bearer " + (localStorage.token || "")
         },
-        body: JSON.stringify({ bucket, path })
+        body: JSON.stringify({
+          bucket: "topup-receipts",
+          path: receiptPath
+        })
       });
 
-      if(!del.ok){
-        console.warn("No se pudo borrar boleta en Storage (falta function/permiso).", await del.text().catch(()=> ""));
-      }
-
-      // 2) limpiar referencia en BD para que ya no aparezca
+      // 4) Limpia receipt_path (aunque no haya podido borrar del bucket, al menos se “desvincula”)
       await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
         method:"PATCH",
         headers: headersJSON(),
         body: JSON.stringify({ receipt_path: null })
-      }).catch(()=>{});
+      });
+
+      // si del falla, igual no rompemos
+      if(!del.ok){
+        console.warn("admin-delete-receipt no respondió OK:", await del.text().catch(()=> ""));
+      }
+    }catch(e){
+      console.warn("No se pudo borrar boleta/limpiar receipt_path:", e);
+      try{
+        await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
+          method:"PATCH",
+          headers: headersJSON(),
+          body: JSON.stringify({ receipt_path: null })
+        });
+      }catch{}
     }
-  }catch(e){
-    console.warn("Borrado de boleta omitido:", e);
   }
 
   alert("Recarga aprobada y capital acreditado.");
@@ -1681,32 +1690,6 @@ async function unscheduleTopup(topupId){
 
   alert("Programación eliminada. La recarga volvió a Pendiente.");
   await listTopups();
-}
-
-async function openReceipt(bucket, path){
-  try{
-    const r = await fetch(`${PROJECT_URL}/functions/v1/admin-signed-receipt`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        apikey: ANON_KEY,
-        Authorization: "Bearer " + (localStorage.token || "")
-      },
-      body: JSON.stringify({ bucket, path })
-    });
-
-    if(!r.ok){
-      console.error(await r.text().catch(()=> ""));
-      alert("No se pudo abrir la boleta.");
-      return;
-    }
-
-    const { signedUrl } = await r.json();
-    window.open(signedUrl, "_blank");
-  }catch(e){
-    console.error(e);
-    alert("Error al abrir la boleta.");
-  }
 }
 
 /* ============================================================
@@ -2089,7 +2072,7 @@ async function doResetPassword(){
       headers:{
         "Content-Type":"application/json",
         apikey: ANON_KEY,
-        Authorization:"Bearer " + (localStorage.token||"")
+        Authorization: "Bearer " + (localStorage.token||"")
       },
       body: JSON.stringify({
         email: RESET_CTX.email,
@@ -2188,20 +2171,16 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   $("modalScheduleTopup")?.addEventListener("click", (e)=>{ if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal(); });
   $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
+  $("modalWithdrawHistory")?.addEventListener("click", (e)=>{ if(e.target === $("modalWithdrawHistory")) closeWithdrawHistory(); });
 
   $("wdAccount")?.addEventListener("change", updateWithdrawHint);
   $("btnWithdraw")?.addEventListener("click", doWithdraw);
 
-  // ✅ NUEVO: historial retiros
+  // ✅ Historial de retiros
   $("btnOpenWithdrawHistory")?.addEventListener("click", openWithdrawHistory);
-  $("btnWdhRefresh")?.addEventListener("click", loadWithdrawHistory);
-  $("btnWdhPrint")?.addEventListener("click", printWithdrawHistory);
-  $("btnWdhDeleteShown")?.addEventListener("click", deleteWithdrawalsShown);
-  $("wdhQ")?.addEventListener("input", ()=> loadWithdrawHistory());
-  $("wdhFrom")?.addEventListener("change", ()=> loadWithdrawHistory());
-  $("wdhTo")?.addEventListener("change", ()=> loadWithdrawHistory());
-
-  $("modalWithdrawHistory")?.addEventListener("click", (e)=>{ if(e.target === $("modalWithdrawHistory")) closeWithdrawHistory(); });
+  $("btnLoadWithdrawHistory")?.addEventListener("click", loadWithdrawHistory);
+  $("btnPrintWithdrawHistory")?.addEventListener("click", printWithdrawalsPDF);
+  $("btnDeleteWithdrawalsShown")?.addEventListener("click", deleteWithdrawalsShown);
 
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
