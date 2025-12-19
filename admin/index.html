@@ -335,7 +335,7 @@ tbody tr:hover{
 }
 .modal-backdrop.hidden{display:none !important}
 .modal{
-  width:min(720px, 100%);
+  width:min(760px, 100%);
   border-radius:22px;
   border:1px solid rgba(255,255,255,.10);
   box-shadow: 0 30px 90px rgba(0,0,0,.65);
@@ -381,6 +381,26 @@ tbody tr:hover{
 
 /* ✅ mini btn header */
 .header-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* ✅ pills */
+.pills{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.pill{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: rgba(245,247,250,.9);
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  user-select:none;
+  transition:.12s ease;
+}
+.pill:hover{ border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.06); transform: translateY(-1px); }
+.pill.active{
+  border-color: rgba(45,212,191,.35);
+  box-shadow: 0 0 0 3px rgba(45,212,191,.10);
+}
 </style>
 </head>
 
@@ -415,11 +435,19 @@ tbody tr:hover{
   <!-- APP -->
   <div id="app" class="hidden">
 
-    <!-- TOPUPS PENDIENTES -->
+    <!-- TOPUPS -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Recargas pendientes</h2>
-        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <h2 style="margin:0">Recargas</h2>
+          <div class="pills">
+            <div id="pillPending" class="pill active" role="button" tabindex="0">Pendientes</div>
+            <div id="pillScheduled" class="pill" role="button" tabindex="0">Programadas</div>
+          </div>
+        </div>
+        <div class="inline" style="gap:10px">
+          <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -432,6 +460,7 @@ tbody tr:hover{
               <th>Monto</th>
               <th>Banco</th>
               <th>Boleta</th>
+              <th class="nowrap">Fecha efectiva</th>
               <th class="nowrap">Acciones</th>
             </tr>
           </thead>
@@ -440,7 +469,8 @@ tbody tr:hover{
       </div>
 
       <p class="small" style="margin-top:10px">
-        Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
+        <b>Aprobar ahora</b> acredita el capital inmediatamente (como antes).<br>
+        <b>Programar</b> guarda una <b>fecha efectiva</b> para que la recarga afecte el capital en el inicio del ciclo (según el día de ingreso del cliente).
       </p>
       <p id="topupsMsg" class="small"></p>
     </div>
@@ -562,6 +592,43 @@ tbody tr:hover{
       <p id="usersMsg" class="small" style="margin-top:6px"></p>
     </div>
 
+  </div>
+</div>
+
+<!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
+<div id="modalSchedule" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Programar acreditación</h3>
+        <button class="xbtn" type="button" onclick="closeScheduleModal()">✕</button>
+      </div>
+
+      <div class="small" id="scheduleInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Fecha efectiva</label>
+          <input id="scheduleDate" type="date">
+          <div class="small">Sugerida = próximo inicio de ciclo del cliente (según su <b>fecha de ingreso</b>).</div>
+        </div>
+        <div>
+          <label>Nota (opcional)</label>
+          <input id="scheduleNote" placeholder="Ej. Acreditar al inicio del ciclo">
+          <div class="small">Si tu tabla no tiene campo para nota, se ignora.</div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="scheduleMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeScheduleModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnScheduleDo">Programar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -951,10 +1018,17 @@ $("q")?.addEventListener("input",(e)=>{
 });
 
 /* ============================================================
-   ✅ TOPUPS PENDIENTES (ACTUALIZADO: JOIN + FALLBACKS)
+   ✅ TOPUPS (PENDIENTES / PROGRAMADAS)
    ============================================================ */
+let TOPUP_VIEW = "pending"; // "pending" | "scheduled"
 
-/** Helper: arma mapas locales desde CACHED para fallback rápido */
+function setTopupView(v){
+  TOPUP_VIEW = v;
+  $("pillPending").classList.toggle("active", v==="pending");
+  $("pillScheduled").classList.toggle("active", v==="scheduled");
+  listTopups();
+}
+
 function buildCachedMaps(){
   const byUserId = new Map();
   const byAccountId = new Map();
@@ -965,7 +1039,6 @@ function buildCachedMaps(){
   return { byUserId, byAccountId };
 }
 
-/** Helper: trae accounts.user_id para account_ids */
 async function fetchAccountsUserIds(accountIds, h){
   if(!accountIds?.length) return new Map();
   const unique = [...new Set(accountIds.filter(Boolean))];
@@ -978,7 +1051,6 @@ async function fetchAccountsUserIds(accountIds, h){
   return map;
 }
 
-/** Helper: trae profiles para user_ids */
 async function fetchProfiles(userIds, h){
   if(!userIds?.length) return new Map();
   const unique = [...new Set(userIds.filter(Boolean))];
@@ -989,14 +1061,13 @@ async function fetchProfiles(userIds, h){
   return new Map(profs.map(p=>[p.id,p]));
 }
 
-/** ✅ Intento 1: traer topups ya con joins (si tu DB tiene relaciones) */
 async function tryLoadTopupsWithJoin(h){
   const selJoin =
-    `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,`+
+    `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,`+
     `profiles:profiles(full_name,email),`+
     `accounts:accounts(user_id,profiles:profiles(full_name,email))`;
 
-  const url = `${BASE}/topups?select=${encodeURIComponent(selJoin)}&status=eq.pending&order=created_at.desc`;
+  const url = `${BASE}/topups?select=${encodeURIComponent(selJoin)}&status=eq.${encodeURIComponent(TOPUP_VIEW)}&order=created_at.desc`;
   const r = await fetch(url, { headers:h, cache:"no-store" });
   if(!r.ok) return { ok:false, rows:[], status:r.status, text: await r.text().catch(()=> "") };
   const rows = await r.json();
@@ -1014,29 +1085,26 @@ async function listTopups(){
     Pragma:"no-cache"
   };
 
-  // ✅ 1) Intentar JOIN directo (si existe relación)
   try{
     const joinTry = await tryLoadTopupsWithJoin(h);
     if(joinTry.ok){
-      renderTopups(joinTry.rows, null, null, null, null, true); // joinMode=true
-      if(msgEl) msgEl.textContent = `Recargas pendientes: ${joinTry.rows.length}`;
+      renderTopups(joinTry.rows, null, null, null, null, true);
+      if(msgEl) msgEl.textContent = `Recargas ${TOPUP_VIEW === "pending" ? "pendientes" : "programadas"}: ${joinTry.rows.length}`;
       return;
     }else{
-      // Si falla el join, seguimos con el fallback robusto (no rompemos nada)
       console.warn("JOIN topups no disponible, usando fallback:", joinTry.status, joinTry.text);
     }
   }catch(e){
     console.warn("JOIN topups falló (exception), usando fallback:", e);
   }
 
-  // ✅ 2) Fallback: traer topups plano y resolver por accounts/profiles/CACHED
-  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider`;
-  const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`, { headers:h, cache:"no-store" });
+  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date`;
+  const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.${encodeURIComponent(TOPUP_VIEW)}&order=created_at.desc`, { headers:h, cache:"no-store" });
 
   if(!r.ok){
     const t = await r.text().catch(()=> "");
     console.error("listTopups error:", r.status, t);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar recargas pendientes (revisa conexión o permisos).";
+    if(msgEl) msgEl.textContent = "No se pudieron cargar recargas (revisa conexión o permisos).";
     if(r.status === 401 || r.status === 403){
       localStorage.removeItem("token");
       localStorage.removeItem("uid");
@@ -1046,8 +1114,6 @@ async function listTopups(){
   }
 
   const rows = await r.json();
-
-  // ✅ Fallback 2A: usar CACHED
   const { byUserId, byAccountId } = buildCachedMaps();
 
   const directUserIds = rows.map(x=>x.user_id).filter(Boolean);
@@ -1079,8 +1145,7 @@ async function listTopups(){
   }
 
   renderTopups(rows, profMap, byUserId, byAccountId, acctToUid, false);
-
-  if(msgEl) msgEl.textContent = `Recargas pendientes: ${rows.length}`;
+  if(msgEl) msgEl.textContent = `Recargas ${TOPUP_VIEW === "pending" ? "pendientes" : "programadas"}: ${rows.length}`;
 }
 
 function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid, joinMode){
@@ -1091,11 +1156,9 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
   const BUCKET = "topup-receipts";
 
   rows.forEach(x=>{
-    // ✅ Si viene por JOIN:
-    // x.profiles.full_name / x.profiles.email
-    // x.accounts.profiles.full_name / x.accounts.profiles.email
     let name = "—";
     let email = "—";
+    let joined_at = null;
 
     if(joinMode){
       name = x?.profiles?.full_name || x?.accounts?.profiles?.full_name || "—";
@@ -1109,11 +1172,13 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
 
       name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
       email = (p?.email || c1?.email || c2?.email || "—");
+      joined_at = c1?.joined_at || c2?.joined_at || null;
     }
 
     const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
+    const eff  = x.effective_date ? fmtDate(x.effective_date) : "—";
 
     const receipt = x.receipt_path
       ? `<button class="ghost" type="button"
@@ -1121,6 +1186,16 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
             Ver boleta
          </button>`
       : "—";
+
+    const canActions = (TOPUP_VIEW === "pending");
+    const actions = canActions ? `
+        <button class="ghost" onclick='approveTopup("${x.id}")'>Aprobar ahora</button>
+        <button class="ghost" onclick='openScheduleModal(${JSON.stringify({id:x.id, amount:x.amount, currency:x.currency, bank_name:x.bank_name, created_at:x.created_at, name, email, joined_at})})'>Programar</button>
+        <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
+    ` : `
+        <button class="ghost" onclick='openScheduleModal(${JSON.stringify({id:x.id, amount:x.amount, currency:x.currency, bank_name:x.bank_name, created_at:x.created_at, name, email, joined_at, effective_date:x.effective_date})})'>Cambiar fecha</button>
+        <button class="danger" onclick="unscheduleTopupPrompt('${x.id}')">Quitar programación</button>
+    `;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1130,23 +1205,21 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
       <td>${amt}</td>
       <td>${bank}</td>
       <td>${receipt}</td>
-      <td class="nowrap">
-        <button class="ghost" onclick="approveTopup('${x.id}')">Aprobar</button>
-        <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
-      </td>
+      <td class="nowrap">${eff}</td>
+      <td class="nowrap">${actions}</td>
     `;
     tb.appendChild(tr);
   });
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="7" class="small">No hay recargas pendientes.</td>`;
+    tr.innerHTML = `<td colspan="8" class="small">No hay recargas ${TOPUP_VIEW === "pending" ? "pendientes" : "programadas"}.</td>`;
     tb.appendChild(tr);
   }
 }
 
 async function approveTopup(topupId){
-  if(!confirm("¿Aprobar esta recarga?\n\nEsto sumará el monto al capital del cliente.")) return;
+  if(!confirm("¿Aprobar esta recarga?\n\nEsto sumará el monto al capital del cliente inmediatamente.")) return;
 
   const r = await fetch(`${RPC}/approve_topup`, {
     method:"POST",
@@ -1155,7 +1228,7 @@ async function approveTopup(topupId){
   });
 
   if(!r.ok){
-    console.error(await r.text());
+    console.error(await r.text().catch(()=> ""));
     alert("No se pudo aprobar la recarga.");
     return;
   }
@@ -1180,7 +1253,7 @@ async function rejectTopup(topupId, reason){
   });
 
   if(!r.ok){
-    console.error(await r.text());
+    console.error(await r.text().catch(()=> ""));
     alert("No se pudo rechazar la recarga.");
     return;
   }
@@ -1189,6 +1262,7 @@ async function rejectTopup(topupId, reason){
   await listTopups();
 }
 
+/*** ✅ abrir boleta ***/
 async function openReceipt(bucket, path){
   try{
     const r = await fetch(`${PROJECT_URL}/functions/v1/admin-signed-receipt`,{
@@ -1202,7 +1276,7 @@ async function openReceipt(bucket, path){
     });
 
     if(!r.ok){
-      console.error(await r.text());
+      console.error(await r.text().catch(()=> ""));
       alert("No se pudo abrir la boleta.");
       return;
     }
@@ -1212,6 +1286,182 @@ async function openReceipt(bucket, path){
   }catch(e){
     console.error(e);
     alert("Error al abrir la boleta.");
+  }
+}
+
+/* ============================================================
+   ✅ PROGRAMAR TOPUP (MODAL)
+   ============================================================ */
+let SCHEDULE_CTX = null;
+
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+
+// calcula la próxima fecha de inicio de ciclo basada en joined_at
+function nextCycleDateFromJoined(joinedAt, baseDate=new Date()){
+  if(!joinedAt){
+    return todayISO();
+  }
+  const j = new Date(joinedAt);
+  if(isNaN(j.getTime())) return todayISO();
+
+  const cycleDay = j.getDate(); // día del mes del ingreso
+  const y = baseDate.getFullYear();
+  const m = baseDate.getMonth(); // 0-11
+  const d = baseDate.getDate();
+
+  function lastDayOfMonth(year, month0){
+    return new Date(year, month0+1, 0).getDate();
+  }
+
+  // si hoy aún no pasó el día del ciclo, usar este mes; si ya pasó, usar próximo mes
+  let targetYear = y;
+  let targetMonth = m;
+  if(d > cycleDay){
+    targetMonth = m + 1;
+    if(targetMonth > 11){ targetMonth = 0; targetYear = y + 1; }
+  }
+
+  const last = lastDayOfMonth(targetYear, targetMonth);
+  const day = Math.min(cycleDay, last);
+  const dt = new Date(targetYear, targetMonth, day);
+  return dt.toISOString().slice(0,10);
+}
+
+function openScheduleModal(payload){
+  SCHEDULE_CTX = payload;
+
+  const amountTxt = fmtMoney(payload.amount, payload.currency||"GTQ");
+  const createdTxt = payload.created_at ? new Date(payload.created_at).toLocaleString('es-GT') : "—";
+  const cycleSuggest = nextCycleDateFromJoined(payload.joined_at, new Date());
+
+  $("scheduleInfo").innerHTML =
+    `<b>${payload.name||'—'}</b> — ${payload.email||'—'}<br>`+
+    `Recarga: <b>${amountTxt}</b> · Creada: ${createdTxt}<br>`+
+    `Sugerencia inicio de ciclo: <b>${cycleSuggest}</b>`;
+
+  $("scheduleDate").value = payload.effective_date ? String(payload.effective_date).slice(0,10) : cycleSuggest;
+  $("scheduleNote").value = "";
+  $("scheduleMsg").textContent = "";
+
+  show($("modalSchedule"), true);
+}
+
+function closeScheduleModal(){
+  show($("modalSchedule"), false);
+  SCHEDULE_CTX = null;
+}
+
+async function doScheduleTopup(){
+  if(!SCHEDULE_CTX?.id) return;
+
+  const eff = $("scheduleDate").value || todayISO();
+  const note = ($("scheduleNote").value || "").trim();
+
+  const msg =
+    `¿Programar esta recarga?\n\n`+
+    `Fecha efectiva: ${eff}\n\n`+
+    `Esto NO acreditará el capital hoy. Se guardará como "scheduled" con fecha efectiva.`;
+
+  if(!confirm(msg)) return;
+
+  $("scheduleMsg").textContent = "Programando…";
+  setLoading($("scheduleMsg"), true);
+
+  try{
+    // 1) Intento RPC (recomendado)
+    let ok = false;
+    try{
+      const r = await fetch(`${RPC}/schedule_topup`,{
+        method:"POST",
+        headers: headersJSON(),
+        body: JSON.stringify({ p_topup_id: SCHEDULE_CTX.id, p_effective_date: eff, p_note: note || null })
+      });
+      if(r.ok) ok = true;
+      else {
+        const t = await r.text().catch(()=> "");
+        console.warn("RPC schedule_topup no ok:", r.status, t);
+      }
+    }catch(e){
+      console.warn("RPC schedule_topup no disponible:", e);
+    }
+
+    // 2) Fallback PATCH (si existe effective_date + status)
+    if(!ok){
+      const r2 = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(SCHEDULE_CTX.id)}`,{
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({
+          status: "scheduled",
+          effective_date: eff,
+          note: note || null
+        })
+      });
+      if(!r2.ok){
+        const t2 = await r2.text().catch(()=> "");
+        throw new Error(
+          "No se pudo programar.\n\n" +
+          "Necesitas agregar en tu DB:\n" +
+          "1) topups.effective_date (date)\n" +
+          "2) permitir status='scheduled'\n" +
+          "y/o crear RPC schedule_topup.\n\n" +
+          "Detalle: " + (t2 || r2.status)
+        );
+      }
+      ok = true;
+    }
+
+    $("scheduleMsg").textContent = "Programada.";
+    closeScheduleModal();
+    alert("Recarga programada.");
+    await listTopups();
+
+  }catch(e){
+    console.error(e);
+    $("scheduleMsg").textContent = "Error.";
+    alert("No se pudo programar: " + (e.message||e));
+  }finally{
+    setLoading($("scheduleMsg"), false);
+  }
+}
+
+function unscheduleTopupPrompt(topupId){
+  if(!confirm("¿Quitar programación?\n\nVolverá a estado PENDING.")) return;
+  unscheduleTopup(topupId);
+}
+
+async function unscheduleTopup(topupId){
+  try{
+    // intenta RPC si existe
+    let ok = false;
+    try{
+      const r = await fetch(`${RPC}/unschedule_topup`,{
+        method:"POST",
+        headers: headersJSON(),
+        body: JSON.stringify({ p_topup_id: topupId })
+      });
+      if(r.ok) ok = true;
+    }catch{}
+
+    if(!ok){
+      // fallback patch
+      const r2 = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({
+          status: "pending",
+          effective_date: null
+        })
+      });
+      if(!r2.ok) throw new Error(await r2.text().catch(()=> "No se pudo quitar programación."));
+    }
+
+    alert("Programación quitada.");
+    await listTopups();
+  }catch(e){
+    console.error(e);
+    alert("No se pudo quitar: " + (e.message||e));
   }
 }
 
@@ -1335,7 +1585,7 @@ async function saveUser(){
         body: JSON.stringify({ compound_interest: compound })
       });
       if(!pr.ok){
-        console.error(await pr.text());
+        console.error(await pr.text().catch(()=> ""));
         throw new Error("Se guardó el usuario, pero no se pudo actualizar el modo de interés.");
       }
     }
@@ -1412,10 +1662,6 @@ async function deleteClient(x){
    ACREDITAR CAPITAL (Manual)
    ============================================================ */
 let ACCREDIT_CTX = null;
-
-function todayISO(){
-  return new Date().toISOString().slice(0,10);
-}
 
 function openAccreditModal(client){
   ACCREDIT_CTX = client;
@@ -1654,7 +1900,6 @@ async function initApp(){
     show($("logoutBtn"), true);
     show($("btnOpenResetGlobal"), true);
 
-    // ✅ Importante: primero listUsers (para llenar CACHED), luego listTopups
     await listUsers();
     await listTopups();
   }else{
@@ -1701,10 +1946,20 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("modalAccredit")?.addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
   $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
 
+  $("modalSchedule")?.addEventListener("click", (e)=>{ if(e.target === $("modalSchedule")) closeScheduleModal(); });
+  $("btnScheduleDo")?.addEventListener("click", doScheduleTopup);
+
+  // pills
+  $("pillPending")?.addEventListener("click", ()=> setTopupView("pending"));
+  $("pillScheduled")?.addEventListener("click", ()=> setTopupView("scheduled"));
+  $("pillPending")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") setTopupView("pending"); });
+  $("pillScheduled")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") setTopupView("scheduled"); });
+
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape"){
       try{ closeResetModal(); }catch{}
       try{ closeAccreditModal(); }catch{}
+      try{ closeScheduleModal(); }catch{}
     }
   });
 
