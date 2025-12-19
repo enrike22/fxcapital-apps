@@ -859,6 +859,28 @@
     return new Intl.DateTimeFormat('es-GT', { timeZone: TZ }).format(d);
   }
 
+    function parseDateOnlyToGT(v){
+  // Acepta "YYYY-MM-DD" o "YYYY-MM-DDTHH:MM:SSZ"
+  const s = String(v || '');
+  const d10 = s.slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d10)){
+    // si no es ISO, fallback seguro
+    return clampGT(new Date(v));
+  }
+  const [y,m,d] = d10.split('-').map(Number);
+  // ✅ Construye “medianoche Guatemala” (00:00 GT) sin que se corra al día anterior
+  return makeGTDate(y, m, d, 0, 0, 0);
+}
+
+function parseJoinedAtFixed(v){
+  if(!v) return clampGT(getGTNow());
+  // Si viene string ISO, usamos solo la parte de fecha para respetar EXACTO lo que puso el admin
+  if(typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)){
+    return parseDateOnlyToGT(v);
+  }
+  return clampGT(new Date(v));
+}
+
   function getGTNow(){
     // Date() ya es "instante real"; parts/format se amarran a TZ.
     return new Date();
@@ -1523,7 +1545,7 @@
     });
 
     // ✅ Periodos exactos (mes redondeado) desde la fecha que puso el admin (joined_at)
-    const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
+    const joinedForPeriods = parseJoinedAtFixed(acc.joined_at);
     const periods = buildPeriodsGT(joinedForPeriods, acc.invest_months);
 
     renderStatementTable({ acc, periods, approvedTopups: approvedTopups||[], settlementsMap });
@@ -1541,7 +1563,7 @@
 
     const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
 
-    const joined = acc.joined_at ? clampGT(new Date(acc.joined_at)) : clampGT(new Date());
+    const joined = parseJoinedAtFixed(acc.joined_at);
     const close  = addMonthsSameDayGT(joined, acc.invest_months||0);
 
     const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = fmtDateGT(joined);
