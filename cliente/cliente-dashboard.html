@@ -21,11 +21,10 @@
 
 <style>
   :root{
-    --bg0:#000; --bg1:#0b0c0e; --bg2:#111317; --bg3:#14171c;
+    --bg0:#000; --bg1:#0b0c0e; --bg2_toggle:#111317; --bg3:#14171c;
 
-    /* ✅ Mejor legibilidad */
     --txt:#ffffff;
-    --fg:#ffffff;         /* ✅ alias para compatibilidad */
+    --fg:#ffffff;
     --muted:#d6dceb;
     --line:rgba(255,255,255,.14);
 
@@ -40,7 +39,6 @@
     --chip:#171b20;
     --danger:#ff4d4f;
 
-    /* ✅ Gris “premium 3D” */
     --panel-gray-bg1:#4b515b;
     --panel-gray-bg2:#1b1f27;
     --panel-gray-border:rgba(255,255,255,.16);
@@ -58,7 +56,6 @@
   }
   .wrap{max-width:1100px;margin:40px auto;padding:0 22px}
 
-  /* ======= HEADER ======= */
   header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
   .brand-wrap{display:flex;flex-direction:column;gap:0}
   .brand-row{display:flex;align-items:center;gap:18px}
@@ -74,7 +71,6 @@
     overflow:hidden;
     text-overflow:ellipsis;
   }
-
   .brand-sub{margin:10px 0 0 0;font-weight:700;color:#e7ecf6;font-size:clamp(16px,2.2vw,28px);opacity:.92}
 
   .btn{
@@ -92,7 +88,6 @@
     box-shadow:var(--shadow-1),var(--shadow-inset)
   }
 
-  /* ✅ BOTÓN CTA */
   .btn.cta{
     padding:13px 20px;
     font-weight:900;
@@ -121,12 +116,10 @@
   }
   .btn.cta:hover{filter:brightness(.98)}
 
-  /* ✅ Ajuste solo en móviles */
   @media (max-width:560px){
     .brand-title{font-size: clamp(24px, 8.2vw, 34px);}
   }
 
-  /* ======= PANEL ======= */
   .panel{
     background:var(--grad-panel);
     border:1px solid var(--line);
@@ -267,7 +260,6 @@
     box-shadow:0 0 0 2px rgba(0,0,0,.08);
   }
 
-  /* ===== RECARGA POR TRANSFERENCIA (3D PRO) ===== */
   .tx-wrap{padding-top:22px}
   .tx-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin:0 0 14px 0}
   .tx-title{display:flex; gap:12px; align-items:flex-start}
@@ -410,10 +402,8 @@
     border:1px solid rgba(255,255,255,.12);
   }
 
-  /* ===== Nav ===== */
   .nav-actions{display:flex; gap:12px; margin:0 0 18px 0; flex-wrap:wrap; align-items:center}
 
-  /* ✅ Nuevo: “Mi Panel” con palanca */
   .nav-panel-toggle{
     display:inline-flex;
     align-items:center;
@@ -462,7 +452,6 @@
   .btn.withdrawBtn::before{content:"⇣";}
   .btn.backBtn::before{content:"←";}
 
-  /* ✅ Estado activo en navegación (depositar/retirar) */
   .nav-actions .btn.active{
     background: linear-gradient(180deg, rgba(45,212,191,.95), rgba(45,212,191,.75));
     color:#02110f;
@@ -481,11 +470,9 @@
     #btnSignOut{position:absolute; top:10px; right:12px; z-index:5; padding:10px 14px;}
   }
 
-  /* ✅ Espacio de respeto bajo “Mi cuenta” cuando NO hay extras */
   #accountSection.space-after{ margin-bottom:14px; }
   #accountSection.tight-after{ margin-bottom:0; }
 
-  /* ✅ Utilidad */
   .hidden{display:none !important;}
 </style>
 </head>
@@ -511,9 +498,7 @@
       <button class="btn" id="btnSignOut">Cerrar sesión</button>
     </header>
 
-    <!-- NAV / ACCIONES -->
     <div class="nav-actions">
-      <!-- ✅ “Mi Panel” ahora es palanca -->
       <div id="navPanelToggleWrap" class="nav-panel-toggle active" role="group" aria-label="Mi Panel">
         <span class="label">Mi Panel</span>
         <div id="switchPanelExtras" class="switch" role="switch" aria-checked="false" tabindex="0" title="Mostrar / ocultar secciones adicionales"></div>
@@ -524,9 +509,6 @@
       <button class="btn secondary backBtn icon" id="btnBackPanel" type="button" style="display:none">Volver a Mi Panel</button>
     </div>
 
-    <!-- =========================
-         VISTA: MI PANEL
-    ========================== -->
     <div id="viewPanel">
       <section class="panel section gray" id="accountSection">
         <h2 style="margin:0 0 14px 0">Mi cuenta</h2>
@@ -605,12 +587,9 @@
             </table>
           </div>
         </section>
-      </div><!-- /#panelExtras -->
-    </div><!-- /#viewPanel -->
+      </div>
+    </div>
 
-    <!-- =========================
-         VISTA: DEPOSITAR
-    ========================== -->
     <div id="viewDeposit" style="display:none">
       <section class="panel section tx-wrap">
         <div class="tx-head">
@@ -688,11 +667,8 @@
           </div>
         </div>
       </section>
-    </div><!-- /#viewDeposit -->
+    </div>
 
-    <!-- =========================
-         VISTA: RETIRAR
-    ========================== -->
     <div id="viewWithdraw" style="display:none">
       <section class="panel section gray">
         <h2 style="margin:0 0 14px 0">Solicitud de retiro de capital</h2>
@@ -735,11 +711,10 @@
           Al enviar la solicitud, un representante de <b>FX | CAPITAL R.L.</b> revisará su información y se comunicará con usted.
         </div>
       </section>
-    </div><!-- /#viewWithdraw -->
+    </div>
 
-  </div><!-- /wrap -->
+  </div>
 
-  <!-- MODAL CONTRASEÑA -->
   <dialog id="pwdDlg" aria-labelledby="pwdTitle">
     <div class="modal-h">
       <div id="pwdTitle" style="font-weight:900">Actualizar contraseña</div>
@@ -777,7 +752,6 @@
     </div>
   </dialog>
 
-  <!-- MODAL RECARGA (TRANSFERENCIA) -->
   <dialog id="tdlg" aria-labelledby="tdlgTitle">
     <div class="modal-h">
       <div id="tdlgTitle" style="font-weight:900">Enviar boleta de depósito</div>
@@ -821,7 +795,6 @@
     </div>
   </dialog>
 
-  <!-- MODAL MENSAJES -->
   <dialog id="msgDlg">
     <div class="modal-h">
       <div style="font-weight:900">FX | CAPITAL R.L.</div>
@@ -847,69 +820,56 @@
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
 
-  /* ===========================
-     ✅ TZ FIJO GUATEMALA (America/Guatemala)
-     - Todo cálculo de fechas (mes, viernes, corte 9AM) se hace con esta TZ, aunque el usuario esté en otro país.
-  ============================ */
-  const TZ_GT = 'America/Guatemala';
+  /* ==========================================
+     ✅ ZONA HORARIA AMARRADA A GUATEMALA
+     - Todos los cálculos/periodos se hacen con "America/Guatemala"
+     - Evita que joined_at "se corra" 1 día por UTC/navegador
+  ========================================== */
+  const TZ = 'America/Guatemala';
 
-  function gtParts(d){
-    // Extraer partes del "reloj" de Guatemala para una fecha absoluta
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: TZ_GT,
-      year:'numeric', month:'2-digit', day:'2-digit',
-      hour:'2-digit', minute:'2-digit', second:'2-digit',
-      hour12:false
-    }).formatToParts(d);
+  const dtfPartsGT = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
 
+  function getGTParts(date){
+    const parts = dtfPartsGT.formatToParts(date);
     const map = {};
     parts.forEach(p => { if(p.type !== 'literal') map[p.type] = p.value; });
-
-    return {
-      y: Number(map.year),
-      mo: Number(map.month),
-      da: Number(map.day),
-      hh: Number(map.hour),
-      mm: Number(map.minute),
-      ss: Number(map.second),
-    };
+    return { y: Number(map.year), m: Number(map.month), d: Number(map.day) };
   }
 
-  function fromGT(y, mo, da, hh=0, mm=0, ss=0, ms=0){
-    // Construir una fecha ABSOLUTA que representa "esa fecha/hora" en Guatemala
-    // Truco: creamos un Date con ese string en GMT y luego lo interpretamos en TZ_GT vía offset:
-    // Para hacerlo 100% estable sin libs: usamos Date.UTC como base y corregimos con offset real de TZ_GT en ese instante.
-    // Guatemala no usa DST (offset estable), pero igual lo hacemos robusto.
-
-    // 1) Un candidato UTC
-    const utcCandidate = new Date(Date.UTC(y, mo-1, da, hh, mm, ss, ms));
-
-    // 2) Calcular el offset real de TZ_GT en ese instante (en minutos)
-    //    offset = (hora en TZ - hora en UTC) en minutos
-    const pTz = gtParts(utcCandidate);
-    // pTz es la lectura de ese instante en Guatemala; no nos sirve directo para offset.
-    // Para obtener offset exacto: comparamos "lo que sería" la misma fecha/hora si fuera UTC.
-    // Método clásico: parsear una fecha en la TZ y medir diferencia.
-    const asIfLocal = new Date(`${String(y).padStart(4,'0')}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}T${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}.${String(ms).padStart(3,'0')}`);
-    // asIfLocal es en TZ del navegador; lo evitamos usando offset fijo de Guatemala. Guatemala es UTC-06:00 sin DST.
-    // ✅ Por simplicidad y estabilidad:
-    const OFFSET_MIN = -6 * 60; // Guatemala UTC-6
-    const absMs = Date.UTC(y, mo-1, da, hh, mm, ss, ms) - (OFFSET_MIN * 60000);
-    return new Date(absMs);
+  // Guatemala es UTC-6 fijo. Medianoche GT = 06:00 UTC.
+  function makeGTDate(y, m, d, hh=0, mm=0, ss=0){
+    // m: 1-12
+    const utcH = hh + 6;
+    return new Date(Date.UTC(y, m-1, d, utcH, mm, ss, 0));
   }
 
-  function fmtDateGT(d){
-    return new Intl.DateTimeFormat('es-GT', { timeZone: TZ_GT }).format(d);
+  function clampGT(dateLike){
+    const d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
+    const { y, m, d:dd } = getGTParts(d);
+    return makeGTDate(y, m, dd, 0, 0, 0);
   }
 
-  function clampDate(d){
-    const p = gtParts(d);
-    return fromGT(p.y, p.mo, p.da, 0,0,0,0);
+  function fmtDateGT(dateLike){
+    const d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
+    return new Intl.DateTimeFormat('es-GT', { timeZone: TZ }).format(d);
   }
 
-  function gtNow(){
-    // Fecha absoluta actual, pero usaremos gtParts() para decisiones
+  function getGTNow(){
+    // Date() ya es "instante real"; parts/format se amarran a TZ.
     return new Date();
+  }
+
+  function getGTDow(dateLike){
+    // 0=Dom ... 6=Sab, pero basado en TZ Guatemala
+    const d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
+    const wd = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday:'short' }).format(d);
+    const map = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
+    return map[wd] ?? d.getDay();
   }
 
   // ✅ Guardar nombre/email del usuario logueado (para UI / logs / apoyo)
@@ -943,47 +903,63 @@
     }
   });
 
-  function nextMonthSameDay(d){
-    const p = gtParts(d);
-    let y = p.y, m = p.mo + 1;
-    if(m > 12){ m = 1; y++; }
-    let day = p.da;
+  function nextMonthSameDayGT(d){
+    const x = clampGT(d);
+    const { y, m, d:dd } = getGTParts(x);
+    const targetM = m + 1;
+    let ny = y;
+    let nm = targetM;
+    if(nm === 13){ nm = 1; ny += 1; }
 
-    const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate(); // último día del mes
-    if(day > lastDay) day = lastDay;
-
-    return fromGT(y, m, day, 0,0,0,0);
+    // intento directo
+    let t = makeGTDate(ny, nm, dd, 0,0,0);
+    // si se salió del mes (por día inexistente), retroceder hasta caer en el mes correcto
+    while(getGTParts(t).m !== nm){
+      const p = getGTParts(t);
+      t = makeGTDate(p.y, p.m, p.d - 1, 0,0,0);
+    }
+    return clampGT(t);
   }
 
-  function fridayOfSameWeek(d){
-    const x = clampDate(d);              // GT 00:00
-    const dow = x.getUTCDay();           // OK porque x es GT-midnight (UTC 06:00)
-    const add = (5 - dow + 7) % 7;       // 5 = Friday
-    const f = new Date(x);
-    f.setUTCDate(x.getUTCDate() + add);
-    f.setUTCHours(0,0,0,0);
-    return f;
+  function addMonthsSameDayGT(d, months){
+    let x = clampGT(d);
+    for(let i=0;i<Number(months||0);i++) x = nextMonthSameDayGT(x);
+    return x;
   }
 
-  function currentWindow(joinedAt, today){
-    let start = clampDate(joinedAt), end = nextMonthSameDay(start);
-    while(end <= today){ start = end; end = nextMonthSameDay(start); }
+  function fridayOfSameWeekGT(d){
+    const x = clampGT(d);
+    const dow = getGTDow(x);
+    const add = (5 - dow + 7) % 7;
+    const p = getGTParts(x);
+    const base = makeGTDate(p.y, p.m, p.d + add, 0,0,0);
+    return clampGT(base);
+  }
+
+  function currentWindowGT(joinedAt, today){
+    let start = clampGT(joinedAt);
+    let end = nextMonthSameDayGT(start);
+    const t = clampGT(today);
+    while(end <= t){
+      start = end;
+      end = nextMonthSameDayGT(start);
+    }
     return { start, end };
   }
 
-  function fridaysInRange(start, end){
-    let f = fridayOfSameWeek(start);
-    if(f < start){
-      const ff = new Date(f);
-      ff.setUTCDate(ff.getUTCDate() + 7);
-      f = ff;
+  function fridaysInRangeGT(start,end){
+    let f = fridayOfSameWeekGT(start);
+    if(f < clampGT(start)){
+      const fp = getGTParts(f);
+      f = makeGTDate(fp.y, fp.m, fp.d + 7, 0,0,0);
+      f = clampGT(f);
     }
-    const list = [];
-    while(f < end){
-      list.push(new Date(f));
-      const ff = new Date(f);
-      ff.setUTCDate(ff.getUTCDate() + 7);
-      f = ff;
+    const list=[];
+    while(f < clampGT(end)){
+      list.push(clampGT(f));
+      const fp = getGTParts(f);
+      f = makeGTDate(fp.y, fp.m, fp.d + 7, 0,0,0);
+      f = clampGT(f);
     }
     return list;
   }
@@ -1007,51 +983,47 @@
     el.addEventListener('focus', ()=> el.select());
   }
 
-  function addMonthsSameDay(d, months){
-    let x = clampDate(d);
-    for(let i=0;i<months;i++) x = nextMonthSameDay(x);
-    return x;
-  }
-
-  function buildPeriods(joinedAt, investMonths){
-    const start0 = clampDate(joinedAt);
+  function buildPeriodsGT(joinedAt, investMonths){
+    const start0 = clampGT(joinedAt);
     const periods = [];
     let start = start0;
     for(let i=0;i<Number(investMonths||0);i++){
-      const end = nextMonthSameDay(start);
-      periods.push({ idx:i+1, start:new Date(start), end:new Date(end) });
+      const end = nextMonthSameDayGT(start);
+      periods.push({ idx:i+1, start: clampGT(start), end: clampGT(end) });
       start = end;
     }
     return periods;
   }
 
-  function businessCloseDate(endDate){
-    const d = clampDate(endDate);
-    const dow = d.getUTCDay();
-    if(dow === 6){ d.setUTCDate(d.getUTCDate()+2); }      // sábado -> lunes
-    else if(dow === 0){ d.setUTCDate(d.getUTCDate()+1); } // domingo -> lunes
-    d.setUTCHours(0,0,0,0);
-    return d;
+  // ✅ Si cierre cae sábado/domingo => "cierra" lunes (status cambia lunes)
+  function businessCloseDateGT(endDate){
+    let d = clampGT(endDate);
+    const dow = getGTDow(d);
+    if(dow === 6){ // sábado
+      const p = getGTParts(d);
+      d = makeGTDate(p.y, p.m, p.d + 2, 0,0,0);
+    } else if(dow === 0){ // domingo
+      const p = getGTParts(d);
+      d = makeGTDate(p.y, p.m, p.d + 1, 0,0,0);
+    }
+    return clampGT(d);
   }
 
-  /* ===========================
-     ✅ NUEVO CORE: recargas aplican "desde ese mes" (no prorrateo)
-  ============================ */
   function normalizeTopups(list){
     return (list||[])
       .filter(t => t && (t.approved_at || t.paid_at || t.created_at) )
       .map(t => ({
         amount: Number(t.amount||0),
-        at: clampDate(new Date(t.approved_at || t.paid_at || t.created_at))
+        at: clampGT(new Date(t.approved_at || t.paid_at || t.created_at))
       }))
       .filter(t => t.amount > 0);
   }
 
   function findPeriodIndexByDate(periods, dt){
-    const d = clampDate(dt);
+    const d = clampGT(dt);
     for(const p of periods){
-      const ps = clampDate(p.start);
-      const pe = clampDate(p.end);
+      const ps = clampGT(p.start);
+      const pe = clampGT(p.end);
       if(d >= ps && d < pe) return p.idx;
     }
     return null;
@@ -1087,12 +1059,13 @@
     return cap;
   }
 
-  function monthLabel(start, end, idx){
+  // ✅ Etiqueta de mes SIN restar 1 día:
+  // Mes 01 (18/10/2025 — 18/11/2025)
+  function monthLabelGT(start, end, idx){
     const s = fmtDateGT(start);
-    const e = new Date(end); e.setUTCDate(e.getUTCDate()-1);
-    const ee = fmtDateGT(e);
+    const e = fmtDateGT(end);
     const n = String(idx).padStart(2,'0');
-    return `Mes ${n} (${s} — ${ee})`;
+    return `Mes ${n} (${s} — ${e})`;
   }
 
   function renderStatementTable({ acc, periods, approvedTopups, settlementsMap }){
@@ -1107,8 +1080,8 @@
     const initialCapital = deriveInitialCapital(acc, approvedTopups||[]);
     const buckets = buildTopupBuckets(periods, approvedTopups||[]);
 
-    const today = clampDate(gtNow());
-    const visiblePeriods = periods.filter(p => clampDate(p.start) <= today);
+    const today = clampGT(getGTNow());
+    const visiblePeriods = periods.filter(p => clampGT(p.start) <= today);
 
     const stmtRange = document.getElementById('stmtRange');
     if(stmtRange && visiblePeriods.length){
@@ -1120,7 +1093,7 @@
     let accrued = 0;
 
     for(const p of visiblePeriods){
-      const closeEffective = businessCloseDate(p.end);
+      const closeEffective = businessCloseDateGT(p.end);
       const ended = today >= closeEffective;
 
       const capStart = capitalAtPeriodStart(periods, buckets, initialCapital, p.idx);
@@ -1143,7 +1116,7 @@
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${monthLabel(p.start, p.end, p.idx)}</td>
+        <td>${monthLabelGT(p.start, p.end, p.idx)}</td>
         <td>${fmtQ(capStart)}</td>
         <td>${fmtQ(interest)}</td>
         <td><b>${estado}</b></td>
@@ -1159,86 +1132,64 @@
     const note = document.getElementById('stmtNote');
     if(note){
       note.innerHTML = isCompound
-        ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre de cada mes.`
+        ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre (si el cierre cae sábado/domingo, cambia hasta el lunes).`
         : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
 
-  /* ===========================
-     ✅ RESULTADOS SEMANALES
-     - Se muestran SOLO desde las 9:00 AM (hora Guatemala) de cada viernes.
-     - Amarrado a TZ Guatemala aunque el usuario esté en otro país.
-  ============================ */
-  function paintWeeks(acc, opts = {}){
-    const nowAbs = gtNow();                 // instante absoluto
-    const nowP = gtParts(nowAbs);           // lectura del reloj en Guatemala
+  // ✅ Viernes a las 9:00 AM (Guatemala) es cuando se "habilita" mostrar ese viernes.
+  function fridayUnlockAt9AMGT(fridayDate){
+    const f = clampGT(fridayDate);
+    const p = getGTParts(f);
+    // 09:00 GT
+    return makeGTDate(p.y, p.m, p.d, 9, 0, 0);
+  }
 
-    // Para ventana mensual usamos "hoy" (GT 00:00)
-    let today0 = clampDate(nowAbs);
+  function paintWeeks(acc, opts={}){
+    const now = getGTNow();
+    const today = clampGT(now);
+    const joined = acc?.joined_at ? clampGT(new Date(acc.joined_at)) : today;
 
-    // freezeAtClose (si algún día lo usas)
-    let nowForCalcAbs = nowAbs;
+    let todayForCalc = today;
     if (opts.freezeAtClose){
-      const freezeAbs = new Date(opts.freezeAtClose);
-      const freezeP = gtParts(freezeAbs);
-      // congelar en el día ANTERIOR 23:59:59.999 GT
-      const prev = fromGT(freezeP.y, freezeP.mo, freezeP.da, 23,59,59,999);
-      prev.setTime(prev.getTime() - 24*60*60*1000);
-      nowForCalcAbs = prev;
-      today0 = clampDate(nowForCalcAbs);
+      const freeze = clampGT(opts.freezeAtClose);
+      const fp = getGTParts(freeze);
+      const prev = makeGTDate(fp.y, fp.m, fp.d - 1, 0,0,0);
+      todayForCalc = clampGT(prev);
     }
 
-    const joined = acc?.joined_at ? clampDate(new Date(acc.joined_at)) : today0;
-    const { start, end } = currentWindow(joined, today0);
-
+    const {start,end} = currentWindowGT(joined, todayForCalc);
     $('#monthRange').textContent = `${fmtDateGT(start)} — ${fmtDateGT(end)}`;
     $('#monthNote').textContent  = `Periodo de cierre fin de mes: ${fmtDateGT(end)}.`;
 
-    const cap = Number(acc.capital || 0);
-    const semRate = Number(acc.interest_pct || 0) / 100;
-    const monthly = cap * (semRate / 6);
+    const cap = Number(acc.capital||0);
+    const semRate = Number(acc.interest_pct||0)/100;
+    const monthly = cap*(semRate/6);
 
-    const allFridays = fridaysInRange(start, end);
-    const weekly = allFridays.length ? (monthly / allFridays.length) : 0;
+    const allFridays = fridaysInRangeGT(start,end);
+    const weekly = allFridays.length ? (monthly/allFridays.length) : 0;
 
-    const tbody = $('#weekBody');
-    tbody.innerHTML = '';
+    const tbody = $('#weekBody'); tbody.innerHTML='';
+    const cutoff = (todayForCalc < end ? todayForCalc : end);
 
-    // Cutoff absoluto = "ahora", pero nunca más allá del end (cierre de ventana)
-    let cutoffAbs = nowForCalcAbs;
-    if(cutoffAbs > end) cutoffAbs = new Date(end);
-
-    // ✅ Regla 9:00 AM Guatemala
-    const cP = gtParts(cutoffAbs);
-    const isFridayGT = clampDate(cutoffAbs).getUTCDay() === 5;
-
-    if(isFridayGT){
-      // si antes de 09:00, entonces el cutoff se queda en 08:59:59.999 (GT)
-      if(cP.hh < 9){
-        cutoffAbs = fromGT(cP.y, cP.mo, cP.da, 8, 59, 59, 999);
-      } else {
-        // si ya pasó 09:00, dejamos cutoffAbs tal cual (o podríamos mínimo 09:00 exacto)
-        // cutoffAbs = cutoffAbs;
-      }
-    }
-
-    // Mostrar viernes cuyo "momento de publicación" (viernes 09:00 GT) ya pasó
+    // ✅ mostrar viernes SOLO si ya pasó ese viernes 9:00 AM GT
     const shown = allFridays.filter(f => {
-      const fp = gtParts(f); // f es viernes 00:00 GT
-      const publishAbs = fromGT(fp.y, fp.mo, fp.da, 9, 0, 0, 0); // ✅ 09:00 GT de ese viernes
-      return publishAbs <= cutoffAbs;
+      if(f >= cutoff) return false;
+      const unlock = fridayUnlockAt9AMGT(f);
+      return now >= unlock;
     });
 
-    if(shown.length === 0){
+    if(shown.length===0){
       tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
       $('#weekSum').textContent = '—';
     }else{
       shown.forEach(f=>{
-        const tr = document.createElement('tr');
+        const tr=document.createElement('tr');
         tr.innerHTML = `<td>${fmtDateGT(f)}</td><td>${fmtQ(weekly)}</td>`;
         tbody.appendChild(tr);
       });
-      $('#weekSum').textContent = fmtQ(weekly * shown.length);
+      const partial = weekly * shown.length;
+      $('#weekSum').textContent = fmtQ(partial);
     }
   }
 
@@ -1308,101 +1259,99 @@
   }
   function safeParseMoney(str){ return Number((str || '').toString().replace(/[,\s]/g,'') || 0); }
 
- async function enviarTopupTransferencia(){
-  const { data:{ session } } = await sb.auth.getSession();
-  if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
+  async function enviarTopupTransferencia(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
 
-  const amount = safeParseMoney(document.getElementById('tAmount')?.value);
-  const bank   = (document.getElementById('tBank')?.value || '').trim();
-  const notes  = (document.getElementById('tNotes')?.value || '').trim();
-  const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
-  const fileEl = document.getElementById('tReceipt');
-  const file   = fileEl?.files?.[0];
+    const amount = safeParseMoney(document.getElementById('tAmount')?.value);
+    const bank   = (document.getElementById('tBank')?.value || '').trim();
+    const notes  = (document.getElementById('tNotes')?.value || '').trim();
+    const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
+    const fileEl = document.getElementById('tReceipt');
+    const file   = fileEl?.files?.[0];
 
-  if(amount <= 0){ alert('Ingrese un monto válido.'); return; }
-  if(!file){ alert('Debe adjuntar la boleta (JPG/PNG/PDF).'); return; }
+    if(amount <= 0){ alert('Ingrese un monto válido.'); return; }
+    if(!file){ alert('Debe adjuntar la boleta (JPG/PNG/PDF).'); return; }
 
-  const MAX_MB = 6;
-  if(file.size > MAX_MB * 1024 * 1024){
-    alert(`La boleta excede ${MAX_MB}MB. Comprímala o envíe una versión más ligera.`);
-    return;
-  }
-
-  const okType = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
-  if(!okType){ alert('Formato no permitido. Use JPG/PNG o PDF.'); return; }
-
-  const btn = document.getElementById('tSend');
-  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
-
-  const reference_code = genRefCode();
-  const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
-
-  try{
-    // 1) Subir boleta a Storage
-    const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
-    const ext = extFromFile(file);
-    const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
-
-    const up = await sb.storage.from('topup-receipts').upload(receipt_path, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type || undefined
-    });
-    if(up.error){
-      console.error(up.error);
-      alert('No se pudo subir la boleta. Intente de nuevo.');
+    const MAX_MB = 6;
+    if(file.size > MAX_MB * 1024 * 1024){
+      alert(`La boleta excede ${MAX_MB}MB. Comprímala o envíe una versión más ligera.`);
       return;
     }
 
-    // ✅ 2) INVOCAR create-topup mandando SIEMPRE el JWT en Authorization
-    const accessToken = session.access_token;
+    const okType = (file.type || '').startsWith('image/') || file.type === 'application/pdf';
+    if(!okType){ alert('Formato no permitido. Use JPG/PNG o PDF.'); return; }
 
-    const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
-      body: {
-        amount,
-        currency: 'GTQ',
-        bank_name: bank || null,
-        receipt_path,
-        reference_code,
-        note: notes || null,
-        deposit_datetime
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`
+    const btn = document.getElementById('tSend');
+    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    const reference_code = genRefCode();
+    const deposit_datetime = dtRaw ? new Date(dtRaw).toISOString() : null;
+
+    try{
+      const topupId = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` );
+      const ext = extFromFile(file);
+      const receipt_path = `${session.user.id}/${topupId}/receipt.${ext}`;
+
+      const up = await sb.storage.from('topup-receipts').upload(receipt_path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if(up.error){
+        console.error(up.error);
+        alert('No se pudo subir la boleta. Intente de nuevo.');
+        return;
       }
-    });
 
-    if(fnErr){
-      let extra = '';
-      try{
-        if(fnErr.context){
-          const t = await fnErr.context.text();
-          extra = '\n\nDetalles:\n' + t;
+      const accessToken = session.access_token;
+
+      const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
+        body: {
+          amount,
+          currency: 'GTQ',
+          bank_name: bank || null,
+          receipt_path,
+          reference_code,
+          note: notes || null,
+          deposit_datetime
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`
         }
-      }catch(e){}
-      alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || '') + extra);
-      return;
+      });
+
+      if(fnErr){
+        let extra = '';
+        try{
+          if(fnErr.context){
+            const t = await fnErr.context.text();
+            extra = '\n\nDetalles:\n' + t;
+          }
+        }catch(e){}
+        alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || '') + extra);
+        return;
+      }
+
+      showMessage(
+        `Depósito enviado con éxito.<br><br>
+         <b>Código:</b> ${reference_code}<br>
+         Un administrador revisará su boleta y acreditará el capital.`
+      );
+
+      document.getElementById('txStep1')?.classList.remove('tx-step-active');
+      document.getElementById('txStep2')?.classList.add('tx-step-active');
+
+      tdlg?.close();
+      if(document.getElementById('tAmount')) document.getElementById('tAmount').value = '';
+      if(document.getElementById('tBank')) document.getElementById('tBank').value = '';
+      if(document.getElementById('tNotes')) document.getElementById('tNotes').value = '';
+      if(document.getElementById('tDate')) document.getElementById('tDate').value = '';
+      if(fileEl) fileEl.value = '';
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = 'Enviar depósito'; }
     }
-
-    showMessage(
-      `Depósito enviado con éxito.<br><br>
-       <b>Código:</b> ${reference_code}<br>
-       Un administrador revisará su boleta y acreditará el capital.`
-    );
-
-    document.getElementById('txStep1')?.classList.remove('tx-step-active');
-    document.getElementById('txStep2')?.classList.add('tx-step-active');
-
-    tdlg?.close();
-    if(document.getElementById('tAmount')) document.getElementById('tAmount').value = '';
-    if(document.getElementById('tBank')) document.getElementById('tBank').value = '';
-    if(document.getElementById('tNotes')) document.getElementById('tNotes').value = '';
-    if(document.getElementById('tDate')) document.getElementById('tDate').value = '';
-    if(fileEl) fileEl.value = '';
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'Enviar depósito'; }
   }
-}
 
   let pwdDlg;
   function openPwdDialog(){
@@ -1573,8 +1522,9 @@
       if(k) settlementsMap[k] = s;
     });
 
+    // ✅ Periodos exactos (mes redondeado) desde la fecha que puso el admin (joined_at)
     const joinedForPeriods = acc.joined_at ? new Date(acc.joined_at) : new Date();
-    const periods = buildPeriods(joinedForPeriods, acc.invest_months);
+    const periods = buildPeriodsGT(joinedForPeriods, acc.invest_months);
 
     renderStatementTable({ acc, periods, approvedTopups: approvedTopups||[], settlementsMap });
 
@@ -1591,8 +1541,8 @@
 
     const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
 
-    const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
-    const close  = addMonthsSameDay(joined, acc.invest_months||0);
+    const joined = acc.joined_at ? clampGT(new Date(acc.joined_at)) : clampGT(new Date());
+    const close  = addMonthsSameDayGT(joined, acc.invest_months||0);
 
     const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = fmtDateGT(joined);
     const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = fmtDateGT(close);
@@ -1601,16 +1551,8 @@
     const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
     const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
 
+    // ✅ Viernes 9AM Guatemala
     paintWeeks(acc, {});
-
-    // ✅ Auto-refresh para que EXACTO a las 9AM GT se refleje sin recargar
-    // (se repinta cada 60s)
-    if(window.__WEEK_TIMER__) clearInterval(window.__WEEK_TIMER__);
-    window.__WEEK_TIMER__ = setInterval(()=> {
-      // solo si el usuario está viendo el panel y con extras abiertos
-      if(CURRENT_VIEW !== 'panel') return;
-      paintWeeks(acc, {});
-    }, 60 * 1000);
 
     if(prof?.must_change_password){ openPwdDialog(); }
   }
