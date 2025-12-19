@@ -846,7 +846,71 @@
 
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
-  const clampDate = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
+
+  /* ===========================
+     ✅ TZ FIJO GUATEMALA (America/Guatemala)
+     - Todo cálculo de fechas (mes, viernes, corte 9AM) se hace con esta TZ, aunque el usuario esté en otro país.
+  ============================ */
+  const TZ_GT = 'America/Guatemala';
+
+  function gtParts(d){
+    // Extraer partes del "reloj" de Guatemala para una fecha absoluta
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ_GT,
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', second:'2-digit',
+      hour12:false
+    }).formatToParts(d);
+
+    const map = {};
+    parts.forEach(p => { if(p.type !== 'literal') map[p.type] = p.value; });
+
+    return {
+      y: Number(map.year),
+      mo: Number(map.month),
+      da: Number(map.day),
+      hh: Number(map.hour),
+      mm: Number(map.minute),
+      ss: Number(map.second),
+    };
+  }
+
+  function fromGT(y, mo, da, hh=0, mm=0, ss=0, ms=0){
+    // Construir una fecha ABSOLUTA que representa "esa fecha/hora" en Guatemala
+    // Truco: creamos un Date con ese string en GMT y luego lo interpretamos en TZ_GT vía offset:
+    // Para hacerlo 100% estable sin libs: usamos Date.UTC como base y corregimos con offset real de TZ_GT en ese instante.
+    // Guatemala no usa DST (offset estable), pero igual lo hacemos robusto.
+
+    // 1) Un candidato UTC
+    const utcCandidate = new Date(Date.UTC(y, mo-1, da, hh, mm, ss, ms));
+
+    // 2) Calcular el offset real de TZ_GT en ese instante (en minutos)
+    //    offset = (hora en TZ - hora en UTC) en minutos
+    const pTz = gtParts(utcCandidate);
+    // pTz es la lectura de ese instante en Guatemala; no nos sirve directo para offset.
+    // Para obtener offset exacto: comparamos "lo que sería" la misma fecha/hora si fuera UTC.
+    // Método clásico: parsear una fecha en la TZ y medir diferencia.
+    const asIfLocal = new Date(`${String(y).padStart(4,'0')}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}T${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}.${String(ms).padStart(3,'0')}`);
+    // asIfLocal es en TZ del navegador; lo evitamos usando offset fijo de Guatemala. Guatemala es UTC-06:00 sin DST.
+    // ✅ Por simplicidad y estabilidad:
+    const OFFSET_MIN = -6 * 60; // Guatemala UTC-6
+    const absMs = Date.UTC(y, mo-1, da, hh, mm, ss, ms) - (OFFSET_MIN * 60000);
+    return new Date(absMs);
+  }
+
+  function fmtDateGT(d){
+    return new Intl.DateTimeFormat('es-GT', { timeZone: TZ_GT }).format(d);
+  }
+
+  function clampDate(d){
+    const p = gtParts(d);
+    return fromGT(p.y, p.mo, p.da, 0,0,0,0);
+  }
+
+  function gtNow(){
+    // Fecha absoluta actual, pero usaremos gtParts() para decisiones
+    return new Date();
+  }
 
   // ✅ Guardar nombre/email del usuario logueado (para UI / logs / apoyo)
   let CURRENT_USER_NAME = '';
@@ -880,15 +944,49 @@
   });
 
   function nextMonthSameDay(d){
-    const x=clampDate(d);
-    const t=new Date(x.getFullYear(), x.getMonth()+1, x.getDate());
-    while(t.getMonth() !== (x.getMonth()+1)%12){ t.setDate(t.getDate()-1); }
-    t.setHours(0,0,0,0);
-    return t;
+    const p = gtParts(d);
+    let y = p.y, m = p.mo + 1;
+    if(m > 12){ m = 1; y++; }
+    let day = p.da;
+
+    const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate(); // último día del mes
+    if(day > lastDay) day = lastDay;
+
+    return fromGT(y, m, day, 0,0,0,0);
   }
-  function fridayOfSameWeek(d){ const x=clampDate(d); const add=(5-x.getDay()+7)%7; const f=new Date(x); f.setDate(x.getDate()+add); f.setHours(0,0,0,0); return f; }
-  function currentWindow(joinedAt, today){ let start=clampDate(joinedAt), end=nextMonthSameDay(start); while(end <= today){ start=end; end=nextMonthSameDay(start); } return {start,end}; }
-  function fridaysInRange(start,end){ let f=fridayOfSameWeek(start); if(f<start) f.setDate(f.getDate()+7); const list=[]; while(f<end){ list.push(new Date(f)); f.setDate(f.getDate()+7); } return list; }
+
+  function fridayOfSameWeek(d){
+    const x = clampDate(d);              // GT 00:00
+    const dow = x.getUTCDay();           // OK porque x es GT-midnight (UTC 06:00)
+    const add = (5 - dow + 7) % 7;       // 5 = Friday
+    const f = new Date(x);
+    f.setUTCDate(x.getUTCDate() + add);
+    f.setUTCHours(0,0,0,0);
+    return f;
+  }
+
+  function currentWindow(joinedAt, today){
+    let start = clampDate(joinedAt), end = nextMonthSameDay(start);
+    while(end <= today){ start = end; end = nextMonthSameDay(start); }
+    return { start, end };
+  }
+
+  function fridaysInRange(start, end){
+    let f = fridayOfSameWeek(start);
+    if(f < start){
+      const ff = new Date(f);
+      ff.setUTCDate(ff.getUTCDate() + 7);
+      f = ff;
+    }
+    const list = [];
+    while(f < end){
+      list.push(new Date(f));
+      const ff = new Date(f);
+      ff.setUTCDate(ff.getUTCDate() + 7);
+      f = ff;
+    }
+    return list;
+  }
 
   function cleanMoney(s){ return (s||'').toString().replace(/[,\s]/g,''); }
   function formatNumberString(val){
@@ -929,17 +1027,15 @@
 
   function businessCloseDate(endDate){
     const d = clampDate(endDate);
-    const dow = d.getDay();
-    if(dow === 6){ d.setDate(d.getDate()+2); }
-    else if(dow === 0){ d.setDate(d.getDate()+1); }
-    d.setHours(0,0,0,0);
+    const dow = d.getUTCDay();
+    if(dow === 6){ d.setUTCDate(d.getUTCDate()+2); }      // sábado -> lunes
+    else if(dow === 0){ d.setUTCDate(d.getUTCDate()+1); } // domingo -> lunes
+    d.setUTCHours(0,0,0,0);
     return d;
   }
 
   /* ===========================
      ✅ NUEVO CORE: recargas aplican "desde ese mes" (no prorrateo)
-     - Se asigna cada topup aprobado al período mensual donde cae su approved_at
-     - Se aplica al CAPITAL de inicio de ese mes
   ============================ */
   function normalizeTopups(list){
     return (list||[])
@@ -992,9 +1088,9 @@
   }
 
   function monthLabel(start, end, idx){
-    const s = start.toLocaleDateString('es-GT');
-    const e = new Date(end); e.setDate(e.getDate()-1);
-    const ee = e.toLocaleDateString('es-GT');
+    const s = fmtDateGT(start);
+    const e = new Date(end); e.setUTCDate(e.getUTCDate()-1);
+    const ee = fmtDateGT(e);
     const n = String(idx).padStart(2,'0');
     return `Mes ${n} (${s} — ${ee})`;
   }
@@ -1011,12 +1107,12 @@
     const initialCapital = deriveInitialCapital(acc, approvedTopups||[]);
     const buckets = buildTopupBuckets(periods, approvedTopups||[]);
 
-    const today = clampDate(new Date());
+    const today = clampDate(gtNow());
     const visiblePeriods = periods.filter(p => clampDate(p.start) <= today);
 
     const stmtRange = document.getElementById('stmtRange');
     if(stmtRange && visiblePeriods.length){
-      stmtRange.textContent = `${visiblePeriods[0].start.toLocaleDateString('es-GT')} — ${visiblePeriods[visiblePeriods.length-1].end.toLocaleDateString('es-GT')}`;
+      stmtRange.textContent = `${fmtDateGT(visiblePeriods[0].start)} — ${fmtDateGT(visiblePeriods[visiblePeriods.length-1].end)}`;
     } else if(stmtRange){
       stmtRange.textContent = '—';
     }
@@ -1068,39 +1164,81 @@
     }
   }
 
-  function paintWeeks(acc, opts={}){
-    const today=clampDate(new Date());
-    const joined=acc?.joined_at? clampDate(new Date(acc.joined_at)) : today;
+  /* ===========================
+     ✅ RESULTADOS SEMANALES
+     - Se muestran SOLO desde las 9:00 AM (hora Guatemala) de cada viernes.
+     - Amarrado a TZ Guatemala aunque el usuario esté en otro país.
+  ============================ */
+  function paintWeeks(acc, opts = {}){
+    const nowAbs = gtNow();                 // instante absoluto
+    const nowP = gtParts(nowAbs);           // lectura del reloj en Guatemala
 
-    let todayForCalc = today;
+    // Para ventana mensual usamos "hoy" (GT 00:00)
+    let today0 = clampDate(nowAbs);
+
+    // freezeAtClose (si algún día lo usas)
+    let nowForCalcAbs = nowAbs;
     if (opts.freezeAtClose){
-      const freeze = clampDate(opts.freezeAtClose);
-      const prev = new Date(freeze); prev.setDate(prev.getDate()-1);
-      todayForCalc = prev;
+      const freezeAbs = new Date(opts.freezeAtClose);
+      const freezeP = gtParts(freezeAbs);
+      // congelar en el día ANTERIOR 23:59:59.999 GT
+      const prev = fromGT(freezeP.y, freezeP.mo, freezeP.da, 23,59,59,999);
+      prev.setTime(prev.getTime() - 24*60*60*1000);
+      nowForCalcAbs = prev;
+      today0 = clampDate(nowForCalcAbs);
     }
 
-    const {start,end}=currentWindow(joined,todayForCalc);
-    $('#monthRange').textContent = `${start.toLocaleDateString('es-GT')} — ${end.toLocaleDateString('es-GT')}`;
-    $('#monthNote').textContent  = `Periodo de cierre fin de mes: ${end.toLocaleDateString('es-GT')}.`;
+    const joined = acc?.joined_at ? clampDate(new Date(acc.joined_at)) : today0;
+    const { start, end } = currentWindow(joined, today0);
 
-    const cap=Number(acc.capital||0), semRate=Number(acc.interest_pct||0)/100, monthly=cap*(semRate/6);
-    const allFridays=fridaysInRange(start,end), weekly=allFridays.length? (monthly/allFridays.length) : 0;
+    $('#monthRange').textContent = `${fmtDateGT(start)} — ${fmtDateGT(end)}`;
+    $('#monthNote').textContent  = `Periodo de cierre fin de mes: ${fmtDateGT(end)}.`;
 
-    const tbody=$('#weekBody'); tbody.innerHTML='';
-    const cutoff = todayForCalc < end ? todayForCalc : end;
-    const shown = allFridays.filter(f => f < cutoff);
+    const cap = Number(acc.capital || 0);
+    const semRate = Number(acc.interest_pct || 0) / 100;
+    const monthly = cap * (semRate / 6);
 
-    if(shown.length===0){
+    const allFridays = fridaysInRange(start, end);
+    const weekly = allFridays.length ? (monthly / allFridays.length) : 0;
+
+    const tbody = $('#weekBody');
+    tbody.innerHTML = '';
+
+    // Cutoff absoluto = "ahora", pero nunca más allá del end (cierre de ventana)
+    let cutoffAbs = nowForCalcAbs;
+    if(cutoffAbs > end) cutoffAbs = new Date(end);
+
+    // ✅ Regla 9:00 AM Guatemala
+    const cP = gtParts(cutoffAbs);
+    const isFridayGT = clampDate(cutoffAbs).getUTCDay() === 5;
+
+    if(isFridayGT){
+      // si antes de 09:00, entonces el cutoff se queda en 08:59:59.999 (GT)
+      if(cP.hh < 9){
+        cutoffAbs = fromGT(cP.y, cP.mo, cP.da, 8, 59, 59, 999);
+      } else {
+        // si ya pasó 09:00, dejamos cutoffAbs tal cual (o podríamos mínimo 09:00 exacto)
+        // cutoffAbs = cutoffAbs;
+      }
+    }
+
+    // Mostrar viernes cuyo "momento de publicación" (viernes 09:00 GT) ya pasó
+    const shown = allFridays.filter(f => {
+      const fp = gtParts(f); // f es viernes 00:00 GT
+      const publishAbs = fromGT(fp.y, fp.mo, fp.da, 9, 0, 0, 0); // ✅ 09:00 GT de ese viernes
+      return publishAbs <= cutoffAbs;
+    });
+
+    if(shown.length === 0){
       tbody.innerHTML = `<tr><td>—</td><td>—</td></tr>`;
       $('#weekSum').textContent = '—';
     }else{
       shown.forEach(f=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${f.toLocaleDateString('es-GT')}</td><td>${fmtQ(weekly)}</td>`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${fmtDateGT(f)}</td><td>${fmtQ(weekly)}</td>`;
         tbody.appendChild(tr);
       });
-      const partial = weekly * shown.length;
-      $('#weekSum').textContent = fmtQ(partial);
+      $('#weekSum').textContent = fmtQ(weekly * shown.length);
     }
   }
 
@@ -1234,17 +1372,17 @@
       }
     });
 
-if(fnErr){
-  let extra = '';
-  try{
-    if(fnErr.context){
-      const t = await fnErr.context.text();
-      extra = '\n\nDetalles:\n' + t;
+    if(fnErr){
+      let extra = '';
+      try{
+        if(fnErr.context){
+          const t = await fnErr.context.text();
+          extra = '\n\nDetalles:\n' + t;
+        }
+      }catch(e){}
+      alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || '') + extra);
+      return;
     }
-  }catch(e){}
-  alert('No se pudo registrar el depósito (create-topup).\n' + (fnErr.message || '') + extra);
-  return;
-}
 
     showMessage(
       `Depósito enviado con éxito.<br><br>
@@ -1456,14 +1594,23 @@ if(fnErr){
     const joined = acc.joined_at ? new Date(acc.joined_at) : new Date();
     const close  = addMonthsSameDay(joined, acc.invest_months||0);
 
-    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = joined.toLocaleDateString('es-GT');
-    const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = close.toLocaleDateString('es-GT');
+    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = fmtDateGT(joined);
+    const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = fmtDateGT(close);
 
     const semPct=(acc.interest_pct||0)/100;
     const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
     const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
 
     paintWeeks(acc, {});
+
+    // ✅ Auto-refresh para que EXACTO a las 9AM GT se refleje sin recargar
+    // (se repinta cada 60s)
+    if(window.__WEEK_TIMER__) clearInterval(window.__WEEK_TIMER__);
+    window.__WEEK_TIMER__ = setInterval(()=> {
+      // solo si el usuario está viendo el panel y con extras abiertos
+      if(CURRENT_VIEW !== 'panel') return;
+      paintWeeks(acc, {});
+    }, 60 * 1000);
 
     if(prof?.must_change_password){ openPwdDialog(); }
   }
