@@ -873,18 +873,19 @@
 }
 
 function parseJoinedAtFixed(v){
-  if(!v) return clampGT(getGTNow());
-  // Si viene string ISO, usamos solo la parte de fecha para respetar EXACTO lo que puso el admin
-  if(typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)){
-    return parseDateOnlyToGT(v);
-  }
-  return clampGT(new Date(v));
-}
+  // ✅ SIEMPRE tomamos solo la parte YYYY-MM-DD
+  // Esto “mata” cualquier hora/UTC y deja la fecha EXACTA del admin.
+  const s = String(v || '');
+  const d10 = s.slice(0,10);
 
-  function getGTNow(){
-    // Date() ya es "instante real"; parts/format se amarran a TZ.
-    return new Date();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d10)){
+    // si viniera algo inesperado, no inventamos días: mostramos hoy GT
+    return clampGT(getGTNow());
   }
+
+  const [y,m,d] = d10.split('-').map(Number);
+  return makeGTDate(y, m, d, 0, 0, 0); // ✅ 00:00 Guatemala del día exacto
+}
 
   function getGTDow(dateLike){
     // 0=Dom ... 6=Sab, pero basado en TZ Guatemala
