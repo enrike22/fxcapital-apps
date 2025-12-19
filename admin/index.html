@@ -272,7 +272,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .dot.pending{ background: rgba(255,255,255,.75); box-shadow: 0 0 0 3px rgba(255,255,255,.10); }
 .dot.scheduled{ background: rgba(253, 224, 71, .95); box-shadow: 0 0 0 3px rgba(253,224,71,.14); }
 .dot.approved{ background: rgba(45,212,191,.9); }
-.dot.rejected{ background: rgba(255,77,79,.95); }
+.dot.rejected{ background: rgba(255,77,79,.95); box-shadow: 0 0 0 3px rgba(255,77,79,.12); }
 
 @keyframes fadeUp{
   from{ opacity:0; transform: translateY(10px); }
@@ -716,7 +716,8 @@ function bindCapitalFormatter(inputEl){
     inputEl.value = formatCapitalString(rawNoCommas);
     const diff = inputEl.value.length - before.length;
     const newPos = Math.max(0, pos + diff);
-    inputEl.setSelectionRange?.(newPos, newPos);
+    const newPosSafe = Math.min(newPos, inputEl.value.length);
+    inputEl.setSelectionRange?.(newPosSafe, newPosSafe);
   });
   inputEl.addEventListener("blur", () => {
     if (!inputEl.value.replace(/[^\d]/g, "")) inputEl.value = "0";
@@ -1047,17 +1048,14 @@ async function doWithdraw(){
       throw new Error(t || `HTTP ${r.status}`);
     }
 
-    // puede venir como [{ new_capital: ... }]
     let data = null;
     try{ data = await r.json(); }catch{ data = null; }
     const newCap = data?.[0]?.new_capital;
 
     if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
 
-    // refrescar datos / UI
-    await listUsers(); // esto refresca CACHED y vuelve a pintar withdraw picker
+    await listUsers();
 
-    // limpiar inputs
     if($("wdAmount")) $("wdAmount").value = "";
     if($("wdRef")) $("wdRef").value = "";
     if($("wdNote")) $("wdNote").value = "";
@@ -1117,7 +1115,6 @@ async function listTopups(){
     Pragma:"no-cache"
   };
 
-  // ✅ incluir pending y scheduled
   const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,scheduled_note`;
   const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=in.(pending,scheduled)&order=created_at.desc`;
 
@@ -1293,7 +1290,7 @@ async function approveTopup(topupId){
 
   alert("Recarga aprobada y capital acreditado.");
   await listTopups();
-  await listUsers(); // refresca capital
+  await listUsers();
 }
 
 function rejectTopupPrompt(topupId){
@@ -1798,7 +1795,6 @@ async function initApp(){
     await listUsers();
     await listTopups();
 
-    // ✅ aseguramos que el selector de retiros tenga data
     refreshWithdrawPicker();
     updateWithdrawHint();
   }else{
@@ -1845,7 +1841,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("modalScheduleTopup")?.addEventListener("click", (e)=>{ if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal(); });
   $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
 
-  // ✅ Retiro capital bindings
   $("wdAccount")?.addEventListener("change", updateWithdrawHint);
   $("btnWithdraw")?.addEventListener("click", doWithdraw);
 
