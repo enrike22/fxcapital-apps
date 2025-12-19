@@ -822,8 +822,6 @@
 
   /* ==========================================
      ✅ ZONA HORARIA AMARRADA A GUATEMALA
-     - Todos los cálculos/periodos se hacen con "America/Guatemala"
-     - Evita que joined_at "se corra" 1 día por UTC/navegador
   ========================================== */
   const TZ = 'America/Guatemala';
 
@@ -843,7 +841,6 @@
 
   // Guatemala es UTC-6 fijo. Medianoche GT = 06:00 UTC.
   function makeGTDate(y, m, d, hh=0, mm=0, ss=0){
-    // m: 1-12
     const utcH = hh + 6;
     return new Date(Date.UTC(y, m-1, d, utcH, mm, ss, 0));
   }
@@ -859,44 +856,35 @@
     return new Intl.DateTimeFormat('es-GT', { timeZone: TZ }).format(d);
   }
 
-    function parseDateOnlyToGT(v){
-  // Acepta "YYYY-MM-DD" o "YYYY-MM-DDTHH:MM:SSZ"
-  const s = String(v || '');
-  const d10 = s.slice(0,10);
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(d10)){
-    // si no es ISO, fallback seguro
-    return clampGT(new Date(v));
+  function getGTNow(){
+    return new Date();
   }
-  const [y,m,d] = d10.split('-').map(Number);
-  // ✅ Construye “medianoche Guatemala” (00:00 GT) sin que se corra al día anterior
-  return makeGTDate(y, m, d, 0, 0, 0);
-}
-
-function parseJoinedAtFixed(v){
-  try{
-    const s = String(v || '');
-    const d10 = s.slice(0,10); // YYYY-MM-DD
-
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(d10)){
-      return null; // no rompemos el script
-    }
-
-    const [y,m,d] = d10.split('-').map(Number);
-    return makeGTDate(y, m, d, 0, 0, 0); // 00:00 GT del día exacto
-  }catch(e){
-    return null;
-  }
-}
 
   function getGTDow(dateLike){
-    // 0=Dom ... 6=Sab, pero basado en TZ Guatemala
     const d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
     const wd = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday:'short' }).format(d);
     const map = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
     return map[wd] ?? d.getDay();
   }
 
-  // ✅ Guardar nombre/email del usuario logueado (para UI / logs / apoyo)
+  /* ============================================================
+     ✅ FIX DEFINITIVO joined_at:
+     - TOMAMOS SOLO "YYYY-MM-DD" (lo que puso el admin)
+     - IGNORAMOS horas/UTC/navegador para que NO cambie el día
+     - NUNCA devuelve null (para que no se rompa el script)
+  ============================================================ */
+  function parseJoinedExactGT(v){
+    const s = String(v || '');
+    const d10 = s.slice(0,10); // YYYY-MM-DD
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d10)){
+      const [y,m,d] = d10.split('-').map(Number);
+      return makeGTDate(y, m, d, 0, 0, 0); // 00:00 GT del día EXACTO
+    }
+    // fallback seguro: si viniera raro, no rompemos nada
+    return clampGT(v ? new Date(v) : getGTNow());
+  }
+
+  // ✅ Guardar nombre/email del usuario logueado
   let CURRENT_USER_NAME = '';
   let CURRENT_USER_EMAIL = '';
 
@@ -935,9 +923,7 @@ function parseJoinedAtFixed(v){
     let nm = targetM;
     if(nm === 13){ nm = 1; ny += 1; }
 
-    // intento directo
     let t = makeGTDate(ny, nm, dd, 0,0,0);
-    // si se salió del mes (por día inexistente), retroceder hasta caer en el mes correcto
     while(getGTParts(t).m !== nm){
       const p = getGTParts(t);
       t = makeGTDate(p.y, p.m, p.d - 1, 0,0,0);
@@ -1019,14 +1005,14 @@ function parseJoinedAtFixed(v){
     return periods;
   }
 
-  // ✅ Si cierre cae sábado/domingo => "cierra" lunes (status cambia lunes)
+  // ✅ Si cierre cae sábado/domingo => "cierra" lunes
   function businessCloseDateGT(endDate){
     let d = clampGT(endDate);
     const dow = getGTDow(d);
-    if(dow === 6){ // sábado
+    if(dow === 6){
       const p = getGTParts(d);
       d = makeGTDate(p.y, p.m, p.d + 2, 0,0,0);
-    } else if(dow === 0){ // domingo
+    } else if(dow === 0){
       const p = getGTParts(d);
       d = makeGTDate(p.y, p.m, p.d + 1, 0,0,0);
     }
@@ -1083,8 +1069,6 @@ function parseJoinedAtFixed(v){
     return cap;
   }
 
-  // ✅ Etiqueta de mes SIN restar 1 día:
-  // Mes 01 (18/10/2025 — 18/11/2025)
   function monthLabelGT(start, end, idx){
     const s = fmtDateGT(start);
     const e = fmtDateGT(end);
@@ -1092,7 +1076,7 @@ function parseJoinedAtFixed(v){
     return `Mes ${n} (${s} — ${e})`;
   }
 
-  function renderStatementTable({ acc, periods, approvedTopups, settlementsMap }){
+  function renderStatementTable({ acc, periods, approvedTopups }){
     const tbody = document.getElementById('stmtBody');
     if(!tbody) return;
     tbody.innerHTML = '';
@@ -1161,18 +1145,19 @@ function parseJoinedAtFixed(v){
     }
   }
 
-  // ✅ Viernes a las 9:00 AM (Guatemala) es cuando se "habilita" mostrar ese viernes.
+  // ✅ Viernes a las 9:00 AM (Guatemala)
   function fridayUnlockAt9AMGT(fridayDate){
     const f = clampGT(fridayDate);
     const p = getGTParts(f);
-    // 09:00 GT
     return makeGTDate(p.y, p.m, p.d, 9, 0, 0);
   }
 
   function paintWeeks(acc, opts={}){
     const now = getGTNow();
     const today = clampGT(now);
-    const joined = acc?.joined_at ? clampGT(new Date(acc.joined_at)) : today;
+
+    // ✅ USAR FECHA EXACTA DEL ADMIN
+    const joined = parseJoinedExactGT(acc?.joined_at);
 
     let todayForCalc = today;
     if (opts.freezeAtClose){
@@ -1196,7 +1181,6 @@ function parseJoinedAtFixed(v){
     const tbody = $('#weekBody'); tbody.innerHTML='';
     const cutoff = (todayForCalc < end ? todayForCalc : end);
 
-    // ✅ mostrar viernes SOLO si ya pasó ese viernes 9:00 AM GT
     const shown = allFridays.filter(f => {
       if(f >= cutoff) return false;
       const unlock = fridayUnlockAt9AMGT(f);
@@ -1217,6 +1201,9 @@ function parseJoinedAtFixed(v){
     }
   }
 
+  function cleanMoneyStr(s){ return (s||'').toString().replace(/[,\s]/g,''); }
+
+  // ✅ UI
   function selectType(t){
     document.getElementById('optEarly')?.classList.toggle('selected',t==='early');
     document.getElementById('optHealth')?.classList.toggle('selected',t==='health');
@@ -1241,7 +1228,7 @@ function parseJoinedAtFixed(v){
 
     const capital=Number(acc?.capital||0);
     const all=document.getElementById('switchAll')?.classList.contains('on');
-    const amount=all? capital : Number((document.getElementById('wAmount')?.value||'').replace(/[,\s]/g,'') || 0);
+    const amount=all? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
     const reason=(document.getElementById('wReason')?.value||'').trim();
 
     if(!all){
@@ -1281,7 +1268,7 @@ function parseJoinedAtFixed(v){
     const parts = name.split('.');
     return parts.length > 1 ? parts.pop() : 'bin';
   }
-  function safeParseMoney(str){ return Number((str || '').toString().replace(/[,\s]/g,'') || 0); }
+  function safeParseMoney(str){ return Number(cleanMoneyStr(str) || 0); }
 
   async function enviarTopupTransferencia(){
     const { data:{ session } } = await sb.auth.getSession();
@@ -1330,7 +1317,7 @@ function parseJoinedAtFixed(v){
 
       const accessToken = session.access_token;
 
-      const { data: fnData, error: fnErr } = await sb.functions.invoke('create-topup', {
+      const { error: fnErr } = await sb.functions.invoke('create-topup', {
         body: {
           amount,
           currency: 'GTQ',
@@ -1472,7 +1459,7 @@ function parseJoinedAtFixed(v){
   }
   function handleCalc(){
     const raw = document.getElementById('simCapital')?.value || '';
-    const cap = Number(raw.replace(/[,\s]/g,'') || 0);
+    const cap = Number(cleanMoneyStr(raw) || 0);
     const note = document.getElementById('simNote');
     const sp = document.getElementById('simPlan');
 
@@ -1535,22 +1522,13 @@ function parseJoinedAtFixed(v){
       .eq('account_id', acc.id)
       .eq('status', 'paid');
 
-    const { data: settlements } = await sb
-      .from('interest_settlements')
-      .select('period_start, status, paid_at, paid_amount')
-      .eq('account_id', acc.id);
+    // ✅ FECHA EXACTA DEL ADMIN
+    const joinedExact = parseJoinedExactGT(acc.joined_at);
 
-    const settlementsMap = {};
-    (settlements||[]).forEach(s=>{
-      const k = (s.period_start ? s.period_start.toString().slice(0,10) : '');
-      if(k) settlementsMap[k] = s;
-    });
+    // ✅ Periodos exactos
+    const periods = buildPeriodsGT(joinedExact, acc.invest_months);
 
-    // ✅ Periodos exactos (mes redondeado) desde la fecha que puso el admin (joined_at)
-    const joinedForPeriods = parseJoinedAtFixed(acc.joined_at);
-    const periods = buildPeriodsGT(joinedForPeriods, acc.invest_months);
-
-    renderStatementTable({ acc, periods, approvedTopups: approvedTopups||[], settlementsMap });
+    renderStatementTable({ acc, periods, approvedTopups: approvedTopups||[] });
 
     const map = {
       valAccountId: acc.id||'—',
@@ -1565,17 +1543,16 @@ function parseJoinedAtFixed(v){
 
     const vc=document.getElementById('valCapital'); if(vc) vc.textContent=fmtQ(acc.capital||0);
 
-    const joined = parseJoinedAtFixed(acc.joined_at);
-    const close  = addMonthsSameDayGT(joined, acc.invest_months||0);
+    const close  = addMonthsSameDayGT(joinedExact, acc.invest_months||0);
 
-    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = fmtDateGT(joined);
+    const vo=document.getElementById('valOpenDate'); if(vo) vo.textContent  = fmtDateGT(joinedExact);
     const vc2=document.getElementById('valCloseDate'); if(vc2) vc2.textContent = fmtDateGT(close);
 
     const semPct=(acc.interest_pct||0)/100;
     const total= (acc.capital||0) * semPct * ((acc.invest_months||0)/6);
     const vpi=document.getElementById('valPeriodInterest'); if(vpi) vpi.textContent = fmtQ(total);
 
-    // ✅ Viernes 9AM Guatemala
+    // ✅ Viernes 9AM Guatemala + joined exacto
     paintWeeks(acc, {});
 
     if(prof?.must_change_password){ openPwdDialog(); }
