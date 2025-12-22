@@ -38,6 +38,7 @@
     --gloss: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 35%);
     --chip:#171b20;
     --danger:#ff4d4f;
+    --ok:#2dd4bf;
 
     --panel-gray-bg1:#4b515b;
     --panel-gray-bg2:#1b1f27;
@@ -474,6 +475,30 @@
   #accountSection.tight-after{ margin-bottom:0; }
 
   .hidden{display:none !important;}
+
+  /* ✅ Chips para estados (retiros) */
+  .status-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    white-space:nowrap;
+  }
+  .status-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:rgba(255,255,255,.35);
+    border:1px solid rgba(0,0,0,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+  }
+  .status-pending .status-dot{ background: rgba(255,255,255,.40); }
+  .status-approved .status-dot{ background: rgba(45,212,191,.95); }
+  .status-rejected .status-dot{ background: rgba(255,77,79,.95); }
 </style>
 </head>
 
@@ -671,9 +696,12 @@
 
     <div id="viewWithdraw" style="display:none">
       <section class="panel section gray">
-        <h2 style="margin:0 0 14px 0">Solicitud de retiro de capital</h2>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <h2 style="margin:0">Solicitud de retiro de capital</h2>
+          <button class="btn secondary" id="btnRefreshWithdrawals" type="button">Refrescar historial</button>
+        </div>
 
-        <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+        <div class="row" style="display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:14px">
           <div class="pill selected" id="optEarly" tabindex="0" role="button" aria-pressed="true">
             <div style="font-weight:800;margin-bottom:6px">Antes de tiempo</div>
             <div class="muted">Aplicará una penalización del 10%.</div>
@@ -709,6 +737,31 @@
 
         <div class="note" style="margin-top:14px">
           Al enviar la solicitud, un representante de <b>FX | CAPITAL R.L.</b> revisará su información y se comunicará con usted.
+        </div>
+
+        <!-- ✅ HISTORIAL DE RETIROS -->
+        <div style="margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.16)">
+          <h2 style="margin:0 0 8px 0">Historial de retiros</h2>
+          <div class="muted" id="wHistRange">—</div>
+
+          <div style="overflow:auto;margin-top:10px">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Monto</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="wHistBody">
+                <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note" id="wHistNote">—</div>
         </div>
       </section>
     </div>
@@ -856,6 +909,11 @@
     return new Intl.DateTimeFormat('es-GT', { timeZone: TZ }).format(d);
   }
 
+  function fmtDateTimeGT(dateLike){
+    const d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
+    return new Intl.DateTimeFormat('es-GT', { timeZone: TZ, dateStyle:'short', timeStyle:'short' }).format(d);
+  }
+
   function getGTNow(){
     return new Date();
   }
@@ -887,6 +945,7 @@
   // ✅ Guardar nombre/email del usuario logueado
   let CURRENT_USER_NAME = '';
   let CURRENT_USER_EMAIL = '';
+  let CURRENT_ACCOUNT_ID = null;
 
   async function forceLogout(){
     try {
@@ -1219,6 +1278,129 @@
     if(wa) wa.disabled = on;
   }
 
+  /* ==========================================
+     ✅ HISTORIAL DE RETIROS (NUEVO)
+     - Intenta: withdrawals -> withdrawal_requests
+  ========================================== */
+  function statusChipHTML(status){
+    const s = String(status||'').toLowerCase();
+    let cls = 'status-pending';
+    let label = status || 'Pendiente';
+    if(['approved','aprobado','approved_at','paid'].includes(s)){ cls='status-approved'; label='Aprobado'; }
+    if(['rejected','rechazado','cancelled','canceled'].includes(s)){ cls='status-rejected'; label='Rechazado'; }
+    if(['pending','pendiente','requested','request'].includes(s)){ cls='status-pending'; label='Pendiente'; }
+    return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
+  }
+
+  async function tryLoadWithdrawalRows(tableName, accountId){
+    const { data, error } = await sb
+      .from(tableName)
+      .select('*')
+      .eq('account_id', accountId)
+      .order('created_at', { ascending:false })
+      .limit(50);
+    if(error) return { ok:false, error, data:null, table:tableName };
+    return { ok:true, error:null, data:data||[], table:tableName };
+  }
+
+  async function loadWithdrawalHistory(){
+    const tbody = document.getElementById('wHistBody');
+    const range = document.getElementById('wHistRange');
+    const note  = document.getElementById('wHistNote');
+
+    if(!tbody || !range || !note){
+      return;
+    }
+
+    tbody.innerHTML = `<tr><td colspan="5">Cargando…</td></tr>`;
+    range.textContent = '—';
+    note.textContent  = 'Cargando historial…';
+
+    if(!CURRENT_ACCOUNT_ID){
+      tbody.innerHTML = `<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
+      note.textContent = 'No se encontró la cuenta para cargar el historial.';
+      return;
+    }
+
+    // 1) withdrawals
+    let r = await tryLoadWithdrawalRows('withdrawals', CURRENT_ACCOUNT_ID);
+
+    // 2) fallback withdrawal_requests
+    if(!r.ok){
+      r = await tryLoadWithdrawalRows('withdrawal_requests', CURRENT_ACCOUNT_ID);
+    }
+
+    if(!r.ok){
+      console.warn('No se pudo cargar historial de retiros:', r.error?.message || r.error);
+      tbody.innerHTML = `<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
+      note.textContent = 'No se pudo cargar el historial (tabla no existe o permisos/RLS).';
+      return;
+    }
+
+    const rows = r.data || [];
+    if(rows.length === 0){
+      tbody.innerHTML = `<tr><td colspan="5">No hay solicitudes de retiro registradas.</td></tr>`;
+      note.textContent = 'Cuando envíe una solicitud, aparecerá aquí.';
+      return;
+    }
+
+    // rango
+    const first = rows[rows.length-1]?.created_at || rows[rows.length-1]?.requested_at || rows[rows.length-1]?.inserted_at;
+    const last  = rows[0]?.created_at || rows[0]?.requested_at || rows[0]?.inserted_at;
+    if(first && last){
+      range.textContent = `${fmtDateGT(first)} — ${fmtDateGT(last)}`;
+    }else{
+      range.textContent = '—';
+    }
+
+    tbody.innerHTML = '';
+    rows.forEach(x=>{
+      const created = x.created_at || x.requested_at || x.inserted_at || x.date || null;
+      const amount  = Number(x.amount || x.withdraw_amount || x.request_amount || 0);
+      const full    = !!(x.full_withdrawal ?? x.is_full ?? x.full ?? false);
+
+      const typeRaw = (x.type || x.withdraw_type || x.reason_type || '');
+      const penalty = (x.penalty_pct ?? x.penalty_percent ?? x.penalty ?? null);
+
+      let typeLabel = 'Parcial';
+      if(full) typeLabel = 'Total';
+      if(String(typeRaw).toLowerCase().includes('health') || String(typeRaw).toLowerCase().includes('salud')) typeLabel = 'Salud';
+      if(String(typeRaw).toLowerCase().includes('early') || String(typeRaw).toLowerCase().includes('antes')) typeLabel = 'Antes de tiempo';
+
+      const status = x.status || x.state || 'Pendiente';
+
+      const detailParts = [];
+      if(penalty != null && !Number.isNaN(Number(penalty))) detailParts.push(`Penalización: ${Number(penalty)}%`);
+      const ref = x.reference_code || x.ref || x.code || '';
+      if(ref) detailParts.push(`Ref: ${ref}`);
+      const det = detailParts.join(' · ') || '—';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${created ? fmtDateTimeGT(created) : '—'}</td>
+        <td><b>${fmtQ(amount)}</b></td>
+        <td>${typeLabel}</td>
+        <td>${statusChipHTML(status)}</td>
+        <td>${det}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    note.textContent = `Fuente: <b>${r.table}</b>. Si no ve datos, revise permisos (RLS) o nombre real de la tabla.`;
+  }
+
+  async function tryInsertWithdrawalRow(payload){
+    // Intentar insertar en withdrawals, si falla, probar withdrawal_requests.
+    const a = await sb.from('withdrawals').insert([payload]);
+    if(!a.error) return { ok:true, table:'withdrawals' };
+
+    const b = await sb.from('withdrawal_requests').insert([payload]);
+    if(!b.error) return { ok:true, table:'withdrawal_requests' };
+
+    console.warn('Insert retiro falló en ambas tablas:', a.error?.message, b.error?.message);
+    return { ok:false };
+  }
+
   async function enviarSolicitudRetiro(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
@@ -1231,6 +1413,11 @@
     const amount=all? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
     const reason=(document.getElementById('wReason')?.value||'').trim();
 
+    // tipo por UI
+    const isHealth = document.getElementById('optHealth')?.classList.contains('selected');
+    const withdraw_type = isHealth ? 'health' : 'early';
+    const penalty_pct = isHealth ? 0 : 10;
+
     if(!all){
       if(amount<=0){ alert('Ingrese un monto válido.'); return; }
       if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
@@ -1238,18 +1425,52 @@
     }
     if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
 
-    const { error } = await sb.functions.invoke('send-withdrawal-email', {
-      body:{ amount, reason, full_withdrawal:!!all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' }
-    });
+    const btn = document.getElementById('wSend');
+    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
 
-    if(error){ alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error))); return; }
+    // ✅ 1) Intentar guardar en BD (si RLS lo permite)
+    try{
+      const payload = {
+        account_id: acc?.id || null,
+        user_id: session.user.id,
+        user_email: session.user.email,
+        user_name: (document.getElementById('valName')?.textContent || '').trim() || null,
+        amount,
+        full_withdrawal: !!all,
+        reason,
+        type: withdraw_type,
+        penalty_pct,
+        status: 'pending'
+      };
+      await tryInsertWithdrawalRow(payload);
+    }catch(e){
+      // No interrumpimos. El email es lo principal.
+      console.warn('Guardar retiro (opcional) falló:', e);
+    }
 
-    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
+    // ✅ 2) Enviar email (como ya tenías)
+    try{
+      const { error } = await sb.functions.invoke('send-withdrawal-email', {
+        body:{ amount, reason, full_withdrawal:!!all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' , withdraw_type, penalty_pct }
+      });
 
-    if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
-    if(document.getElementById('wReason')) document.getElementById('wReason').value='';
-    toggleSwitchAll(false);
-    selectType('early');
+      if(error){
+        alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error)));
+        return;
+      }
+
+      showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
+
+      if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
+      if(document.getElementById('wReason')) document.getElementById('wReason').value='';
+      toggleSwitchAll(false);
+      selectType('early');
+
+      // ✅ 3) Refrescar historial
+      await loadWithdrawalHistory();
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+    }
   }
 
   const msgDlg = document.getElementById('msgDlg');
@@ -1260,7 +1481,6 @@
   }
 
   const tdlg = document.getElementById('tdlg');
-  let CURRENT_ACCOUNT_ID = null;
 
   function genRefCode(){ return `FXC-${Math.floor(100000 + Math.random()*900000)}`; }
   function extFromFile(file){
@@ -1588,7 +1808,7 @@
     document.getElementById('txStep2')?.classList.remove('tx-step-active');
   }
 
-  function showView(which){
+  async function showView(which){
     const panel = document.getElementById('viewPanel');
     const dep   = document.getElementById('viewDeposit');
     const wit   = document.getElementById('viewWithdraw');
@@ -1615,6 +1835,9 @@
       window.location.hash = '#retirar';
       selectType('early');
       toggleSwitchAll(false);
+
+      // ✅ cargar historial al entrar
+      await loadWithdrawalHistory();
       return;
     }
 
@@ -1677,6 +1900,8 @@
   document.getElementById('wSend')?.addEventListener('click', enviarSolicitudRetiro);
   document.getElementById('wCancel')?.addEventListener('click', ()=> { showView('panel'); setPanelExtras(false); });
 
+  document.getElementById('btnRefreshWithdrawals')?.addEventListener('click', loadWithdrawalHistory);
+
   document.getElementById('msgClose')?.addEventListener('click', ()=> msgDlg?.close());
   document.getElementById('msgOk')?.addEventListener('click', ()=> msgDlg?.close());
 
@@ -1718,9 +1943,9 @@
 
   (async function init(){
     const h = (window.location.hash||'').toLowerCase();
-    if(h === '#depositar') showView('deposit');
-    else if(h === '#retirar') showView('withdraw');
-    else showView('panel');
+    if(h === '#depositar') await showView('deposit');
+    else if(h === '#retirar') await showView('withdraw');
+    else await showView('panel');
 
     setPanelExtras(false);
 
