@@ -378,6 +378,35 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- APP -->
   <div id="app" class="hidden">
 
+<!-- SOLICITUDES DE RETIRO (pendientes) -->
+<div class="card">
+  <div class="header" style="margin:0 0 10px">
+    <h2 style="margin:0">Solicitudes de retiro</h2>
+    <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Email</th>
+          <th>Monto</th>
+          <th>Banco</th>
+          <th>No. cuenta</th>
+          <th>Tipo</th>
+          <th>Nota</th>
+          <th class="nowrap">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="withdrawReqs"></tbody>
+    </table>
+  </div>
+
+  <p id="withdrawReqsMsg" class="small"></p>
+</div>
+    
     <!-- TOPUPS -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
@@ -1756,6 +1785,132 @@ async function doScheduleTopup(){
   }
 }
 
+async function listWithdrawRequests(){
+  const msgEl = $("withdrawReqsMsg");
+  const tb = $("withdrawReqs");
+  if(!tb) return;
+
+  msgEl.textContent = "Cargando…";
+  tb.innerHTML = "";
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  // 🔧 Ajusta el select si tu tabla tiene otros nombres de columnas
+  const sel = "id,created_at,account_id,amount,status,note";
+  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc&limit=200`;
+
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok){
+    const t = await r.text().catch(()=> "");
+    console.error("withdrawal_requests error:", r.status, t);
+    msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso o nombre de tabla/campos).";
+    tb.innerHTML = `<tr><td colspan="9" class="small">Error cargando solicitudes.</td></tr>`;
+    return;
+  }
+
+  const rows = await r.json();
+  renderWithdrawRequests(rows);
+  msgEl.textContent = `Solicitudes pendientes: ${rows.length}`;
+}
+
+function renderWithdrawRequests(rows){
+  const tb = $("withdrawReqs");
+  tb.innerHTML = "";
+
+  if(!rows.length){
+    tb.innerHTML = `<tr><td colspan="9" class="small">No hay solicitudes pendientes.</td></tr>`;
+    return;
+  }
+
+  // usamos CACHED para resolver cliente por account_id
+  rows.forEach(w=>{
+    const c = (CACHED||[]).find(x => x.account_id === w.account_id) || {};
+    const ccy = c.currency || "GTQ";
+
+    tb.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td class="nowrap">${fmtDateTime(w.created_at)}</td>
+        <td>${c.full_name || "—"}</td>
+        <td>${c.email || "—"}</td>
+        <td>${fmtMoney(w.amount, ccy)}</td>
+        <td>${c.bank_name || "—"}</td>
+        <td class="nowrap">${c.bank_account || "—"}</td>
+        <td class="nowrap">${c.bank_account_type || "—"}</td>
+        <td>${w.note || "—"}</td>
+        <td class="nowrap">
+          <button class="ok" onclick="approveWithdrawReq('${w.id}', '${w.account_id}', ${Number(w.amount||0)})">Aprobar</button>
+          <button class="danger" onclick="rejectWithdrawReq('${w.id}')">Rechazar</button>
+        </td>
+      </tr>
+    `);
+  });
+}
+
+async function approveWithdrawReq(reqId, accountId, amount){
+  if(!confirm("¿Aprobar esta solicitud de retiro?\n\nEsto descontará el capital y marcará la solicitud como aprobada.")) return;
+
+  // ✅ OPCIÓN 1 (mejor): RPC que haga TODO en transacción (recomendado)
+  // Si ya tienes un RPC: withdraw_capital, puedes usarlo y luego marcar request.
+  try{
+    // 1) descuenta capital
+    const r1 = await fetch(`${RPC}/withdraw_capital`,{
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_account_id: accountId,
+        p_amount: amount,
+        p_note: "Aprobado desde solicitudes",
+        p_reference: "withdraw_request:"+reqId
+      })
+    });
+    if(!r1.ok) throw new Error(await r1.text().catch(()=> "") || "Error en withdraw_capital");
+
+    // 2) marca solicitud aprobada
+    const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
+      method:"PATCH",
+      headers: headersJSON(),
+      body: JSON.stringify({ status: "approved", approved_at: new Date().toISOString() })
+    });
+    if(!r2.ok) throw new Error(await r2.text().catch(()=> "") || "No se pudo marcar approved");
+
+    alert("✅ Solicitud aprobada y capital descontado.");
+    await listUsers();
+    await listWithdrawRequests();
+  }catch(e){
+    console.error(e);
+    alert("❌ No se pudo aprobar: " + (e.message||e));
+  }
+}
+
+async function rejectWithdrawReq(reqId){
+  const reason = prompt("Motivo del rechazo (opcional):") || null;
+  if(!confirm("¿Rechazar esta solicitud?")) return;
+
+  try{
+    const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
+      method:"PATCH",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        status: "rejected",
+        rejected_at: new Date().toISOString(),
+        reject_reason: reason
+      })
+    });
+    if(!r.ok) throw new Error(await r.text().catch(()=> "") || "No se pudo rechazar");
+
+    alert("Solicitud rechazada.");
+    await listWithdrawRequests();
+  }catch(e){
+    console.error(e);
+    alert("❌ Error rechazando: " + (e.message||e));
+  }
+}  
+  
 /*** Editar ***/
 function editClient(x){
   $("u_email").value = x.email || "";
@@ -2111,6 +2266,7 @@ async function initApp(){
 
     await listUsers();
     await listTopups();
+    await listWithdrawRequests();
 
     refreshWithdrawPicker();
     updateWithdrawHint();
@@ -2126,6 +2282,7 @@ async function initApp(){
 document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
+  $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
 
   $("togglePass").addEventListener("click", ()=> {
     const inp = $("u_pass");
@@ -2180,3 +2337,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
