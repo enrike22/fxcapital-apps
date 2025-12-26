@@ -38,6 +38,13 @@
   --grid: radial-gradient(circle at 25% 12%, rgba(255,255,255,.06), transparent 55%),
           radial-gradient(circle at 75% 18%, rgba(45,212,191,.08), transparent 60%),
           radial-gradient(circle at 50% 90%, rgba(255,255,255,.05), transparent 55%);
+
+  /* KPI (del panel PRO) */
+  --good:#21C07A;
+  --warn:#E6C15A;
+  --bad:#FF4D4F;
+  --primary:#E6C15A;
+  --primary2:#D8B65C;
 }
 
 *{box-sizing:border-box}
@@ -59,7 +66,7 @@ body{
 .container{
   max-width:1320px;
   margin:0 auto;
-  padding:34px 22px 46px;
+  padding:22px 22px 46px;
 }
 
 .header{
@@ -344,25 +351,146 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .xbtn:hover{ border-color: rgba(255,255,255,.18); box-shadow: var(--shadow2); transform: translateY(-1px); }
 
 .header-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* ===== Sticky Topbar + KPI (agregado, no rompe nada) ===== */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:14px; padding:16px 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  position:sticky;top:12px;z-index:200;
+  backdrop-filter: blur(10px);
+  margin-bottom:14px;
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:260px}
+.logo{
+  width:38px;height:38px;border-radius:12px;
+  background: linear-gradient(180deg, rgba(230,193,90,.22), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.10);
+  display:grid;place-items:center;
+  font-weight:900;letter-spacing:.6px;
+}
+.brand .title{margin:0;font-size:16px;letter-spacing:.3px;font-weight:900}
+.brand .sub{margin-top:3px;color:rgba(245,247,250,.68);font-size:12px}
+.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.search-pill{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:999px;
+  background: rgba(0,0,0,.30);
+  border:1px solid rgba(255,255,255,.08);
+  min-width:320px;
+}
+.search-pill input{
+  width:100%;
+  border:0;outline:0;background:transparent;color:var(--fg);
+  font-size:13px
+}
+.btn-pill{
+  border:0;cursor:pointer;
+  padding:10px 14px;border-radius:999px;
+  background: rgba(255,255,255,.08);
+  color:var(--fg);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  font-weight:900;font-size:13px;
+}
+.btn-pill:hover{filter:brightness(1.08)}
+.btn-pill:active{transform:translateY(1px)}
+.btn-pill.primary{
+  background: linear-gradient(180deg, var(--primary), var(--primary2));
+  color:#0B0D10;
+  border-color: rgba(0,0,0,.25);
+}
+.btn-pill.danger{
+  background: linear-gradient(180deg, rgba(255,77,79,.95), rgba(255,77,79,.75));
+  color:#0B0D10;border-color: rgba(0,0,0,.25);
+}
+.kpis{
+  display:grid; gap:12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin:12px 0 18px;
+}
+.kpi{
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  box-shadow:var(--shadow);
+  padding:14px 16px;
+}
+.kpi .label{color:rgba(245,247,250,.68);font-size:12px}
+.kpi .value{margin-top:6px;font-size:20px;font-weight:950;letter-spacing:.2px}
+.kpi .hint{margin-top:4px;color:rgba(245,247,250,.68);font-size:12px}
+
+.errorBox{
+  margin:10px 0 0;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,77,79,.25);
+  background: rgba(255,77,79,.08);
+  color: rgba(245,247,250,.78);
+  font-size:13px;
+}
+.errorBox.hidden{display:none !important}
+
+@media (max-width: 900px){
+  .kpis{grid-template-columns:1fr}
+  .search-pill{min-width: 220px}
+  .brand{min-width:unset}
+}
 </style>
+
+<!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 <div class="container">
 
-  <div class="header">
-    <h1>FX | CAPITAL R.L. — Panel Admin</h1>
+  <!-- ✅ TOPBAR PRO (agregado) -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">FX</div>
+      <div>
+        <div class="title">FX | CAPITAL R.L. — Panel Admin</div>
+        <div class="sub" id="sessionMeta">Administrador · Sesión no iniciada</div>
+      </div>
+    </div>
 
-    <div class="header-actions">
-      <div class="searchbar">
+    <div class="right">
+      <div class="search-pill" title="Buscar en clientes">
+        <span style="opacity:.75">🔎</span>
+        <!-- NOTA: este input es el MISMO id="q" que ya usabas; solo cambiamos el diseño -->
         <input id="q" type="search" placeholder="Buscar (nombre, email, teléfono, plan, banco…)" aria-label="Buscar cliente">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
 
-      <button id="btnOpenResetGlobal" type="button" class="ghost hidden">Reset contraseña</button>
-      <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
+      <button id="btnOpenResetGlobal" type="button" class="btn-pill hidden">Reset contraseña</button>
+      <button id="logoutBtn" type="button" class="btn-pill danger hidden">Cerrar sesión</button>
     </div>
   </div>
+
+  <!-- ✅ KPIs (agregado) -->
+  <div class="kpis" id="kpisWrap" class="hidden">
+    <div class="kpi">
+      <div class="label">Retiros pendientes</div>
+      <div class="value" id="kpiWithdrawPending">—</div>
+      <div class="hint" id="kpiWithdrawHint">Actualizado al cargar</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Recargas pendientes</div>
+      <div class="value" id="kpiTopupsPending">—</div>
+      <div class="hint">Pendientes / programadas</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Operaciones hoy</div>
+      <div class="value" id="kpiOpsToday">—</div>
+      <div class="hint">Retiros + recargas (últimas 24h)</div>
+    </div>
+  </div>
+
+  <!-- Mensajes de error “premium” globales (agregado, no afecta lógica) -->
+  <div id="globalError" class="errorBox hidden"></div>
 
   <!-- LOGIN -->
   <div id="unauth" class="card">
@@ -378,35 +506,35 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- APP -->
   <div id="app" class="hidden">
 
-<!-- SOLICITUDES DE RETIRO (pendientes) -->
-<div class="card">
-  <div class="header" style="margin:0 0 10px">
-    <h2 style="margin:0">Solicitudes de retiro</h2>
-    <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-  </div>
+    <!-- SOLICITUDES DE RETIRO (pendientes) -->
+    <div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Solicitudes de retiro</h2>
+        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
+      </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Cliente</th>
-          <th>Email</th>
-          <th>Monto</th>
-          <th>Banco</th>
-          <th>No. cuenta</th>
-          <th>Tipo</th>
-          <th>Nota</th>
-          <th class="nowrap">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="withdrawReqs"></tbody>
-    </table>
-  </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Monto</th>
+              <th>Banco</th>
+              <th>No. cuenta</th>
+              <th>Tipo</th>
+              <th>Nota</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawReqs"></tbody>
+        </table>
+      </div>
 
-  <p id="withdrawReqsMsg" class="small"></p>
-</div>
-    
+      <p id="withdrawReqsMsg" class="small"></p>
+    </div>
+
     <!-- TOPUPS -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
@@ -601,8 +729,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       <p id="usersMsg" class="small" style="margin-top:6px"></p>
     </div>
 
-  </div>
-</div>
+  </div><!-- /app -->
+</div><!-- /container -->
 
 <!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
 <div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -723,6 +851,30 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   </div>
 </div>
 
+<!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
+<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(620px,100%)">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3 id="confirmTitle">Confirmación</h3>
+        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
+      </div>
+
+      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
+          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
@@ -741,12 +893,28 @@ function headersJSON(){
 
 /*** HELPERS UI ***/
 const $ = (id)=> document.getElementById(id);
-const show = (el, v)=> el.classList.toggle('hidden', !v);
+const show = (el, v)=> { if(!el) return; el.classList.toggle('hidden', !v); };
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 const fmtDateTime = (s)=> s ? new Date(s).toLocaleString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
+function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
+
+function clearGlobalError(){
+  const box = $("globalError");
+  if(!box) return;
+  show(box, false);
+  box.textContent = "";
+}
+function showGlobalError(title, err){
+  const box = $("globalError");
+  if(!box) return;
+  show(box, true);
+  box.innerHTML = `<div style="font-weight:900;color:#FFD0D0;margin-bottom:4px">${title}</div>
+                   <div>Verifique permisos, sesión o configuración del sistema e intente nuevamente.</div>`;
+  console.error("[DEBUG]", err);
+}
 
 /*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
@@ -764,6 +932,125 @@ async function validateSession(){
     }
     return true;
   }catch{ return false; }
+}
+
+/*** ✅ Session meta (agregado) ***/
+async function refreshSessionMeta(){
+  const meta = $("sessionMeta");
+  if(!meta) return;
+
+  const token = localStorage.token;
+  if(!token){
+    meta.textContent = "Administrador · Sesión no iniciada";
+    return;
+  }
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
+    });
+    if(!r.ok){
+      meta.textContent = "Administrador · Sesión no iniciada";
+      return;
+    }
+    const u = await r.json().catch(()=>null);
+    const email = u?.email || u?.user_metadata?.email || "admin";
+    meta.textContent = `Administrador · ${email} · Última actualización: ${new Date().toLocaleTimeString("es-GT")}`;
+  }catch(e){
+    meta.textContent = `Administrador · Sesión iniciada`;
+    console.error(e);
+  }
+}
+
+/*** ✅ Modal Confirm PRO (agregado, y lo usamos en vez de confirm() cuando se pueda) ***/
+let CONFIRM_RESOLVE = null;
+function openConfirm({title, message, okText}){
+  const m = $("modalConfirm");
+  const t = $("confirmTitle");
+  const msg = $("confirmMsg");
+  const okBtn = $("confirmOkBtn");
+  if(!m || !t || !msg || !okBtn){
+    // fallback
+    return Promise.resolve(window.confirm((title? (title+"\n\n"):"") + String(message||"")));
+  }
+  t.textContent = title || "Confirmación";
+  msg.innerHTML = message || "¿Confirma esta acción?";
+  okBtn.textContent = okText || "Confirmar";
+  show(m, true);
+
+  return new Promise((resolve)=>{
+    CONFIRM_RESOLVE = resolve;
+  });
+}
+function closeConfirm(result){
+  const m = $("modalConfirm");
+  if(m) show(m, false);
+  if(CONFIRM_RESOLVE) CONFIRM_RESOLVE(!!result);
+  CONFIRM_RESOLVE = null;
+}
+window.closeConfirm = closeConfirm;
+
+// cerrar al click fuera
+document.addEventListener("click", (e)=>{
+  const m = $("modalConfirm");
+  if(!m || m.classList.contains("hidden")) return;
+  if(e.target === m) closeConfirm(false);
+});
+
+/*** ✅ KPIs (agregado) ***/
+async function refreshKPIs(){
+  const kWrap = $("kpisWrap");
+  const kW = $("kpiWithdrawPending");
+  const kT = $("kpiTopupsPending");
+  const kO = $("kpiOpsToday");
+  const kWHint = $("kpiWithdrawHint");
+
+  if(!kW || !kT || !kO) return;
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+(localStorage.token||""),
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  try{
+    // withdrawals pending
+    const rw = await fetch(`${BASE}/withdrawal_requests?select=id,status,created_at&limit=600`, { headers:h, cache:"no-store" });
+    if(!rw.ok) throw new Error(await rw.text().catch(()=> "") || `HTTP ${rw.status}`);
+    const wrows = await rw.json();
+
+    const pendingW = (wrows||[]).filter(r=> String(r.status||"").toLowerCase()==="pending").length;
+    kW.textContent = pendingW;
+    if(kWHint) kWHint.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-GT")}`;
+
+    // topups pending + programadas (effective_date != null) aunque status sea pending
+    const rt = await fetch(`${BASE}/topups?select=id,status,created_at,effective_date&limit=800`, { headers:h, cache:"no-store" });
+    if(!rt.ok) throw new Error(await rt.text().catch(()=> "") || `HTTP ${rt.status}`);
+    const trows = await rt.json();
+
+    const pendingT = (trows||[]).filter(r=>{
+      const s = String(r.status||"").toLowerCase();
+      const scheduled = !!r.effective_date;
+      return s==="pending" || scheduled;
+    }).length;
+    kT.textContent = pendingT;
+
+    // ops 24h
+    const since = Date.now() - 24*60*60*1000;
+    const ops =
+      (wrows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length +
+      (trows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length;
+    kO.textContent = ops;
+
+    if(kWrap) show(kWrap, true);
+  }catch(err){
+    console.error("[KPI DEBUG]", err);
+    kW.textContent = "—";
+    kT.textContent = "—";
+    kO.textContent = "—";
+    if(kWrap) show(kWrap, true);
+  }
 }
 
 /*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
@@ -813,6 +1100,8 @@ function todayISO(){ return new Date().toISOString().slice(0,10); }
 /*** LOGIN ***/
 async function doLogin(e){
   e.preventDefault();
+  clearGlobalError();
+
   const email = $("email").value.trim();
   const password = $("password").value;
 
@@ -844,6 +1133,7 @@ async function doLogin(e){
 
     localStorage.token = data.access_token;
     localStorage.uid = data.user?.id || "";
+
     await initApp();
 
   }catch(err){
@@ -1010,12 +1300,12 @@ function renderUsers(rows){
   });
 }
 
-/*** BUSCAR ***/
+/*** BUSCAR (mismo id="q") ***/
 $("q")?.addEventListener("input",(e)=>{
-  const q = e.target.value.trim().toLowerCase();
-  if(!q){ renderUsers(CACHED); return; }
+  const qv = e.target.value.trim().toLowerCase();
+  if(!qv){ renderUsers(CACHED); return; }
   const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
-    .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+    .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
   renderUsers(filt);
 });
 
@@ -1107,7 +1397,17 @@ async function doWithdraw(){
     return;
   }
 
-  if(!confirm(`¿Aplicar retiro de capital?\n\nCliente: ${who}\nMonto: ${fmtMoney(amount, ccy)}\n\nEsto descuenta el capital actual y registra el movimiento.`)) return;
+  const ok = await openConfirm({
+    title: "Confirmación de retiro",
+    message: `
+      <div style="font-weight:950;margin-bottom:6px">¿Aplicar retiro de capital?</div>
+      <div>Cliente: <b>${who}</b></div>
+      <div>Monto: <b>${fmtMoney(amount, ccy)}</b></div>
+      <div style="margin-top:8px;opacity:.9">Esto descuenta el capital actual y registra el movimiento.</div>
+    `,
+    okText: "Retirar"
+  });
+  if(!ok) return;
 
   const btn = $("btnWithdraw");
   if(btn){ btn.disabled = true; btn.textContent = "Procesando..."; }
@@ -1136,6 +1436,7 @@ async function doWithdraw(){
     if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
 
     await listUsers();
+    await refreshKPIs();
 
     if($("wdAmount")) $("wdAmount").value = "";
     if($("wdRef")) $("wdRef").value = "";
@@ -1143,7 +1444,13 @@ async function doWithdraw(){
   }catch(e){
     console.error(e);
     if(msg) msg.textContent = `❌ Error: ${e.message || e}`;
-    alert("No se pudo retirar: " + (e.message || e));
+    await openConfirm({
+      title:"No se pudo retirar",
+      message:`<div style="color:#FFD0D0;font-weight:950;margin-bottom:6px">Operación no aplicada</div>
+               <div>Detalle: <span style="opacity:.9">${String(e.message||e)}</span></div>`,
+      okText:"Entendido"
+    });
+    closeConfirm(false);
   }finally{
     if(btn){ btn.disabled = false; btn.textContent = "Retirar"; }
   }
@@ -1313,15 +1620,22 @@ async function deleteWithdrawalsShown(){
     alert("No hay filas mostradas para borrar.");
     return;
   }
-  if(!confirm(`¿Borrar los retiros MOSTRADOS?\n\nEsto es permanente.\n(Recomendado: imprime/guarda PDF antes.)`)) return;
+
+  const ok = await openConfirm({
+    title:"Borrar historial mostrado",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Borrar los retiros MOSTRADOS?</div>
+             <div>Esto es permanente. (Recomendado: imprime/guarda PDF antes.)</div>`,
+    okText:"Borrar"
+  });
+  if(!ok) return;
 
   const msg = $("wdhMsg");
-  msg.textContent = "Borrando…";
+  safeText(msg, "Borrando…");
   setLoading(msg, true);
 
   const ids = WDH_CACHE.map(x=>x.id).filter(Boolean);
   try{
-    let ok = false;
+    let ok2 = false;
 
     try{
       const r1 = await fetch(`${RPC}/admin_delete_withdrawals`,{
@@ -1329,10 +1643,10 @@ async function deleteWithdrawalsShown(){
         headers: headersJSON(),
         body: JSON.stringify({ p_ids: ids })
       });
-      if(r1.ok) ok = true;
+      if(r1.ok) ok2 = true;
     }catch{}
 
-    if(!ok){
+    if(!ok2){
       const idsCsv = ids.join(",");
       const r2 = await fetch(`${BASE}/withdrawals?id=in.(${idsCsv})`,{
         method:"DELETE",
@@ -1346,10 +1660,11 @@ async function deleteWithdrawalsShown(){
 
     alert("Historial borrado (mostrado).");
     await loadWithdrawHistory();
+    await refreshKPIs();
   }catch(e){
     console.error(e);
     alert("No se pudo borrar: " + (e.message||e));
-    msg.textContent = "Error al borrar.";
+    safeText(msg, "Error al borrar.");
   }finally{
     setLoading(msg, false);
   }
@@ -1394,6 +1709,7 @@ async function fetchProfiles(userIds, h){
 async function listTopups(){
   const msgEl = $("topupsMsg");
   if(msgEl) msgEl.textContent = "";
+  clearGlobalError();
 
   const h = {
     apikey: ANON_KEY,
@@ -1412,6 +1728,7 @@ async function listTopups(){
     const t = await r.text().catch(()=> "");
     console.error("listTopups error:", r.status, t);
     if(msgEl) msgEl.textContent = "No se pudieron cargar recargas (revisa conexión o permisos).";
+    showGlobalError("No se pudieron cargar recargas", t || r.status);
     if(r.status === 401 || r.status === 403){
       localStorage.removeItem("token");
       localStorage.removeItem("uid");
@@ -1451,10 +1768,12 @@ async function listTopups(){
   renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
 
   if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + programadas por fecha)`;
+
+  await refreshKPIs();
+  await refreshSessionMeta();
 }
 
 function statusChip(status, effectiveDate){
-  // ✅ Si tiene effective_date => mostrar como “Programada” aunque status sea pending
   const isScheduled = !!effectiveDate;
   const s = String(status||"").toLowerCase();
 
@@ -1592,7 +1911,14 @@ async function openReceipt(bucket, path){
 
 /*** ✅ Aprobar ahora + ✅ borrar boleta del Storage + limpiar receipt_path ***/
 async function approveTopup(topupId){
-  if(!confirm("¿Aprobar ahora?\n\nEsto sumará el monto al capital del cliente inmediatamente.\n\nLuego se intentará borrar la boleta para que no ocupe espacio.")) return;
+  const ok = await openConfirm({
+    title:"Confirmación de recarga",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Aprobar ahora?</div>
+             <div>Esto sumará el monto al capital del cliente inmediatamente.</div>
+             <div style="margin-top:8px;opacity:.9">Luego se intentará borrar la boleta para que no ocupe espacio.</div>`,
+    okText:"Aprobar"
+  });
+  if(!ok) return;
 
   let receiptPath = null;
   try{
@@ -1619,6 +1945,7 @@ async function approveTopup(topupId){
 
   if(!r.ok){
     console.error(await r.text().catch(()=> ""));
+    showGlobalError("No se pudo aprobar la recarga", await r.text().catch(()=> ""));
     alert("No se pudo aprobar la recarga.");
     return;
   }
@@ -1662,6 +1989,7 @@ async function approveTopup(topupId){
   alert("Recarga aprobada y capital acreditado.");
   await listTopups();
   await listUsers();
+  await refreshKPIs();
 }
 
 function rejectTopupPrompt(topupId){
@@ -1669,7 +1997,13 @@ function rejectTopupPrompt(topupId){
   rejectTopup(topupId, reason);
 }
 async function rejectTopup(topupId, reason){
-  if(!confirm("¿Rechazar esta recarga?")) return;
+  const ok = await openConfirm({
+    title:"Rechazar recarga",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Rechazar esta recarga?</div>
+             <div style="opacity:.9">Motivo (opcional): <b>${escapeHtml(reason||"—")}</b></div>`,
+    okText:"Rechazar"
+  });
+  if(!ok) return;
 
   const r = await fetch(`${RPC}/reject_topup`, {
     method:"POST",
@@ -1685,11 +2019,18 @@ async function rejectTopup(topupId, reason){
 
   alert("Recarga rechazada.");
   await listTopups();
+  await refreshKPIs();
 }
 
 // ✅ Workaround: quitar programación = effective_date NULL, scheduled_note NULL
 async function unscheduleTopup(topupId){
-  if(!confirm("¿Quitar programación?\n\nVolverá a estado Pendiente.")) return;
+  const ok = await openConfirm({
+    title:"Quitar programación",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Quitar programación?</div>
+             <div style="opacity:.9">Volverá a estado Pendiente.</div>`,
+    okText:"Quitar"
+  });
+  if(!ok) return;
 
   const r = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
     method:"PATCH",
@@ -1705,6 +2046,7 @@ async function unscheduleTopup(topupId){
 
   alert("Programación eliminada. La recarga volvió a Pendiente.");
   await listTopups();
+  await refreshKPIs();
 }
 
 /* ============================================================
@@ -1750,7 +2092,14 @@ async function doScheduleTopup(){
     return;
   }
 
-  if(!confirm(`¿Programar esta recarga?\n\nFecha efectiva: ${date}\n\nSe acreditará a las 9:00 AM (GT) de ese día.`)) return;
+  const ok = await openConfirm({
+    title:"Programar acreditación",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Programar esta recarga?</div>
+             <div>Fecha efectiva: <b>${date}</b></div>
+             <div style="margin-top:8px;opacity:.9">Se acreditará a las <b>9:00 AM (GT)</b> de ese día.</div>`,
+    okText:"Programar"
+  });
+  if(!ok) return;
 
   $("schedMsg").textContent = "Programando…";
   setLoading($("schedMsg"), true);
@@ -1775,6 +2124,7 @@ async function doScheduleTopup(){
     closeScheduleTopupModal();
     alert("Recarga programada correctamente.");
     await listTopups();
+    await refreshKPIs();
 
   }catch(e){
     console.error(e);
@@ -1792,6 +2142,7 @@ async function listWithdrawRequests(){
 
   msgEl.textContent = "Cargando…";
   tb.innerHTML = "";
+  clearGlobalError();
 
   const h = {
     apikey: ANON_KEY,
@@ -1809,6 +2160,7 @@ async function listWithdrawRequests(){
     const t = await r.text().catch(()=> "");
     console.error("withdrawal_requests error:", r.status, t);
     msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso o nombre de tabla/campos).";
+    showGlobalError("No se pudieron cargar solicitudes de retiro", t || r.status);
     tb.innerHTML = `<tr><td colspan="9" class="small">Error cargando solicitudes.</td></tr>`;
     return;
   }
@@ -1816,6 +2168,9 @@ async function listWithdrawRequests(){
   const rows = await r.json();
   renderWithdrawRequests(rows);
   msgEl.textContent = `Solicitudes pendientes: ${rows.length}`;
+
+  await refreshKPIs();
+  await refreshSessionMeta();
 }
 
 function renderWithdrawRequests(rows){
@@ -1852,10 +2207,14 @@ function renderWithdrawRequests(rows){
 }
 
 async function approveWithdrawReq(reqId, accountId, amount){
-  if(!confirm("¿Aprobar esta solicitud de retiro?\n\nEsto descontará el capital y marcará la solicitud como aprobada.")) return;
+  const ok = await openConfirm({
+    title:"Aprobar retiro",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Aprobar esta solicitud de retiro?</div>
+             <div style="opacity:.9">Esto descontará el capital y marcará la solicitud como aprobada.</div>`,
+    okText:"Aprobar"
+  });
+  if(!ok) return;
 
-  // ✅ OPCIÓN 1 (mejor): RPC que haga TODO en transacción (recomendado)
-  // Si ya tienes un RPC: withdraw_capital, puedes usarlo y luego marcar request.
   try{
     // 1) descuenta capital
     const r1 = await fetch(`${RPC}/withdraw_capital`,{
@@ -1881,6 +2240,7 @@ async function approveWithdrawReq(reqId, accountId, amount){
     alert("✅ Solicitud aprobada y capital descontado.");
     await listUsers();
     await listWithdrawRequests();
+    await refreshKPIs();
   }catch(e){
     console.error(e);
     alert("❌ No se pudo aprobar: " + (e.message||e));
@@ -1889,7 +2249,14 @@ async function approveWithdrawReq(reqId, accountId, amount){
 
 async function rejectWithdrawReq(reqId){
   const reason = prompt("Motivo del rechazo (opcional):") || null;
-  if(!confirm("¿Rechazar esta solicitud?")) return;
+
+  const ok = await openConfirm({
+    title:"Rechazar retiro",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Rechazar esta solicitud?</div>
+             <div style="opacity:.9">Motivo (opcional): <b>${escapeHtml(reason||"—")}</b></div>`,
+    okText:"Rechazar"
+  });
+  if(!ok) return;
 
   try{
     const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
@@ -1905,12 +2272,13 @@ async function rejectWithdrawReq(reqId){
 
     alert("Solicitud rechazada.");
     await listWithdrawRequests();
+    await refreshKPIs();
   }catch(e){
     console.error(e);
     alert("❌ Error rechazando: " + (e.message||e));
   }
-}  
-  
+}
+
 /*** Editar ***/
 function editClient(x){
   $("u_email").value = x.email || "";
@@ -2038,6 +2406,7 @@ async function saveUser(){
 
     msgEl.textContent = "Guardado";
     await listUsers();
+    await refreshKPIs();
   }catch(e){
     msgEl.textContent = "Error";
     alert("No se pudo guardar: " + (e.message||e));
@@ -2048,8 +2417,15 @@ async function saveUser(){
 
 /*** Eliminar (tu lógica original) ***/
 async function deleteClient(x){
-  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
-  if(!confirm(msg)) return;
+  const ok = await openConfirm({
+    title:"Eliminar cliente",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Eliminar al cliente?</div>
+             <div>Nombre: <b>${escapeHtml(x.full_name||'—')}</b></div>
+             <div>Email: <b>${escapeHtml(x.email||'—')}</b></div>
+             <div style="margin-top:8px;opacity:.9">Esto es permanente.</div>`,
+    okText:"Eliminar"
+  });
+  if(!ok) return;
 
   const jh = headersJSON();
   const mustOk = async (resp, label) => {
@@ -2101,6 +2477,7 @@ async function deleteClient(x){
   CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
   renderUsers(CACHED);
   await listUsers();
+  await refreshKPIs();
   alert("Cliente eliminado correctamente.");
 }
 
@@ -2201,7 +2578,14 @@ async function doResetPassword(){
     return;
   }
 
-  if(!confirm(`¿Asignar nueva contraseña a ${RESET_CTX.email}?\n\nEsto activará el modal obligatorio en el panel cliente.`)) return;
+  const ok = await openConfirm({
+    title:"Restablecer contraseña",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Asignar nueva contraseña?</div>
+             <div>Cliente: <b>${escapeHtml(RESET_CTX.email)}</b></div>
+             <div style="margin-top:8px;opacity:.9">Esto activará el modal obligatorio en el panel cliente.</div>`,
+    okText:"Aplicar"
+  });
+  if(!ok) return;
 
   $("resetMsg").textContent = "Aplicando reset…";
   setLoading($("resetMsg"), true);
@@ -2256,6 +2640,8 @@ async function doResetPassword(){
 
 /*** INIT ***/
 async function initApp(){
+  clearGlobalError();
+
   const ok = await validateSession();
 
   if(ok){
@@ -2263,10 +2649,13 @@ async function initApp(){
     show($("app"), true);
     show($("logoutBtn"), true);
     show($("btnOpenResetGlobal"), true);
+    show($("kpisWrap"), true);
 
+    await refreshSessionMeta();
     await listUsers();
     await listTopups();
     await listWithdrawRequests();
+    await refreshKPIs();
 
     refreshWithdrawPicker();
     updateWithdrawHint();
@@ -2274,7 +2663,9 @@ async function initApp(){
     show($("app"), false);
     show($("logoutBtn"), false);
     show($("btnOpenResetGlobal"), false);
+    show($("kpisWrap"), false);
     show($("unauth"), true);
+    await refreshSessionMeta();
   }
 }
 
@@ -2301,8 +2692,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
     validateRatePlan();
   });
 
-  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); });
-  $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); });
+  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); await refreshKPIs(); });
+  $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); await refreshKPIs(); });
 
   bindCapitalFormatter($("u_capital"));
 
@@ -2329,12 +2720,15 @@ document.addEventListener("DOMContentLoaded", ()=>{
       try{ closeResetModal(); }catch{}
       try{ closeScheduleTopupModal(); }catch{}
       try{ closeWithdrawHistory(); }catch{}
+      try{ closeConfirm(false); }catch{}
     }
   });
+
+  // botón confirmar del modal confirm
+  $("confirmOkBtn")?.addEventListener("click", ()=> closeConfirm(true));
 
   initApp();
 });
 </script>
 </body>
 </html>
-
