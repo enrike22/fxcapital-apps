@@ -1278,233 +1278,247 @@
     if(wa) wa.disabled = on;
   }
 
- /* ==========================================
-   ✅ RETIROS — 100% CONSISTENTE (requests + pagos)
-   TABLAS:
-   - withdrawal_requests: solicitud (cliente crea)
-   - withdrawals: pago (admin crea) con request_id
-========================================== */
+  /* ==========================================
+     ✅ HISTORIAL DE RETIROS (CORRECTO)
+     - Usa withdrawal_requests como fuente
+     - Si hay pago en withdrawals.request_id => estado PAID
+  ========================================== */
 
-/** Chip UI */
-function statusChipHTML(status){
-  const s = String(status||'').toUpperCase().trim();
+  // ✅ REEMPLAZO DEFINITIVO: PAID / APPROVED / REJECTED / PENDING
+  function statusChipHTML(status){
+    const raw = (status ?? '').toString().trim();
+    const s = raw.toUpperCase();
 
-  let cls = 'status-pending';
-  let label = 'Pendiente';
+    let cls = 'status-pending';
+    let label = 'Pendiente';
 
-  if(s === 'APPROVED'){ cls='status-approved'; label='Aprobado'; }
-  if(s === 'REJECTED'){ cls='status-rejected'; label='Rechazado'; }
-  if(s === 'PAID'){ cls='status-approved'; label='Pagado'; }
-  if(s === 'PENDING'){ cls='status-pending'; label='Pendiente'; }
-
-  return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
-}
-
-/** Cargar historial:
- * 1) Trae withdrawal_requests por account_id
- * 2) Trae pagos withdrawals donde request_id IN (ids)
- * 3) Muestra estado = PAID si existe pago, si no usa request.status
- */
-async function loadWithdrawalHistory(){
-  const tbody = document.getElementById('wHistBody');
-  const range = document.getElementById('wHistRange');
-  const note  = document.getElementById('wHistNote');
-
-  if(!tbody || !range || !note) return;
-
-  tbody.innerHTML = `<tr><td colspan="5">Cargando…</td></tr>`;
-  range.textContent = '—';
-  note.textContent  = 'Cargando historial…';
-
-  if(!CURRENT_ACCOUNT_ID){
-    tbody.innerHTML = `<tr><td colspan="5">No se encontró la cuenta para cargar el historial.</td></tr>`;
-    note.textContent = '—';
-    return;
-  }
-
-  // 1) Requests
-  const { data: reqs, error: reqErr } = await sb
-    .from('withdrawal_requests')
-    .select('id, created_at, amount, kind, status, penalty_pct, reason_text, reason, full_withdrawal, reviewed_at')
-    .eq('account_id', CURRENT_ACCOUNT_ID)
-    .order('created_at', { ascending:false })
-    .limit(50);
-
-  if(reqErr){
-    console.warn('withdrawal_requests error:', reqErr?.message || reqErr);
-    tbody.innerHTML = `<tr><td colspan="5">No se pudo cargar el historial (RLS/permisos).</td></tr>`;
-    note.textContent = 'Revise RLS en withdrawal_requests para SELECT por account_id del usuario.';
-    return;
-  }
-
-  const rows = reqs || [];
-  if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="5">No hay solicitudes registradas.</td></tr>`;
-    note.textContent = 'Cuando envíe una solicitud, aparecerá aquí.';
-    return;
-  }
-
-  // 2) Pagos ligados (withdrawals.request_id)
-  const ids = rows.map(r => r.id);
-  let payMap = new Map();
-  if(ids.length){
-    const { data: pays, error: payErr } = await sb
-      .from('withdrawals')
-      .select('id, request_id, created_at, reference, note')
-      .in('request_id', ids);
-
-    if(!payErr && Array.isArray(pays)){
-      for(const p of pays){
-        if(p?.request_id) payMap.set(p.request_id, p);
-      }
-    } else {
-      // Si no hay permisos en withdrawals, igual funciona con status del request
-      console.warn('withdrawals (pagos) no accesible o error:', payErr?.message || payErr);
+    if (s === 'PAID' || s === 'PAGADO') {
+      cls = 'status-approved';
+      label = 'Pagado';
+      return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
     }
-  }
 
-  // rango
-  const first = rows[rows.length-1]?.created_at;
-  const last  = rows[0]?.created_at;
-  range.textContent = (first && last) ? `${fmtDateGT(first)} — ${fmtDateGT(last)}` : '—';
-
-  tbody.innerHTML = '';
-  rows.forEach(r=>{
-    const created = r.created_at;
-    const amount  = Number(r.amount || 0);
-    const kind    = String(r.kind || '').toUpperCase();
-    const full    = !!r.full_withdrawal;
-
-    // Tipo
-    let typeLabel = full ? 'Total' : 'Parcial';
-    if(kind === 'HEALTH') typeLabel = 'Salud';
-    if(kind === 'EARLY')  typeLabel = 'Antes de tiempo';
-
-    // Estado: si ya existe pago ligado, marcar PAID
-    const pay = payMap.get(r.id);
-    const status = pay ? 'PAID' : (String(r.status || 'PENDING').toUpperCase());
-
-    // Detalle
-    const detailParts = [];
-    if(r.penalty_pct != null && !Number.isNaN(Number(r.penalty_pct)) && Number(r.penalty_pct) > 0){
-      detailParts.push(`Penalización: ${Number(r.penalty_pct)}%`);
+    if (s === 'APPROVED' || s === 'APROBADO') {
+      cls = 'status-approved';
+      label = 'Aprobado';
+      return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
     }
-    if(pay?.reference) detailParts.push(`Ref: ${pay.reference}`);
-    const det = detailParts.join(' · ') || '—';
 
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${created ? fmtDateTimeGT(created) : '—'}</td>
-      <td><b>${fmtQ(amount)}</b></td>
-      <td>${typeLabel}</td>
-      <td>${statusChipHTML(status)}</td>
-      <td>${det}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    if (s === 'REJECTED' || s === 'RECHAZADO' || s === 'CANCELLED' || s === 'CANCELED') {
+      cls = 'status-rejected';
+      label = 'Rechazado';
+      return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
+    }
 
-  note.innerHTML = `Fuente: <b>withdrawal_requests</b>` + (payMap.size ? ` + pagos ligados` : ``) + `.`;
-}
+    if (s === 'PENDING' || s === 'PENDIENTE') {
+      cls = 'status-pending';
+      label = 'Pendiente';
+      return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
+    }
 
-/** Crear solicitud (cliente):
- * Inserta SOLO en withdrawal_requests con columnas reales.
- */
-async function enviarSolicitudRetiro(){
-  const { data:{ session } } = await sb.auth.getSession();
-  if(!session){
-    const bust=`no_session=${Date.now()}`;
-    const sep=LOGIN_URL.includes('?')?'&':'?';
-    window.location.replace(`${LOGIN_URL}${sep}${bust}`);
-    return;
+    return `<span class="status-chip ${cls}"><span class="status-dot"></span>${raw || label}</span>`;
   }
 
-  const { data: acc, error: accErr } = await sb
-    .from('accounts')
-    .select('id, capital')
-    .eq('user_id', session.user.id)
-    .single();
+  async function loadWithdrawalHistory(){
+    const tbody = document.getElementById('wHistBody');
+    const range = document.getElementById('wHistRange');
+    const note  = document.getElementById('wHistNote');
 
-  if(accErr || !acc){
-    alert('No se pudo cargar su cuenta.');
-    return;
-  }
+    if(!tbody || !range || !note) return;
 
-  const capital = Number(acc.capital||0);
-  const all = document.getElementById('switchAll')?.classList.contains('on');
+    tbody.innerHTML = `<tr><td colspan="5">Cargando…</td></tr>`;
+    range.textContent = '—';
+    note.textContent  = 'Cargando historial…';
 
-  const amount = all ? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
-  const reasonText = (document.getElementById('wReason')?.value || '').trim();
-
-  const isHealth = document.getElementById('optHealth')?.classList.contains('selected');
-  const kind = isHealth ? 'HEALTH' : 'EARLY';
-  const penaltyPct = isHealth ? 0 : 10;
-
-  if(!all){
-    if(amount<=0){ alert('Ingrese un monto válido.'); return; }
-    if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-    const restante = capital - amount;
-    if(restante < 2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
-  }
-  if(reasonText.length < 5){ alert('Describa brevemente el motivo.'); return; }
-
-  const btn = document.getElementById('wSend');
-  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
-
-  try{
-    // ✅ Insert REAL en withdrawal_requests
-    const payload = {
-      account_id: acc.id,
-      kind: kind,
-      reason_text: reasonText,     // (tu columna existe)
-      penalty_pct: penaltyPct,
-      status: 'PENDING',           // enum request_status
-      amount: amount,
-      reason: reasonText,          // la tienes también (text)
-      full_withdrawal: !!all
-    };
-
-    const { error: insErr } = await sb
-      .from('withdrawal_requests')
-      .insert([payload]);
-
-    if(insErr){
-      console.error(insErr);
-      alert('No se pudo registrar la solicitud (RLS/permisos).\n' + (insErr.message||''));
+    if(!CURRENT_ACCOUNT_ID){
+      tbody.innerHTML = `<tr><td colspan="5">No se encontró la cuenta para cargar el historial.</td></tr>`;
+      note.textContent = '—';
       return;
     }
 
-    // ✅ Opcional: email (si tu Edge Function existe, perfecto)
-    try{
-      const { error: fnErr } = await sb.functions.invoke('send-withdrawal-email', {
-        body:{
-          amount,
-          reason: reasonText,
-          full_withdrawal: !!all,
-          account_id: acc.id,
-          user_email: session.user.email,
-          user_name: (document.getElementById('valName')?.textContent || ''),
-          withdraw_type: (isHealth ? 'health' : 'early'),
-          penalty_pct: penaltyPct
-        }
-      });
-      if(fnErr) console.warn('send-withdrawal-email error:', fnErr);
-    }catch(e){
-      console.warn('send-withdrawal-email fail:', e);
+    // 1) Requests
+    const { data: reqs, error: reqErr } = await sb
+      .from('withdrawal_requests')
+      .select('id, created_at, amount, kind, status, penalty_pct, reason_text, reason, full_withdrawal, reviewed_at')
+      .eq('account_id', CURRENT_ACCOUNT_ID)
+      .order('created_at', { ascending:false })
+      .limit(50);
+
+    if(reqErr){
+      console.warn('withdrawal_requests error:', reqErr?.message || reqErr);
+      tbody.innerHTML = `<tr><td colspan="5">No se pudo cargar el historial (RLS/permisos).</td></tr>`;
+      note.textContent = 'Revise RLS en withdrawal_requests para SELECT por account_id del usuario.';
+      return;
     }
 
-    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información.');
+    const rows = reqs || [];
+    if(rows.length === 0){
+      tbody.innerHTML = `<tr><td colspan="5">No hay solicitudes registradas.</td></tr>`;
+      note.textContent = 'Cuando envíe una solicitud, aparecerá aquí.';
+      return;
+    }
 
-    // reset UI
-    if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
-    if(document.getElementById('wReason')) document.getElementById('wReason').value='';
-    toggleSwitchAll(false);
-    selectType('early');
+    // 2) Pagos ligados (withdrawals.request_id)
+    const ids = rows.map(r => r.id);
+    let payMap = new Map();
+    if(ids.length){
+      const { data: pays, error: payErr } = await sb
+        .from('withdrawals')
+        .select('id, request_id, created_at, reference, note')
+        .in('request_id', ids);
 
-    await loadWithdrawalHistory();
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+      if(!payErr && Array.isArray(pays)){
+        for(const p of pays){
+          if(p?.request_id) payMap.set(p.request_id, p);
+        }
+      } else {
+        // Si no hay permisos en withdrawals, igual funciona con status del request
+        console.warn('withdrawals (pagos) no accesible o error:', payErr?.message || payErr);
+      }
+    }
+
+    // rango
+    const first = rows[rows.length-1]?.created_at;
+    const last  = rows[0]?.created_at;
+    range.textContent = (first && last) ? `${fmtDateGT(first)} — ${fmtDateGT(last)}` : '—';
+
+    tbody.innerHTML = '';
+    rows.forEach(r=>{
+      const created = r.created_at;
+      const amount  = Number(r.amount || 0);
+      const kind    = String(r.kind || '').toUpperCase();
+      const full    = !!r.full_withdrawal;
+
+      // Tipo
+      let typeLabel = full ? 'Total' : 'Parcial';
+      if(kind === 'HEALTH') typeLabel = 'Salud';
+      if(kind === 'EARLY')  typeLabel = 'Antes de tiempo';
+
+      // ✅ Estado: si hay pago => PAID, si no => status del request
+      const pay = payMap.get(r.id);
+      const status = pay ? 'PAID' : String(r.status || 'PENDING').toUpperCase();
+
+      // Detalle
+      const detailParts = [];
+      if(r.penalty_pct != null && !Number.isNaN(Number(r.penalty_pct)) && Number(r.penalty_pct) > 0){
+        detailParts.push(`Penalización: ${Number(r.penalty_pct)}%`);
+      }
+      if(pay?.reference) detailParts.push(`Ref: ${pay.reference}`);
+      const det = detailParts.join(' · ') || '—';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${created ? fmtDateTimeGT(created) : '—'}</td>
+        <td><b>${fmtQ(amount)}</b></td>
+        <td>${typeLabel}</td>
+        <td>${statusChipHTML(status)}</td>
+        <td>${det}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    note.innerHTML = `Fuente: <b>withdrawal_requests</b>` + (payMap.size ? ` + pagos ligados` : ``) + `.`;
   }
-}
+
+  /** Crear solicitud (cliente):
+   * Inserta SOLO en withdrawal_requests con columnas reales.
+   */
+  async function enviarSolicitudRetiro(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){
+      const bust=`no_session=${Date.now()}`;
+      const sep=LOGIN_URL.includes('?')?'&':'?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+      return;
+    }
+
+    const { data: acc, error: accErr } = await sb
+      .from('accounts')
+      .select('id, capital')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if(accErr || !acc){
+      alert('No se pudo cargar su cuenta.');
+      return;
+    }
+
+    const capital = Number(acc.capital||0);
+    const all = document.getElementById('switchAll')?.classList.contains('on');
+
+    const amount = all ? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
+    const reasonText = (document.getElementById('wReason')?.value || '').trim();
+
+    const isHealth = document.getElementById('optHealth')?.classList.contains('selected');
+    const kind = isHealth ? 'HEALTH' : 'EARLY';
+    const penaltyPct = isHealth ? 0 : 10;
+
+    if(!all){
+      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
+      if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
+      const restante = capital - amount;
+      if(restante < 2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
+    }
+    if(reasonText.length < 5){ alert('Describa brevemente el motivo.'); return; }
+
+    const btn = document.getElementById('wSend');
+    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    try{
+      // ✅ Insert REAL en withdrawal_requests
+      const payload = {
+        account_id: acc.id,
+        kind: kind,                 // enum withdrawal_kind
+        reason_text: reasonText,    // columna existe
+        penalty_pct: penaltyPct,
+        status: 'PENDING',          // enum request_status
+        amount: amount,
+        reason: reasonText,         // tu columna existe también
+        full_withdrawal: !!all
+      };
+
+      const { error: insErr } = await sb
+        .from('withdrawal_requests')
+        .insert([payload]);
+
+      if(insErr){
+        console.error(insErr);
+        alert('No se pudo registrar la solicitud (RLS/permisos).\n' + (insErr.message||''));
+        return;
+      }
+
+      // ✅ Opcional: email (si tu Edge Function existe)
+      try{
+        const { error: fnErr } = await sb.functions.invoke('send-withdrawal-email', {
+          body:{
+            amount,
+            reason: reasonText,
+            full_withdrawal: !!all,
+            account_id: acc.id,
+            user_email: session.user.email,
+            user_name: (document.getElementById('valName')?.textContent || ''),
+            withdraw_type: (isHealth ? 'health' : 'early'),
+            penalty_pct: penaltyPct
+          }
+        });
+        if(fnErr) console.warn('send-withdrawal-email error:', fnErr);
+      }catch(e){
+        console.warn('send-withdrawal-email fail:', e);
+      }
+
+      showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información.');
+
+      // reset UI
+      if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
+      if(document.getElementById('wReason')) document.getElementById('wReason').value='';
+      toggleSwitchAll(false);
+      selectType('early');
+
+      await loadWithdrawalHistory();
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+    }
+  }
 
   const msgDlg = document.getElementById('msgDlg');
   function showMessage(html){
