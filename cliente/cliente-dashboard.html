@@ -1278,200 +1278,233 @@
     if(wa) wa.disabled = on;
   }
 
-  /* ==========================================
-     ✅ HISTORIAL DE RETIROS (NUEVO)
-     - Intenta: withdrawals -> withdrawal_requests
-  ========================================== */
-  function statusChipHTML(status){
-    const s = String(status||'').toLowerCase();
-    let cls = 'status-pending';
-    let label = status || 'Pendiente';
-    if(['approved','aprobado','approved_at','paid'].includes(s)){ cls='status-approved'; label='Aprobado'; }
-    if(['rejected','rechazado','cancelled','canceled'].includes(s)){ cls='status-rejected'; label='Rechazado'; }
-    if(['pending','pendiente','requested','request'].includes(s)){ cls='status-pending'; label='Pendiente'; }
-    return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
+ /* ==========================================
+   ✅ RETIROS — 100% CONSISTENTE (requests + pagos)
+   TABLAS:
+   - withdrawal_requests: solicitud (cliente crea)
+   - withdrawals: pago (admin crea) con request_id
+========================================== */
+
+/** Chip UI */
+function statusChipHTML(status){
+  const s = String(status||'').toUpperCase().trim();
+
+  let cls = 'status-pending';
+  let label = 'Pendiente';
+
+  if(s === 'APPROVED'){ cls='status-approved'; label='Aprobado'; }
+  if(s === 'REJECTED'){ cls='status-rejected'; label='Rechazado'; }
+  if(s === 'PAID'){ cls='status-approved'; label='Pagado'; }
+  if(s === 'PENDING'){ cls='status-pending'; label='Pendiente'; }
+
+  return `<span class="status-chip ${cls}"><span class="status-dot"></span>${label}</span>`;
+}
+
+/** Cargar historial:
+ * 1) Trae withdrawal_requests por account_id
+ * 2) Trae pagos withdrawals donde request_id IN (ids)
+ * 3) Muestra estado = PAID si existe pago, si no usa request.status
+ */
+async function loadWithdrawalHistory(){
+  const tbody = document.getElementById('wHistBody');
+  const range = document.getElementById('wHistRange');
+  const note  = document.getElementById('wHistNote');
+
+  if(!tbody || !range || !note) return;
+
+  tbody.innerHTML = `<tr><td colspan="5">Cargando…</td></tr>`;
+  range.textContent = '—';
+  note.textContent  = 'Cargando historial…';
+
+  if(!CURRENT_ACCOUNT_ID){
+    tbody.innerHTML = `<tr><td colspan="5">No se encontró la cuenta para cargar el historial.</td></tr>`;
+    note.textContent = '—';
+    return;
   }
 
-  async function tryLoadWithdrawalRows(tableName, accountId){
-    const { data, error } = await sb
-      .from(tableName)
-      .select('*')
-      .eq('account_id', accountId)
-      .order('created_at', { ascending:false })
-      .limit(50);
-    if(error) return { ok:false, error, data:null, table:tableName };
-    return { ok:true, error:null, data:data||[], table:tableName };
+  // 1) Requests
+  const { data: reqs, error: reqErr } = await sb
+    .from('withdrawal_requests')
+    .select('id, created_at, amount, kind, status, penalty_pct, reason_text, reason, full_withdrawal, reviewed_at')
+    .eq('account_id', CURRENT_ACCOUNT_ID)
+    .order('created_at', { ascending:false })
+    .limit(50);
+
+  if(reqErr){
+    console.warn('withdrawal_requests error:', reqErr?.message || reqErr);
+    tbody.innerHTML = `<tr><td colspan="5">No se pudo cargar el historial (RLS/permisos).</td></tr>`;
+    note.textContent = 'Revise RLS en withdrawal_requests para SELECT por account_id del usuario.';
+    return;
   }
 
-  async function loadWithdrawalHistory(){
-    const tbody = document.getElementById('wHistBody');
-    const range = document.getElementById('wHistRange');
-    const note  = document.getElementById('wHistNote');
-
-    if(!tbody || !range || !note){
-      return;
-    }
-
-    tbody.innerHTML = `<tr><td colspan="5">Cargando…</td></tr>`;
-    range.textContent = '—';
-    note.textContent  = 'Cargando historial…';
-
-    if(!CURRENT_ACCOUNT_ID){
-      tbody.innerHTML = `<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
-      note.textContent = 'No se encontró la cuenta para cargar el historial.';
-      return;
-    }
-
-    // 1) withdrawals
-    let r = await tryLoadWithdrawalRows('withdrawals', CURRENT_ACCOUNT_ID);
-
-    // 2) fallback withdrawal_requests
-    if(!r.ok){
-      r = await tryLoadWithdrawalRows('withdrawal_requests', CURRENT_ACCOUNT_ID);
-    }
-
-    if(!r.ok){
-      console.warn('No se pudo cargar historial de retiros:', r.error?.message || r.error);
-      tbody.innerHTML = `<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
-      note.textContent = 'No se pudo cargar el historial (tabla no existe o permisos/RLS).';
-      return;
-    }
-
-    const rows = r.data || [];
-    if(rows.length === 0){
-      tbody.innerHTML = `<tr><td colspan="5">No hay solicitudes de retiro registradas.</td></tr>`;
-      note.textContent = 'Cuando envíe una solicitud, aparecerá aquí.';
-      return;
-    }
-
-    // rango
-    const first = rows[rows.length-1]?.created_at || rows[rows.length-1]?.requested_at || rows[rows.length-1]?.inserted_at;
-    const last  = rows[0]?.created_at || rows[0]?.requested_at || rows[0]?.inserted_at;
-    if(first && last){
-      range.textContent = `${fmtDateGT(first)} — ${fmtDateGT(last)}`;
-    }else{
-      range.textContent = '—';
-    }
-
-    tbody.innerHTML = '';
-    rows.forEach(x=>{
-      const created = x.created_at || x.requested_at || x.inserted_at || x.date || null;
-      const amount  = Number(x.amount || x.withdraw_amount || x.request_amount || 0);
-      const full    = !!(x.full_withdrawal ?? x.is_full ?? x.full ?? false);
-
-      const typeRaw = (x.type || x.withdraw_type || x.reason_type || '');
-      const penalty = (x.penalty_pct ?? x.penalty_percent ?? x.penalty ?? null);
-
-      let typeLabel = 'Parcial';
-      if(full) typeLabel = 'Total';
-      if(String(typeRaw).toLowerCase().includes('health') || String(typeRaw).toLowerCase().includes('salud')) typeLabel = 'Salud';
-      if(String(typeRaw).toLowerCase().includes('early') || String(typeRaw).toLowerCase().includes('antes')) typeLabel = 'Antes de tiempo';
-
-      const status = x.status || x.state || 'Pendiente';
-
-      const detailParts = [];
-      if(penalty != null && !Number.isNaN(Number(penalty))) detailParts.push(`Penalización: ${Number(penalty)}%`);
-      const ref = x.reference_code || x.ref || x.code || '';
-      if(ref) detailParts.push(`Ref: ${ref}`);
-      const det = detailParts.join(' · ') || '—';
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${created ? fmtDateTimeGT(created) : '—'}</td>
-        <td><b>${fmtQ(amount)}</b></td>
-        <td>${typeLabel}</td>
-        <td>${statusChipHTML(status)}</td>
-        <td>${det}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    note.textContent = `Fuente: <b>${r.table}</b>. Si no ve datos, revise permisos (RLS) o nombre real de la tabla.`;
+  const rows = reqs || [];
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5">No hay solicitudes registradas.</td></tr>`;
+    note.textContent = 'Cuando envíe una solicitud, aparecerá aquí.';
+    return;
   }
 
-  async function tryInsertWithdrawalRow(payload){
-    // Intentar insertar en withdrawals, si falla, probar withdrawal_requests.
-    const a = await sb.from('withdrawals').insert([payload]);
-    if(!a.error) return { ok:true, table:'withdrawals' };
+  // 2) Pagos ligados (withdrawals.request_id)
+  const ids = rows.map(r => r.id);
+  let payMap = new Map();
+  if(ids.length){
+    const { data: pays, error: payErr } = await sb
+      .from('withdrawals')
+      .select('id, request_id, created_at, reference, note')
+      .in('request_id', ids);
 
-    const b = await sb.from('withdrawal_requests').insert([payload]);
-    if(!b.error) return { ok:true, table:'withdrawal_requests' };
-
-    console.warn('Insert retiro falló en ambas tablas:', a.error?.message, b.error?.message);
-    return { ok:false };
-  }
-
-  async function enviarSolicitudRetiro(){
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
-
-    const { data: acc, error: accErr } = await sb.from('accounts').select('capital,id').eq('user_id',session.user.id).single();
-    if(accErr){ alert('No se pudo cargar su cuenta.'); return; }
-
-    const capital=Number(acc?.capital||0);
-    const all=document.getElementById('switchAll')?.classList.contains('on');
-    const amount=all? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
-    const reason=(document.getElementById('wReason')?.value||'').trim();
-
-    // tipo por UI
-    const isHealth = document.getElementById('optHealth')?.classList.contains('selected');
-    const withdraw_type = isHealth ? 'health' : 'early';
-    const penalty_pct = isHealth ? 0 : 10;
-
-    if(!all){
-      if(amount<=0){ alert('Ingrese un monto válido.'); return; }
-      if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
-      const restante=capital-amount; if(restante<2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
-    }
-    if(reason.length<5){ alert('Describa brevemente el motivo.'); return; }
-
-    const btn = document.getElementById('wSend');
-    if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
-
-    // ✅ 1) Intentar guardar en BD (si RLS lo permite)
-    try{
-      const payload = {
-        account_id: acc?.id || null,
-        user_id: session.user.id,
-        user_email: session.user.email,
-        user_name: (document.getElementById('valName')?.textContent || '').trim() || null,
-        amount,
-        full_withdrawal: !!all,
-        reason,
-        type: withdraw_type,
-        penalty_pct,
-        status: 'pending'
-      };
-      await tryInsertWithdrawalRow(payload);
-    }catch(e){
-      // No interrumpimos. El email es lo principal.
-      console.warn('Guardar retiro (opcional) falló:', e);
-    }
-
-    // ✅ 2) Enviar email (como ya tenías)
-    try{
-      const { error } = await sb.functions.invoke('send-withdrawal-email', {
-        body:{ amount, reason, full_withdrawal:!!all, account_id:acc?.id||null, user_email:session.user.email, user_name: document.getElementById('valName')?.textContent || '' , withdraw_type, penalty_pct }
-      });
-
-      if(error){
-        alert('No se pudo enviar la solicitud.\n' + (error.message||JSON.stringify(error)));
-        return;
+    if(!payErr && Array.isArray(pays)){
+      for(const p of pays){
+        if(p?.request_id) payMap.set(p.request_id, p);
       }
-
-      showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información y le escribirá en las próximas horas.');
-
-      if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
-      if(document.getElementById('wReason')) document.getElementById('wReason').value='';
-      toggleSwitchAll(false);
-      selectType('early');
-
-      // ✅ 3) Refrescar historial
-      await loadWithdrawalHistory();
-    } finally {
-      if(btn){ btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+    } else {
+      // Si no hay permisos en withdrawals, igual funciona con status del request
+      console.warn('withdrawals (pagos) no accesible o error:', payErr?.message || payErr);
     }
   }
+
+  // rango
+  const first = rows[rows.length-1]?.created_at;
+  const last  = rows[0]?.created_at;
+  range.textContent = (first && last) ? `${fmtDateGT(first)} — ${fmtDateGT(last)}` : '—';
+
+  tbody.innerHTML = '';
+  rows.forEach(r=>{
+    const created = r.created_at;
+    const amount  = Number(r.amount || 0);
+    const kind    = String(r.kind || '').toUpperCase();
+    const full    = !!r.full_withdrawal;
+
+    // Tipo
+    let typeLabel = full ? 'Total' : 'Parcial';
+    if(kind === 'HEALTH') typeLabel = 'Salud';
+    if(kind === 'EARLY')  typeLabel = 'Antes de tiempo';
+
+    // Estado: si ya existe pago ligado, marcar PAID
+    const pay = payMap.get(r.id);
+    const status = pay ? 'PAID' : (String(r.status || 'PENDING').toUpperCase());
+
+    // Detalle
+    const detailParts = [];
+    if(r.penalty_pct != null && !Number.isNaN(Number(r.penalty_pct)) && Number(r.penalty_pct) > 0){
+      detailParts.push(`Penalización: ${Number(r.penalty_pct)}%`);
+    }
+    if(pay?.reference) detailParts.push(`Ref: ${pay.reference}`);
+    const det = detailParts.join(' · ') || '—';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${created ? fmtDateTimeGT(created) : '—'}</td>
+      <td><b>${fmtQ(amount)}</b></td>
+      <td>${typeLabel}</td>
+      <td>${statusChipHTML(status)}</td>
+      <td>${det}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  note.innerHTML = `Fuente: <b>withdrawal_requests</b>` + (payMap.size ? ` + pagos ligados` : ``) + `.`;
+}
+
+/** Crear solicitud (cliente):
+ * Inserta SOLO en withdrawal_requests con columnas reales.
+ */
+async function enviarSolicitudRetiro(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){
+    const bust=`no_session=${Date.now()}`;
+    const sep=LOGIN_URL.includes('?')?'&':'?';
+    window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+    return;
+  }
+
+  const { data: acc, error: accErr } = await sb
+    .from('accounts')
+    .select('id, capital')
+    .eq('user_id', session.user.id)
+    .single();
+
+  if(accErr || !acc){
+    alert('No se pudo cargar su cuenta.');
+    return;
+  }
+
+  const capital = Number(acc.capital||0);
+  const all = document.getElementById('switchAll')?.classList.contains('on');
+
+  const amount = all ? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
+  const reasonText = (document.getElementById('wReason')?.value || '').trim();
+
+  const isHealth = document.getElementById('optHealth')?.classList.contains('selected');
+  const kind = isHealth ? 'HEALTH' : 'EARLY';
+  const penaltyPct = isHealth ? 0 : 10;
+
+  if(!all){
+    if(amount<=0){ alert('Ingrese un monto válido.'); return; }
+    if(amount>capital){ alert('El monto no puede ser mayor al capital disponible.'); return; }
+    const restante = capital - amount;
+    if(restante < 2000){ alert('Debe permanecer al menos Q 2,000 (a menos que retire todo).'); return; }
+  }
+  if(reasonText.length < 5){ alert('Describa brevemente el motivo.'); return; }
+
+  const btn = document.getElementById('wSend');
+  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+  try{
+    // ✅ Insert REAL en withdrawal_requests
+    const payload = {
+      account_id: acc.id,
+      kind: kind,
+      reason_text: reasonText,     // (tu columna existe)
+      penalty_pct: penaltyPct,
+      status: 'PENDING',           // enum request_status
+      amount: amount,
+      reason: reasonText,          // la tienes también (text)
+      full_withdrawal: !!all
+    };
+
+    const { error: insErr } = await sb
+      .from('withdrawal_requests')
+      .insert([payload]);
+
+    if(insErr){
+      console.error(insErr);
+      alert('No se pudo registrar la solicitud (RLS/permisos).\n' + (insErr.message||''));
+      return;
+    }
+
+    // ✅ Opcional: email (si tu Edge Function existe, perfecto)
+    try{
+      const { error: fnErr } = await sb.functions.invoke('send-withdrawal-email', {
+        body:{
+          amount,
+          reason: reasonText,
+          full_withdrawal: !!all,
+          account_id: acc.id,
+          user_email: session.user.email,
+          user_name: (document.getElementById('valName')?.textContent || ''),
+          withdraw_type: (isHealth ? 'health' : 'early'),
+          penalty_pct: penaltyPct
+        }
+      });
+      if(fnErr) console.warn('send-withdrawal-email error:', fnErr);
+    }catch(e){
+      console.warn('send-withdrawal-email fail:', e);
+    }
+
+    showMessage('Solicitud enviada con éxito. Un representante de <b>FX | CAPITAL R.L.</b> revisará su información.');
+
+    // reset UI
+    if(document.getElementById('wAmount')) document.getElementById('wAmount').value='';
+    if(document.getElementById('wReason')) document.getElementById('wReason').value='';
+    toggleSwitchAll(false);
+    selectType('early');
+
+    await loadWithdrawalHistory();
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+  }
+}
 
   const msgDlg = document.getElementById('msgDlg');
   function showMessage(html){
