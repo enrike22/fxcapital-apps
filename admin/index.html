@@ -1098,6 +1098,34 @@ function setCapitalInputValue(n){
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 
 /*** LOGIN ***/
+
+/*** ADMIN CHECK (usa public.admin_users + rpc is_admin) ***/
+async function rpcIsAdmin(){
+  const r = await fetch(`${BASE}/rpc/is_admin`, {
+    method:"POST",
+    headers: hAuth(),
+    body: "{}"
+  });
+  if(!r.ok) return false;
+  try{
+    const v = await r.json();
+    return !!v;
+  }catch(e){
+    return false;
+  }
+}
+
+async function requireAdmin(){
+  const ok = await rpcIsAdmin();
+  if(!ok){
+    // Limpia sesión para evitar estado raro
+    localStorage.removeItem("token");
+    localStorage.removeItem("uid");
+    localStorage.removeItem("email");
+    throw new Error("not_admin");
+  }
+}
+
 async function doLogin(e){
   e.preventDefault();
   clearGlobalError();
@@ -2137,147 +2165,140 @@ async function doScheduleTopup(){
 
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
-  const tb = $("withdrawReqs");
-  if(!tb) return;
+  if(msgEl) msgEl.textContent = "";
 
-  msgEl.textContent = "Cargando…";
-  tb.innerHTML = "";
-  clearGlobalError();
+  const h = hAuth();
 
-  const h = {
-    apikey: ANON_KEY,
-    Authorization: "Bearer "+localStorage.token,
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
+  // ✅ Columnas reales según tu tabla withdrawal_requests
+  const sel = `id,account_id,profile_id,kind,amount,penalty_pct,full_withdrawal,reason,reason_text,status,created_at,reviewed_by,reviewed_at,note`;
+  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&order=${encodeURIComponent("created_at.desc")}&limit=200`;
 
-  // 🔧 Ajusta el select si tu tabla tiene otros nombres de columnas
-  const sel = "id,created_at,account_id,amount,status,note";
-  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc&limit=200`;
-
-  const r = await fetch(url, { headers:h, cache:"no-store" });
-  if(!r.ok){
-    const t = await r.text().catch(()=> "");
-    console.error("withdrawal_requests error:", r.status, t);
-    msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso o nombre de tabla/campos).";
-    showGlobalError("No se pudieron cargar solicitudes de retiro", t || r.status);
-    tb.innerHTML = `<tr><td colspan="9" class="small">Error cargando solicitudes.</td></tr>`;
+  let data = [];
+  try{
+    const r = await fetch(url, { headers: h });
+    if(!r.ok) throw new Error(await r.text());
+    data = await r.json();
+  }catch(err){
+    console.error("listWithdrawRequests error:", err);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso, sesión o tabla).";
     return;
   }
 
-  const rows = await r.json();
-  renderWithdrawRequests(rows);
-  msgEl.textContent = `Solicitudes pendientes: ${rows.length}`;
-
-  await refreshKPIs();
-  await refreshSessionMeta();
-}
-
-function renderWithdrawRequests(rows){
-  const tb = $("withdrawReqs");
-  tb.innerHTML = "";
-
-  if(!rows.length){
-    tb.innerHTML = `<tr><td colspan="9" class="small">No hay solicitudes pendientes.</td></tr>`;
-    return;
+  // Traer emails/nombres de profiles para mostrar mejor (sin depender de joins/FK)
+  const profileIds = [...new Set(data.map(x=>x.profile_id).filter(Boolean))];
+  const profileMap = {};
+  if(profileIds.length){
+    const psel = "id,email,full_name";
+    const purl = `${BASE}/profiles?select=${encodeURIComponent(psel)}&id=in.(${profileIds.join(",")})`;
+    try{
+      const pr = await fetch(purl, { headers: h });
+      if(pr.ok){
+        const ps = await pr.json();
+        ps.forEach(p=> profileMap[p.id] = p);
+      }
+    }catch(e){/* ignore */}
   }
 
-  // usamos CACHED para resolver cliente por account_id
-  rows.forEach(w=>{
-    const c = (CACHED||[]).find(x => x.account_id === w.account_id) || {};
-    const ccy = c.currency || "GTQ";
+  const tbody = $("withdrawReqsTbody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
 
-    tb.insertAdjacentHTML("beforeend", `
-      <tr>
-        <td class="nowrap">${fmtDateTime(w.created_at)}</td>
-        <td>${c.full_name || "—"}</td>
-        <td>${c.email || "—"}</td>
-        <td>${fmtMoney(w.amount, ccy)}</td>
-        <td>${c.bank_name || "—"}</td>
-        <td class="nowrap">${c.bank_account || "—"}</td>
-        <td class="nowrap">${c.bank_account_type || "—"}</td>
-        <td>${w.note || "—"}</td>
-        <td class="nowrap">
-          <button class="ok" onclick="approveWithdrawReq('${w.id}', '${w.account_id}', ${Number(w.amount||0)})">Aprobar</button>
-          <button class="danger" onclick="rejectWithdrawReq('${w.id}')">Rechazar</button>
-        </td>
-      </tr>
-    `);
+  for(const v of data){
+    const tr = document.createElement("tr");
+
+    const prof = profileMap[v.profile_id] || {};
+    const who = prof.email || v.profile_id || "";
+
+    const status = String(v.status || "").toUpperCase();
+    const statusChip = chip(status || "PENDING", status==="REJECTED"?"danger":status==="APPROVED"?"ok":"warn");
+
+    tr.innerHTML = `
+      <td class="mono">${String(v.id).slice(0,8)}…</td>
+      <td class="mono">${String(v.account_id||"").slice(0,8)}…</td>
+      <td>${escapeHtml(who)}</td>
+      <td class="right">${fmtMoney(v.amount||0)} </td>
+      <td>${statusChip}</td>
+      <td>${fmtDateTime(v.created_at)}</td>
+      <td class="right">
+        <button class="btn sm" data-act="approve" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Aprobar</button>
+        <button class="btn sm danger" data-act="reject" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Rechazar</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  }
+
+  // bind actions
+  tbody.querySelectorAll("button[data-act]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.getAttribute("data-id");
+      const act = btn.getAttribute("data-act");
+      if(!id) return;
+
+      if(act==="approve"){
+        if(!confirm("¿Aprobar esta solicitud?")) return;
+        await approveWithdrawReq(id);
+      }else if(act==="reject"){
+        const reason = prompt("Motivo de rechazo (opcional):", "");
+        if(reason===null) return; // cancel
+        await rejectWithdrawReq(id, reason || "");
+      }
+      await listWithdrawRequests();
+    });
   });
 }
 
-async function approveWithdrawReq(reqId, accountId, amount){
-  const ok = await openConfirm({
-    title:"Aprobar retiro",
-    message:`<div style="font-weight:950;margin-bottom:6px">¿Aprobar esta solicitud de retiro?</div>
-             <div style="opacity:.9">Esto descontará el capital y marcará la solicitud como aprobada.</div>`,
-    okText:"Aprobar"
+
+async function approveWithdrawReq(id){
+  const h = hAuth();
+
+  // 1) Obtener solicitud para saber account_id y amount
+  const q = `${BASE}/withdrawal_requests?select=${encodeURIComponent("id,account_id,amount,status")}&id=eq.${id}&limit=1`;
+  const r0 = await fetch(q, { headers: h });
+  if(!r0.ok) throw new Error(await r0.text());
+  const rows = await r0.json();
+  const req = rows?.[0];
+  if(!req) throw new Error("Solicitud no encontrada");
+  const status = String(req.status||"").toUpperCase();
+  if(status !== "PENDING") return;
+
+  // 2) Ejecutar el retiro (RPC)
+  const r1 = await fetch(`${BASE}/rpc/withdraw_capital`, {
+    method:"POST",
+    headers: h,
+    body: JSON.stringify({ p_account_id: req.account_id, p_amount: Number(req.amount) })
   });
-  if(!ok) return;
+  if(!r1.ok) throw new Error(await r1.text());
 
-  try{
-    // 1) descuenta capital
-    const r1 = await fetch(`${RPC}/withdraw_capital`,{
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        p_account_id: accountId,
-        p_amount: amount,
-        p_note: "Aprobado desde solicitudes",
-        p_reference: "withdraw_request:"+reqId
-      })
-    });
-    if(!r1.ok) throw new Error(await r1.text().catch(()=> "") || "Error en withdraw_capital");
-
-    // 2) marca solicitud aprobada
-    const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
-      method:"PATCH",
-      headers: headersJSON(),
-      body: JSON.stringify({ status: "approved", approved_at: new Date().toISOString() })
-    });
-    if(!r2.ok) throw new Error(await r2.text().catch(()=> "") || "No se pudo marcar approved");
-
-    alert("✅ Solicitud aprobada y capital descontado.");
-    await listUsers();
-    await listWithdrawRequests();
-    await refreshKPIs();
-  }catch(e){
-    console.error(e);
-    alert("❌ No se pudo aprobar: " + (e.message||e));
-  }
+  // 3) Marcar como APPROVED + auditoría
+  const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
+    method:"PATCH",
+    headers: h,
+    body: JSON.stringify({
+      status: "APPROVED",
+      reviewed_by: localStorage.uid || null,
+      reviewed_at: new Date().toISOString()
+    })
+  });
+  if(!r2.ok) throw new Error(await r2.text());
 }
 
-async function rejectWithdrawReq(reqId){
-  const reason = prompt("Motivo del rechazo (opcional):") || null;
+async function rejectWithdrawReq(id, reason){
+  const h = hAuth();
 
-  const ok = await openConfirm({
-    title:"Rechazar retiro",
-    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Rechazar esta solicitud?</div>
-             <div style="opacity:.9">Motivo (opcional): <b>${escapeHtml(reason||"—")}</b></div>`,
-    okText:"Rechazar"
+  const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
+    method:"PATCH",
+    headers: h,
+    body: JSON.stringify({
+      status: "REJECTED",
+      reviewed_by: localStorage.uid || null,
+      reviewed_at: new Date().toISOString(),
+      note: String(reason || "")
+    })
   });
-  if(!ok) return;
-
-  try{
-    const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
-      method:"PATCH",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        status: "rejected",
-        rejected_at: new Date().toISOString(),
-        reject_reason: reason
-      })
-    });
-    if(!r.ok) throw new Error(await r.text().catch(()=> "") || "No se pudo rechazar");
-
-    alert("Solicitud rechazada.");
-    await listWithdrawRequests();
-    await refreshKPIs();
-  }catch(e){
-    console.error(e);
-    alert("❌ Error rechazando: " + (e.message||e));
-  }
+  if(!r2.ok) throw new Error(await r2.text());
 }
+
 
 /*** Editar ***/
 function editClient(x){
@@ -2645,6 +2666,13 @@ async function initApp(){
   const ok = await validateSession();
 
   if(ok){
+    try{
+      await requireAdmin();
+    }catch(e){
+      setGlobalError("Tu usuario no es admin (no está en admin_users).\nAgrega tu UUID en la tabla admin_users y vuelve a iniciar sesión.");
+      await logout();
+      return;
+    }
     show($("unauth"), false);
     show($("app"), true);
     show($("logoutBtn"), true);
@@ -2732,3 +2760,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
+
