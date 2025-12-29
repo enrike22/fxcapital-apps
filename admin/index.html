@@ -441,20 +441,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 }
 </style>
 
-<script>
-  function setGlobalError(msg){
-    console.error(msg);
-    const el = document.getElementById("globalError");
-    if(el){
-      el.textContent = msg;
-      el.style.display = "block";
-    } else {
-      alert(msg);
-    }
-  }
-</script>
-
-
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -471,16 +457,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <div class="sub" id="sessionMeta">Administrador · Sesión no iniciada</div>
       </div>
     </div>
-
-    <div id="globalError" style="
-  display:none;
-  margin-top:12px;
-  padding:10px 14px;
-  border-radius:12px;
-  background:#2a0f12;
-  color:#ffb4b4;
-  font-size:14px;">
-</div>
 
     <div class="right">
       <div class="search-pill" title="Buscar en clientes">
@@ -519,16 +495,12 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- LOGIN -->
   <div id="unauth" class="card">
     <h2>Admin — Iniciar sesión</h2>
-   <form id="loginForm" autocomplete="on">
-  <label>Email</label>
-  <input id="email" type="email" autocomplete="username" required>
-
-  <label>Contraseña</label>
-  <input id="password" type="password" autocomplete="current-password" required>
-
-  <button type="submit">Entrar</button>
-</form>
-
+    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
+      <div><label>Email</label><input id="email" type="email" required></div>
+      <div><label>Contraseña</label><input id="password" type="password" required></div>
+      <div style="align-self:end"><button type="submit">Entrar</button></div>
+      <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
+    </form>
   </div>
 
   <!-- APP -->
@@ -944,6 +916,12 @@ function showGlobalError(title, err){
   console.error("[DEBUG]", err);
 }
 
+// Compatibilidad: algunas partes usan setGlobalError(...)
+function setGlobalError(msg){
+  const t = (msg && String(msg).trim()) ? String(msg) : "Error";
+  showGlobalError(t, null);
+}
+
 /*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
   const token = localStorage.token;
@@ -1154,51 +1132,61 @@ async function requireAdmin(){
   }
 }
 
-<script>
 async function doLogin(e){
   e.preventDefault();
+  clearGlobalError();
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const email = $("email").value.trim();
+  const password = $("password").value;
 
-  if(!email || !password){
-    setGlobalError("Email y contraseña son obligatorios");
-    return;
-  }
+  $("loginMsg").textContent = "";
+  setLoading($("loginForm"), true);
 
-  try {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_ANON_KEY
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+      method:"POST",
+      headers:{
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        "Content-Type":"application/json",
+        "Accept":"application/json"
       },
-      body: JSON.stringify({
-        email,
-        password
-      })
+      body: JSON.stringify({ email, password })
     });
 
-    const data = await res.json();
+    // A veces, si hay un error de proxy/hosting, puede venir HTML.
+    // Leemos texto primero y luego intentamos JSON.
+    const raw = await r.text();
+    let data = null;
+    try{ data = raw ? JSON.parse(raw) : null; }catch{ data = null; }
 
-    if(!res.ok){
-      setGlobalError(data.error_description || "Credenciales incorrectas");
+    if(!r.ok){
+      const msg = data?.error_description || data?.error || (raw && raw.trim().startsWith("<") ? "Respuesta inválida (HTML). Revisa PROJECT_URL/ANON_KEY y CORS." : "Login inválido");
+      $("loginMsg").textContent = msg;
+      return;
+    }
+    if(!data?.access_token){
+      $("loginMsg").textContent = "Login inválido (sin token).";
       return;
     }
 
-    // Guardar sesión
-    localStorage.setItem("sb_access_token", data.access_token);
-    localStorage.setItem("sb_refresh_token", data.refresh_token);
+    localStorage.token = data.access_token;
+    localStorage.uid = data.user?.id || "";
 
-    // Redirigir o inicializar app
-    location.reload();
+    await initApp();
 
-  } catch(err){
+  }catch(err){
     console.error(err);
-    setGlobalError("Error de conexión con Supabase");
+    $("loginMsg").textContent = "Error de red";
+  }finally{
+    setLoading($("loginForm"), false);
   }
 }
-</script>
+function logout(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("uid");
+  location.reload();
+}
 
 /*** Edge Functions auxiliares ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
@@ -2783,8 +2771,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-
-
 
 
