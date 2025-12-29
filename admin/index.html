@@ -38,13 +38,6 @@
   --grid: radial-gradient(circle at 25% 12%, rgba(255,255,255,.06), transparent 55%),
           radial-gradient(circle at 75% 18%, rgba(45,212,191,.08), transparent 60%),
           radial-gradient(circle at 50% 90%, rgba(255,255,255,.05), transparent 55%);
-
-  /* KPI (del panel PRO) */
-  --good:#21C07A;
-  --warn:#E6C15A;
-  --bad:#FF4D4F;
-  --primary:#E6C15A;
-  --primary2:#D8B65C;
 }
 
 *{box-sizing:border-box}
@@ -66,7 +59,7 @@ body{
 .container{
   max-width:1320px;
   margin:0 auto;
-  padding:22px 22px 46px;
+  padding:34px 22px 46px;
 }
 
 .header{
@@ -97,7 +90,7 @@ h2{
 .small{font-size:13px;color:var(--txtDim)}
 .error{font-size:13px;color:var(--danger)}
 .nowrap{white-space:nowrap}
-.hidden{display:none !important}
+.hidden{display:none}
 
 /* ---- cards (3D) ---- */
 .card{
@@ -114,6 +107,7 @@ h2{
   transform: translateZ(0);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
+
 .card:before{
   content:"";
   position:absolute;
@@ -123,6 +117,7 @@ h2{
   pointer-events:none;
   mask: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,.55) 45%, rgba(0,0,0,0));
 }
+
 .card:after{
   content:"";
   position:absolute;
@@ -135,10 +130,12 @@ h2{
   pointer-events:none;
   animation: floatGlow 8s ease-in-out infinite;
 }
+
 @keyframes floatGlow{
   0%,100%{ transform: translate3d(0,0,0) rotate(0deg); }
   50%{ transform: translate3d(10px,-8px,0) rotate(10deg); }
 }
+
 .card:hover{
   transform: translateY(-2px);
   border-color: var(--border2);
@@ -153,6 +150,7 @@ label{
   font-size:13px;
   letter-spacing:.2px;
 }
+
 input,select{
   width:100%;
   background: rgba(8,10,14,.9);
@@ -165,12 +163,15 @@ input,select{
   transition: box-shadow .15s ease, border-color .15s ease, transform .12s ease, background .15s ease;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
+
 input::placeholder{ color: rgba(245,247,250,.35); }
+
 input:focus,select:focus{
   border-color: rgba(45,212,191,.40);
   box-shadow: var(--glow2);
   background: rgba(10,12,16,.95);
 }
+
 input:hover,select:hover{
   border-color: rgba(255,255,255,.14);
 }
@@ -188,11 +189,13 @@ button{
   box-shadow: 0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.55);
   transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
 }
+
 button:hover{
   transform: translateY(-1px);
   box-shadow: 0 18px 44px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.65);
   filter: brightness(1.02);
 }
+
 button:active{ transform: translateY(0px) scale(.99); }
 
 button.ghost{
@@ -201,18 +204,22 @@ button.ghost{
   border:1px solid var(--border);
   box-shadow: 0 10px 26px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
 }
+
 button.ghost:hover{
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 14px 36px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
 }
+
 button.danger{
   background: linear-gradient(180deg, #ff6b6c, #ff3f40);
   color:#fff;
   box-shadow: 0 14px 34px rgba(255,77,79,.20), 0 12px 30px rgba(0,0,0,.35);
 }
+
 button.danger:hover{
   box-shadow: 0 18px 44px rgba(255,77,79,.24), 0 16px 40px rgba(0,0,0,.45);
 }
+
 button.ok{
   background: linear-gradient(180deg, rgba(45,212,191,1), rgba(45,212,191,.75));
   color:#02110f;
@@ -239,6 +246,7 @@ hr.sep{border:0;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
   background: rgba(0,0,0,.16);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
+
 table{width:100%;border-collapse:separate;border-spacing:0}
 th,td{
   padding:14px 16px;
@@ -247,6 +255,7 @@ th,td{
   font-size:15px;
   color: var(--txtSoft);
 }
+
 th{
   text-align:left;
   color: rgba(245,247,250,.92);
@@ -256,8 +265,14 @@ th{
   z-index:2;
   backdrop-filter: blur(8px);
 }
-tbody tr{ transition: background .12s ease, transform .12s ease; }
-tbody tr:hover{ background: rgba(255,255,255,.035); }
+
+tbody tr{
+  transition: background .12s ease, transform .12s ease;
+}
+
+tbody tr:hover{
+  background: rgba(255,255,255,.035);
+}
 
 .chip{
   display:inline-flex;
@@ -271,23 +286,25 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   color: rgba(245,247,250,.86);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
+
 .dot{
   width:8px;height:8px;border-radius:99px;
   background: rgba(45,212,191,.9);
   box-shadow: 0 0 0 3px rgba(45,212,191,.12);
 }
-.dot.pending{ background: rgba(255,255,255,.75); box-shadow: 0 0 0 3px rgba(255,255,255,.10); }
-.dot.scheduled{ background: rgba(253, 224, 71, .95); box-shadow: 0 0 0 3px rgba(253,224,71,.14); }
-.dot.approved{ background: rgba(45,212,191,.9); }
-.dot.rejected{ background: rgba(255,77,79,.95); box-shadow: 0 0 0 3px rgba(255,77,79,.12); }
 
+/* ---- subtle page fade in ---- */
 @keyframes fadeUp{
   from{ opacity:0; transform: translateY(10px); }
   to{ opacity:1; transform: translateY(0); }
 }
 .container{ animation: fadeUp .32s ease both; }
 
-.loading{opacity:.85;position:relative;}
+/* ---- small loader (optional) ---- */
+.loading{
+  opacity:.85;
+  position:relative;
+}
 .loading:after{
   content:"";
   width:10px;height:10px;border-radius:50%;
@@ -316,9 +333,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   padding:18px;
   z-index:9999;
 }
-.modal-backdrop.hidden{display:none !important}
 .modal{
-  width:min(900px, 100%);
+  width:min(720px, 100%);
   border-radius:22px;
   border:1px solid rgba(255,255,255,.10);
   box-shadow: 0 30px 90px rgba(0,0,0,.65);
@@ -336,10 +352,22 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   pointer-events:none;
   mask: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,.55) 45%, rgba(0,0,0,0));
 }
-.modal-inner{ position:relative; padding:20px 18px 18px; }
-.modal-title{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-.modal-title h3{ margin:0; font-size:18px; letter-spacing:.2px; }
-.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
+.modal-inner{
+  position:relative;
+  padding:20px 18px 18px;
+}
+.modal-title{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-bottom:10px;
+}
+.modal-title h3{
+  margin:0;
+  font-size:18px;
+  letter-spacing:.2px;
+}
+.modal-actions{
+  display:flex; gap:10px; justify-content:flex-end; margin-top:14px;
+}
 .xbtn{
   background: transparent;
   border:1px solid rgba(255,255,255,.12);
@@ -350,147 +378,29 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 }
 .xbtn:hover{ border-color: rgba(255,255,255,.18); box-shadow: var(--shadow2); transform: translateY(-1px); }
 
+/* ✅ mini btn header */
 .header-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-
-/* ===== Sticky Topbar + KPI (agregado, no rompe nada) ===== */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:14px; padding:16px 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:22px;
-  box-shadow:var(--shadow);
-  position:sticky;top:12px;z-index:200;
-  backdrop-filter: blur(10px);
-  margin-bottom:14px;
-}
-.brand{display:flex;align-items:center;gap:12px;min-width:260px}
-.logo{
-  width:38px;height:38px;border-radius:12px;
-  background: linear-gradient(180deg, rgba(230,193,90,.22), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.10);
-  display:grid;place-items:center;
-  font-weight:900;letter-spacing:.6px;
-}
-.brand .title{margin:0;font-size:16px;letter-spacing:.3px;font-weight:900}
-.brand .sub{margin-top:3px;color:rgba(245,247,250,.68);font-size:12px}
-.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.search-pill{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-radius:999px;
-  background: rgba(0,0,0,.30);
-  border:1px solid rgba(255,255,255,.08);
-  min-width:320px;
-}
-.search-pill input{
-  width:100%;
-  border:0;outline:0;background:transparent;color:var(--fg);
-  font-size:13px
-}
-.btn-pill{
-  border:0;cursor:pointer;
-  padding:10px 14px;border-radius:999px;
-  background: rgba(255,255,255,.08);
-  color:var(--fg);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow: 0 12px 30px rgba(0,0,0,.35);
-  font-weight:900;font-size:13px;
-}
-.btn-pill:hover{filter:brightness(1.08)}
-.btn-pill:active{transform:translateY(1px)}
-.btn-pill.primary{
-  background: linear-gradient(180deg, var(--primary), var(--primary2));
-  color:#0B0D10;
-  border-color: rgba(0,0,0,.25);
-}
-.btn-pill.danger{
-  background: linear-gradient(180deg, rgba(255,77,79,.95), rgba(255,77,79,.75));
-  color:#0B0D10;border-color: rgba(0,0,0,.25);
-}
-.kpis{
-  display:grid; gap:12px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin:12px 0 18px;
-}
-.kpi{
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.08);
-  border-radius: var(--radius);
-  box-shadow:var(--shadow);
-  padding:14px 16px;
-}
-.kpi .label{color:rgba(245,247,250,.68);font-size:12px}
-.kpi .value{margin-top:6px;font-size:20px;font-weight:950;letter-spacing:.2px}
-.kpi .hint{margin-top:4px;color:rgba(245,247,250,.68);font-size:12px}
-
-.errorBox{
-  margin:10px 0 0;
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid rgba(255,77,79,.25);
-  background: rgba(255,77,79,.08);
-  color: rgba(245,247,250,.78);
-  font-size:13px;
-}
-.errorBox.hidden{display:none !important}
-
-@media (max-width: 900px){
-  .kpis{grid-template-columns:1fr}
-  .search-pill{min-width: 220px}
-  .brand{min-width:unset}
-}
 </style>
-
-<!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 <div class="container">
 
-  <!-- ✅ TOPBAR PRO (agregado) -->
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">FX</div>
-      <div>
-        <div class="title">FX | CAPITAL R.L. — Panel Admin</div>
-        <div class="sub" id="sessionMeta">Administrador · Sesión no iniciada</div>
-      </div>
-    </div>
+  <div class="header">
+    <h1>FX | CAPITAL R.L. — Panel Admin</h1>
 
-    <div class="right">
-      <div class="search-pill" title="Buscar en clientes">
-        <span style="opacity:.75">🔎</span>
-        <!-- NOTA: este input es el MISMO id="q" que ya usabas; solo cambiamos el diseño -->
+    <div class="header-actions">
+      <div class="searchbar">
         <input id="q" type="search" placeholder="Buscar (nombre, email, teléfono, plan, banco…)" aria-label="Buscar cliente">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.2-4.2M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#b9c0c8" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
 
-      <button id="btnOpenResetGlobal" type="button" class="btn-pill hidden">Reset contraseña</button>
-      <button id="logoutBtn" type="button" class="btn-pill danger hidden">Cerrar sesión</button>
+      <!-- ✅ NUEVO: Reset global (selecciona cliente dentro del modal) -->
+      <button id="btnOpenResetGlobal" type="button" class="ghost hidden">Reset contraseña</button>
+
+      <button id="logoutBtn" type="button" class="hidden">Cerrar sesión</button>
     </div>
   </div>
-
-  <!-- ✅ KPIs (agregado) -->
-  <div class="kpis" id="kpisWrap" class="hidden">
-    <div class="kpi">
-      <div class="label">Retiros pendientes</div>
-      <div class="value" id="kpiWithdrawPending">—</div>
-      <div class="hint" id="kpiWithdrawHint">Actualizado al cargar</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Recargas pendientes</div>
-      <div class="value" id="kpiTopupsPending">—</div>
-      <div class="hint">Pendientes / programadas</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Operaciones hoy</div>
-      <div class="value" id="kpiOpsToday">—</div>
-      <div class="hint">Retiros + recargas (últimas 24h)</div>
-    </div>
-  </div>
-
-  <!-- Mensajes de error “premium” globales (agregado, no afecta lógica) -->
-  <div id="globalError" class="errorBox hidden"></div>
 
   <!-- LOGIN -->
   <div id="unauth" class="card">
@@ -506,39 +416,10 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- APP -->
   <div id="app" class="hidden">
 
-    <!-- SOLICITUDES DE RETIRO (pendientes) -->
+    <!-- TOPUPS PENDIENTES -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Solicitudes de retiro</h2>
-        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Banco</th>
-              <th>No. cuenta</th>
-              <th>Tipo</th>
-              <th>Nota</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawReqs"></tbody>
-        </table>
-      </div>
-
-      <p id="withdrawReqsMsg" class="small"></p>
-    </div>
-
-    <!-- TOPUPS -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
+        <h2 style="margin:0">Recargas pendientes</h2>
         <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
       </div>
 
@@ -552,8 +433,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
               <th>Monto</th>
               <th>Banco</th>
               <th>Boleta</th>
-              <th class="nowrap">Estado</th>
-              <th class="nowrap">Efectiva</th>
               <th class="nowrap">Acciones</th>
             </tr>
           </thead>
@@ -562,10 +441,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
 
       <p class="small" style="margin-top:10px">
-        ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
-        📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
+        Aprobar sumará el monto al capital del cliente y marcará la recarga como <b>approved</b>.
       </p>
-      <p id="topupsMsg" class="small"></p>
     </div>
 
     <!-- Crear/Editar -->
@@ -588,6 +465,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         </div>
 
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo"></div>
+
         <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555"></div>
 
         <div>
@@ -649,50 +527,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
     </div>
 
-    <!-- RETIRAR CAPITAL -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Retirar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
-          </div>
-        </div>
-
-        <div class="inline" style="gap:10px">
-          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
-        </div>
-      </div>
-
-      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-        <div>
-          <label>Cliente / Cuenta</label>
-          <select id="wdAccount"></select>
-          <div class="small" id="wdHint">—</div>
-        </div>
-
-        <div>
-          <label>Monto a retirar</label>
-          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00">
-        </div>
-
-        <div>
-          <label>Referencia (opcional)</label>
-          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta">
-        </div>
-
-        <div>
-          <label>Nota interna (opcional)</label>
-          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación">
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
-        <span id="wdMsg" class="small" style="opacity:.9"></span>
-      </div>
-    </div>
-
     <!-- Lista -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
@@ -726,49 +560,53 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       <p class="small" style="margin-top:10px">
         <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
       </p>
-      <p id="usersMsg" class="small" style="margin-top:6px"></p>
     </div>
 
-  </div><!-- /app -->
-</div><!-- /container -->
+  </div>
+</div>
 
-<!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
-<div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+<!-- ===== MODAL: ACREDITAR CAPITAL ===== -->
+<div id="modalAccredit" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
       <div class="modal-title">
-        <h3>Programar acreditación</h3>
-        <button class="xbtn" type="button" onclick="closeScheduleTopupModal()">✕</button>
+        <h3>Acreditar capital</h3>
+        <button class="xbtn" type="button" onclick="closeAccreditModal()">✕</button>
       </div>
 
-      <div class="small" id="schedInfo">—</div>
+      <div class="small" id="accreditClientInfo">—</div>
 
       <div class="row" style="margin-top:10px">
         <div>
-          <label>Fecha efectiva (se acredita a las 9:00 AM GT)</label>
-          <input id="schedDate" type="date">
-          <div class="small">🔒 No se permiten fechas pasadas.</div>
+          <label>Monto a acreditar</label>
+          <input id="accreditAmount" type="text" inputmode="decimal" placeholder="0.00">
+          <div class="small">Se registrará como <b>topup paid</b> + <b>approved_at</b>.</div>
         </div>
         <div>
-          <label>Nota (opcional)</label>
-          <input id="schedNote" placeholder="Ej: Se acredita al inicio del ciclo">
+          <label>Fecha efectiva</label>
+          <input id="accreditDate" type="date">
+          <div class="small">Afecta intereses <b>desde este mes</b> en adelante (sin tocar meses anteriores).</div>
+        </div>
+        <div>
+          <label>Banco (opcional)</label>
+          <input id="accreditBank" placeholder="Banco Industrial">
         </div>
       </div>
 
       <hr class="sep">
 
       <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" id="schedMsg"></div>
+        <div class="small" id="accreditMsg"></div>
         <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeScheduleTopupModal()">Cancelar</button>
-          <button class="ok" type="button" id="btnDoSchedule">Programar</button>
+          <button class="ghost" type="button" onclick="closeAccreditModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnAccreditDo">Acreditar</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===== MODAL: RESET PASSWORD ===== -->
+<!-- ===== MODAL: RESET PASSWORD (ACTUALIZADO) ===== -->
 <div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
@@ -780,6 +618,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       <div class="small" id="resetClientInfo">—</div>
 
       <div class="row" style="margin-top:10px">
+        <!-- ✅ NUEVO: selector de cliente (cuando abres desde botón global) -->
         <div id="resetPickWrap" class="hidden">
           <label>Seleccionar cliente</label>
           <select id="resetPick"></select>
@@ -806,79 +645,10 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   </div>
 </div>
 
-<!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
-<div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Historial de retiros</h3>
-        <button class="xbtn" type="button" onclick="closeWithdrawHistory()">✕</button>
-      </div>
-
-      <div class="small" id="wdhInfo">
-        Aquí puedes imprimir/guardar en PDF y luego (si quieres) borrar lo mostrado.
-      </div>
-
-      <div class="inline" style="justify-content:space-between; margin-top:12px; gap:10px; flex-wrap:wrap">
-        <div class="inline" style="gap:10px; flex-wrap:wrap">
-          <button id="btnLoadWithdrawHistory" type="button" class="ghost">Refrescar historial</button>
-          <button id="btnPrintWithdrawHistory" type="button">Imprimir / Guardar PDF</button>
-          <button id="btnDeleteWithdrawalsShown" type="button" class="danger">Borrar historial mostrado</button>
-        </div>
-        <div class="small" id="wdhMsg">—</div>
-      </div>
-
-      <div class="table-wrap" style="margin-top:12px">
-        <table>
-          <thead>
-            <tr>
-              <th class="nowrap">Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Referencia</th>
-              <th>Motivo / Nota</th>
-            </tr>
-          </thead>
-          <tbody id="wdhBody"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px; opacity:.85">
-        ⚠️ <b>“Borrar historial mostrado”</b> elimina filas de la base de datos. Úsalo solo si ya guardaste el PDF.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
-<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal" style="width:min(620px,100%)">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3 id="confirmTitle">Confirmación</h3>
-        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
-      </div>
-
-      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
-
-      <hr class="sep">
-
-      <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
-          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const ANON_KEY    = "REEMPLAZA_TU_ANON_KEY_AQUI"; // <-- (te recomiendo NO dejarla hardcodeada en prod)
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 
@@ -893,170 +663,14 @@ function headersJSON(){
 
 /*** HELPERS UI ***/
 const $ = (id)=> document.getElementById(id);
-const show = (el, v)=> { if(!el) return; el.classList.toggle('hidden', !v); };
+const show = (el, v)=> el.classList.toggle('hidden', !v);
 const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
-const fmtDateTime = (s)=> s ? new Date(s).toLocaleString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
-function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
-function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
 
-function clearGlobalError(){
-  const box = $("globalError");
-  if(!box) return;
-  show(box, false);
-  box.textContent = "";
-}
-function showGlobalError(title, err){
-  const box = $("globalError");
-  if(!box) return;
-  show(box, true);
-  box.innerHTML = `<div style="font-weight:900;color:#FFD0D0;margin-bottom:4px">${title}</div>
-                   <div>Verifique permisos, sesión o configuración del sistema e intente nuevamente.</div>`;
-  console.error("[DEBUG]", err);
-}
-
-// Compatibilidad: algunas partes usan setGlobalError(...)
-function setGlobalError(msg){
-  const t = (msg && String(msg).trim()) ? String(msg) : "Error";
-  showGlobalError(t, null);
-}
-
-/*** ✅ validar sesión/token antes de cargar panel ***/
-async function validateSession(){
-  const token = localStorage.token;
-  if(!token) return false;
-  try{
-    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
-      method: "GET",
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
-    });
-    if(!r.ok){
-      localStorage.removeItem("token");
-      localStorage.removeItem("uid");
-      return false;
-    }
-    return true;
-  }catch{ return false; }
-}
-
-/*** ✅ Session meta (agregado) ***/
-async function refreshSessionMeta(){
-  const meta = $("sessionMeta");
-  if(!meta) return;
-
-  const token = localStorage.token;
-  if(!token){
-    meta.textContent = "Administrador · Sesión no iniciada";
-    return;
-  }
-  try{
-    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
-      method: "GET",
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
-    });
-    if(!r.ok){
-      meta.textContent = "Administrador · Sesión no iniciada";
-      return;
-    }
-    const u = await r.json().catch(()=>null);
-    const email = u?.email || u?.user_metadata?.email || "admin";
-    meta.textContent = `Administrador · ${email} · Última actualización: ${new Date().toLocaleTimeString("es-GT")}`;
-  }catch(e){
-    meta.textContent = `Administrador · Sesión iniciada`;
-    console.error(e);
-  }
-}
-
-/*** ✅ Modal Confirm PRO (agregado, y lo usamos en vez de confirm() cuando se pueda) ***/
-let CONFIRM_RESOLVE = null;
-function openConfirm({title, message, okText}){
-  const m = $("modalConfirm");
-  const t = $("confirmTitle");
-  const msg = $("confirmMsg");
-  const okBtn = $("confirmOkBtn");
-  if(!m || !t || !msg || !okBtn){
-    // fallback
-    return Promise.resolve(window.confirm((title? (title+"\n\n"):"") + String(message||"")));
-  }
-  t.textContent = title || "Confirmación";
-  msg.innerHTML = message || "¿Confirma esta acción?";
-  okBtn.textContent = okText || "Confirmar";
-  show(m, true);
-
-  return new Promise((resolve)=>{
-    CONFIRM_RESOLVE = resolve;
-  });
-}
-function closeConfirm(result){
-  const m = $("modalConfirm");
-  if(m) show(m, false);
-  if(CONFIRM_RESOLVE) CONFIRM_RESOLVE(!!result);
-  CONFIRM_RESOLVE = null;
-}
-window.closeConfirm = closeConfirm;
-
-// cerrar al click fuera
-document.addEventListener("click", (e)=>{
-  const m = $("modalConfirm");
-  if(!m || m.classList.contains("hidden")) return;
-  if(e.target === m) closeConfirm(false);
-});
-
-/*** ✅ KPIs (agregado) ***/
-async function refreshKPIs(){
-  const kWrap = $("kpisWrap");
-  const kW = $("kpiWithdrawPending");
-  const kT = $("kpiTopupsPending");
-  const kO = $("kpiOpsToday");
-  const kWHint = $("kpiWithdrawHint");
-
-  if(!kW || !kT || !kO) return;
-
-  const h = {
-    apikey: ANON_KEY,
-    Authorization: "Bearer "+(localStorage.token||""),
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
-
-  try{
-    // withdrawals pending
-    const rw = await fetch(`${BASE}/withdrawal_requests?select=id,status,created_at&limit=600`, { headers:h, cache:"no-store" });
-    if(!rw.ok) throw new Error(await rw.text().catch(()=> "") || `HTTP ${rw.status}`);
-    const wrows = await rw.json();
-
-    const pendingW = (wrows||[]).filter(r=> String(r.status||"").toLowerCase()==="pending").length;
-    kW.textContent = pendingW;
-    if(kWHint) kWHint.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-GT")}`;
-
-    // topups pending + programadas (effective_date != null) aunque status sea pending
-    const rt = await fetch(`${BASE}/topups?select=id,status,created_at,effective_date&limit=800`, { headers:h, cache:"no-store" });
-    if(!rt.ok) throw new Error(await rt.text().catch(()=> "") || `HTTP ${rt.status}`);
-    const trows = await rt.json();
-
-    const pendingT = (trows||[]).filter(r=>{
-      const s = String(r.status||"").toLowerCase();
-      const scheduled = !!r.effective_date;
-      return s==="pending" || scheduled;
-    }).length;
-    kT.textContent = pendingT;
-
-    // ops 24h
-    const since = Date.now() - 24*60*60*1000;
-    const ops =
-      (wrows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length +
-      (trows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length;
-    kO.textContent = ops;
-
-    if(kWrap) show(kWrap, true);
-  }catch(err){
-    console.error("[KPI DEBUG]", err);
-    kW.textContent = "—";
-    kT.textContent = "—";
-    kO.textContent = "—";
-    if(kWrap) show(kWrap, true);
-  }
+function setLoading(el, isLoading){
+  if(!el) return;
+  el.classList.toggle("loading", !!isLoading);
 }
 
 /*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
@@ -1070,7 +684,9 @@ function formatCapitalString(raw){
   }
   let [intPart, decPart] = raw.split(".");
   intPart = intPart ? intPart.replace(/^0+(?=\d)/, "") : "";
-  if (intPart){ intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  if (intPart){
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
   if (decPart !== undefined) decPart = decPart.slice(0, 2);
   return decPart !== undefined ? `${intPart || "0"}.${decPart}` : (intPart || "");
 }
@@ -1089,9 +705,7 @@ function bindCapitalFormatter(inputEl){
     inputEl.value = formatCapitalString(rawNoCommas);
     const diff = inputEl.value.length - before.length;
     const newPos = Math.max(0, pos + diff);
-    const newPosSafe = Math.min(newPos, inputEl.value.length);
-    const ss = inputEl.setSelectionRange;
-    if (typeof ss === "function") ss.call(inputEl, newPosSafe, newPosSafe);
+    inputEl.setSelectionRange?.(newPos, newPos);
   });
   inputEl.addEventListener("blur", () => {
     if (!inputEl.value.replace(/[^\d]/g, "")) inputEl.value = "0";
@@ -1101,76 +715,57 @@ function setCapitalInputValue(n){
   const val = (n === null || n === undefined) ? "" : String(n);
   $("u_capital").value = formatCapitalString(val);
 }
-function todayISO(){ return new Date().toISOString().slice(0,10); }
 
 /*** LOGIN ***/
-
-/*** ADMIN CHECK (usa public.admin_users + rpc is_admin) ***/
-async function rpcIsAdmin(){
-  const r = await fetch(`${BASE}/rpc/is_admin`, {
-    method:"POST",
-    headers: hAuth(),
-    body: "{}"
-  });
-
-  const raw = await r.text();
-  if(!r.ok){
-    // Diferenciamos entre "no existe" (404) vs permisos/sesión.
-    throw new Error(`rpc/is_admin ${r.status}: ${raw.slice(0,200)}`);
-  }
-
-  // La RPC devuelve true/false (JSON) o a veces "true" como texto.
-  try{
-    const v = JSON.parse(raw);
-    return !!v;
-  }catch(e){
-    return raw.trim() === "true";
-  }
-}
-
-async function requireAdmin(){
-  const ok = await rpcIsAdmin();
-  if(!ok){
-    // Limpia sesión para evitar estado raro
-    localStorage.removeItem("token");
-    localStorage.removeItem("uid");
-    localStorage.removeItem("email");
-    throw new Error("not_admin");
-  }
-}
-
 async function doLogin(e){
   e.preventDefault();
 
-  const email = document.getElementById("u_email").value.trim();
-  const password = document.getElementById("u_pass").value;
+  const email = $("email").value.trim();
+  const password = $("password").value;
 
-  const url = `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
+  $("loginMsg").textContent = "";
+  setLoading($("loginForm"), true);
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "apikey": ANON_KEY,
-      "Authorization": "Bearer " + ANON_KEY,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ email, password })
-  });
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
+      method:"POST",
+      headers:{
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-  const data = await res.json();
+    let data = null;
+    try{ data = await r.json(); }catch{ data = null; }
 
-  if(!res.ok){
-    console.error("LOGIN ERROR:", data);
-    showGlobalError("Login inválido: " + (data?.error_description || data?.msg || JSON.stringify(data)));
-    return;
+    if(!r.ok){
+      $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido";
+      return;
+    }
+
+    if(!data?.access_token){
+      $("loginMsg").textContent = "Login inválido (sin token).";
+      return;
+    }
+
+    localStorage.token = data.access_token;
+    localStorage.uid = data.user?.id || "";
+    await initApp();
+
+  }catch(err){
+    console.error(err);
+    $("loginMsg").textContent = "Error de red";
+  }finally{
+    setLoading($("loginForm"), false);
   }
+}
 
-  // ✅ token correcto
-  localStorage.token = data.access_token;
-  localStorage.refresh_token = data.refresh_token;
-  localStorage.user_id = data.user?.id || "";
-
-  await initApp(); // aquí ya puedes llamar /rpc/is_admin
+function logout(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("uid");
+  location.reload();
 }
 
 /*** Edge Functions auxiliares ***/
@@ -1187,6 +782,7 @@ async function createAuthUserIfNeeded(email, password, fullName) {
     body: JSON.stringify({ email, password, full_name: fullName })
   });
 }
+
 async function getAuthUserIdByEmail(email){
   try{
     const r = await fetch(`${RPC}/get_user_id_by_email`, {
@@ -1200,12 +796,9 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
-/*** LISTA CLIENTES ***/
+/*** LISTA ***/
 let CACHED = [];
 async function listUsers(){
-  const msgEl = $("usersMsg");
-  if(msgEl) msgEl.textContent = "";
-
   const h = {
     apikey: ANON_KEY,
     Authorization: "Bearer "+localStorage.token,
@@ -1215,41 +808,18 @@ async function listUsers(){
 
   const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at,compound_interest`;
 
-  try{
-    let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
+  let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
 
-    if (r.ok) {
-      CACHED = await r.json();
-      if(msgEl) msgEl.textContent = `Clientes cargados: ${CACHED.length}`;
-      renderUsers(CACHED);
-      refreshResetPicker();
-      refreshWithdrawPicker();
-      return;
-    }
-
-    const t = await r.text().catch(()=> "");
-    console.error("v_admin_users_filtered error:", r.status, t);
-    if(msgEl) msgEl.textContent = `No se pudo cargar la vista (HTTP ${r.status}). Probando método alterno…`;
-
-    CACHED = await loadUsersViaJoinFallback(h);
-    if(msgEl) msgEl.textContent = `Clientes cargados (fallback): ${CACHED.length}`;
+  if (r.ok) {
+    CACHED = await r.json();
     renderUsers(CACHED);
-    refreshResetPicker();
-    refreshWithdrawPicker();
-
-    if(r.status === 401 || r.status === 403){
-      localStorage.removeItem("token");
-      localStorage.removeItem("uid");
-      await initApp();
-    }
-  }catch(e){
-    console.error(e);
-    if(msgEl) msgEl.textContent = "Error cargando clientes (revisa conexión, permisos o RLS).";
-    CACHED = [];
-    renderUsers(CACHED);
-    refreshResetPicker();
-    refreshWithdrawPicker();
+    refreshResetPicker(); // ✅ NUEVO
+    return;
   }
+
+  CACHED = await loadUsersViaJoinFallback(h);
+  renderUsers(CACHED);
+  refreshResetPicker(); // ✅ NUEVO
 }
 
 async function loadUsersViaJoinFallback(h){
@@ -1292,14 +862,6 @@ async function loadUsersViaJoinFallback(h){
 function renderUsers(rows){
   const tb = $("users");
   tb.innerHTML = "";
-
-  if(!rows || !rows.length){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="13" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
-    tb.appendChild(tr);
-    return;
-  }
-
   rows.forEach(x=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1317,6 +879,7 @@ function renderUsers(rows){
       <td>${x.compound_interest ? "Acumulado" : "Mensual"}</td>
       <td class="nowrap">
         <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
+        <button class="ghost" onclick='openAccreditModal(${JSON.stringify(x)})'>Acreditar capital</button>
         <button class="ghost" onclick='openResetModal(${JSON.stringify(x)})'>Reset contraseña</button>
         <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
       </td>`;
@@ -1324,417 +887,17 @@ function renderUsers(rows){
   });
 }
 
-/*** BUSCAR (mismo id="q") ***/
+/*** BUSCAR ***/
 $("q")?.addEventListener("input",(e)=>{
-  const qv = e.target.value.trim().toLowerCase();
-  if(!qv){ renderUsers(CACHED); return; }
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderUsers(CACHED); return; }
   const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
-    .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
+    .filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   renderUsers(filt);
 });
 
-/* ============================================================
-   ✅ RETIRAR CAPITAL (Admin)
-   ============================================================ */
-
-function refreshWithdrawPicker(){
-  const sel = $("wdAccount");
-  const hint = $("wdHint");
-  const msg = $("wdMsg");
-  if(!sel) return;
-
-  if(msg) msg.textContent = "";
-  sel.innerHTML = "";
-
-  const rows = (CACHED||[]).filter(x=>x.account_id && (x.email || x.full_name));
-  if(!rows.length){
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "No hay clientes cargados";
-    sel.appendChild(opt);
-    if(hint) hint.textContent = "—";
-    return;
-  }
-
-  const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = "Selecciona una cuenta";
-  sel.appendChild(opt0);
-
-  rows.forEach(x=>{
-    const opt = document.createElement("option");
-    opt.value = x.account_id;
-    const name = (x.full_name || x.email || "—");
-    opt.textContent = `${name} — ${x.email || "—"} — Capital: ${fmtMoney(x.capital, x.currency || "GTQ")}`;
-    opt.dataset.capital = String(x.capital ?? 0);
-    opt.dataset.currency = x.currency || "GTQ";
-    opt.dataset.name = x.full_name || "";
-    opt.dataset.email = x.email || "";
-    sel.appendChild(opt);
-  });
-
-  if(hint) hint.textContent = "Selecciona una cuenta para ver el capital y retirar.";
-}
-
-function updateWithdrawHint(){
-  const sel = $("wdAccount");
-  const hint = $("wdHint");
-  if(!sel || !hint) return;
-
-  const opt = sel.options[sel.selectedIndex];
-  const name = opt?.dataset?.name || "";
-  const email = opt?.dataset?.email || "";
-  const cap = Number(opt?.dataset?.capital || 0);
-  const ccy = opt?.dataset?.currency || "GTQ";
-
-  if(!sel.value){
-    hint.textContent = "—";
-    return;
-  }
-  hint.innerHTML = `<b>${name || "Cliente"}</b> — ${email || "—"}<br>Capital actual: <b>${fmtMoney(cap, ccy)}</b>`;
-}
-
-async function doWithdraw(){
-  const msg = $("wdMsg");
-  const sel = $("wdAccount");
-  const amount = Number($("wdAmount")?.value || 0);
-  const reference = ($("wdRef")?.value || "").trim() || null;
-  const note = ($("wdNote")?.value || "").trim() || null;
-
-  if(msg) msg.textContent = "";
-  if(!sel?.value){
-    if(msg) msg.textContent = "Selecciona una cuenta.";
-    return;
-  }
-  if(!amount || amount <= 0){
-    if(msg) msg.textContent = "Monto inválido.";
-    return;
-  }
-
-  const opt = sel.options[sel.selectedIndex];
-  const cap = Number(opt?.dataset?.capital || 0);
-  const ccy = opt?.dataset?.currency || "GTQ";
-  const who = opt?.textContent?.split("—")?.[0]?.trim() || "cliente";
-
-  if(amount > cap){
-    if(msg) msg.textContent = `Fondos insuficientes. Capital actual: ${fmtMoney(cap, ccy)}`;
-    return;
-  }
-
-  const ok = await openConfirm({
-    title: "Confirmación de retiro",
-    message: `
-      <div style="font-weight:950;margin-bottom:6px">¿Aplicar retiro de capital?</div>
-      <div>Cliente: <b>${who}</b></div>
-      <div>Monto: <b>${fmtMoney(amount, ccy)}</b></div>
-      <div style="margin-top:8px;opacity:.9">Esto descuenta el capital actual y registra el movimiento.</div>
-    `,
-    okText: "Retirar"
-  });
-  if(!ok) return;
-
-  const btn = $("btnWithdraw");
-  if(btn){ btn.disabled = true; btn.textContent = "Procesando..."; }
-
-  try{
-    const r = await fetch(`${RPC}/withdraw_capital`,{
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        p_account_id: sel.value,
-        p_amount: amount,
-        p_note: note,
-        p_reference: reference
-      })
-    });
-
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      throw new Error(t || `HTTP ${r.status}`);
-    }
-
-    let data = null;
-    try{ data = await r.json(); }catch{ data = null; }
-    const newCap = data?.[0]?.new_capital;
-
-    if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
-
-    await listUsers();
-    await refreshKPIs();
-
-    if($("wdAmount")) $("wdAmount").value = "";
-    if($("wdRef")) $("wdRef").value = "";
-    if($("wdNote")) $("wdNote").value = "";
-  }catch(e){
-    console.error(e);
-    if(msg) msg.textContent = `❌ Error: ${e.message || e}`;
-    await openConfirm({
-      title:"No se pudo retirar",
-      message:`<div style="color:#FFD0D0;font-weight:950;margin-bottom:6px">Operación no aplicada</div>
-               <div>Detalle: <span style="opacity:.9">${String(e.message||e)}</span></div>`,
-      okText:"Entendido"
-    });
-    closeConfirm(false);
-  }finally{
-    if(btn){ btn.disabled = false; btn.textContent = "Retirar"; }
-  }
-}
-
-/* ============================================================
-   ✅ HISTORIAL DE RETIROS (Modal + PDF + Borrar mostrado)
-   ============================================================ */
-let WDH_CACHE = [];
-
-function openWithdrawHistory(){
-  show($("modalWithdrawHistory"), true);
-  loadWithdrawHistory();
-}
-function closeWithdrawHistory(){
-  show($("modalWithdrawHistory"), false);
-}
-
-function resolveClientByAccountId(accountId){
-  const x = (CACHED||[]).find(r => r.account_id === accountId);
-  return {
-    name: x?.full_name || "—",
-    email: x?.email || "—",
-    currency: x?.currency || "GTQ"
-  };
-}
-
-async function loadWithdrawHistory(){
-  const msg = $("wdhMsg");
-  const body = $("wdhBody");
-  if(!body) return;
-
-  if(msg) msg.textContent = "Cargando…";
-  setLoading(msg, true);
-  body.innerHTML = "";
-  WDH_CACHE = [];
-
-  const h = {
-    apikey: ANON_KEY,
-    Authorization: "Bearer "+localStorage.token,
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
-
-  try{
-    const sel = `id,created_at,account_id,amount,reference,note`;
-    const url = `${BASE}/withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc&limit=500`;
-    const r = await fetch(url, { headers:h, cache:"no-store" });
-
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      throw new Error(t || `HTTP ${r.status}`);
-    }
-
-    const rows = await r.json();
-    WDH_CACHE = Array.isArray(rows) ? rows : [];
-
-    renderWithdrawHistory();
-    if(msg) msg.textContent = `Retiros cargados: ${WDH_CACHE.length}`;
-  }catch(e){
-    console.error(e);
-    if(msg) msg.textContent = "No se pudo cargar el historial (revisa RLS/permiso o estructura de tabla).";
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="small">No se pudo cargar el historial. (Error: ${String(e.message||e)})</td>`;
-    body.appendChild(tr);
-  }finally{
-    setLoading(msg, false);
-  }
-}
-
-function renderWithdrawHistory(){
-  const body = $("wdhBody");
-  if(!body) return;
-  body.innerHTML = "";
-
-  if(!WDH_CACHE.length){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="small">No hay retiros para mostrar.</td>`;
-    body.appendChild(tr);
-    return;
-  }
-
-  WDH_CACHE.forEach(w=>{
-    const cli = resolveClientByAccountId(w.account_id || "");
-    const ccy = cli.currency || "GTQ";
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="nowrap">${fmtDateTime(w.created_at)}</td>
-      <td>${cli.name}</td>
-      <td>${cli.email}</td>
-      <td>${fmtMoney(w.amount, ccy)}</td>
-      <td>${(w.reference || "—")}</td>
-      <td>${(w.note || "—")}</td>
-    `;
-    body.appendChild(tr);
-  });
-}
-
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, (m)=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-
-function printWithdrawalsPDF(){
-  if(!WDH_CACHE.length){
-    alert("No hay retiros cargados para imprimir.");
-    return;
-  }
-
-  const rowsHtml = WDH_CACHE.map(w=>{
-    const cli = resolveClientByAccountId(w.account_id || "");
-    const ccy = cli.currency || "GTQ";
-    return `
-      <tr>
-        <td>${fmtDateTime(w.created_at)}</td>
-        <td>${escapeHtml(cli.name)}</td>
-        <td>${escapeHtml(cli.email)}</td>
-        <td>${escapeHtml(fmtMoney(w.amount, ccy))}</td>
-        <td>${escapeHtml(w.reference || "—")}</td>
-        <td>${escapeHtml(w.note || "—")}</td>
-      </tr>
-    `;
-  }).join("");
-
-  const html = `
-  <!doctype html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Historial de retiros — FX | CAPITAL R.L.</title>
-    <style>
-      body{font-family:Arial, sans-serif; padding:20px; color:#111;}
-      h1{margin:0 0 8px; font-size:18px;}
-      .meta{font-size:12px; color:#444; margin-bottom:12px;}
-      table{width:100%; border-collapse:collapse; font-size:12px;}
-      th,td{border:1px solid #ddd; padding:8px; vertical-align:top;}
-      th{background:#f2f2f2; text-align:left;}
-      @media print{ button{display:none} }
-    </style>
-  </head>
-  <body>
-    <h1>Historial de retiros — FX | CAPITAL R.L.</h1>
-    <div class="meta">Generado: ${new Date().toLocaleString("es-GT")}</div>
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha</th><th>Cliente</th><th>Email</th><th>Monto</th><th>Referencia</th><th>Motivo / Nota</th>
-        </tr>
-      </thead>
-      <tbody>${rowsHtml}</tbody>
-    </table>
-    <script>window.print();<\/script>
-  </body>
-  </html>
-  `;
-
-  const w = window.open("", "_blank");
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-}
-
-async function deleteWithdrawalsShown(){
-  if(!WDH_CACHE.length){
-    alert("No hay filas mostradas para borrar.");
-    return;
-  }
-
-  const ok = await openConfirm({
-    title:"Borrar historial mostrado",
-    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Borrar los retiros MOSTRADOS?</div>
-             <div>Esto es permanente. (Recomendado: imprime/guarda PDF antes.)</div>`,
-    okText:"Borrar"
-  });
-  if(!ok) return;
-
-  const msg = $("wdhMsg");
-  safeText(msg, "Borrando…");
-  setLoading(msg, true);
-
-  const ids = WDH_CACHE.map(x=>x.id).filter(Boolean);
-  try{
-    let ok2 = false;
-
-    try{
-      const r1 = await fetch(`${RPC}/admin_delete_withdrawals`,{
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ p_ids: ids })
-      });
-      if(r1.ok) ok2 = true;
-    }catch{}
-
-    if(!ok2){
-      const idsCsv = ids.join(",");
-      const r2 = await fetch(`${BASE}/withdrawals?id=in.(${idsCsv})`,{
-        method:"DELETE",
-        headers: headersJSON()
-      });
-      if(!r2.ok){
-        const t = await r2.text().catch(()=> "");
-        throw new Error(t || "No se pudo borrar (RLS o falta RPC).");
-      }
-    }
-
-    alert("Historial borrado (mostrado).");
-    await loadWithdrawHistory();
-    await refreshKPIs();
-  }catch(e){
-    console.error(e);
-    alert("No se pudo borrar: " + (e.message||e));
-    safeText(msg, "Error al borrar.");
-  }finally{
-    setLoading(msg, false);
-  }
-}
-
-/* ============================================================
-   TOPUPS (PENDING + PROGRAMADAS por effective_date)
-   ============================================================ */
-
-function buildCachedMaps(){
-  const byUserId = new Map();
-  const byAccountId = new Map();
-  (CACHED||[]).forEach(c=>{
-    if(c?.user_id) byUserId.set(c.user_id, c);
-    if(c?.account_id) byAccountId.set(c.account_id, c);
-  });
-  return { byUserId, byAccountId };
-}
-
-async function fetchAccountsUserIds(accountIds, h){
-  if(!accountIds?.length) return new Map();
-  const unique = [...new Set(accountIds.filter(Boolean))];
-  const map = new Map();
-  const url = `${BASE}/accounts?select=id,user_id&id=in.(${unique.join(",")})`;
-  const r = await fetch(url, { headers:h, cache:"no-store" });
-  if(!r.ok) return map;
-  const rows = await r.json();
-  rows.forEach(a=>{ if(a?.id && a?.user_id) map.set(a.id, a.user_id); });
-  return map;
-}
-
-async function fetchProfiles(userIds, h){
-  if(!userIds?.length) return new Map();
-  const unique = [...new Set(userIds.filter(Boolean))];
-  const url = `${BASE}/profiles?select=id,full_name,email&id=in.(${unique.join(",")})`;
-  const r = await fetch(url, { headers:h, cache:"no-store" });
-  if(!r.ok) return new Map();
-  const profs = await r.json();
-  return new Map(profs.map(p=>[p.id,p]));
-}
-
+/*** TOPUPS PENDIENTES ***/
 async function listTopups(){
-  const msgEl = $("topupsMsg");
-  if(msgEl) msgEl.textContent = "";
-  clearGlobalError();
-
   const h = {
     apikey: ANON_KEY,
     Authorization: "Bearer "+localStorage.token,
@@ -1742,133 +905,50 @@ async function listTopups(){
     Pragma:"no-cache"
   };
 
-  // ✅ Workaround: solo traemos PENDING y marcamos “Programada” si effective_date != null
-  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,scheduled_note`;
-  const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`;
-
-  const r = await fetch(url, { headers:h, cache:"no-store" });
+  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code`;
+  const r = await fetch(`${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`, { headers:h, cache:"no-store" });
 
   if(!r.ok){
-    const t = await r.text().catch(()=> "");
-    console.error("listTopups error:", r.status, t);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar recargas (revisa conexión o permisos).";
-    showGlobalError("No se pudieron cargar recargas", t || r.status);
-    if(r.status === 401 || r.status === 403){
-      localStorage.removeItem("token");
-      localStorage.removeItem("uid");
-      await initApp();
-    }
+    console.error(await r.text());
+    alert("No se pudo cargar recargas pendientes.");
     return;
   }
 
   const rows = await r.json();
-
-  const { byUserId, byAccountId } = buildCachedMaps();
-
-  const directUserIds = rows.map(x=>x.user_id).filter(Boolean);
-  const missingUidAccountIds = rows.filter(x=>!x.user_id && x.account_id).map(x=>x.account_id);
-
-  const acctToUid = new Map();
-  missingUidAccountIds.forEach(aid=>{
-    const c = byAccountId.get(aid);
-    if(c?.user_id) acctToUid.set(aid, c.user_id);
-  });
-
-  const stillMissing = missingUidAccountIds.filter(aid=> !acctToUid.get(aid));
-  const acctToUidFromDb = await fetchAccountsUserIds(stillMissing, h);
-  acctToUidFromDb.forEach((uid, aid)=> acctToUid.set(aid, uid));
-
-  const resolvedUserIds = rows.map(x=>{
-    if(x.user_id) return x.user_id;
-    if(x.account_id && acctToUid.get(x.account_id)) return acctToUid.get(x.account_id);
-    return null;
-  }).filter(Boolean);
-
-  const allUserIds = [...new Set([...directUserIds, ...resolvedUserIds])];
-
+  const uids = [...new Set(rows.map(x=>x.user_id).filter(Boolean))];
   let profMap = new Map();
-  try{ profMap = await fetchProfiles(allUserIds, h); }catch{ profMap = new Map(); }
 
-  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
-
-  if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + programadas por fecha)`;
-
-  await refreshKPIs();
-  await refreshSessionMeta();
-}
-
-function statusChip(status, effectiveDate){
-  const isScheduled = !!effectiveDate;
-  const s = String(status||"").toLowerCase();
-
-  if(isScheduled){
-    return `<span class="chip"><span class="dot scheduled"></span>Programada</span>`;
+  if(uids.length){
+    const pr = await fetch(`${BASE}/profiles?select=id,full_name,email&id=in.(${uids.join(",")})`, { headers:h, cache:"no-store" });
+    if(pr.ok){
+      const profs = await pr.json();
+      profMap = new Map(profs.map(p=>[p.id,p]));
+    }
   }
 
-  const dotClass = (s==="pending")?"pending":(s==="approved")?"approved":(s==="rejected")?"rejected":"pending";
-  const label = (s==="pending")?"Pendiente":(s==="approved")?"Aprobada":(s==="rejected")?"Rechazada":(status||"—");
-  return `<span class="chip"><span class="dot ${dotClass}"></span>${label}</span>`;
+  renderTopups(rows, profMap);
 }
 
-function nextCycleStartISO(joinedAt){
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  if(!joinedAt){
-    return new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0,10);
-  }
-
-  const j = new Date(joinedAt);
-  const day = j.getDate();
-
-  const clampDate = (y,m,d)=>{
-    const last = new Date(y, m+1, 0).getDate();
-    const dd = Math.min(d, last);
-    return new Date(y,m,dd);
-  };
-
-  let cand = clampDate(today.getFullYear(), today.getMonth(), day);
-
-  if (today >= cand){
-    const y = today.getFullYear();
-    const m = today.getMonth()+1;
-    cand = clampDate(y + Math.floor(m/12), (m%12), day);
-  }
-
-  return cand.toISOString().slice(0,10);
-}
-
-function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
+function renderTopups(rows, profMap){
   const tb = $("topups");
   if(!tb) return;
   tb.innerHTML = "";
 
-  const BUCKET = "topup-receipts";
-
   rows.forEach(x=>{
-    const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
-
-    const p = (inferredUid && profMap && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
-    const c1 = (inferredUid && cachedByUserId && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
-    const c2 = (x.account_id && cachedByAccountId && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
-
-    const name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
-    const email = (p?.email || c1?.email || c2?.email || "—");
-
+    const p = profMap.get(x.user_id) || {};
+    const name = p.full_name || "—";
+    const email = p.email || "—";
     const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
 
+    const BUCKET = "topup-receipts";
     const receipt = x.receipt_path
       ? `<button class="ghost" type="button"
             onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
             Ver boleta
          </button>`
       : "—";
-
-    const eff = x.effective_date ? x.effective_date : "—";
-    const joined = c1?.joined_at || c2?.joined_at || null;
-    const defNextCycle = nextCycleStartISO(joined);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1878,22 +958,8 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
       <td>${amt}</td>
       <td>${bank}</td>
       <td>${receipt}</td>
-      <td class="nowrap">${statusChip(x.status, x.effective_date)}</td>
-      <td class="nowrap">${eff}</td>
       <td class="nowrap">
-        <button class="ok" onclick="approveTopup('${x.id}')">Aprobar ahora</button>
-        <button class="ghost" onclick='openScheduleTopupModal(${JSON.stringify({
-          id:x.id,
-          amount:x.amount,
-          currency:x.currency,
-          status:x.status,
-          effective_date:x.effective_date,
-          user_id: inferredUid,
-          account_id:x.account_id,
-          name, email,
-          default_date: defNextCycle
-        })})'>Programar</button>
-        ${x.effective_date ? `<button class="ghost" onclick="unscheduleTopup('${x.id}')">Quitar programación</button>` : ``}
+        <button class="ghost" onclick="approveTopup('${x.id}')">Aprobar</button>
         <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
       </td>
     `;
@@ -1902,9 +968,53 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="9" class="small">No hay recargas pendientes.</td>`;
+    tr.innerHTML = `<td colspan="7" class="small">No hay recargas pendientes.</td>`;
     tb.appendChild(tr);
   }
+}
+
+async function approveTopup(topupId){
+  if(!confirm("¿Aprobar esta recarga?\n\nEsto sumará el monto al capital del cliente.")) return;
+
+  const r = await fetch(`${RPC}/approve_topup`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId })
+  });
+
+  if(!r.ok){
+    console.error(await r.text());
+    alert("No se pudo aprobar la recarga.");
+    return;
+  }
+
+  alert("Recarga aprobada y capital acreditado.");
+  await listTopups();
+  await listUsers();
+}
+
+function rejectTopupPrompt(topupId){
+  const reason = prompt("Motivo del rechazo (opcional):") || "";
+  rejectTopup(topupId, reason);
+}
+
+async function rejectTopup(topupId, reason){
+  if(!confirm("¿Rechazar esta recarga?")) return;
+
+  const r = await fetch(`${RPC}/reject_topup`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId, p_reason: reason })
+  });
+
+  if(!r.ok){
+    console.error(await r.text());
+    alert("No se pudo rechazar la recarga.");
+    return;
+  }
+
+  alert("Recarga rechazada.");
+  await listTopups();
 }
 
 async function openReceipt(bucket, path){
@@ -1920,7 +1030,7 @@ async function openReceipt(bucket, path){
     });
 
     if(!r.ok){
-      console.error(await r.text().catch(()=> ""));
+      console.error(await r.text());
       alert("No se pudo abrir la boleta.");
       return;
     }
@@ -1932,369 +1042,6 @@ async function openReceipt(bucket, path){
     alert("Error al abrir la boleta.");
   }
 }
-
-/*** ✅ Aprobar ahora + ✅ borrar boleta del Storage + limpiar receipt_path ***/
-async function approveTopup(topupId){
-  const ok = await openConfirm({
-    title:"Confirmación de recarga",
-    message:`<div style="font-weight:950;margin-bottom:6px">¿Aprobar ahora?</div>
-             <div>Esto sumará el monto al capital del cliente inmediatamente.</div>
-             <div style="margin-top:8px;opacity:.9">Luego se intentará borrar la boleta para que no ocupe espacio.</div>`,
-    okText:"Aprobar"
-  });
-  if(!ok) return;
-
-  let receiptPath = null;
-  try{
-    const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
-      headers: {
-        apikey: ANON_KEY,
-        Authorization: "Bearer "+localStorage.token,
-        "Cache-Control":"no-cache, no-store, must-revalidate",
-        Pragma:"no-cache"
-      },
-      cache:"no-store"
-    });
-    if(r0.ok){
-      const rows = await r0.json();
-      receiptPath = rows?.[0]?.receipt_path || null;
-    }
-  }catch{}
-
-  const r = await fetch(`${RPC}/approve_topup`, {
-    method:"POST",
-    headers: headersJSON(),
-    body: JSON.stringify({ p_topup_id: topupId })
-  });
-
-  if(!r.ok){
-    console.error(await r.text().catch(()=> ""));
-    showGlobalError("No se pudo aprobar la recarga", await r.text().catch(()=> ""));
-    alert("No se pudo aprobar la recarga.");
-    return;
-  }
-
-  if(receiptPath){
-    try{
-      const del = await fetch(`${PROJECT_URL}/functions/v1/admin-delete-receipt`,{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          apikey: ANON_KEY,
-          Authorization: "Bearer " + (localStorage.token || "")
-        },
-        body: JSON.stringify({
-          bucket: "topup-receipts",
-          path: receiptPath
-        })
-      });
-
-      await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ receipt_path: null })
-      });
-
-      if(!del.ok){
-        console.warn("admin-delete-receipt no respondió OK:", await del.text().catch(()=> ""));
-      }
-    }catch(e){
-      console.warn("No se pudo borrar boleta/limpiar receipt_path:", e);
-      try{
-        await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
-          method:"PATCH",
-          headers: headersJSON(),
-          body: JSON.stringify({ receipt_path: null })
-        });
-      }catch{}
-    }
-  }
-
-  alert("Recarga aprobada y capital acreditado.");
-  await listTopups();
-  await listUsers();
-  await refreshKPIs();
-}
-
-function rejectTopupPrompt(topupId){
-  const reason = prompt("Motivo del rechazo (opcional):") || "";
-  rejectTopup(topupId, reason);
-}
-async function rejectTopup(topupId, reason){
-  const ok = await openConfirm({
-    title:"Rechazar recarga",
-    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Rechazar esta recarga?</div>
-             <div style="opacity:.9">Motivo (opcional): <b>${escapeHtml(reason||"—")}</b></div>`,
-    okText:"Rechazar"
-  });
-  if(!ok) return;
-
-  const r = await fetch(`${RPC}/reject_topup`, {
-    method:"POST",
-    headers: headersJSON(),
-    body: JSON.stringify({ p_topup_id: topupId, p_reason: reason })
-  });
-
-  if(!r.ok){
-    console.error(await r.text().catch(()=> ""));
-    alert("No se pudo rechazar la recarga.");
-    return;
-  }
-
-  alert("Recarga rechazada.");
-  await listTopups();
-  await refreshKPIs();
-}
-
-// ✅ Workaround: quitar programación = effective_date NULL, scheduled_note NULL
-async function unscheduleTopup(topupId){
-  const ok = await openConfirm({
-    title:"Quitar programación",
-    message:`<div style="font-weight:950;margin-bottom:6px">¿Quitar programación?</div>
-             <div style="opacity:.9">Volverá a estado Pendiente.</div>`,
-    okText:"Quitar"
-  });
-  if(!ok) return;
-
-  const r = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
-    method:"PATCH",
-    headers: headersJSON(),
-    body: JSON.stringify({ effective_date: null, scheduled_note: null })
-  });
-
-  if(!r.ok){
-    console.error(await r.text().catch(()=> ""));
-    alert("No se pudo quitar la programación.");
-    return;
-  }
-
-  alert("Programación eliminada. La recarga volvió a Pendiente.");
-  await listTopups();
-  await refreshKPIs();
-}
-
-/* ============================================================
-   MODAL PROGRAMAR TOPUP (workaround seguro)
-   ============================================================ */
-let SCHED_CTX = null;
-
-function openScheduleTopupModal(ctx){
-  SCHED_CTX = ctx;
-
-  $("schedInfo").innerHTML =
-    `<b>${ctx.name||'—'}</b> — ${ctx.email||'—'}<br>`+
-    `Monto: <b>${fmtMoney(ctx.amount, ctx.currency||'GTQ')}</b><br>`+
-    `Regla: Se acreditará automáticamente a las <b>9:00 AM (Guatemala)</b> del día efectivo.`;
-
-  const d = ctx.effective_date || ctx.default_date || todayISO();
-  $("schedDate").value = d;
-  $("schedNote").value = ctx.scheduled_note || "";
-  $("schedMsg").textContent = "";
-
-  show($("modalScheduleTopup"), true);
-}
-
-function closeScheduleTopupModal(){
-  show($("modalScheduleTopup"), false);
-  SCHED_CTX = null;
-}
-
-async function doScheduleTopup(){
-  if(!SCHED_CTX) return;
-
-  const date = $("schedDate").value;
-  const note = ($("schedNote").value || "").trim();
-
-  if(!date){
-    $("schedMsg").textContent = "Fecha requerida.";
-    return;
-  }
-
-  const today = todayISO();
-  if(date < today){
-    $("schedMsg").textContent = "No se permiten fechas pasadas.";
-    return;
-  }
-
-  const ok = await openConfirm({
-    title:"Programar acreditación",
-    message:`<div style="font-weight:950;margin-bottom:6px">¿Programar esta recarga?</div>
-             <div>Fecha efectiva: <b>${date}</b></div>
-             <div style="margin-top:8px;opacity:.9">Se acreditará a las <b>9:00 AM (GT)</b> de ese día.</div>`,
-    okText:"Programar"
-  });
-  if(!ok) return;
-
-  $("schedMsg").textContent = "Programando…";
-  setLoading($("schedMsg"), true);
-
-  try{
-    // ✅ Workaround: solo actualiza campos de programación, NO cambia status
-    const r = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(SCHED_CTX.id)}`,{
-      method:"PATCH",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        effective_date: date,
-        scheduled_note: note || null
-      })
-    });
-
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      throw new Error(t || "No se pudo programar.");
-    }
-
-    $("schedMsg").textContent = "Listo.";
-    closeScheduleTopupModal();
-    alert("Recarga programada correctamente.");
-    await listTopups();
-    await refreshKPIs();
-
-  }catch(e){
-    console.error(e);
-    $("schedMsg").textContent = "Error.";
-    alert("No se pudo programar: " + (e.message||e));
-  }finally{
-    setLoading($("schedMsg"), false);
-  }
-}
-
-async function listWithdrawRequests(){
-  const msgEl = $("withdrawReqsMsg");
-  if(msgEl) msgEl.textContent = "";
-
-  const h = hAuth();
-
-  // ✅ Columnas reales según tu tabla withdrawal_requests
-  const sel = `id,account_id,profile_id,kind,amount,penalty_pct,full_withdrawal,reason,reason_text,status,created_at,reviewed_by,reviewed_at,note`;
-  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&order=${encodeURIComponent("created_at.desc")}&limit=200`;
-
-  let data = [];
-  try{
-    const r = await fetch(url, { headers: h });
-    if(!r.ok) throw new Error(await r.text());
-    data = await r.json();
-  }catch(err){
-    console.error("listWithdrawRequests error:", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso, sesión o tabla).";
-    return;
-  }
-
-  // Traer emails/nombres de profiles para mostrar mejor (sin depender de joins/FK)
-  const profileIds = [...new Set(data.map(x=>x.profile_id).filter(Boolean))];
-  const profileMap = {};
-  if(profileIds.length){
-    const psel = "id,email,full_name";
-    const purl = `${BASE}/profiles?select=${encodeURIComponent(psel)}&id=in.(${profileIds.join(",")})`;
-    try{
-      const pr = await fetch(purl, { headers: h });
-      if(pr.ok){
-        const ps = await pr.json();
-        ps.forEach(p=> profileMap[p.id] = p);
-      }
-    }catch(e){/* ignore */}
-  }
-
-  const tbody = $("withdrawReqsTbody");
-  if(!tbody) return;
-  tbody.innerHTML = "";
-
-  for(const v of data){
-    const tr = document.createElement("tr");
-
-    const prof = profileMap[v.profile_id] || {};
-    const who = prof.email || v.profile_id || "";
-
-    const status = String(v.status || "").toUpperCase();
-    const statusChip = chip(status || "PENDING", status==="REJECTED"?"danger":status==="APPROVED"?"ok":"warn");
-
-    tr.innerHTML = `
-      <td class="mono">${String(v.id).slice(0,8)}…</td>
-      <td class="mono">${String(v.account_id||"").slice(0,8)}…</td>
-      <td>${escapeHtml(who)}</td>
-      <td class="right">${fmtMoney(v.amount||0)} </td>
-      <td>${statusChip}</td>
-      <td>${fmtDateTime(v.created_at)}</td>
-      <td class="right">
-        <button class="btn sm" data-act="approve" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Aprobar</button>
-        <button class="btn sm danger" data-act="reject" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Rechazar</button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-  }
-
-  // bind actions
-  tbody.querySelectorAll("button[data-act]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-id");
-      const act = btn.getAttribute("data-act");
-      if(!id) return;
-
-      if(act==="approve"){
-        if(!confirm("¿Aprobar esta solicitud?")) return;
-        await approveWithdrawReq(id);
-      }else if(act==="reject"){
-        const reason = prompt("Motivo de rechazo (opcional):", "");
-        if(reason===null) return; // cancel
-        await rejectWithdrawReq(id, reason || "");
-      }
-      await listWithdrawRequests();
-    });
-  });
-}
-
-
-async function approveWithdrawReq(id){
-  const h = hAuth();
-
-  // 1) Obtener solicitud para saber account_id y amount
-  const q = `${BASE}/withdrawal_requests?select=${encodeURIComponent("id,account_id,amount,status")}&id=eq.${id}&limit=1`;
-  const r0 = await fetch(q, { headers: h });
-  if(!r0.ok) throw new Error(await r0.text());
-  const rows = await r0.json();
-  const req = rows?.[0];
-  if(!req) throw new Error("Solicitud no encontrada");
-  const status = String(req.status||"").toUpperCase();
-  if(status !== "PENDING") return;
-
-  // 2) Ejecutar el retiro (RPC)
-  const r1 = await fetch(`${BASE}/rpc/withdraw_capital`, {
-    method:"POST",
-    headers: h,
-    body: JSON.stringify({ p_account_id: req.account_id, p_amount: Number(req.amount) })
-  });
-  if(!r1.ok) throw new Error(await r1.text());
-
-  // 3) Marcar como APPROVED + auditoría
-  const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
-    method:"PATCH",
-    headers: h,
-    body: JSON.stringify({
-      status: "APPROVED",
-      reviewed_by: localStorage.uid || null,
-      reviewed_at: new Date().toISOString()
-    })
-  });
-  if(!r2.ok) throw new Error(await r2.text());
-}
-
-async function rejectWithdrawReq(id, reason){
-  const h = hAuth();
-
-  const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
-    method:"PATCH",
-    headers: h,
-    body: JSON.stringify({
-      status: "REJECTED",
-      reviewed_by: localStorage.uid || null,
-      reviewed_at: new Date().toISOString(),
-      note: String(reason || "")
-    })
-  });
-  if(!r2.ok) throw new Error(await r2.text());
-}
-
 
 /*** Editar ***/
 function editClient(x){
@@ -2405,7 +1152,8 @@ async function saveUser(){
     });
     if(!r.ok) throw new Error(await r.text() || "Error guardando");
 
-    const mode = $("u_interest_mode").value;
+    // Guardar modo de interés (compound_interest) en accounts
+    const mode = $("u_interest_mode").value; // monthly | compound
     const compound = (mode === "compound");
     const uidForAccount = uid || await getAuthUserIdByEmail(email);
 
@@ -2416,14 +1164,13 @@ async function saveUser(){
         body: JSON.stringify({ compound_interest: compound })
       });
       if(!pr.ok){
-        console.error(await pr.text().catch(()=> ""));
+        console.error(await pr.text());
         throw new Error("Se guardó el usuario, pero no se pudo actualizar el modo de interés.");
       }
     }
 
     msgEl.textContent = "Guardado";
     await listUsers();
-    await refreshKPIs();
   }catch(e){
     msgEl.textContent = "Error";
     alert("No se pudo guardar: " + (e.message||e));
@@ -2434,15 +1181,8 @@ async function saveUser(){
 
 /*** Eliminar (tu lógica original) ***/
 async function deleteClient(x){
-  const ok = await openConfirm({
-    title:"Eliminar cliente",
-    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Eliminar al cliente?</div>
-             <div>Nombre: <b>${escapeHtml(x.full_name||'—')}</b></div>
-             <div>Email: <b>${escapeHtml(x.email||'—')}</b></div>
-             <div style="margin-top:8px;opacity:.9">Esto es permanente.</div>`,
-    okText:"Eliminar"
-  });
-  if(!ok) return;
+  const msg = `¿Eliminar al cliente?\n\nNombre: ${x.full_name||'—'}\nEmail: ${x.email||'—'}`;
+  if(!confirm(msg)) return;
 
   const jh = headersJSON();
   const mustOk = async (resp, label) => {
@@ -2494,15 +1234,101 @@ async function deleteClient(x){
   CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
   renderUsers(CACHED);
   await listUsers();
-  await refreshKPIs();
   alert("Cliente eliminado correctamente.");
 }
 
 /* ============================================================
-   RESET PASSWORD (CLIENTES)
+   NUEVO: ACREDITAR CAPITAL (Manual)
+   ============================================================ */
+let ACCREDIT_CTX = null;
+
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function openAccreditModal(client){
+  ACCREDIT_CTX = client;
+
+  $("accreditClientInfo").innerHTML =
+    `<b>${client.full_name||'—'}</b> — ${client.email||'—'}<br>`+
+    `Capital actual: <b>${fmtMoney(client.capital, client.currency)}</b> · Modo: <b>${client.compound_interest ? "Acumulado" : "Mensual"}</b>`;
+
+  $("accreditAmount").value = "0";
+  $("accreditDate").value = todayISO();
+  $("accreditBank").value = (client.bank_name || "Banco Industrial");
+  $("accreditMsg").textContent = "";
+
+  show($("modalAccredit"), true);
+}
+
+function closeAccreditModal(){
+  show($("modalAccredit"), false);
+  ACCREDIT_CTX = null;
+}
+
+bindCapitalFormatter($("accreditAmount"));
+
+async function doAccreditCapital(){
+  if(!ACCREDIT_CTX) return;
+
+  const amount = parseCapitalFromInput($("accreditAmount").value);
+  const date = $("accreditDate").value || todayISO();
+  const bank = ($("accreditBank").value || "").trim() || null;
+
+  if(!amount || amount <= 0){
+    $("accreditMsg").textContent = "Monto inválido.";
+    return;
+  }
+  if(!ACCREDIT_CTX.account_id || !ACCREDIT_CTX.user_id){
+    $("accreditMsg").textContent = "Falta account_id / user_id en el cliente (revisa vista v_admin_users_filtered).";
+    return;
+  }
+
+  const msg = `¿Acreditar ${fmtMoney(amount, ACCREDIT_CTX.currency)} a ${ACCREDIT_CTX.full_name||'cliente'}?\n\nFecha efectiva: ${date}\n\nEsto creará un topup como PAID + approved_at, y recalculará intereses desde ese mes (sin tocar meses anteriores).`;
+  if(!confirm(msg)) return;
+
+  $("accreditMsg").textContent = "Acreditando…";
+  setLoading($("accreditMsg"), true);
+
+  try{
+    const r = await fetch(`${RPC}/admin_accredit_capital`,{
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_account_id: ACCREDIT_CTX.account_id,
+        p_user_id: ACCREDIT_CTX.user_id,
+        p_amount: amount,
+        p_effective_date: date,
+        p_bank_name: bank
+      })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || "No se pudo acreditar (RPC admin_accredit_capital).");
+    }
+
+    $("accreditMsg").textContent = "Acreditado.";
+    await listUsers();
+    await listTopups();
+    closeAccreditModal();
+    alert("Capital acreditado correctamente.");
+
+  }catch(e){
+    console.error(e);
+    $("accreditMsg").textContent = "Error.";
+    alert("No se pudo acreditar: " + (e.message||e));
+  }finally{
+    setLoading($("accreditMsg"), false);
+  }
+}
+
+/* ============================================================
+   RESET PASSWORD (ACTUALIZADO: elegir cliente)
    ============================================================ */
 let RESET_CTX = null;
 
+/** ✅ Rellena el selector con CACHED **/
 function refreshResetPicker(){
   const sel = $("resetPick");
   if(!sel) return;
@@ -2526,12 +1352,14 @@ function refreshResetPicker(){
     sel.appendChild(opt);
   });
 
+  // mantener selección previa si existe
   if(RESET_CTX?.user_id){
     sel.value = RESET_CTX.user_id;
   } else {
     sel.value = rows[0].user_id;
   }
 
+  // actualizar ctx según selector
   syncResetCtxFromPicker();
 }
 
@@ -2555,11 +1383,13 @@ function setResetInfoFromCtx(){
 }
 
 function openResetModal(client=null){
+  // Si viene desde fila
   if(client && client.email){
     RESET_CTX = client;
     show($("resetPickWrap"), false);
     setResetInfoFromCtx();
   }else{
+    // Si viene desde botón global
     RESET_CTX = null;
     show($("resetPickWrap"), true);
     refreshResetPicker();
@@ -2576,7 +1406,8 @@ function closeResetModal(){
 }
 
 async function doResetPassword(){
-  if(!$("resetPickWrap")?.classList.contains("hidden")){
+  // si modal está en modo selector, asegurar ctx actualizado
+  if(!$("resetPickWrap").classList.contains("hidden")){
     syncResetCtxFromPicker();
   }
 
@@ -2595,26 +1426,20 @@ async function doResetPassword(){
     return;
   }
 
-  const ok = await openConfirm({
-    title:"Restablecer contraseña",
-    message:`<div style="font-weight:950;margin-bottom:6px">¿Asignar nueva contraseña?</div>
-             <div>Cliente: <b>${escapeHtml(RESET_CTX.email)}</b></div>
-             <div style="margin-top:8px;opacity:.9">Esto activará el modal obligatorio en el panel cliente.</div>`,
-    okText:"Aplicar"
-  });
-  if(!ok) return;
+  if(!confirm(`¿Asignar nueva contraseña a ${RESET_CTX.email}?\n\nEsto activará el modal obligatorio en el panel cliente.`)) return;
 
   $("resetMsg").textContent = "Aplicando reset…";
   setLoading($("resetMsg"), true);
 
   try{
-    const url = `${PROJECT_URL}/functions/v1/admin-reset-password`;
+    // 1) Edge Function: actualiza contraseña en Auth (admin)
+    const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-reset-password";
     const r = await fetch(url,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + (localStorage.token||"")
+        Authorization:"Bearer " + (localStorage.token||"")
       },
       body: JSON.stringify({
         email: RESET_CTX.email,
@@ -2627,6 +1452,7 @@ async function doResetPassword(){
       throw new Error(t || "No se pudo resetear (Edge Function admin-reset-password).");
     }
 
+    // 2) Activar flag (solo si reset OK)
     if(RESET_CTX.user_id){
       const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(RESET_CTX.user_id)}`,{
         method:"PATCH",
@@ -2657,39 +1483,18 @@ async function doResetPassword(){
 
 /*** INIT ***/
 async function initApp(){
-  clearGlobalError();
-
-  const ok = await validateSession();
-
-  if(ok){
-    try{
-      await requireAdmin();
-    }catch(e){
-      setGlobalError("Tu usuario no es admin (no está en admin_users).\nAgrega tu UUID en la tabla admin_users y vuelve a iniciar sesión.");
-      await logout();
-      return;
-    }
+  if(localStorage.token){
     show($("unauth"), false);
     show($("app"), true);
     show($("logoutBtn"), true);
-    show($("btnOpenResetGlobal"), true);
-    show($("kpisWrap"), true);
-
-    await refreshSessionMeta();
+    show($("btnOpenResetGlobal"), true); // ✅ NUEVO
     await listUsers();
     await listTopups();
-    await listWithdrawRequests();
-    await refreshKPIs();
-
-    refreshWithdrawPicker();
-    updateWithdrawHint();
   }else{
     show($("app"), false);
     show($("logoutBtn"), false);
     show($("btnOpenResetGlobal"), false);
-    show($("kpisWrap"), false);
     show($("unauth"), true);
-    await refreshSessionMeta();
   }
 }
 
@@ -2697,7 +1502,6 @@ async function initApp(){
 document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
-  $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
 
   $("togglePass").addEventListener("click", ()=> {
     const inp = $("u_pass");
@@ -2716,44 +1520,26 @@ document.addEventListener("DOMContentLoaded", ()=>{
     validateRatePlan();
   });
 
-  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); await refreshKPIs(); });
-  $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); await refreshKPIs(); });
+  $("btnRefreshUsers").addEventListener("click", listUsers);
+  $("btnRefreshTopups")?.addEventListener("click", listTopups);
 
   bindCapitalFormatter($("u_capital"));
 
+  $("btnAccreditDo").addEventListener("click", doAccreditCapital);
   $("btnResetDo").addEventListener("click", doResetPassword);
+
+  // ✅ Nuevo botón global para reset
   $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
+
+  // ✅ Si cambias el selector, actualiza el contexto
   $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
 
-  $("btnDoSchedule")?.addEventListener("click", doScheduleTopup);
-
-  $("modalScheduleTopup")?.addEventListener("click", (e)=>{ if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal(); });
-  $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
-  $("modalWithdrawHistory")?.addEventListener("click", (e)=>{ if(e.target === $("modalWithdrawHistory")) closeWithdrawHistory(); });
-
-  $("wdAccount")?.addEventListener("change", updateWithdrawHint);
-  $("btnWithdraw")?.addEventListener("click", doWithdraw);
-
-  $("btnOpenWithdrawHistory")?.addEventListener("click", openWithdrawHistory);
-  $("btnLoadWithdrawHistory")?.addEventListener("click", loadWithdrawHistory);
-  $("btnPrintWithdrawHistory")?.addEventListener("click", printWithdrawalsPDF);
-  $("btnDeleteWithdrawalsShown")?.addEventListener("click", deleteWithdrawalsShown);
-
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape"){
-      try{ closeResetModal(); }catch{}
-      try{ closeScheduleTopupModal(); }catch{}
-      try{ closeWithdrawHistory(); }catch{}
-      try{ closeConfirm(false); }catch{}
-    }
-  });
-
-  // botón confirmar del modal confirm
-  $("confirmOkBtn")?.addEventListener("click", ()=> closeConfirm(true));
+  // Cerrar modales con click afuera
+  $("modalAccredit").addEventListener("click", (e)=>{ if(e.target === $("modalAccredit")) closeAccreditModal(); });
+  $("modalReset").addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
 
   initApp();
 });
 </script>
 </body>
 </html>
-
