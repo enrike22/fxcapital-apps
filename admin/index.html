@@ -962,41 +962,6 @@ async function refreshSessionMeta(){
   }
 }
 
-/*** ✅ Modal Confirm PRO (agregado, y lo usamos en vez de confirm() cuando se pueda) ***/
-let CONFIRM_RESOLVE = null;
-function openConfirm({title, message, okText}){
-  const m = $("modalConfirm");
-  const t = $("confirmTitle");
-  const msg = $("confirmMsg");
-  const okBtn = $("confirmOkBtn");
-  if(!m || !t || !msg || !okBtn){
-    // fallback
-    return Promise.resolve(window.confirm((title? (title+"\n\n"):"") + String(message||"")));
-  }
-  t.textContent = title || "Confirmación";
-  msg.innerHTML = message || "¿Confirma esta acción?";
-  okBtn.textContent = okText || "Confirmar";
-  show(m, true);
-
-  return new Promise((resolve)=>{
-    CONFIRM_RESOLVE = resolve;
-  });
-}
-function closeConfirm(result){
-  const m = $("modalConfirm");
-  if(m) show(m, false);
-  if(CONFIRM_RESOLVE) CONFIRM_RESOLVE(!!result);
-  CONFIRM_RESOLVE = null;
-}
-window.closeConfirm = closeConfirm;
-
-// cerrar al click fuera
-document.addEventListener("click", (e)=>{
-  const m = $("modalConfirm");
-  if(!m || m.classList.contains("hidden")) return;
-  if(e.target === m) closeConfirm(false);
-});
-
 /*** =========================
   LOGIN + AUTH
 ========================= ***/
@@ -2407,5 +2372,6 @@ document.addEventListener("DOMContentLoaded", init);
 
 </body>
 </html>
+
 
 
