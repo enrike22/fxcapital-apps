@@ -519,12 +519,16 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- LOGIN -->
   <div id="unauth" class="card">
     <h2>Admin — Iniciar sesión</h2>
-    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
-      <div><label>Email</label><input id="email" type="email" required></div>
-      <div><label>Contraseña</label><input id="password" type="password" required></div>
-      <div style="align-self:end"><button type="submit">Entrar</button></div>
-      <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
-    </form>
+   <form id="loginForm" autocomplete="on">
+  <label>Email</label>
+  <input id="email" type="email" autocomplete="username" required>
+
+  <label>Contraseña</label>
+  <input id="password" type="password" autocomplete="current-password" required>
+
+  <button type="submit">Entrar</button>
+</form>
+
   </div>
 
   <!-- APP -->
@@ -2779,6 +2783,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
