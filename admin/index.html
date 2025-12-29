@@ -1112,12 +1112,19 @@ async function rpcIsAdmin(){
     headers: hAuth(),
     body: "{}"
   });
-  if(!r.ok) return false;
+
+  const raw = await r.text();
+  if(!r.ok){
+    // Diferenciamos entre "no existe" (404) vs permisos/sesión.
+    throw new Error(`rpc/is_admin ${r.status}: ${raw.slice(0,200)}`);
+  }
+
+  // La RPC devuelve true/false (JSON) o a veces "true" como texto.
   try{
-    const v = await r.json();
+    const v = JSON.parse(raw);
     return !!v;
   }catch(e){
-    return false;
+    return raw.trim() === "true";
   }
 }
 
@@ -2771,5 +2778,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-
