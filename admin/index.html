@@ -1150,56 +1150,51 @@ async function requireAdmin(){
   }
 }
 
+<script>
 async function doLogin(e){
   e.preventDefault();
-  clearGlobalError();
 
-  const email = $("email").value.trim();
-  const password = $("password").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-  $("loginMsg").textContent = "";
-  setLoading($("loginForm"), true);
+  if(!email || !password){
+    setGlobalError("Email y contraseña son obligatorios");
+    return;
+  }
 
-  try{
-    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-      method:"POST",
-      headers:{
-        apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,
-        "Content-Type":"application/json"
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({
+        email,
+        password
+      })
     });
 
-    let data = null;
-    try{ data = await r.json(); }catch{ data = null; }
+    const data = await res.json();
 
-    if(!r.ok){
-      $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido";
-      return;
-    }
-    if(!data?.access_token){
-      $("loginMsg").textContent = "Login inválido (sin token).";
+    if(!res.ok){
+      setGlobalError(data.error_description || "Credenciales incorrectas");
       return;
     }
 
-    localStorage.token = data.access_token;
-    localStorage.uid = data.user?.id || "";
+    // Guardar sesión
+    localStorage.setItem("sb_access_token", data.access_token);
+    localStorage.setItem("sb_refresh_token", data.refresh_token);
 
-    await initApp();
+    // Redirigir o inicializar app
+    location.reload();
 
-  }catch(err){
+  } catch(err){
     console.error(err);
-    $("loginMsg").textContent = "Error de red";
-  }finally{
-    setLoading($("loginForm"), false);
+    setGlobalError("Error de conexión con Supabase");
   }
 }
-function logout(){
-  localStorage.removeItem("token");
-  localStorage.removeItem("uid");
-  location.reload();
-}
+</script>
 
 /*** Edge Functions auxiliares ***/
 async function createAuthUserIfNeeded(email, password, fullName) {
@@ -2784,6 +2779,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
