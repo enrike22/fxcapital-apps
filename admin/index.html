@@ -1141,58 +1141,36 @@ async function requireAdmin(){
 
 async function doLogin(e){
   e.preventDefault();
-  clearGlobalError();
 
-  const email = $("email").value.trim();
-  const password = $("password").value;
+  const email = document.getElementById("u_email").value.trim();
+  const password = document.getElementById("u_pass").value;
 
-  $("loginMsg").textContent = "";
-  setLoading($("loginForm"), true);
+  const url = `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
 
-  try{
-    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
-      method:"POST",
-      headers:{
-        apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,
-        "Content-Type":"application/json",
-        "Accept":"application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "apikey": ANON_KEY,
+      "Authorization": "Bearer " + ANON_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
 
-    // A veces, si hay un error de proxy/hosting, puede venir HTML.
-    // Leemos texto primero y luego intentamos JSON.
-    const raw = await r.text();
-    let data = null;
-    try{ data = raw ? JSON.parse(raw) : null; }catch{ data = null; }
+  const data = await res.json();
 
-    if(!r.ok){
-      const msg = data?.error_description || data?.error || (raw && raw.trim().startsWith("<") ? "Respuesta inválida (HTML). Revisa PROJECT_URL/ANON_KEY y CORS." : "Login inválido");
-      $("loginMsg").textContent = msg;
-      return;
-    }
-    if(!data?.access_token){
-      $("loginMsg").textContent = "Login inválido (sin token).";
-      return;
-    }
-
-    localStorage.token = data.access_token;
-    localStorage.uid = data.user?.id || "";
-
-    await initApp();
-
-  }catch(err){
-    console.error(err);
-    $("loginMsg").textContent = "Error de red";
-  }finally{
-    setLoading($("loginForm"), false);
+  if(!res.ok){
+    console.error("LOGIN ERROR:", data);
+    showGlobalError("Login inválido: " + (data?.error_description || data?.msg || JSON.stringify(data)));
+    return;
   }
-}
-function logout(){
-  localStorage.removeItem("token");
-  localStorage.removeItem("uid");
-  location.reload();
+
+  // ✅ token correcto
+  localStorage.token = data.access_token;
+  localStorage.refresh_token = data.refresh_token;
+  localStorage.user_id = data.user?.id || "";
+
+  await initApp(); // aquí ya puedes llamar /rpc/is_admin
 }
 
 /*** Edge Functions auxiliares ***/
@@ -2778,3 +2756,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
