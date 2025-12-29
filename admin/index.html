@@ -962,1416 +962,1773 @@ async function refreshSessionMeta(){
   }
 }
 
-/*** =========================
-  LOGIN + AUTH
-========================= ***/
+/*** ✅ Modal Confirm PRO (agregado, y lo usamos en vez de confirm() cuando se pueda) ***/
+let CONFIRM_RESOLVE = null;
+function openConfirm({title, message, okText}){
+  const m = $("modalConfirm");
+  const t = $("confirmTitle");
+  const msg = $("confirmMsg");
+  const okBtn = $("confirmOkBtn");
+  if(!m || !t || !msg || !okBtn){
+    // fallback
+    return Promise.resolve(window.confirm((title? (title+"\n\n"):"") + String(message||"")));
+  }
+  t.textContent = title || "Confirmación";
+  msg.innerHTML = message || "¿Confirma esta acción?";
+  okBtn.textContent = okText || "Confirmar";
+  show(m, true);
+
+  return new Promise((resolve)=>{
+    CONFIRM_RESOLVE = resolve;
+  });
+}
+function closeConfirm(result){
+  const m = $("modalConfirm");
+  if(m) show(m, false);
+  if(CONFIRM_RESOLVE) CONFIRM_RESOLVE(!!result);
+  CONFIRM_RESOLVE = null;
+}
+window.closeConfirm = closeConfirm;
+
+// cerrar al click fuera
+document.addEventListener("click", (e)=>{
+  const m = $("modalConfirm");
+  if(!m || m.classList.contains("hidden")) return;
+  if(e.target === m) closeConfirm(false);
+});
+
+/*** ✅ KPIs (agregado) ***/
+async function refreshKPIs(){
+  const kWrap = $("kpisWrap");
+  const kW = $("kpiWithdrawPending");
+  const kT = $("kpiTopupsPending");
+  const kO = $("kpiOpsToday");
+  const kWHint = $("kpiWithdrawHint");
+
+  if(!kW || !kT || !kO) return;
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+(localStorage.token||""),
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  try{
+    // withdrawals pending
+    const rw = await fetch(`${BASE}/withdrawal_requests?select=id,status,created_at&limit=600`, { headers:h, cache:"no-store" });
+    if(!rw.ok) throw new Error(await rw.text().catch(()=> "") || `HTTP ${rw.status}`);
+    const wrows = await rw.json();
+
+    const pendingW = (wrows||[]).filter(r=> String(r.status||"").toLowerCase()==="pending").length;
+    kW.textContent = pendingW;
+    if(kWHint) kWHint.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-GT")}`;
+
+    // topups pending + programadas (effective_date != null) aunque status sea pending
+    const rt = await fetch(`${BASE}/topups?select=id,status,created_at,effective_date&limit=800`, { headers:h, cache:"no-store" });
+    if(!rt.ok) throw new Error(await rt.text().catch(()=> "") || `HTTP ${rt.status}`);
+    const trows = await rt.json();
+
+    const pendingT = (trows||[]).filter(r=>{
+      const s = String(r.status||"").toLowerCase();
+      const scheduled = !!r.effective_date;
+      return s==="pending" || scheduled;
+    }).length;
+    kT.textContent = pendingT;
+
+    // ops 24h
+    const since = Date.now() - 24*60*60*1000;
+    const ops =
+      (wrows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length +
+      (trows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length;
+    kO.textContent = ops;
+
+    if(kWrap) show(kWrap, true);
+  }catch(err){
+    console.error("[KPI DEBUG]", err);
+    kW.textContent = "—";
+    kT.textContent = "—";
+    kO.textContent = "—";
+    if(kWrap) show(kWrap, true);
+  }
+}
+
+/*** FORMATEO EN INPUT NUMÉRICO CON COMAS ***/
+function formatCapitalString(raw){
+  raw = String(raw ?? "").replace(/[^\d.]/g, "");
+  const firstDot = raw.indexOf(".");
+  if (firstDot !== -1){
+    const head = raw.slice(0, firstDot+1);
+    const tail = raw.slice(firstDot+1).replace(/\./g, "");
+    raw = head + tail;
+  }
+  let [intPart, decPart] = raw.split(".");
+  intPart = intPart ? intPart.replace(/^0+(?=\d)/, "") : "";
+  if (intPart){ intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  if (decPart !== undefined) decPart = decPart.slice(0, 2);
+  return decPart !== undefined ? `${intPart || "0"}.${decPart}` : (intPart || "");
+}
+function parseCapitalFromInput(val){
+  if (!val) return 0;
+  const clean = String(val).replace(/,/g, "");
+  const n = Number(clean);
+  return Number.isFinite(n) ? n : 0;
+}
+function bindCapitalFormatter(inputEl){
+  if(!inputEl) return;
+  inputEl.addEventListener("input", () => {
+    const pos = inputEl.selectionStart ?? inputEl.value.length;
+    const before = inputEl.value;
+    const rawNoCommas = before.replace(/,/g, "");
+    inputEl.value = formatCapitalString(rawNoCommas);
+    const diff = inputEl.value.length - before.length;
+    const newPos = Math.max(0, pos + diff);
+    const newPosSafe = Math.min(newPos, inputEl.value.length);
+    const ss = inputEl.setSelectionRange;
+    if (typeof ss === "function") ss.call(inputEl, newPosSafe, newPosSafe);
+  });
+  inputEl.addEventListener("blur", () => {
+    if (!inputEl.value.replace(/[^\d]/g, "")) inputEl.value = "0";
+  });
+}
+function setCapitalInputValue(n){
+  const val = (n === null || n === undefined) ? "" : String(n);
+  $("u_capital").value = formatCapitalString(val);
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+/*** LOGIN ***/
 async function doLogin(e){
   e.preventDefault();
   clearGlobalError();
-  safeText($("loginMsg"), "Iniciando sesión...");
-  setLoading($("loginMsg"), true);
 
-  const email = ($("email")?.value || "").trim();
-  const password = $("password")?.value || "";
+  const email = $("email").value.trim();
+  const password = $("password").value;
+
+  $("loginMsg").textContent = "";
+  setLoading($("loginForm"), true);
 
   try{
-    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`, {
+    const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
       method:"POST",
-      headers: { apikey: ANON_KEY, "Content-Type":"application/json" },
+      headers:{
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        "Content-Type":"application/json"
+      },
       body: JSON.stringify({ email, password })
     });
 
-    const data = await r.json().catch(()=>({}));
+    let data = null;
+    try{ data = await r.json(); }catch{ data = null; }
+
     if(!r.ok){
-      setLoading($("loginMsg"), false);
-      safeText($("loginMsg"), (data?.error_description || data?.msg || "No se pudo iniciar sesión."));
+      $("loginMsg").textContent = data?.error_description || data?.error || "Login inválido";
+      return;
+    }
+    if(!data?.access_token){
+      $("loginMsg").textContent = "Login inválido (sin token).";
       return;
     }
 
     localStorage.token = data.access_token;
     localStorage.uid = data.user?.id || "";
 
-    // ✅ Verifica admin (RLS) con RPC is_admin()
-    const ok = await checkIsAdmin();
-    if(!ok){
-      localStorage.removeItem("token");
-      localStorage.removeItem("uid");
-      setLoading($("loginMsg"), false);
-      safeText($("loginMsg"), "Acceso denegado: este usuario no es admin.");
-      return;
-    }
+    await initApp();
 
-    setLoading($("loginMsg"), false);
-    safeText($("loginMsg"), "✅ Sesión iniciada.");
-    await afterLogin();
   }catch(err){
-    setLoading($("loginMsg"), false);
-    safeText($("loginMsg"), "Error de red o configuración.");
-    showGlobalError("No se pudo iniciar sesión", err);
+    console.error(err);
+    $("loginMsg").textContent = "Error de red";
+  }finally{
+    setLoading($("loginForm"), false);
   }
 }
-
-async function checkIsAdmin(){
-  try{
-    const r = await fetch(`${RPC}/is_admin`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({})
-    });
-    if(!r.ok) return false;
-    const v = await r.json().catch(()=>false);
-    return !!v;
-  }catch(e){
-    console.error(e);
-    return false;
-  }
-}
-
 function logout(){
   localStorage.removeItem("token");
   localStorage.removeItem("uid");
-  show($("app"), false);
-  show($("unauth"), true);
-  show($("logoutBtn"), false);
-  show($("btnOpenResetGlobal"), false);
-  show($("kpisWrap"), false);
-  refreshSessionMeta();
+  location.reload();
 }
 
-async function afterLogin(){
-  show($("unauth"), false);
-  show($("app"), true);
-  show($("logoutBtn"), true);
-  show($("btnOpenResetGlobal"), true);
-  show($("kpisWrap"), true);
-  await refreshSessionMeta();
-
-  await Promise.allSettled([
-    listUsers(),
-    listWithdrawRequests(),
-    listTopups(),
-    loadWithdrawAccountsForAdmin(),
-    refreshKPIs()
-  ]);
-}
-
-/*** =========================
-  CLIENTES (accounts + profiles)
-========================= ***/
-let USERS_CACHE = [];
-let ACCOUNTS_CACHE = [];
-
-function applySearchFilter(){
-  const q = ($("q")?.value || "").trim().toLowerCase();
-  if(!q){
-    renderUsers(USERS_CACHE);
-    return;
-  }
-  const filtered = USERS_CACHE.filter(u=>{
-    const s = [
-      u.full_name, u.email, u.phone, u.plan, u.bank_name, u.bank_account, u.bank_account_type,
-      u.currency, u.interest_mode, u.joined_at
-    ].map(x=>String(x||"").toLowerCase()).join(" | ");
-    return s.includes(q);
+/*** Edge Functions auxiliares ***/
+async function createAuthUserIfNeeded(email, password, fullName) {
+  if(!password) return { ok:true, status:204, json: async()=>({}) };
+  const url = "https://czvpehbubfrinutztnwh.functions.supabase.co/admin-create-user";
+  return fetch(url, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      apikey:ANON_KEY,
+      Authorization:"Bearer "+(localStorage.token||"")
+    },
+    body: JSON.stringify({ email, password, full_name: fullName })
   });
-  renderUsers(filtered);
+}
+async function getAuthUserIdByEmail(email){
+  try{
+    const r = await fetch(`${RPC}/get_user_id_by_email`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({ p_email: email })
+    });
+    if(!r.ok) return null;
+    const id = await r.json();
+    return id || null;
+  }catch{ return null; }
 }
 
+/*** LISTA CLIENTES ***/
+let CACHED = [];
 async function listUsers(){
-  clearGlobalError();
-  safeText($("usersMsg"), "Cargando clientes...");
-  setLoading($("usersMsg"), true);
+  const msgEl = $("usersMsg");
+  if(msgEl) msgEl.textContent = "";
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  const sel = `user_id,full_name,email,phone,plan,currency,capital,account_id,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at,compound_interest`;
 
   try{
-    // Traemos profiles + accounts (join manual por email/user_id)
-    const profSel = "id,email,full_name,phone,role,created_at";
-    const accSel  = "id,user_id,currency,capital,joined_at,plan,months,rate_6m,bank_name,bank_account,bank_account_type,interest_mode,updated_at";
+    let r = await fetch(`${BASE}/v_admin_users_filtered?select=${encodeURIComponent(sel)}&order=full_name.asc`, { headers:h, cache:"no-store" });
 
-    const [pR, aR] = await Promise.all([
-      fetch(`${BASE}/profiles?select=${encodeURIComponent(profSel)}&order=created_at.desc`, { headers: headersJSON() }),
-      fetch(`${BASE}/accounts?select=${encodeURIComponent(accSel)}&order=updated_at.desc`, { headers: headersJSON() })
-    ]);
-
-    if(!pR.ok || !aR.ok){
-      const err = { profiles: await pR.text(), accounts: await aR.text() };
-      throw err;
+    if (r.ok) {
+      CACHED = await r.json();
+      if(msgEl) msgEl.textContent = `Clientes cargados: ${CACHED.length}`;
+      renderUsers(CACHED);
+      refreshResetPicker();
+      refreshWithdrawPicker();
+      return;
     }
 
-    const profiles = await pR.json();
-    const accounts = await aR.json();
+    const t = await r.text().catch(()=> "");
+    console.error("v_admin_users_filtered error:", r.status, t);
+    if(msgEl) msgEl.textContent = `No se pudo cargar la vista (HTTP ${r.status}). Probando método alterno…`;
 
-    // Map: user_id -> profile
-    const mapP = new Map(profiles.map(p=>[p.id, p]));
-    const users = accounts.map(a=>{
-      const p = mapP.get(a.user_id) || {};
+    CACHED = await loadUsersViaJoinFallback(h);
+    if(msgEl) msgEl.textContent = `Clientes cargados (fallback): ${CACHED.length}`;
+    renderUsers(CACHED);
+    refreshResetPicker();
+    refreshWithdrawPicker();
+
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      await initApp();
+    }
+  }catch(e){
+    console.error(e);
+    if(msgEl) msgEl.textContent = "Error cargando clientes (revisa conexión, permisos o RLS).";
+    CACHED = [];
+    renderUsers(CACHED);
+    refreshResetPicker();
+    refreshWithdrawPicker();
+  }
+}
+
+async function loadUsersViaJoinFallback(h){
+  try{
+    const [aRes, pRes] = await Promise.all([
+      fetch(`${BASE}/accounts?select=id,user_id,currency,capital,plan,bank_name,bank_account,bank_account_type,invest_months,interest_pct,joined_at,compound_interest`, { headers:h, cache:"no-store" }),
+      fetch(`${BASE}/profiles?select=id,full_name,email,phone,is_admin`, { headers:h, cache:"no-store" }),
+    ]);
+
+    const accounts = aRes.ok ? await aRes.json() : [];
+    const profiles = pRes.ok ? await pRes.json() : [];
+    const pmap = new Map(profiles.map(p => [p.id, p]));
+
+    return accounts.map(a=>{
+      const p = pmap.get(a.user_id) || {};
+      if (p.is_admin) return null;
       return {
+        user_id: p.id || a.user_id,
+        full_name: p.full_name || null,
+        email: p.email || null,
+        phone: p.phone || null,
         account_id: a.id,
-        user_id: a.user_id,
-        email: p.email || "",
-        full_name: p.full_name || "",
-        phone: p.phone || "",
-        joined_at: a.joined_at,
-        plan: a.plan,
         currency: a.currency,
         capital: a.capital,
-        months: a.months,
-        rate_6m: a.rate_6m,
+        plan: a.plan,
         bank_name: a.bank_name,
         bank_account: a.bank_account,
         bank_account_type: a.bank_account_type,
-        interest_mode: a.interest_mode || "monthly"
+        invest_months: a.invest_months,
+        interest_pct: a.interest_pct,
+        joined_at: a.joined_at,
+        compound_interest: a.compound_interest
       };
-    });
-
-    USERS_CACHE = users;
-    ACCOUNTS_CACHE = accounts;
-
-    renderUsers(users);
-    setLoading($("usersMsg"), false);
-    safeText($("usersMsg"), `✅ ${users.length} clientes cargados.`);
-    applySearchFilter();
-    await refreshKPIs();
-  }catch(err){
-    setLoading($("usersMsg"), false);
-    safeText($("usersMsg"), "No se pudieron cargar clientes.");
-    showGlobalError("No se pudieron cargar clientes", err);
+    }).filter(Boolean).sort((x,y)=> (x.full_name||'').localeCompare(y.full_name||'' ));
+  }catch{
+    return [];
   }
 }
 
 function renderUsers(rows){
   const tb = $("users");
-  if(!tb) return;
   tb.innerHTML = "";
 
-  const frag = document.createDocumentFragment();
-
-  rows.forEach(u=>{
+  if(!rows || !rows.length){
     const tr = document.createElement("tr");
-
-    const modeChip = u.interest_mode === "compound"
-      ? `<span class="chip"><span class="dot scheduled"></span>Acumulado</span>`
-      : `<span class="chip"><span class="dot approved"></span>Mensual</span>`;
-
-    tr.innerHTML = `
-      <td>${escapeHtml(u.full_name || "—")}</td>
-      <td>${escapeHtml(u.email || "—")}</td>
-      <td>${escapeHtml(u.phone || "—")}</td>
-      <td class="nowrap">${escapeHtml(u.joined_at || "—")}</td>
-      <td>${escapeHtml(u.plan || "—")}</td>
-      <td>${escapeHtml(fmtMoney(u.capital, u.currency))}</td>
-      <td>${escapeHtml(u.bank_name || "—")}</td>
-      <td class="nowrap">${escapeHtml(u.bank_account || "—")}</td>
-      <td class="nowrap">${escapeHtml(u.bank_account_type || "—")}</td>
-      <td>${escapeHtml(String(u.months ?? "—"))}</td>
-      <td class="nowrap">${escapeHtml(String(u.rate_6m ?? "—"))}</td>
-      <td>${modeChip}</td>
-      <td class="nowrap">
-        <button class="ghost" type="button" data-edit="${u.email}">Editar</button>
-        <button class="ghost" type="button" data-reset="${u.email}">Reset</button>
-      </td>
-    `;
-
-    frag.appendChild(tr);
-  });
-
-  tb.appendChild(frag);
-
-  // botones
-  tb.querySelectorAll("[data-edit]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const email = btn.getAttribute("data-edit");
-      const user = USERS_CACHE.find(x=>x.email===email);
-      if(user) fillFormForEdit(user);
-    });
-  });
-
-  tb.querySelectorAll("[data-reset]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const email = btn.getAttribute("data-reset");
-      const user = USERS_CACHE.find(x=>x.email===email);
-      if(user) openResetModalFor(user);
-    });
-  });
-}
-
-function fillFormForEdit(u){
-  clearGlobalError();
-  $("u_email").value = u.email || "";
-  $("u_name").value = u.full_name || "";
-  $("u_phone").value = u.phone || "";
-  $("u_pass").value = "";
-  $("u_currency").value = u.currency || "GTQ";
-  $("u_capital").value = (u.capital ?? 0);
-  $("u_joined").value = (u.joined_at || "").slice(0,10);
-  $("u_plan").value = u.plan || "STANDARD";
-  $("u_months").value = String(u.months || 12);
-  $("u_rate").value = (u.rate_6m ?? "");
-  $("u_bank_name").value = u.bank_name || "";
-  $("u_bank_account").value = u.bank_account || "";
-  $("u_bank_account_type").value = u.bank_account_type || "";
-  $("u_interest_mode").value = u.interest_mode || "monthly";
-  safeText($("saveMsg"), `Editando: ${u.email}`);
-  validateRateVsPlan();
-}
-
-function clearForm(){
-  $("u_email").value = "";
-  $("u_name").value = "";
-  $("u_phone").value = "";
-  $("u_pass").value = "";
-  $("u_currency").value = "GTQ";
-  $("u_capital").value = "";
-  $("u_joined").value = "";
-  $("u_plan").value = "STANDARD";
-  $("u_months").value = "12";
-  $("u_rate").value = "";
-  $("u_bank_name").value = "";
-  $("u_bank_account").value = "";
-  $("u_bank_account_type").value = "";
-  $("u_interest_mode").value = "monthly";
-  safeText($("saveMsg"), "");
-  validateRateVsPlan();
-}
-
-function validateRateVsPlan(){
-  const plan = $("u_plan")?.value;
-  const rate = Number(($("u_rate")?.value || "0"));
-  const err = $("rateError");
-  if(!err) return;
-
-  let ok = true;
-  if(plan === "STANDARD" && rate && rate !== 15) ok = false;
-  if(plan === "PLATINUM" && rate && rate !== 20) ok = false;
-  // BLACK puede variar
-
-  err.classList.toggle("hidden", ok);
-}
-
-/*** =========================
-  CREAR / EDITAR CLIENTE (profiles + accounts + auth)
-========================= ***/
-async function saveUser(){
-  clearGlobalError();
-  safeText($("saveMsg"), "Guardando...");
-  setLoading($("saveMsg"), true);
-
-  const email = ($("u_email").value || "").trim().toLowerCase();
-  const full_name = ($("u_name").value || "").trim();
-  const phone = ($("u_phone").value || "").trim();
-  const pass = ($("u_pass").value || "");
-  const currency = $("u_currency").value || "GTQ";
-  const capital = Number(($("u_capital").value || "0"));
-  const joined_at = $("u_joined").value || null;
-  const plan = $("u_plan").value || "STANDARD";
-  const months = Number(($("u_months").value || "12"));
-  const rate_6m = Number(($("u_rate").value || "0"));
-  const bank_name = ($("u_bank_name").value || "").trim();
-  const bank_account = ($("u_bank_account").value || "").trim();
-  const bank_account_type = ($("u_bank_account_type").value || "").trim();
-  const interest_mode = $("u_interest_mode").value || "monthly";
-
-  try{
-    if(!email || !full_name){
-      setLoading($("saveMsg"), false);
-      safeText($("saveMsg"), "Email y nombre son obligatorios.");
-      return;
-    }
-    validateRateVsPlan();
-
-    // Buscar si existe profile por email
-    const pR = await fetch(`${BASE}/profiles?select=id,email&email=eq.${encodeURIComponent(email)}`, { headers: headersJSON() });
-    if(!pR.ok) throw await pR.text();
-    const pList = await pR.json();
-    const profile = pList?.[0] || null;
-
-    let user_id = profile?.id || null;
-
-    // Si no existe profile y hay pass -> crear usuario Auth mediante Edge Function (si la tienes)
-    // Si NO tienes edge, puedes crear el user manual y solo guardar profile+account.
-    if(!user_id && pass && pass.length >= 8){
-      // Intentamos RPC admin_create_user(email, pass) si existe (recomendado)
-      const rCreate = await fetch(`${RPC}/admin_create_user`, {
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ p_email: email, p_password: pass, p_full_name: full_name, p_phone: phone })
-      });
-
-      if(!rCreate.ok){
-        // fallback: seguimos creando solo profile/account (pero sin Auth)
-        console.warn("admin_create_user RPC no disponible o falló:", await rCreate.text());
-      }else{
-        const out = await rCreate.json().catch(()=>null);
-        user_id = out?.id || out?.user_id || user_id;
-      }
-    }
-
-    // Si aún no hay user_id, solo actualizamos/insertamos profile por email (sin Auth)
-    // (Ideal: que ya exista user_id real en profiles)
-    if(profile){
-      // update profile
-      const up = await fetch(`${BASE}/profiles?id=eq.${profile.id}`, {
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ full_name, phone })
-      });
-      if(!up.ok) throw await up.text();
-    }else{
-      // insert profile (si no hay user_id, lo ponemos null no se puede; por eso intentamos usar local uid si es demo)
-      // OJO: en tu esquema profiles.id probablemente = auth.uid(). Si no creaste Auth user, no insertes.
-      // Entonces si no existe user_id real, NO insertamos profile para no romper integridad.
-      if(!user_id){
-        setLoading($("saveMsg"), false);
-        safeText($("saveMsg"), "⚠️ No existe usuario Auth para ese email. Crea primero el usuario (con password) o crea un RPC admin_create_user.");
-        return;
-      }
-      const ins = await fetch(`${BASE}/profiles`, {
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ id: user_id, email, full_name, phone, role: "client" })
-      });
-      if(!ins.ok) throw await ins.text();
-    }
-
-    // accounts: buscar por user_id
-    const aR = await fetch(`${BASE}/accounts?select=id,user_id&user_id=eq.${user_id}`, { headers: headersJSON() });
-    if(!aR.ok) throw await aR.text();
-    const aList = await aR.json();
-    const acc = aList?.[0] || null;
-
-    const accPayload = {
-      user_id,
-      currency,
-      capital,
-      joined_at,
-      plan,
-      months,
-      rate_6m,
-      bank_name,
-      bank_account,
-      bank_account_type,
-      interest_mode
-    };
-
-    if(acc){
-      const upA = await fetch(`${BASE}/accounts?id=eq.${acc.id}`, {
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify(accPayload)
-      });
-      if(!upA.ok) throw await upA.text();
-    }else{
-      const inA = await fetch(`${BASE}/accounts`, {
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify(accPayload)
-      });
-      if(!inA.ok) throw await inA.text();
-    }
-
-    setLoading($("saveMsg"), false);
-    safeText($("saveMsg"), "✅ Guardado.");
-    await listUsers();
-    await loadWithdrawAccountsForAdmin();
-  }catch(err){
-    setLoading($("saveMsg"), false);
-    safeText($("saveMsg"), "Error al guardar.");
-    showGlobalError("Error al guardar cliente", err);
-  }
-}
-
-/*** =========================
-  WITHDRAW REQUESTS (SOLICITUDES)
-  ✅ FIX: campos correctos + status filter + mensajes claros
-========================= ***/
-async function listWithdrawRequests(){
-  clearGlobalError();
-  const msgEl = $("withdrawReqsMsg");
-  if(msgEl) safeText(msgEl, "Cargando solicitudes...");
-  setLoading(msgEl, true);
-
-  try{
-    // ✅ Ajusta el select a tu tabla withdrawal_requests
-    // Incluimos datos de cuenta y usuario si los tienes como columnas
-    const sel = [
-      "id",
-      "created_at",
-      "status",
-      "amount",
-      "currency",
-      "bank_name",
-      "bank_account",
-      "bank_account_type",
-      "note",
-      "user_id",
-      "account_id"
-    ].join(",");
-
-    const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.PENDING&order=created_at.desc`;
-    const r = await fetch(url, { headers: headersJSON() });
-
-    if(!r.ok){
-      const t = await r.text();
-      throw t;
-    }
-
-    const rows = await r.json();
-    renderWithdrawRequests(rows);
-
-    setLoading(msgEl, false);
-    safeText(msgEl, `✅ ${rows.length} pendientes.`);
-    await refreshKPIs();
-  }catch(err){
-    setLoading(msgEl, false);
-    safeText(msgEl, "No se pudieron cargar solicitudes de retiro");
-    showGlobalError("No se pudieron cargar solicitudes de retiro", err);
-  }
-}
-
-function renderWithdrawRequests(rows){
-  const tb = $("withdrawReqs");
-  if(!tb) return;
-  tb.innerHTML = "";
-
-  if(!rows.length){
-    tb.innerHTML = `<tr><td colspan="9" class="small" style="padding:18px;opacity:.75">No hay solicitudes pendientes.</td></tr>`;
+    tr.innerHTML = `<td colspan="13" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
+    tb.appendChild(tr);
     return;
   }
 
-  const frag = document.createDocumentFragment();
-
-  rows.forEach(r=>{
-    // buscamos el cliente en cache para mostrar nombre/email
-    const user = USERS_CACHE.find(u=>u.user_id === r.user_id) || {};
-    const full_name = user.full_name || "—";
-    const email = user.email || "—";
-
+  rows.forEach(x=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="nowrap">${escapeHtml(fmtDateTime(r.created_at))}</td>
-      <td>${escapeHtml(full_name)}</td>
-      <td>${escapeHtml(email)}</td>
-      <td>${escapeHtml(fmtMoney(r.amount, r.currency || user.currency))}</td>
-      <td>${escapeHtml(r.bank_name || user.bank_name || "—")}</td>
-      <td class="nowrap">${escapeHtml(r.bank_account || user.bank_account || "—")}</td>
-      <td>${escapeHtml(r.bank_account_type || user.bank_account_type || "—")}</td>
-      <td>${escapeHtml(r.note || "—")}</td>
+      <td>${x.full_name ?? '—'}</td>
+      <td>${x.email ?? '—'}</td>
+      <td>${x.phone || '—'}</td>
+      <td class="nowrap">${fmtDate(x.joined_at)}</td>
+      <td>${x.plan ?? '—'}</td>
+      <td>${fmtMoney(x.capital, x.currency)}</td>
+      <td>${x.bank_name ?? '—'}</td>
+      <td class="nowrap">${x.bank_account ?? '—'}</td>
+      <td class="nowrap">${x.bank_account_type ?? '—'}</td>
+      <td>${x.invest_months ?? '—'}</td>
+      <td>${x.interest_pct ?? '—'}</td>
+      <td>${x.compound_interest ? "Acumulado" : "Mensual"}</td>
       <td class="nowrap">
-        <button class="ok" type="button" data-approve="${r.id}">Aprobar</button>
-        <button class="danger" type="button" data-reject="${r.id}">Rechazar</button>
-      </td>
-    `;
-    frag.appendChild(tr);
-  });
-
-  tb.appendChild(frag);
-
-  tb.querySelectorAll("[data-approve]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-approve");
-      const yes = await openConfirm({
-        title: "Aprobar retiro",
-        message: "Se marcará como <b>APPROVED</b>. ¿Confirmas?",
-        okText: "Aprobar"
-      });
-      if(!yes) return;
-      await approveWithdrawRequest(id);
-    });
-  });
-
-  tb.querySelectorAll("[data-reject]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-reject");
-      const yes = await openConfirm({
-        title: "Rechazar retiro",
-        message: "Se marcará como <b>REJECTED</b>. ¿Confirmas?",
-        okText: "Rechazar"
-      });
-      if(!yes) return;
-      await rejectWithdrawRequest(id);
-    });
+        <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
+        <button class="ghost" onclick='openResetModal(${JSON.stringify(x)})'>Reset contraseña</button>
+        <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
+      </td>`;
+    tb.appendChild(tr);
   });
 }
 
-async function approveWithdrawRequest(id){
-  clearGlobalError();
-  const msgEl = $("withdrawReqsMsg");
-  safeText(msgEl, "Aprobando...");
-  setLoading(msgEl, true);
+/*** BUSCAR (mismo id="q") ***/
+$("q")?.addEventListener("input",(e)=>{
+  const qv = e.target.value.trim().toLowerCase();
+  if(!qv){ renderUsers(CACHED); return; }
+  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
+    .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
+  renderUsers(filt);
+});
 
-  try{
-    // ✅ RPC de tu función
-    const r = await fetch(`${RPC}/admin_approve_withdrawal_request`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_id: id })
-    });
-    if(!r.ok) throw await r.text();
+/* ============================================================
+   ✅ RETIRAR CAPITAL (Admin)
+   ============================================================ */
 
-    setLoading(msgEl, false);
-    safeText(msgEl, "✅ Retiro aprobado.");
-    await listWithdrawRequests();
-  }catch(err){
-    setLoading(msgEl, false);
-    safeText(msgEl, "Error al aprobar retiro.");
-    showGlobalError("Error al aprobar retiro", err);
-  }
-}
-
-async function rejectWithdrawRequest(id){
-  clearGlobalError();
-  const msgEl = $("withdrawReqsMsg");
-  safeText(msgEl, "Rechazando...");
-  setLoading(msgEl, true);
-
-  try{
-    // Si tienes un RPC para rechazo, úsalo. Si no, hacemos PATCH directo.
-    // Intentamos RPC primero:
-    let ok = false;
-    try{
-      const r1 = await fetch(`${RPC}/admin_reject_withdrawal_request`, {
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ p_id: id })
-      });
-      if(r1.ok) ok = true;
-    }catch{}
-
-    if(!ok){
-      const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ status:"REJECTED", updated_at: new Date().toISOString() })
-      });
-      if(!r.ok) throw await r.text();
-    }
-
-    setLoading(msgEl, false);
-    safeText(msgEl, "✅ Retiro rechazado.");
-    await listWithdrawRequests();
-  }catch(err){
-    setLoading(msgEl, false);
-    safeText(msgEl, "Error al rechazar retiro.");
-    showGlobalError("Error al rechazar retiro", err);
-  }
-}
-
-/*** =========================
-  TOPUPS (pendientes/programadas)
-========================= ***/
-let SCHED_TOPUP_ID = null;
-
-function statusChipTopup(t){
-  // pending + effective_date => programada
-  if(t.status === "PENDING" && t.effective_date){
-    return `<span class="chip"><span class="dot scheduled"></span>Programada</span>`;
-  }
-  if(t.status === "PENDING"){
-    return `<span class="chip"><span class="dot pending"></span>Pendiente</span>`;
-  }
-  if(t.status === "APPROVED"){
-    return `<span class="chip"><span class="dot approved"></span>Aprobada</span>`;
-  }
-  if(t.status === "REJECTED"){
-    return `<span class="chip"><span class="dot rejected"></span>Rechazada</span>`;
-  }
-  return `<span class="chip"><span class="dot"></span>${escapeHtml(t.status||"—")}</span>`;
-}
-
-async function listTopups(){
-  clearGlobalError();
-  const msgEl = $("topupsMsg");
-  if(msgEl) safeText(msgEl, "Cargando recargas...");
-  setLoading(msgEl, true);
-
-  try{
-    const sel = [
-      "id",
-      "amount",
-      "currency",
-      "status",
-      "bank_name",
-      "receipt_path",
-      "created_at",
-      "user_id",
-      "account_id",
-      "reference_code",
-      "provider",
-      "effective_date",
-      "scheduled_note"
-    ].join(",");
-
-    const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.PENDING&order=created_at.desc`;
-    const r = await fetch(url, { headers: headersJSON() });
-    if(!r.ok) throw await r.text();
-
-    const rows = await r.json();
-    renderTopups(rows);
-
-    setLoading(msgEl, false);
-    safeText(msgEl, `✅ ${rows.length} pendientes/programadas.`);
-    await refreshKPIs();
-  }catch(err){
-    setLoading(msgEl, false);
-    safeText(msgEl, "No se pudieron cargar recargas.");
-    showGlobalError("No se pudieron cargar recargas", err);
-  }
-}
-
-function renderTopups(rows){
-  const tb = $("topups");
-  if(!tb) return;
-  tb.innerHTML = "";
-
-  if(!rows.length){
-    tb.innerHTML = `<tr><td colspan="9" class="small" style="padding:18px;opacity:.75">No hay recargas pendientes.</td></tr>`;
-    return;
-  }
-
-  const frag = document.createDocumentFragment();
-
-  rows.forEach(t=>{
-    const user = USERS_CACHE.find(u=>u.user_id === t.user_id) || {};
-    const full_name = user.full_name || "—";
-    const email = user.email || "—";
-    const chip = statusChipTopup(t);
-
-    const receipt = t.receipt_path
-      ? `<a href="${escapeAttr(t.receipt_path)}" target="_blank" rel="noopener" class="small">Ver</a>`
-      : `<span class="small" style="opacity:.65">—</span>`;
-
-    const eff = t.effective_date ? fmtDate(t.effective_date) : "—";
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="nowrap">${escapeHtml(fmtDateTime(t.created_at))}</td>
-      <td>${escapeHtml(full_name)}</td>
-      <td>${escapeHtml(email)}</td>
-      <td>${escapeHtml(fmtMoney(t.amount, t.currency || user.currency))}</td>
-      <td>${escapeHtml(t.bank_name || "—")}</td>
-      <td>${receipt}</td>
-      <td class="nowrap">${chip}</td>
-      <td class="nowrap">${escapeHtml(eff)}</td>
-      <td class="nowrap">
-        <button class="ok" type="button" data-approve-topup="${t.id}">Aprobar</button>
-        <button class="ghost" type="button" data-schedule-topup="${t.id}">Programar</button>
-      </td>
-    `;
-    frag.appendChild(tr);
-  });
-
-  tb.appendChild(frag);
-
-  tb.querySelectorAll("[data-approve-topup]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-approve-topup");
-      const yes = await openConfirm({
-        title: "Aprobar recarga",
-        message: "Se acreditará el capital inmediatamente. ¿Confirmas?",
-        okText: "Aprobar"
-      });
-      if(!yes) return;
-      await approveTopup(id);
-    });
-  });
-
-  tb.querySelectorAll("[data-schedule-topup]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const id = btn.getAttribute("data-schedule-topup");
-      openScheduleTopupModal(id);
-    });
-  });
-}
-
-async function approveTopup(id){
-  clearGlobalError();
-  const msgEl = $("topupsMsg");
-  safeText(msgEl, "Aprobando recarga...");
-  setLoading(msgEl, true);
-
-  try{
-    // si tienes RPC:
-    let ok = false;
-    try{
-      const r1 = await fetch(`${RPC}/admin_approve_topup`, {
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify({ p_id: id })
-      });
-      if(r1.ok) ok = true;
-    }catch{}
-
-    if(!ok){
-      // fallback: marcar approved (si tu DB trigger acredita)
-      const r = await fetch(`${BASE}/topups?id=eq.${id}`, {
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ status:"APPROVED", updated_at: new Date().toISOString() })
-      });
-      if(!r.ok) throw await r.text();
-    }
-
-    setLoading(msgEl, false);
-    safeText(msgEl, "✅ Recarga aprobada.");
-    await listTopups();
-  }catch(err){
-    setLoading(msgEl, false);
-    safeText(msgEl, "Error al aprobar recarga.");
-    showGlobalError("Error al aprobar recarga", err);
-  }
-}
-
-/*** ===== Programar Topup ===== */
-function openScheduleTopupModal(id){
-  clearGlobalError();
-  SCHED_TOPUP_ID = id;
-
-  const m = $("modalScheduleTopup");
-  const msg = $("schedMsg");
-  const info = $("schedInfo");
-  if(msg) msg.textContent = "";
-  if(info) info.textContent = `Topup ID: ${id}`;
-
-  // fecha mínima hoy
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  const today = `${yyyy}-${mm}-${dd}`;
-  const inp = $("schedDate");
-  if(inp){
-    inp.min = today;
-    if(!inp.value) inp.value = today;
-  }
-
-  show(m, true);
-}
-
-function closeScheduleTopupModal(){
-  show($("modalScheduleTopup"), false);
-  SCHED_TOPUP_ID = null;
-}
-window.closeScheduleTopupModal = closeScheduleTopupModal;
-
-async function doScheduleTopup(){
-  clearGlobalError();
-  const msg = $("schedMsg");
-  const date = $("schedDate")?.value;
-  const note = ($("schedNote")?.value || "").trim();
-
-  if(!SCHED_TOPUP_ID){
-    if(msg) msg.textContent = "No hay topup seleccionado.";
-    return;
-  }
-  if(!date){
-    if(msg) msg.textContent = "Selecciona una fecha.";
-    return;
-  }
-
-  if(msg){ msg.textContent = "Programando..."; setLoading(msg, true); }
-
-  try{
-    const r = await fetch(`${RPC}/admin_schedule_topup`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_id: SCHED_TOPUP_ID, p_effective_date: date, p_note: note })
-    });
-
-    if(!r.ok){
-      // fallback: patch directo
-      const rr = await fetch(`${BASE}/topups?id=eq.${SCHED_TOPUP_ID}`, {
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ effective_date: date, scheduled_note: note })
-      });
-      if(!rr.ok) throw await rr.text();
-    }
-
-    if(msg){ setLoading(msg, false); msg.textContent = "✅ Programada."; }
-    closeScheduleTopupModal();
-    await listTopups();
-  }catch(err){
-    if(msg){ setLoading(msg, false); msg.textContent = "Error al programar."; }
-    showGlobalError("Error al programar recarga", err);
-  }
-}
-
-/*** =========================
-  ADMIN: RETIRAR CAPITAL
-========================= ***/
-async function loadWithdrawAccountsForAdmin(){
-  const sel = "id,user_id,currency,capital,plan";
-  try{
-    const r = await fetch(`${BASE}/accounts?select=${encodeURIComponent(sel)}&order=updated_at.desc`, { headers: headersJSON() });
-    if(!r.ok) throw await r.text();
-    const rows = await r.json();
-
-    const dd = $("wdAccount");
-    if(!dd) return;
-    dd.innerHTML = "";
-    rows.forEach(a=>{
-      const u = USERS_CACHE.find(x=>x.user_id===a.user_id) || {};
-      const name = u.full_name || u.email || a.user_id;
-      const opt = document.createElement("option");
-      opt.value = a.id;
-      opt.textContent = `${name} — ${fmtMoney(a.capital, a.currency)} — ${a.plan || ""}`;
-      dd.appendChild(opt);
-    });
-
-    safeText($("wdHint"), rows.length ? "Selecciona cuenta y monto." : "No hay cuentas.");
-  }catch(err){
-    console.error(err);
-  }
-}
-
-async function doAdminWithdraw(){
-  clearGlobalError();
+function refreshWithdrawPicker(){
+  const sel = $("wdAccount");
+  const hint = $("wdHint");
   const msg = $("wdMsg");
-  safeText(msg, "Procesando retiro...");
-  setLoading(msg, true);
+  if(!sel) return;
 
-  const account_id = $("wdAccount")?.value;
-  const amount = Number(($("wdAmount")?.value || "0"));
-  const reference = ($("wdRef")?.value || "").trim();
-  const note = ($("wdNote")?.value || "").trim();
+  if(msg) msg.textContent = "";
+  sel.innerHTML = "";
 
-  if(!account_id || !amount || amount <= 0){
-    setLoading(msg, false);
-    safeText(msg, "Selecciona cuenta y monto válido.");
+  const rows = (CACHED||[]).filter(x=>x.account_id && (x.email || x.full_name));
+  if(!rows.length){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No hay clientes cargados";
+    sel.appendChild(opt);
+    if(hint) hint.textContent = "—";
     return;
   }
 
-  const yes = await openConfirm({
-    title: "Retirar capital",
-    message: `Se descontará <b>${escapeHtml(String(amount))}</b> del capital y se registrará el retiro. ¿Confirmas?`,
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "Selecciona una cuenta";
+  sel.appendChild(opt0);
+
+  rows.forEach(x=>{
+    const opt = document.createElement("option");
+    opt.value = x.account_id;
+    const name = (x.full_name || x.email || "—");
+    opt.textContent = `${name} — ${x.email || "—"} — Capital: ${fmtMoney(x.capital, x.currency || "GTQ")}`;
+    opt.dataset.capital = String(x.capital ?? 0);
+    opt.dataset.currency = x.currency || "GTQ";
+    opt.dataset.name = x.full_name || "";
+    opt.dataset.email = x.email || "";
+    sel.appendChild(opt);
+  });
+
+  if(hint) hint.textContent = "Selecciona una cuenta para ver el capital y retirar.";
+}
+
+function updateWithdrawHint(){
+  const sel = $("wdAccount");
+  const hint = $("wdHint");
+  if(!sel || !hint) return;
+
+  const opt = sel.options[sel.selectedIndex];
+  const name = opt?.dataset?.name || "";
+  const email = opt?.dataset?.email || "";
+  const cap = Number(opt?.dataset?.capital || 0);
+  const ccy = opt?.dataset?.currency || "GTQ";
+
+  if(!sel.value){
+    hint.textContent = "—";
+    return;
+  }
+  hint.innerHTML = `<b>${name || "Cliente"}</b> — ${email || "—"}<br>Capital actual: <b>${fmtMoney(cap, ccy)}</b>`;
+}
+
+async function doWithdraw(){
+  const msg = $("wdMsg");
+  const sel = $("wdAccount");
+  const amount = Number($("wdAmount")?.value || 0);
+  const reference = ($("wdRef")?.value || "").trim() || null;
+  const note = ($("wdNote")?.value || "").trim() || null;
+
+  if(msg) msg.textContent = "";
+  if(!sel?.value){
+    if(msg) msg.textContent = "Selecciona una cuenta.";
+    return;
+  }
+  if(!amount || amount <= 0){
+    if(msg) msg.textContent = "Monto inválido.";
+    return;
+  }
+
+  const opt = sel.options[sel.selectedIndex];
+  const cap = Number(opt?.dataset?.capital || 0);
+  const ccy = opt?.dataset?.currency || "GTQ";
+  const who = opt?.textContent?.split("—")?.[0]?.trim() || "cliente";
+
+  if(amount > cap){
+    if(msg) msg.textContent = `Fondos insuficientes. Capital actual: ${fmtMoney(cap, ccy)}`;
+    return;
+  }
+
+  const ok = await openConfirm({
+    title: "Confirmación de retiro",
+    message: `
+      <div style="font-weight:950;margin-bottom:6px">¿Aplicar retiro de capital?</div>
+      <div>Cliente: <b>${who}</b></div>
+      <div>Monto: <b>${fmtMoney(amount, ccy)}</b></div>
+      <div style="margin-top:8px;opacity:.9">Esto descuenta el capital actual y registra el movimiento.</div>
+    `,
     okText: "Retirar"
   });
-  if(!yes){
-    setLoading(msg, false);
-    safeText(msg, "Cancelado.");
-    return;
-  }
+  if(!ok) return;
+
+  const btn = $("btnWithdraw");
+  if(btn){ btn.disabled = true; btn.textContent = "Procesando..."; }
 
   try{
-    const r = await fetch(`${RPC}/admin_withdraw_capital`, {
+    const r = await fetch(`${RPC}/withdraw_capital`,{
       method:"POST",
       headers: headersJSON(),
-      body: JSON.stringify({ p_account_id: account_id, p_amount: amount, p_reference: reference, p_note: note })
+      body: JSON.stringify({
+        p_account_id: sel.value,
+        p_amount: amount,
+        p_note: note,
+        p_reference: reference
+      })
     });
 
-    if(!r.ok) throw await r.text();
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || `HTTP ${r.status}`);
+    }
 
-    setLoading(msg, false);
-    safeText(msg, "✅ Retiro realizado.");
-    $("wdAmount").value = "";
-    $("wdRef").value = "";
-    $("wdNote").value = "";
+    let data = null;
+    try{ data = await r.json(); }catch{ data = null; }
+    const newCap = data?.[0]?.new_capital;
+
+    if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
 
     await listUsers();
-    await loadWithdrawAccountsForAdmin();
     await refreshKPIs();
-  }catch(err){
-    setLoading(msg, false);
-    safeText(msg, "Error al retirar.");
-    showGlobalError("Error al retirar capital", err);
+
+    if($("wdAmount")) $("wdAmount").value = "";
+    if($("wdRef")) $("wdRef").value = "";
+    if($("wdNote")) $("wdNote").value = "";
+  }catch(e){
+    console.error(e);
+    if(msg) msg.textContent = `❌ Error: ${e.message || e}`;
+    await openConfirm({
+      title:"No se pudo retirar",
+      message:`<div style="color:#FFD0D0;font-weight:950;margin-bottom:6px">Operación no aplicada</div>
+               <div>Detalle: <span style="opacity:.9">${String(e.message||e)}</span></div>`,
+      okText:"Entendido"
+    });
+    closeConfirm(false);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = "Retirar"; }
   }
 }
 
-/*** =========================
-  HISTORIAL DE RETIROS (modal)
-========================= ***/
-let WITHDRAWALS_SHOWN_IDS = [];
+/* ============================================================
+   ✅ HISTORIAL DE RETIROS (Modal + PDF + Borrar mostrado)
+   ============================================================ */
+let WDH_CACHE = [];
 
 function openWithdrawHistory(){
-  clearGlobalError();
   show($("modalWithdrawHistory"), true);
   loadWithdrawHistory();
 }
 function closeWithdrawHistory(){
   show($("modalWithdrawHistory"), false);
 }
-window.closeWithdrawHistory = closeWithdrawHistory;
+
+function resolveClientByAccountId(accountId){
+  const x = (CACHED||[]).find(r => r.account_id === accountId);
+  return {
+    name: x?.full_name || "—",
+    email: x?.email || "—",
+    currency: x?.currency || "GTQ"
+  };
+}
 
 async function loadWithdrawHistory(){
-  clearGlobalError();
   const msg = $("wdhMsg");
-  safeText(msg, "Cargando historial...");
+  const body = $("wdhBody");
+  if(!body) return;
+
+  if(msg) msg.textContent = "Cargando…";
   setLoading(msg, true);
+  body.innerHTML = "";
+  WDH_CACHE = [];
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
 
   try{
-    const sel = "id,created_at,amount,currency,reference,note,account_id,user_id";
-    const r = await fetch(`${BASE}/withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc&limit=200`, { headers: headersJSON() });
-    if(!r.ok) throw await r.text();
-    const rows = await r.json();
+    const sel = `id,created_at,account_id,amount,reference,note`;
+    const url = `${BASE}/withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc&limit=500`;
+    const r = await fetch(url, { headers:h, cache:"no-store" });
 
-    WITHDRAWALS_SHOWN_IDS = rows.map(x=>x.id);
-
-    const tb = $("wdhBody");
-    tb.innerHTML = "";
-
-    if(!rows.length){
-      tb.innerHTML = `<tr><td colspan="6" class="small" style="padding:18px;opacity:.75">No hay retiros.</td></tr>`;
-    }else{
-      const frag = document.createDocumentFragment();
-      rows.forEach(w=>{
-        const user = USERS_CACHE.find(u=>u.user_id === w.user_id) || {};
-        const name = user.full_name || "—";
-        const email = user.email || "—";
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="nowrap">${escapeHtml(fmtDateTime(w.created_at))}</td>
-          <td>${escapeHtml(name)}</td>
-          <td>${escapeHtml(email)}</td>
-          <td>${escapeHtml(fmtMoney(w.amount, w.currency || user.currency))}</td>
-          <td>${escapeHtml(w.reference || "—")}</td>
-          <td>${escapeHtml(w.note || "—")}</td>
-        `;
-        frag.appendChild(tr);
-      });
-      tb.appendChild(frag);
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || `HTTP ${r.status}`);
     }
 
+    const rows = await r.json();
+    WDH_CACHE = Array.isArray(rows) ? rows : [];
+
+    renderWithdrawHistory();
+    if(msg) msg.textContent = `Retiros cargados: ${WDH_CACHE.length}`;
+  }catch(e){
+    console.error(e);
+    if(msg) msg.textContent = "No se pudo cargar el historial (revisa RLS/permiso o estructura de tabla).";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" class="small">No se pudo cargar el historial. (Error: ${String(e.message||e)})</td>`;
+    body.appendChild(tr);
+  }finally{
     setLoading(msg, false);
-    safeText(msg, `✅ ${rows.length} registros.`);
-  }catch(err){
-    setLoading(msg, false);
-    safeText(msg, "Error cargando historial.");
-    showGlobalError("Error cargando historial de retiros", err);
   }
 }
 
-async function deleteWithdrawalsShown(){
-  clearGlobalError();
-  const msg = $("wdhMsg");
+function renderWithdrawHistory(){
+  const body = $("wdhBody");
+  if(!body) return;
+  body.innerHTML = "";
 
-  if(!WITHDRAWALS_SHOWN_IDS.length){
-    safeText(msg, "No hay filas cargadas para borrar.");
+  if(!WDH_CACHE.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" class="small">No hay retiros para mostrar.</td>`;
+    body.appendChild(tr);
     return;
   }
 
-  const yes = await openConfirm({
-    title: "Borrar historial mostrado",
-    message: "Esto eliminará permanentemente los retiros listados en el modal. ¿Ya guardaste el PDF?",
-    okText: "Borrar"
-  });
-  if(!yes) return;
+  WDH_CACHE.forEach(w=>{
+    const cli = resolveClientByAccountId(w.account_id || "");
+    const ccy = cli.currency || "GTQ";
 
-  safeText(msg, "Borrando...");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="nowrap">${fmtDateTime(w.created_at)}</td>
+      <td>${cli.name}</td>
+      <td>${cli.email}</td>
+      <td>${fmtMoney(w.amount, ccy)}</td>
+      <td>${(w.reference || "—")}</td>
+      <td>${(w.note || "—")}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, (m)=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function printWithdrawalsPDF(){
+  if(!WDH_CACHE.length){
+    alert("No hay retiros cargados para imprimir.");
+    return;
+  }
+
+  const rowsHtml = WDH_CACHE.map(w=>{
+    const cli = resolveClientByAccountId(w.account_id || "");
+    const ccy = cli.currency || "GTQ";
+    return `
+      <tr>
+        <td>${fmtDateTime(w.created_at)}</td>
+        <td>${escapeHtml(cli.name)}</td>
+        <td>${escapeHtml(cli.email)}</td>
+        <td>${escapeHtml(fmtMoney(w.amount, ccy))}</td>
+        <td>${escapeHtml(w.reference || "—")}</td>
+        <td>${escapeHtml(w.note || "—")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Historial de retiros — FX | CAPITAL R.L.</title>
+    <style>
+      body{font-family:Arial, sans-serif; padding:20px; color:#111;}
+      h1{margin:0 0 8px; font-size:18px;}
+      .meta{font-size:12px; color:#444; margin-bottom:12px;}
+      table{width:100%; border-collapse:collapse; font-size:12px;}
+      th,td{border:1px solid #ddd; padding:8px; vertical-align:top;}
+      th{background:#f2f2f2; text-align:left;}
+      @media print{ button{display:none} }
+    </style>
+  </head>
+  <body>
+    <h1>Historial de retiros — FX | CAPITAL R.L.</h1>
+    <div class="meta">Generado: ${new Date().toLocaleString("es-GT")}</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Cliente</th><th>Email</th><th>Monto</th><th>Referencia</th><th>Motivo / Nota</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <script>window.print();<\/script>
+  </body>
+  </html>
+  `;
+
+  const w = window.open("", "_blank");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+async function deleteWithdrawalsShown(){
+  if(!WDH_CACHE.length){
+    alert("No hay filas mostradas para borrar.");
+    return;
+  }
+
+  const ok = await openConfirm({
+    title:"Borrar historial mostrado",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Borrar los retiros MOSTRADOS?</div>
+             <div>Esto es permanente. (Recomendado: imprime/guarda PDF antes.)</div>`,
+    okText:"Borrar"
+  });
+  if(!ok) return;
+
+  const msg = $("wdhMsg");
+  safeText(msg, "Borrando…");
   setLoading(msg, true);
 
+  const ids = WDH_CACHE.map(x=>x.id).filter(Boolean);
   try{
-    // borrado en lote (id=in.(...))
-    const ids = WITHDRAWALS_SHOWN_IDS.slice(0, 200); // seguridad
-    const url = `${BASE}/withdrawals?id=in.(${ids.map(x=>`"${x}"`).join(",")})`;
+    let ok2 = false;
 
-    const r = await fetch(url, { method:"DELETE", headers: headersJSON() });
-    if(!r.ok) throw await r.text();
+    try{
+      const r1 = await fetch(`${RPC}/admin_delete_withdrawals`,{
+        method:"POST",
+        headers: headersJSON(),
+        body: JSON.stringify({ p_ids: ids })
+      });
+      if(r1.ok) ok2 = true;
+    }catch{}
 
-    setLoading(msg, false);
-    safeText(msg, "✅ Borrado.");
-    WITHDRAWALS_SHOWN_IDS = [];
+    if(!ok2){
+      const idsCsv = ids.join(",");
+      const r2 = await fetch(`${BASE}/withdrawals?id=in.(${idsCsv})`,{
+        method:"DELETE",
+        headers: headersJSON()
+      });
+      if(!r2.ok){
+        const t = await r2.text().catch(()=> "");
+        throw new Error(t || "No se pudo borrar (RLS o falta RPC).");
+      }
+    }
+
+    alert("Historial borrado (mostrado).");
     await loadWithdrawHistory();
-    await listUsers();
     await refreshKPIs();
-  }catch(err){
-    setLoading(msg, false);
+  }catch(e){
+    console.error(e);
+    alert("No se pudo borrar: " + (e.message||e));
     safeText(msg, "Error al borrar.");
-    showGlobalError("Error al borrar historial", err);
+  }finally{
+    setLoading(msg, false);
   }
 }
 
-function printWithdrawHistory(){
-  window.print();
+/* ============================================================
+   TOPUPS (PENDING + PROGRAMADAS por effective_date)
+   ============================================================ */
+
+function buildCachedMaps(){
+  const byUserId = new Map();
+  const byAccountId = new Map();
+  (CACHED||[]).forEach(c=>{
+    if(c?.user_id) byUserId.set(c.user_id, c);
+    if(c?.account_id) byAccountId.set(c.account_id, c);
+  });
+  return { byUserId, byAccountId };
 }
 
-/*** =========================
-  RESET PASSWORD (modal)
-========================= ***/
-let RESET_TARGET_USER = null;
-
-function openResetModalFor(user){
-  clearGlobalError();
-  RESET_TARGET_USER = user;
-
-  const wrap = $("resetPickWrap");
-  if(wrap) show(wrap, false);
-
-  safeText($("resetClientInfo"), `Cliente: ${user.full_name || "—"} · ${user.email || "—"}`);
-  $("resetNewPass").value = "";
-  safeText($("resetMsg"), "");
-  show($("modalReset"), true);
+async function fetchAccountsUserIds(accountIds, h){
+  if(!accountIds?.length) return new Map();
+  const unique = [...new Set(accountIds.filter(Boolean))];
+  const map = new Map();
+  const url = `${BASE}/accounts?select=id,user_id&id=in.(${unique.join(",")})`;
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok) return map;
+  const rows = await r.json();
+  rows.forEach(a=>{ if(a?.id && a?.user_id) map.set(a.id, a.user_id); });
+  return map;
 }
 
-function openResetModalGlobal(){
+async function fetchProfiles(userIds, h){
+  if(!userIds?.length) return new Map();
+  const unique = [...new Set(userIds.filter(Boolean))];
+  const url = `${BASE}/profiles?select=id,full_name,email&id=in.(${unique.join(",")})`;
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok) return new Map();
+  const profs = await r.json();
+  return new Map(profs.map(p=>[p.id,p]));
+}
+
+async function listTopups(){
+  const msgEl = $("topupsMsg");
+  if(msgEl) msgEl.textContent = "";
   clearGlobalError();
-  RESET_TARGET_USER = null;
 
-  // mostrar selector con clientes
-  const wrap = $("resetPickWrap");
-  if(wrap) show(wrap, true);
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
 
-  const dd = $("resetPick");
-  dd.innerHTML = "";
-  USERS_CACHE.forEach(u=>{
-    const opt = document.createElement("option");
-    opt.value = u.email;
-    opt.textContent = `${u.full_name || u.email} — ${u.email}`;
-    dd.appendChild(opt);
+  // ✅ Workaround: solo traemos PENDING y marcamos “Programada” si effective_date != null
+  const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,scheduled_note`;
+  const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc`;
+
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+
+  if(!r.ok){
+    const t = await r.text().catch(()=> "");
+    console.error("listTopups error:", r.status, t);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar recargas (revisa conexión o permisos).";
+    showGlobalError("No se pudieron cargar recargas", t || r.status);
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      await initApp();
+    }
+    return;
+  }
+
+  const rows = await r.json();
+
+  const { byUserId, byAccountId } = buildCachedMaps();
+
+  const directUserIds = rows.map(x=>x.user_id).filter(Boolean);
+  const missingUidAccountIds = rows.filter(x=>!x.user_id && x.account_id).map(x=>x.account_id);
+
+  const acctToUid = new Map();
+  missingUidAccountIds.forEach(aid=>{
+    const c = byAccountId.get(aid);
+    if(c?.user_id) acctToUid.set(aid, c.user_id);
   });
 
-  safeText($("resetClientInfo"), "Selecciona un cliente para asignar contraseña temporal.");
+  const stillMissing = missingUidAccountIds.filter(aid=> !acctToUid.get(aid));
+  const acctToUidFromDb = await fetchAccountsUserIds(stillMissing, h);
+  acctToUidFromDb.forEach((uid, aid)=> acctToUid.set(aid, uid));
+
+  const resolvedUserIds = rows.map(x=>{
+    if(x.user_id) return x.user_id;
+    if(x.account_id && acctToUid.get(x.account_id)) return acctToUid.get(x.account_id);
+    return null;
+  }).filter(Boolean);
+
+  const allUserIds = [...new Set([...directUserIds, ...resolvedUserIds])];
+
+  let profMap = new Map();
+  try{ profMap = await fetchProfiles(allUserIds, h); }catch{ profMap = new Map(); }
+
+  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
+
+  if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + programadas por fecha)`;
+
+  await refreshKPIs();
+  await refreshSessionMeta();
+}
+
+function statusChip(status, effectiveDate){
+  const isScheduled = !!effectiveDate;
+  const s = String(status||"").toLowerCase();
+
+  if(isScheduled){
+    return `<span class="chip"><span class="dot scheduled"></span>Programada</span>`;
+  }
+
+  const dotClass = (s==="pending")?"pending":(s==="approved")?"approved":(s==="rejected")?"rejected":"pending";
+  const label = (s==="pending")?"Pendiente":(s==="approved")?"Aprobada":(s==="rejected")?"Rechazada":(status||"—");
+  return `<span class="chip"><span class="dot ${dotClass}"></span>${label}</span>`;
+}
+
+function nextCycleStartISO(joinedAt){
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if(!joinedAt){
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0,10);
+  }
+
+  const j = new Date(joinedAt);
+  const day = j.getDate();
+
+  const clampDate = (y,m,d)=>{
+    const last = new Date(y, m+1, 0).getDate();
+    const dd = Math.min(d, last);
+    return new Date(y,m,dd);
+  };
+
+  let cand = clampDate(today.getFullYear(), today.getMonth(), day);
+
+  if (today >= cand){
+    const y = today.getFullYear();
+    const m = today.getMonth()+1;
+    cand = clampDate(y + Math.floor(m/12), (m%12), day);
+  }
+
+  return cand.toISOString().slice(0,10);
+}
+
+function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
+  const tb = $("topups");
+  if(!tb) return;
+  tb.innerHTML = "";
+
+  const BUCKET = "topup-receipts";
+
+  rows.forEach(x=>{
+    const inferredUid = x.user_id || (x.account_id ? acctToUid.get(x.account_id) : null);
+
+    const p = (inferredUid && profMap && profMap.get(inferredUid)) ? profMap.get(inferredUid) : null;
+    const c1 = (inferredUid && cachedByUserId && cachedByUserId.get(inferredUid)) ? cachedByUserId.get(inferredUid) : null;
+    const c2 = (x.account_id && cachedByAccountId && cachedByAccountId.get(x.account_id)) ? cachedByAccountId.get(x.account_id) : null;
+
+    const name = (p?.full_name || c1?.full_name || c2?.full_name || "—");
+    const email = (p?.email || c1?.email || c2?.email || "—");
+
+    const date = x.created_at ? new Date(x.created_at).toLocaleString('es-GT') : "—";
+    const amt  = fmtMoney(x.amount, x.currency || "GTQ");
+    const bank = x.bank_name || "—";
+
+    const receipt = x.receipt_path
+      ? `<button class="ghost" type="button"
+            onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
+            Ver boleta
+         </button>`
+      : "—";
+
+    const eff = x.effective_date ? x.effective_date : "—";
+    const joined = c1?.joined_at || c2?.joined_at || null;
+    const defNextCycle = nextCycleStartISO(joined);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="nowrap">${date}</td>
+      <td>${name}</td>
+      <td>${email}</td>
+      <td>${amt}</td>
+      <td>${bank}</td>
+      <td>${receipt}</td>
+      <td class="nowrap">${statusChip(x.status, x.effective_date)}</td>
+      <td class="nowrap">${eff}</td>
+      <td class="nowrap">
+        <button class="ok" onclick="approveTopup('${x.id}')">Aprobar ahora</button>
+        <button class="ghost" onclick='openScheduleTopupModal(${JSON.stringify({
+          id:x.id,
+          amount:x.amount,
+          currency:x.currency,
+          status:x.status,
+          effective_date:x.effective_date,
+          user_id: inferredUid,
+          account_id:x.account_id,
+          name, email,
+          default_date: defNextCycle
+        })})'>Programar</button>
+        ${x.effective_date ? `<button class="ghost" onclick="unscheduleTopup('${x.id}')">Quitar programación</button>` : ``}
+        <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  if(!rows.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="9" class="small">No hay recargas pendientes.</td>`;
+    tb.appendChild(tr);
+  }
+}
+
+async function openReceipt(bucket, path){
+  try{
+    const r = await fetch(`${PROJECT_URL}/functions/v1/admin-signed-receipt`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + (localStorage.token || "")
+      },
+      body: JSON.stringify({ bucket, path })
+    });
+
+    if(!r.ok){
+      console.error(await r.text().catch(()=> ""));
+      alert("No se pudo abrir la boleta.");
+      return;
+    }
+
+    const { signedUrl } = await r.json();
+    window.open(signedUrl, "_blank");
+  }catch(e){
+    console.error(e);
+    alert("Error al abrir la boleta.");
+  }
+}
+
+/*** ✅ Aprobar ahora + ✅ borrar boleta del Storage + limpiar receipt_path ***/
+async function approveTopup(topupId){
+  const ok = await openConfirm({
+    title:"Confirmación de recarga",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Aprobar ahora?</div>
+             <div>Esto sumará el monto al capital del cliente inmediatamente.</div>
+             <div style="margin-top:8px;opacity:.9">Luego se intentará borrar la boleta para que no ocupe espacio.</div>`,
+    okText:"Aprobar"
+  });
+  if(!ok) return;
+
+  let receiptPath = null;
+  try{
+    const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: "Bearer "+localStorage.token,
+        "Cache-Control":"no-cache, no-store, must-revalidate",
+        Pragma:"no-cache"
+      },
+      cache:"no-store"
+    });
+    if(r0.ok){
+      const rows = await r0.json();
+      receiptPath = rows?.[0]?.receipt_path || null;
+    }
+  }catch{}
+
+  const r = await fetch(`${RPC}/approve_topup`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId })
+  });
+
+  if(!r.ok){
+    console.error(await r.text().catch(()=> ""));
+    showGlobalError("No se pudo aprobar la recarga", await r.text().catch(()=> ""));
+    alert("No se pudo aprobar la recarga.");
+    return;
+  }
+
+  if(receiptPath){
+    try{
+      const del = await fetch(`${PROJECT_URL}/functions/v1/admin-delete-receipt`,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + (localStorage.token || "")
+        },
+        body: JSON.stringify({
+          bucket: "topup-receipts",
+          path: receiptPath
+        })
+      });
+
+      await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({ receipt_path: null })
+      });
+
+      if(!del.ok){
+        console.warn("admin-delete-receipt no respondió OK:", await del.text().catch(()=> ""));
+      }
+    }catch(e){
+      console.warn("No se pudo borrar boleta/limpiar receipt_path:", e);
+      try{
+        await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
+          method:"PATCH",
+          headers: headersJSON(),
+          body: JSON.stringify({ receipt_path: null })
+        });
+      }catch{}
+    }
+  }
+
+  alert("Recarga aprobada y capital acreditado.");
+  await listTopups();
+  await listUsers();
+  await refreshKPIs();
+}
+
+function rejectTopupPrompt(topupId){
+  const reason = prompt("Motivo del rechazo (opcional):") || "";
+  rejectTopup(topupId, reason);
+}
+async function rejectTopup(topupId, reason){
+  const ok = await openConfirm({
+    title:"Rechazar recarga",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Rechazar esta recarga?</div>
+             <div style="opacity:.9">Motivo (opcional): <b>${escapeHtml(reason||"—")}</b></div>`,
+    okText:"Rechazar"
+  });
+  if(!ok) return;
+
+  const r = await fetch(`${RPC}/reject_topup`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_topup_id: topupId, p_reason: reason })
+  });
+
+  if(!r.ok){
+    console.error(await r.text().catch(()=> ""));
+    alert("No se pudo rechazar la recarga.");
+    return;
+  }
+
+  alert("Recarga rechazada.");
+  await listTopups();
+  await refreshKPIs();
+}
+
+// ✅ Workaround: quitar programación = effective_date NULL, scheduled_note NULL
+async function unscheduleTopup(topupId){
+  const ok = await openConfirm({
+    title:"Quitar programación",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Quitar programación?</div>
+             <div style="opacity:.9">Volverá a estado Pendiente.</div>`,
+    okText:"Quitar"
+  });
+  if(!ok) return;
+
+  const r = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(topupId)}`,{
+    method:"PATCH",
+    headers: headersJSON(),
+    body: JSON.stringify({ effective_date: null, scheduled_note: null })
+  });
+
+  if(!r.ok){
+    console.error(await r.text().catch(()=> ""));
+    alert("No se pudo quitar la programación.");
+    return;
+  }
+
+  alert("Programación eliminada. La recarga volvió a Pendiente.");
+  await listTopups();
+  await refreshKPIs();
+}
+
+/* ============================================================
+   MODAL PROGRAMAR TOPUP (workaround seguro)
+   ============================================================ */
+let SCHED_CTX = null;
+
+function openScheduleTopupModal(ctx){
+  SCHED_CTX = ctx;
+
+  $("schedInfo").innerHTML =
+    `<b>${ctx.name||'—'}</b> — ${ctx.email||'—'}<br>`+
+    `Monto: <b>${fmtMoney(ctx.amount, ctx.currency||'GTQ')}</b><br>`+
+    `Regla: Se acreditará automáticamente a las <b>9:00 AM (Guatemala)</b> del día efectivo.`;
+
+  const d = ctx.effective_date || ctx.default_date || todayISO();
+  $("schedDate").value = d;
+  $("schedNote").value = ctx.scheduled_note || "";
+  $("schedMsg").textContent = "";
+
+  show($("modalScheduleTopup"), true);
+}
+
+function closeScheduleTopupModal(){
+  show($("modalScheduleTopup"), false);
+  SCHED_CTX = null;
+}
+
+async function doScheduleTopup(){
+  if(!SCHED_CTX) return;
+
+  const date = $("schedDate").value;
+  const note = ($("schedNote").value || "").trim();
+
+  if(!date){
+    $("schedMsg").textContent = "Fecha requerida.";
+    return;
+  }
+
+  const today = todayISO();
+  if(date < today){
+    $("schedMsg").textContent = "No se permiten fechas pasadas.";
+    return;
+  }
+
+  const ok = await openConfirm({
+    title:"Programar acreditación",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Programar esta recarga?</div>
+             <div>Fecha efectiva: <b>${date}</b></div>
+             <div style="margin-top:8px;opacity:.9">Se acreditará a las <b>9:00 AM (GT)</b> de ese día.</div>`,
+    okText:"Programar"
+  });
+  if(!ok) return;
+
+  $("schedMsg").textContent = "Programando…";
+  setLoading($("schedMsg"), true);
+
+  try{
+    // ✅ Workaround: solo actualiza campos de programación, NO cambia status
+    const r = await fetch(`${BASE}/topups?id=eq.${encodeURIComponent(SCHED_CTX.id)}`,{
+      method:"PATCH",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        effective_date: date,
+        scheduled_note: note || null
+      })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || "No se pudo programar.");
+    }
+
+    $("schedMsg").textContent = "Listo.";
+    closeScheduleTopupModal();
+    alert("Recarga programada correctamente.");
+    await listTopups();
+    await refreshKPIs();
+
+  }catch(e){
+    console.error(e);
+    $("schedMsg").textContent = "Error.";
+    alert("No se pudo programar: " + (e.message||e));
+  }finally{
+    setLoading($("schedMsg"), false);
+  }
+}
+
+async function listWithdrawRequests(){
+  const msgEl = $("withdrawReqsMsg");
+  const tb = $("withdrawReqs");
+  if(!tb) return;
+
+  msgEl.textContent = "Cargando…";
+  tb.innerHTML = "";
+  clearGlobalError();
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  // 🔧 Ajusta el select si tu tabla tiene otros nombres de columnas
+  const sel = "id,created_at,account_id,amount,status,note";
+  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.pending&order=created_at.desc&limit=200`;
+
+  const r = await fetch(url, { headers:h, cache:"no-store" });
+  if(!r.ok){
+    const t = await r.text().catch(()=> "");
+    console.error("withdrawal_requests error:", r.status, t);
+    msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso o nombre de tabla/campos).";
+    showGlobalError("No se pudieron cargar solicitudes de retiro", t || r.status);
+    tb.innerHTML = `<tr><td colspan="9" class="small">Error cargando solicitudes.</td></tr>`;
+    return;
+  }
+
+  const rows = await r.json();
+  renderWithdrawRequests(rows);
+  msgEl.textContent = `Solicitudes pendientes: ${rows.length}`;
+
+  await refreshKPIs();
+  await refreshSessionMeta();
+}
+
+function renderWithdrawRequests(rows){
+  const tb = $("withdrawReqs");
+  tb.innerHTML = "";
+
+  if(!rows.length){
+    tb.innerHTML = `<tr><td colspan="9" class="small">No hay solicitudes pendientes.</td></tr>`;
+    return;
+  }
+
+  // usamos CACHED para resolver cliente por account_id
+  rows.forEach(w=>{
+    const c = (CACHED||[]).find(x => x.account_id === w.account_id) || {};
+    const ccy = c.currency || "GTQ";
+
+    tb.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td class="nowrap">${fmtDateTime(w.created_at)}</td>
+        <td>${c.full_name || "—"}</td>
+        <td>${c.email || "—"}</td>
+        <td>${fmtMoney(w.amount, ccy)}</td>
+        <td>${c.bank_name || "—"}</td>
+        <td class="nowrap">${c.bank_account || "—"}</td>
+        <td class="nowrap">${c.bank_account_type || "—"}</td>
+        <td>${w.note || "—"}</td>
+        <td class="nowrap">
+          <button class="ok" onclick="approveWithdrawReq('${w.id}', '${w.account_id}', ${Number(w.amount||0)})">Aprobar</button>
+          <button class="danger" onclick="rejectWithdrawReq('${w.id}')">Rechazar</button>
+        </td>
+      </tr>
+    `);
+  });
+}
+
+async function approveWithdrawReq(reqId, accountId, amount){
+  const ok = await openConfirm({
+    title:"Aprobar retiro",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Aprobar esta solicitud de retiro?</div>
+             <div style="opacity:.9">Esto descontará el capital y marcará la solicitud como aprobada.</div>`,
+    okText:"Aprobar"
+  });
+  if(!ok) return;
+
+  try{
+    // 1) descuenta capital
+    const r1 = await fetch(`${RPC}/withdraw_capital`,{
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_account_id: accountId,
+        p_amount: amount,
+        p_note: "Aprobado desde solicitudes",
+        p_reference: "withdraw_request:"+reqId
+      })
+    });
+    if(!r1.ok) throw new Error(await r1.text().catch(()=> "") || "Error en withdraw_capital");
+
+    // 2) marca solicitud aprobada
+    const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
+      method:"PATCH",
+      headers: headersJSON(),
+      body: JSON.stringify({ status: "approved", approved_at: new Date().toISOString() })
+    });
+    if(!r2.ok) throw new Error(await r2.text().catch(()=> "") || "No se pudo marcar approved");
+
+    alert("✅ Solicitud aprobada y capital descontado.");
+    await listUsers();
+    await listWithdrawRequests();
+    await refreshKPIs();
+  }catch(e){
+    console.error(e);
+    alert("❌ No se pudo aprobar: " + (e.message||e));
+  }
+}
+
+async function rejectWithdrawReq(reqId){
+  const reason = prompt("Motivo del rechazo (opcional):") || null;
+
+  const ok = await openConfirm({
+    title:"Rechazar retiro",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Rechazar esta solicitud?</div>
+             <div style="opacity:.9">Motivo (opcional): <b>${escapeHtml(reason||"—")}</b></div>`,
+    okText:"Rechazar"
+  });
+  if(!ok) return;
+
+  try{
+    const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${encodeURIComponent(reqId)}`,{
+      method:"PATCH",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        status: "rejected",
+        rejected_at: new Date().toISOString(),
+        reject_reason: reason
+      })
+    });
+    if(!r.ok) throw new Error(await r.text().catch(()=> "") || "No se pudo rechazar");
+
+    alert("Solicitud rechazada.");
+    await listWithdrawRequests();
+    await refreshKPIs();
+  }catch(e){
+    console.error(e);
+    alert("❌ Error rechazando: " + (e.message||e));
+  }
+}
+
+/*** Editar ***/
+function editClient(x){
+  $("u_email").value = x.email || "";
+  $("u_name").value  = x.full_name || "";
+  $("u_phone").value = x.phone || "";
+  $("u_currency").value = x.currency || "GTQ";
+  setCapitalInputValue(x.capital);
+  $("u_joined").value   = x.joined_at ? new Date(x.joined_at).toISOString().slice(0,10) : "";
+  $("u_plan").value     = x.plan || "STANDARD";
+  $("u_interest_mode").value = x.compound_interest ? "compound" : "monthly";
+  $("u_months").value   = x.invest_months ?? "12";
+  $("u_rate").value     = (x.interest_pct ?? "") === null ? "" : (x.interest_pct ?? "");
+  $("u_bank_name").value   = x.bank_name ?? "";
+  $("u_bank_account").value= x.bank_account ?? "";
+  $("u_bank_account_type").value = x.bank_account_type ?? "";
+  $("u_pass").value = "";
+  validateRatePlan();
+  document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/*** Validación Plan vs Tasa ***/
+function validateRatePlan(){
+  const plan = $("u_plan").value;
+  const rateStr = $("u_rate").value;
+  const rate = rateStr === "" ? null : Number(rateStr);
+  const err = $("rateError");
+
+  if(rate === null){
+    if(plan === "STANDARD") $("u_rate").value = 15;
+    if(plan === "PLATINUM") $("u_rate").value = 20;
+  }
+
+  const finalRate = Number($("u_rate").value || NaN);
+  let isValid = true;
+  if(plan === "STANDARD") isValid = (finalRate === 15);
+  else if(plan === "PLATINUM") isValid = (finalRate === 20);
+  else if(plan === "BLACK") isValid = true;
+
+  show(err, !isValid);
+  return isValid;
+}
+$("u_plan").addEventListener("change", validateRatePlan);
+$("u_rate").addEventListener("input", validateRatePlan);
+
+/*** Guardar ***/
+async function saveUser(){
+  const email    = $("u_email").value.trim();
+  const fullName = $("u_name").value.trim();
+  const phone    = $("u_phone").value.trim();
+  const password = $("u_pass").value;
+  const currency = $("u_currency").value;
+  const capital  = parseCapitalFromInput($("u_capital").value);
+  const joined   = $("u_joined").value || null;
+  const plan     = $("u_plan").value;
+  const months   = parseInt($("u_months").value, 10);
+  const rateStr  = $("u_rate").value;
+  const rate     = rateStr === "" ? null : Number(rateStr);
+  const bankName = $("u_bank_name").value.trim();
+  const bankAcct = $("u_bank_account").value.trim();
+  const bankType = $("u_bank_account_type").value.trim();
+  const msgEl    = $("saveMsg");
+
+  msgEl.textContent = "Guardando…";
+  setLoading(msgEl, true);
+
+  try{
+    if(!email) throw new Error("Email requerido");
+    if(!fullName) throw new Error("Nombre requerido");
+    if(isNaN(capital)||capital<0) throw new Error("Capital inválido");
+    if(!validateRatePlan()) throw new Error("La tasa no coincide con el plan.");
+
+    let uid = await getAuthUserIdByEmail(email);
+
+    if (!uid && password){
+      const rCreate = await createAuthUserIfNeeded(email, password, fullName);
+      if(!rCreate.ok) throw new Error("No se pudo crear en Auth (revisa whitelist/secrets).");
+      try{ uid = (await rCreate.json()).id || null; }catch{}
+      if(!uid){
+        for(let i=0;i<5 && !uid;i++){
+          await sleep(400);
+          uid = await getAuthUserIdByEmail(email);
+        }
+      }
+    }
+
+    if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
+
+    const body = {
+      p_email: email,
+      p_full_name: fullName,
+      p_currency: currency,
+      p_capital: capital,
+      p_joined_at: joined,
+      p_plan: plan,
+      p_bank_name: bankName || null,
+      p_bank_account: bankAcct || null,
+      p_invest_months: months,
+      p_interest_pct: rate,
+      p_phone: phone || null,
+      p_bank_account_type: bankType || null
+    };
+
+    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify(body)
+    });
+    if(!r.ok) throw new Error(await r.text() || "Error guardando");
+
+    const mode = $("u_interest_mode").value;
+    const compound = (mode === "compound");
+    const uidForAccount = uid || await getAuthUserIdByEmail(email);
+
+    if(uidForAccount){
+      const pr = await fetch(`${BASE}/accounts?user_id=eq.${encodeURIComponent(uidForAccount)}`, {
+        method: "PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({ compound_interest: compound })
+      });
+      if(!pr.ok){
+        console.error(await pr.text().catch(()=> ""));
+        throw new Error("Se guardó el usuario, pero no se pudo actualizar el modo de interés.");
+      }
+    }
+
+    msgEl.textContent = "Guardado";
+    await listUsers();
+    await refreshKPIs();
+  }catch(e){
+    msgEl.textContent = "Error";
+    alert("No se pudo guardar: " + (e.message||e));
+  }finally{
+    setLoading(msgEl, false);
+  }
+}
+
+/*** Eliminar (tu lógica original) ***/
+async function deleteClient(x){
+  const ok = await openConfirm({
+    title:"Eliminar cliente",
+    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Eliminar al cliente?</div>
+             <div>Nombre: <b>${escapeHtml(x.full_name||'—')}</b></div>
+             <div>Email: <b>${escapeHtml(x.email||'—')}</b></div>
+             <div style="margin-top:8px;opacity:.9">Esto es permanente.</div>`,
+    okText:"Eliminar"
+  });
+  if(!ok) return;
+
+  const jh = headersJSON();
+  const mustOk = async (resp, label) => {
+    if (!resp.ok) throw new Error(`Error al ${label}: ${(await resp.text().catch(()=>'')) || resp.status}`);
+  };
+
+  if (!x.user_id || !x.account_id){
+    const r = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, { headers: jh, cache:"no-store" });
+    if (r.ok){
+      const rows = await r.json();
+      x.user_id = x.user_id || rows?.[0]?.user_id;
+      x.account_id = x.account_id || rows?.[0]?.account_id;
+    }
+  }
+
+  try{
+    const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
+      method:"POST",
+      headers: jh,
+      body: JSON.stringify({ p_email: x.email, p_dry_run: false })
+    });
+    if (r.status !== 404) await mustOk(r, "RPC admin_delete_user_cascade");
+    else throw new Error("sin RPC");
+  }catch{
+    if (x.account_id) {
+      await mustOk(await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar withdrawal_requests");
+      await mustOk(await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar admin_notifications");
+      await mustOk(await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar accounts");
+    }
+    if (x.user_id) {
+      const rP = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: jh });
+      if (!rP.ok && rP.status !== 404) await mustOk(rP, "eliminar profiles");
+    }
+  }
+
+  try{
+    let uid = x.user_id || await getAuthUserIdByEmail(x.email);
+    await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization:"Bearer "+(localStorage.token||"")
+      },
+      body: JSON.stringify({ user_id: uid || null, email: x.email || null })
+    });
+  }catch{}
+
+  CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
+  renderUsers(CACHED);
+  await listUsers();
+  await refreshKPIs();
+  alert("Cliente eliminado correctamente.");
+}
+
+/* ============================================================
+   RESET PASSWORD (CLIENTES)
+   ============================================================ */
+let RESET_CTX = null;
+
+function refreshResetPicker(){
+  const sel = $("resetPick");
+  if(!sel) return;
+
+  sel.innerHTML = "";
+  const rows = (CACHED||[]).filter(x=>x.email && x.user_id);
+
+  if(!rows.length){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No hay clientes cargados";
+    sel.appendChild(opt);
+    return;
+  }
+
+  rows.forEach(x=>{
+    const opt = document.createElement("option");
+    opt.value = x.user_id;
+    opt.textContent = `${x.full_name || x.email} — ${x.email}`;
+    opt.dataset.email = x.email || "";
+    sel.appendChild(opt);
+  });
+
+  if(RESET_CTX?.user_id){
+    sel.value = RESET_CTX.user_id;
+  } else {
+    sel.value = rows[0].user_id;
+  }
+
+  syncResetCtxFromPicker();
+}
+
+function syncResetCtxFromPicker(){
+  const sel = $("resetPick");
+  if(!sel) return;
+
+  const uid = sel.value;
+  const x = (CACHED||[]).find(r=>r.user_id === uid);
+  if(x){
+    RESET_CTX = x;
+    setResetInfoFromCtx();
+  }
+}
+
+function setResetInfoFromCtx(){
+  const c = RESET_CTX || {};
+  $("resetClientInfo").innerHTML =
+    `<b>${c.full_name||'—'}</b> — ${c.email||'—'}<br>`+
+    `Al aplicar, se asigna contraseña y se fuerza modal de cambio en el panel del cliente.`;
+}
+
+function openResetModal(client=null){
+  if(client && client.email){
+    RESET_CTX = client;
+    show($("resetPickWrap"), false);
+    setResetInfoFromCtx();
+  }else{
+    RESET_CTX = null;
+    show($("resetPickWrap"), true);
+    refreshResetPicker();
+  }
+
   $("resetNewPass").value = "";
-  safeText($("resetMsg"), "");
+  $("resetMsg").textContent = "";
   show($("modalReset"), true);
 }
 
 function closeResetModal(){
   show($("modalReset"), false);
-  RESET_TARGET_USER = null;
+  RESET_CTX = null;
 }
-window.closeResetModal = closeResetModal;
 
 async function doResetPassword(){
-  clearGlobalError();
-  const msg = $("resetMsg");
-  const newPass = ($("resetNewPass")?.value || "");
+  if(!$("resetPickWrap")?.classList.contains("hidden")){
+    syncResetCtxFromPicker();
+  }
 
-  if(!newPass || newPass.length < 8){
-    safeText(msg, "Mínimo 8 caracteres.");
+  if(!RESET_CTX){
+    $("resetMsg").textContent = "Seleccione un cliente.";
     return;
   }
 
-  let email = RESET_TARGET_USER?.email;
-  if(!email){
-    email = $("resetPick")?.value;
+  const newPass = ($("resetNewPass").value || "").trim();
+  if(newPass.length < 8){
+    $("resetMsg").textContent = "La contraseña debe tener mínimo 8 caracteres.";
+    return;
   }
-  if(!email){
-    safeText(msg, "Selecciona un cliente.");
+  if(!RESET_CTX.email){
+    $("resetMsg").textContent = "Falta email del cliente.";
     return;
   }
 
-  const yes = await openConfirm({
-    title: "Reset contraseña",
-    message: `Se asignará una contraseña temporal a <b>${escapeHtml(email)}</b>. ¿Confirmas?`,
-    okText: "Aplicar"
+  const ok = await openConfirm({
+    title:"Restablecer contraseña",
+    message:`<div style="font-weight:950;margin-bottom:6px">¿Asignar nueva contraseña?</div>
+             <div>Cliente: <b>${escapeHtml(RESET_CTX.email)}</b></div>
+             <div style="margin-top:8px;opacity:.9">Esto activará el modal obligatorio en el panel cliente.</div>`,
+    okText:"Aplicar"
   });
-  if(!yes) return;
+  if(!ok) return;
 
-  safeText(msg, "Aplicando reset...");
-  setLoading(msg, true);
+  $("resetMsg").textContent = "Aplicando reset…";
+  setLoading($("resetMsg"), true);
 
   try{
-    // RPC recomendado: admin_reset_password(p_email, p_password)
-    const r = await fetch(`${RPC}/admin_reset_password`, {
+    const url = `${PROJECT_URL}/functions/v1/admin-reset-password`;
+    const r = await fetch(url,{
       method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_email: email, p_password: newPass })
+      headers:{
+        "Content-Type":"application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + (localStorage.token||"")
+      },
+      body: JSON.stringify({
+        email: RESET_CTX.email,
+        new_password: newPass
+      })
     });
 
-    if(!r.ok) throw await r.text();
-
-    setLoading(msg, false);
-    safeText(msg, "✅ Reset aplicado.");
-  }catch(err){
-    setLoading(msg, false);
-    safeText(msg, "Error aplicando reset.");
-    showGlobalError("Error aplicando reset de contraseña", err);
-  }
-}
-
-/*** =========================
-  KPIs (agregado)
-========================= ***/
-async function refreshKPIs(){
-  try{
-    // retiros pendientes
-    const r1 = await fetch(`${BASE}/withdrawal_requests?select=id&status=eq.PENDING`, { headers: headersJSON() });
-    const w = r1.ok ? await r1.json() : [];
-    safeText($("kpiWithdrawPending"), String(w.length || 0));
-
-    // topups pendientes
-    const r2 = await fetch(`${BASE}/topups?select=id,effective_date&status=eq.PENDING`, { headers: headersJSON() });
-    const t = r2.ok ? await r2.json() : [];
-    safeText($("kpiTopupsPending"), String(t.length || 0));
-
-    // ops hoy: últimas 24h (topups + withdrawals)
-    const since = new Date(Date.now() - 24*60*60*1000).toISOString();
-    const r3 = await fetch(`${BASE}/topups?select=id&created_at=gte.${since}`, { headers: headersJSON() });
-    const r4 = await fetch(`${BASE}/withdrawals?select=id&created_at=gte.${since}`, { headers: headersJSON() });
-    const a = r3.ok ? await r3.json() : [];
-    const b = r4.ok ? await r4.json() : [];
-    safeText($("kpiOpsToday"), String((a.length||0) + (b.length||0)));
-
-    safeText($("kpiWithdrawHint"), `Actualizado: ${new Date().toLocaleTimeString("es-GT")}`);
-  }catch(e){
-    console.warn(e);
-  }
-}
-
-/*** =========================
-  UTIL: escape HTML
-========================= ***/
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-function escapeAttr(s){
-  return String(s ?? "").replace(/"/g,"&quot;");
-}
-</script>
-
-  <script>
-
-/*** =========================
-  MODAL CONFIRM (reutilizable)
-========================= ***/
-let CONFIRM_RESOLVE = null;
-
-function openConfirm({ title, message, okText="Confirmar", cancelText="Cancelar" }){
-  return new Promise((resolve)=>{
-    CONFIRM_RESOLVE = resolve;
-    $("confirmTitle").innerHTML = escapeHtml(title || "Confirmar");
-    $("confirmBody").innerHTML = message || "";
-    $("confirmOk").textContent = okText;
-    $("confirmCancel").textContent = cancelText;
-    show($("modalConfirm"), true);
-  });
-}
-
-function closeConfirm(val){
-  show($("modalConfirm"), false);
-  if(CONFIRM_RESOLVE){
-    const r = CONFIRM_RESOLVE;
-    CONFIRM_RESOLVE = null;
-    r(!!val);
-  }
-}
-
-/*** =========================
-  MODAL RESET (hooks globales)
-========================= ***/
-window.openResetModalGlobal = openResetModalGlobal;
-window.openWithdrawHistory = openWithdrawHistory;
-
-/*** =========================
-  UTILIDADES UI
-========================= ***/
-function $(id){ return document.getElementById(id); }
-
-function show(el, yes){
-  if(!el) return;
-  el.classList.toggle("hidden", !yes);
-}
-
-function safeText(el, text){
-  if(!el) return;
-  el.textContent = text ?? "";
-}
-
-function setLoading(el, yes){
-  if(!el) return;
-  el.classList.toggle("loading", !!yes);
-}
-
-function fmtMoney(v, cur){
-  const n = Number(v||0);
-  const c = cur || "";
-  try{
-    return new Intl.NumberFormat("es-GT", { style:"currency", currency: (c==="USD"?"USD":"GTQ") }).format(n);
-  }catch{
-    return `${c} ${n.toFixed(2)}`;
-  }
-}
-
-function fmtDateTime(iso){
-  if(!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleString("es-GT", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-}
-
-function fmtDate(iso){
-  if(!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleDateString("es-GT", { year:"numeric", month:"2-digit", day:"2-digit" });
-}
-
-function headersJSON(){
-  return {
-    apikey: ANON_KEY,
-    Authorization: "Bearer " + (localStorage.token || ""),
-    "Content-Type":"application/json",
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
-}
-
-/*** =========================
-  ERRORES GLOBAL
-========================= ***/
-function clearGlobalError(){
-  const box = $("globalError");
-  if(!box) return;
-  show(box,false);
-  $("globalErrorTitle").textContent = "";
-  $("globalErrorBody").textContent = "";
-}
-
-function showGlobalError(title, err){
-  console.error(title, err);
-  const box = $("globalError");
-  if(!box) return;
-  $("globalErrorTitle").textContent = title || "Error";
-  let body = "";
-
-  if(typeof err === "string"){
-    body = err;
-  }else if(err?.message){
-    body = err.message;
-  }else{
-    try{ body = JSON.stringify(err, null, 2); }catch{ body = String(err); }
-  }
-
-  // recortamos para no romper UI
-  if(body.length > 4000) body = body.slice(0,4000) + "…";
-  $("globalErrorBody").textContent = body;
-  show(box,true);
-}
-
-/*** =========================
-  SESIÓN: mostrar info
-========================= ***/
-async function refreshSessionMeta(){
-  const el = $("sessionMeta");
-  if(!el) return;
-
-  const token = localStorage.token;
-  if(!token){
-    el.textContent = "Sesión: No iniciada";
-    return;
-  }
-
-  // intentamos mostrar el email desde profiles
-  const uid = localStorage.uid || "";
-  if(!uid){
-    el.textContent = "Sesión: Activa";
-    return;
-  }
-
-  try{
-    const r = await fetch(`${BASE}/profiles?select=email,full_name,role&id=eq.${uid}`, { headers: headersJSON() });
     if(!r.ok){
-      el.textContent = "Sesión: Activa";
-      return;
+      const t = await r.text().catch(()=> "");
+      throw new Error(t || "No se pudo resetear (Edge Function admin-reset-password).");
     }
-    const rows = await r.json();
-    const p = rows?.[0];
-    el.textContent = `Sesión: ${p?.email || "admin"} (${p?.role || "—"})`;
-  }catch{
-    el.textContent = "Sesión: Activa";
+
+    if(RESET_CTX.user_id){
+      const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(RESET_CTX.user_id)}`,{
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({
+          must_change_password: true,
+          must_change_password_at: new Date().toISOString()
+        })
+      });
+
+      if(!pr.ok){
+        console.warn("No se pudo marcar must_change_password en profiles:", await pr.text().catch(()=> ""));
+      }
+    }
+
+    $("resetMsg").textContent = "Listo.";
+    closeResetModal();
+    alert("Contraseña restablecida. El cliente deberá iniciar sesión y cambiarla.");
+
+  }catch(e){
+    console.error(e);
+    $("resetMsg").textContent = "Error.";
+    alert("No se pudo restablecer: " + (e.message||e));
+  }finally{
+    setLoading($("resetMsg"), false);
   }
 }
 
-/*** =========================
-  INIT: auto-login si hay token
-========================= ***/
-async function init(){
+/*** INIT ***/
+async function initApp(){
   clearGlobalError();
-  validateRateVsPlan();
 
-  // Confirm modal buttons
-  $("confirmOk")?.addEventListener("click", ()=>closeConfirm(true));
-  $("confirmCancel")?.addEventListener("click", ()=>closeConfirm(false));
-  $("confirmX")?.addEventListener("click", ()=>closeConfirm(false));
-  $("modalConfirm")?.addEventListener("click", (e)=>{
-    if(e.target === $("modalConfirm")) closeConfirm(false);
-  });
+  const ok = await validateSession();
 
-  // Reset modal close
-  $("resetX")?.addEventListener("click", closeResetModal);
-  $("modalReset")?.addEventListener("click", (e)=>{
-    if(e.target === $("modalReset")) closeResetModal();
-  });
+  if(ok){
+    show($("unauth"), false);
+    show($("app"), true);
+    show($("logoutBtn"), true);
+    show($("btnOpenResetGlobal"), true);
+    show($("kpisWrap"), true);
 
-  // Schedule modal close
-  $("schedX")?.addEventListener("click", closeScheduleTopupModal);
-  $("modalScheduleTopup")?.addEventListener("click", (e)=>{
-    if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal();
-  });
+    await refreshSessionMeta();
+    await listUsers();
+    await listTopups();
+    await listWithdrawRequests();
+    await refreshKPIs();
 
-  // Withdraw history modal close
-  $("wdhX")?.addEventListener("click", closeWithdrawHistory);
-  $("modalWithdrawHistory")?.addEventListener("click", (e)=>{
-    if(e.target === $("modalWithdrawHistory")) closeWithdrawHistory();
-  });
-
-  // Global error close
-  $("globalErrorX")?.addEventListener("click", clearGlobalError);
-
-  // BINDINGS
-  $("loginForm")?.addEventListener("submit", doLogin);
-  $("logoutBtn")?.addEventListener("click", logout);
-
-  $("btnRefreshUsers")?.addEventListener("click", listUsers);
-  $("btnClearForm")?.addEventListener("click", clearForm);
-  $("btnSaveUser")?.addEventListener("click", saveUser);
-
-  $("u_plan")?.addEventListener("change", validateRateVsPlan);
-  $("u_rate")?.addEventListener("input", validateRateVsPlan);
-
-  $("q")?.addEventListener("input", applySearchFilter);
-
-  $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
-  $("btnRefreshTopups")?.addEventListener("click", listTopups);
-
-  $("btnOpenSchedule")?.addEventListener("click", ()=>{
-    // abre modal sin id -> no aplica, lo dejamos por si tu UI tiene un botón global
-    safeText($("schedMsg"), "Selecciona una recarga y presiona Programar.");
-    show($("modalScheduleTopup"), true);
-  });
-  $("btnDoSchedule")?.addEventListener("click", doScheduleTopup);
-  $("btnCancelSchedule")?.addEventListener("click", closeScheduleTopupModal);
-
-  $("btnAdminWithdraw")?.addEventListener("click", doAdminWithdraw);
-  $("btnOpenWithdrawHistory")?.addEventListener("click", openWithdrawHistory);
-
-  $("btnPrintWithdrawHistory")?.addEventListener("click", printWithdrawHistory);
-  $("btnDeleteWithdrawHistoryShown")?.addEventListener("click", deleteWithdrawalsShown);
-
-  $("btnOpenResetGlobal")?.addEventListener("click", openResetModalGlobal);
-  $("btnDoReset")?.addEventListener("click", doResetPassword);
-  $("btnCancelReset")?.addEventListener("click", closeResetModal);
-
-  // Auto sesión
-  const token = localStorage.token;
-  if(token){
-    safeText($("loginMsg"), "Restaurando sesión...");
-    // verifica admin
-    const ok = await checkIsAdmin();
-    if(ok){
-      await afterLogin();
-    }else{
-      logout();
-      safeText($("loginMsg"), "Sesión inválida o sin permisos admin.");
-    }
+    refreshWithdrawPicker();
+    updateWithdrawHint();
   }else{
-    show($("unauth"), true);
     show($("app"), false);
     show($("logoutBtn"), false);
     show($("btnOpenResetGlobal"), false);
     show($("kpisWrap"), false);
+    show($("unauth"), true);
     await refreshSessionMeta();
   }
 }
 
-/*** =========================
-  START
-========================= ***/
-document.addEventListener("DOMContentLoaded", init);
-</script>
+/*** BINDINGS ***/
+document.addEventListener("DOMContentLoaded", ()=>{
+  $("loginForm").addEventListener("submit", doLogin);
+  $("logoutBtn").addEventListener("click", logout);
+  $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
 
+  $("togglePass").addEventListener("click", ()=> {
+    const inp = $("u_pass");
+    inp.type = (inp.type === "password") ? "text" : "password";
+  });
+
+  $("saveBtn").addEventListener("click", saveUser);
+
+  $("clearBtn").addEventListener("click", ()=>{
+    ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value="");
+    $("u_currency").value="GTQ";
+    $("u_plan").value="STANDARD";
+    $("u_months").value="12";
+    $("u_interest_mode").value="monthly";
+    $("saveMsg").textContent="";
+    validateRatePlan();
+  });
+
+  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); await refreshKPIs(); });
+  $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); await refreshKPIs(); });
+
+  bindCapitalFormatter($("u_capital"));
+
+  $("btnResetDo").addEventListener("click", doResetPassword);
+  $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
+  $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
+
+  $("btnDoSchedule")?.addEventListener("click", doScheduleTopup);
+
+  $("modalScheduleTopup")?.addEventListener("click", (e)=>{ if(e.target === $("modalScheduleTopup")) closeScheduleTopupModal(); });
+  $("modalReset")?.addEventListener("click", (e)=>{ if(e.target === $("modalReset")) closeResetModal(); });
+  $("modalWithdrawHistory")?.addEventListener("click", (e)=>{ if(e.target === $("modalWithdrawHistory")) closeWithdrawHistory(); });
+
+  $("wdAccount")?.addEventListener("change", updateWithdrawHint);
+  $("btnWithdraw")?.addEventListener("click", doWithdraw);
+
+  $("btnOpenWithdrawHistory")?.addEventListener("click", openWithdrawHistory);
+  $("btnLoadWithdrawHistory")?.addEventListener("click", loadWithdrawHistory);
+  $("btnPrintWithdrawHistory")?.addEventListener("click", printWithdrawalsPDF);
+  $("btnDeleteWithdrawalsShown")?.addEventListener("click", deleteWithdrawalsShown);
+
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){
+      try{ closeResetModal(); }catch{}
+      try{ closeScheduleTopupModal(); }catch{}
+      try{ closeWithdrawHistory(); }catch{}
+      try{ closeConfirm(false); }catch{}
+    }
+  });
+
+  // botón confirmar del modal confirm
+  $("confirmOkBtn")?.addEventListener("click", ()=> closeConfirm(true));
+
+  initApp();
+});
+</script>
 </body>
 </html>
-
-
-
