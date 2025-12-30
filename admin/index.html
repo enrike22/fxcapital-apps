@@ -496,8 +496,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <div id="unauth" class="card">
     <h2>Admin — Iniciar sesión</h2>
     <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
-      <div><label>Email</label><input id="email" type="email" required></div>
-      <div><label>Contraseña</label><input id="password" type="password" required></div>
+      <div><label>Email</label><input id="email" type="email" required autocomplete="username"></div>
+      <div><label>Contraseña</label><input id="password" type="password" required autocomplete="current-password"></div>
       <div style="align-self:end"><button type="submit">Entrar</button></div>
       <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
     </form>
@@ -572,7 +572,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     <div class="card" id="formCard">
       <h2>Crear / Editar usuario</h2>
 
-      <div class="row">
+      <form id="userForm" class="row" onsubmit="return false;">
         <div>
           <label>Modo de intereses</label>
           <select id="u_interest_mode">
@@ -583,7 +583,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         </div>
         <div>
           <label>Email</label>
-          <input id="u_email" placeholder="cliente@demo.com">
+          <input id="u_email" placeholder="cliente@demo.com" type="email" autocomplete="email">
           <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
         </div>
 
@@ -593,7 +593,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <div>
           <label>Contraseña (para el cliente)</label>
           <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)" autocomplete="new-password">
             <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
           </div>
         </div>
@@ -638,7 +638,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial"></div>
         <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890"></div>
         <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …"></div>
-      </div>
+      </form>
 
       <hr class="sep">
 
@@ -1541,7 +1541,7 @@ async function loadWithdrawHistory(){
 
   try{
     // ✅ Admin: RPC Security Definer (evita problemas de RLS/joins)
-    const rpcUrl = `${BASE}/rest/v1/rpc/admin_list_withdrawals;
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
     const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
     if(!res.ok){
@@ -2193,7 +2193,7 @@ async function listWithdrawRequests(){
 
   try{
     // ✅ Admin: usar RPC Security Definer (no depende de RLS/vistas)
-    const rpcUrl = `${BASE}/rest/v1/rpc/admin_list_withdrawal_requests;
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawal_requests_guard`;
     const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
     if(!res.ok){
@@ -2806,5 +2806,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-
