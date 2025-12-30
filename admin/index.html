@@ -1541,7 +1541,7 @@ async function loadWithdrawHistory(){
 
   try{
     // ✅ Admin: RPC Security Definer (evita problemas de RLS/joins)
-    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
+    const rpcUrl = `${BASE}/rest/v1/rpc/admin_list_withdrawals;
     const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
     if(!res.ok){
@@ -2806,4 +2806,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
