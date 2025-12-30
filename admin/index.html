@@ -441,73 +441,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 }
 </style>
 
-<script>
-/* ============================
-   FX | CAPITAL — DEBUG GLOBAL
-   ============================ */
-
-window.FX_DEBUG = {
-  errors: [],
-  logs: []
-};
-
-function fxLog(type, data) {
-  const entry = {
-    time: new Date().toISOString(),
-    type,
-    data
-  };
-  FX_DEBUG.logs.push(entry);
-  console.log("🟢 FX DEBUG:", entry);
-}
-
-function fxError(error, source = "unknown") {
-  const entry = {
-    time: new Date().toISOString(),
-    source,
-    message: error?.message || error,
-    stack: error?.stack || null
-  };
-  FX_DEBUG.errors.push(entry);
-  console.error("🔴 FX ERROR:", entry);
-}
-
-/* Captura errores JS */
-window.onerror = function (msg, src, line, col, err) {
-  fxError(err || msg, `${src}:${line}:${col}`);
-};
-
-/* Captura promesas */
-window.onunhandledrejection = function (e) {
-  fxError(e.reason, "unhandled_promise");
-};
-
-/* Intercepta fetch */
-const _fetch = window.fetch;
-window.fetch = async (...args) => {
-  try {
-    const res = await _fetch(...args);
-    if (!res.ok) {
-      fxError(
-        new Error(`FETCH ${res.status} ${res.url}`),
-        "fetch"
-      );
-    }
-    return res;
-  } catch (e) {
-    fxError(e, "fetch_exception");
-    throw e;
-  }
-};
-
-/* Para inspeccionar luego */
-window.showFXDebug = () => {
-  console.table(FX_DEBUG.errors);
-  console.table(FX_DEBUG.logs);
-};
-</script>
-
-  
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -946,13 +879,11 @@ window.showFXDebug = () => {
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
-// ✅ Aliases por compatibilidad (si alguna versión del HTML/JS usa estos nombres)
-const SUPABASE_URL = PROJECT_URL;
-const SUPABASE_ANON_KEY = ANON_KEY;
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
+const SUPABASE_URL = PROJECT_URL;
+const SUPABASE_ANON_KEY = ANON_KEY;
+
 
 function headersJSON(){
   return {
@@ -2847,161 +2778,80 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   initApp();
 });
-</script>
-</body>
 
-  <script>
-(() => {
-  const MAX_BODY = 5000;
-  const logs = [];
-  const start = Date.now();
-
-  function nowMs(){ return Date.now() - start; }
-  function safeString(x){
-    try { return typeof x === "string" ? x : JSON.stringify(x); }
-    catch { return String(x); }
-  }
-  function push(entry){
-    logs.push({ t: nowMs(), ...entry });
-    renderLast(entry);
-  }
-
-  // ---------- UI ----------
-  const box = document.createElement("div");
-  box.style.cssText = `
-    position:fixed; right:14px; bottom:14px; z-index:999999;
-    width:420px; max-height:55vh; overflow:auto;
-    background:rgba(10,10,12,.92); color:#e9eef6;
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:14px; padding:10px; font:12px/1.35 ui-sans-serif,system-ui;
-    box-shadow:0 18px 60px rgba(0,0,0,.6);
-  `;
-  box.innerHTML = `
-    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-      <div style="font-weight:700">🧪 Debug FX | CAPITAL</div>
-      <div style="opacity:.7" id="dbgCount">0</div>
-      <div style="margin-left:auto; display:flex; gap:6px;">
-        <button id="dbgExport" style="cursor:pointer;border:0;border-radius:10px;padding:6px 10px;">Exportar JSON</button>
-        <button id="dbgClear" style="cursor:pointer;border:0;border-radius:10px;padding:6px 10px;">Limpiar</button>
-      </div>
-    </div>
-    <div id="dbgList" style="display:flex; flex-direction:column; gap:6px;"></div>
-  `;
-  document.documentElement.appendChild(box);
-
-  const list = box.querySelector("#dbgList");
-  const count = box.querySelector("#dbgCount");
-
-  function renderLast(e){
-    count.textContent = String(logs.length);
-    const row = document.createElement("div");
-    row.style.cssText = "padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04)";
-    const type = e.type || "log";
-    row.innerHTML = `
-      <div style="display:flex; gap:8px; align-items:center;">
-        <div style="font-weight:700; opacity:.9">${type}</div>
-        <div style="opacity:.6">+${e.t}ms</div>
-      </div>
-      <div style="margin-top:4px; white-space:pre-wrap; word-break:break-word; opacity:.9">${safeString(e.message || e.url || e.error || e)}</div>
-    `;
-    list.prepend(row);
-  }
-
-  box.querySelector("#dbgClear").onclick = () => {
-    logs.length = 0;
-    list.innerHTML = "";
-    count.textContent = "0";
+/*** FX DEBUG HARNESS (captura TODOS los errores + requests) ***/
+(function(){
+  const store = [];
+  const push = (type, payload) => {
+    store.push({ts:new Date().toISOString(), type, ...payload});
+    try{ localStorage.fx_debug_log = JSON.stringify(store.slice(-800)); }catch(e){}
   };
 
-  box.querySelector("#dbgExport").onclick = async () => {
-    const blob = new Blob([JSON.stringify({ when: new Date().toISOString(), logs }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "fx_debug_log.json";
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  };
-
-  // ---------- Global JS errors ----------
-  window.addEventListener("error", (ev) => {
-    push({
-      type: "js_error",
-      message: ev.message,
-      url: ev.filename,
-      line: ev.lineno,
-      col: ev.colno,
-      error: ev.error ? String(ev.error.stack || ev.error) : null
-    });
+  // 1) Errores JS
+  window.addEventListener('error', (e)=>{
+    push('js_error', {message: e.message, filename: e.filename, lineno: e.lineno, colno: e.colno, stack: (e.error && e.error.stack) || null});
+  });
+  window.addEventListener('unhandledrejection', (e)=>{
+    const r = e.reason;
+    push('unhandled_rejection', {message: (r && (r.message||r.error_description||r.error)) || String(r), stack: r && r.stack});
   });
 
-  window.addEventListener("unhandledrejection", (ev) => {
-    push({
-      type: "promise_rejection",
-      message: ev.reason ? String(ev.reason.stack || ev.reason) : "unknown"
-    });
+  // 2) console.*
+  ['error','warn','log'].forEach((k)=>{
+    const orig = console[k].bind(console);
+    console[k] = (...args)=>{
+      push('console_'+k, {args: args.map(a=>{ try{return (typeof a==='string')?a:JSON.stringify(a);}catch(e){return String(a);} })});
+      orig(...args);
+    };
   });
 
-  // ---------- Console intercept ----------
-  const _err = console.error.bind(console);
-  const _warn = console.warn.bind(console);
-
-  console.error = (...args) => {
-    push({ type: "console_error", message: args.map(safeString).join(" ") });
-    _err(...args);
-  };
-  console.warn = (...args) => {
-    push({ type: "console_warn", message: args.map(safeString).join(" ") });
-    _warn(...args);
-  };
-
-  // ---------- Fetch intercept ----------
-  const _fetch = window.fetch.bind(window);
-  window.fetch = async (input, init = {}) => {
-    const url = (typeof input === "string") ? input : (input && input.url) ? input.url : String(input);
-    const method = (init && init.method) ? init.method : "GET";
-    const startT = nowMs();
-
-    try {
-      const res = await _fetch(input, init);
-      const clone = res.clone();
-      let body = "";
-      try {
-        body = await clone.text();
-        if (body.length > MAX_BODY) body = body.slice(0, MAX_BODY) + "…(truncado)";
-      } catch (e) {
-        body = "[no_text_body]";
-      }
-
-      push({
-        type: "fetch",
-        url,
-        method,
-        status: res.status,
-        ok: res.ok,
-        ms: nowMs() - startT,
-        body
-      });
-
+  // 3) fetch
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async (input, init={})=>{
+    const url = (typeof input === 'string') ? input : (input && input.url);
+    const method = (init && init.method) || 'GET';
+    const headers = (init && init.headers) || {};
+    const body = init && init.body;
+    const t0 = performance.now();
+    try{
+      const res = await origFetch(input, init);
+      const t1 = performance.now();
+      let text = '';
+      try { text = await res.clone().text(); } catch(e){}
+      push('fetch', {url, method, status: res.status, ms: Math.round(t1-t0), req_headers: headers, req_body: body, res_text: text.slice(0,2000)});
       return res;
-    } catch (err) {
-      push({
-        type: "fetch_error",
-        url,
-        method,
-        ms: nowMs() - startT,
-        message: String(err && err.stack ? err.stack : err)
-      });
+    }catch(err){
+      const t1 = performance.now();
+      push('fetch_error', {url, method, ms: Math.round(t1-t0), message: err && err.message, stack: err && err.stack});
       throw err;
     }
   };
 
-  push({ type: "debug_ready", message: "Capturando errores + fetch ✅" });
+  // API para descargar
+  window.FX_DEBUG = {
+    get(){ try{return JSON.parse(localStorage.fx_debug_log||'[]');}catch(e){return store;} },
+    clear(){ localStorage.removeItem('fx_debug_log'); store.length=0; },
+    download(){
+      const blob = new Blob([JSON.stringify(window.FX_DEBUG.get(), null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'fx_admin_debug_log.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+  };
+
+  // Atajo: Ctrl+Shift+D descarga
+  window.addEventListener('keydown', (e)=>{
+    if(e.ctrlKey && e.shiftKey && (e.key==='D' || e.key==='d')){
+      e.preventDefault();
+      window.FX_DEBUG.download();
+      alert('Log descargado: fx_admin_debug_log.json');
+    }
+  });
 })();
+
 </script>
-  
+</body>
 </html>
-
-
-
-
