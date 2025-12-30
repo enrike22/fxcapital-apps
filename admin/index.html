@@ -878,12 +878,10 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
-const APP_VERSION = "ADMIN-2.6";
-console.log("FX ADMIN", APP_VERSION, {PROJECT_URL});
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
-const SUPABASE_URL = PROJECT_URL; // alias
+const SUPABASE_URL = PROJECT_URL;
 const SUPABASE_ANON_KEY = ANON_KEY;
 
 
@@ -1530,45 +1528,40 @@ function resolveClientByAccountId(accountId){
 }
 
 async function loadWithdrawHistory(){
-  const msg = $("wdhMsg");
-  const body = $("wdhBody");
-  if(!body) return;
-
-  if(msg) msg.textContent = "Cargando…";
-  setLoading(msg, true);
-  body.innerHTML = "";
-  WDH_CACHE = [];
+  const msg = $("withdrawHistoryMsg");
+  if(msg) msg.textContent = "";
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer "+localStorage.token,
+    Authorization: "Bearer " + localStorage.token,
     "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
+    Pragma:"no-cache",
+    "Content-Type":"application/json"
   };
 
   try{
-    const sel = `id,created_at,account_id,amount,reference,note`;
-    const url = `${BASE}/withdrawals?select=${encodeURIComponent(sel)}&order=created_at.desc&limit=500`;
-    const r = await fetch(url, { headers:h, cache:"no-store" });
+    // ✅ Admin: RPC Security Definer (evita problemas de RLS/joins)
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
+    const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      throw new Error(t || `HTTP ${r.status}`);
+    if(!res.ok){
+      const t = await res.text();
+      throw new Error(t || ("HTTP "+res.status));
     }
 
-    const rows = await r.json();
-    WDH_CACHE = Array.isArray(rows) ? rows : [];
+    const rows = await res.json();
 
-    renderWithdrawHistory();
-    if(msg) msg.textContent = `Retiros cargados: ${WDH_CACHE.length}`;
-  }catch(e){
-    console.error(e);
-    if(msg) msg.textContent = "No se pudo cargar el historial (revisa RLS/permiso o estructura de tabla).";
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="small">No se pudo cargar el historial. (Error: ${String(e.message||e)})</td>`;
-    body.appendChild(tr);
-  }finally{
-    setLoading(msg, false);
+    // Reusar helpers existentes para mapear cuenta→perfil
+    const accIds = Array.from(new Set(rows.map(r => r.account_id).filter(Boolean)));
+    const accMap = await loadAccountsByIds(accIds);        // Map account_id -> account row (incl user_id)
+    const userIds = Array.from(new Set(Array.from(accMap.values()).map(a => a.user_id).filter(Boolean)));
+    const profMap = await loadProfilesByIds(userIds);      // Map user_id -> profile
+
+    renderWithdrawHistory(rows, accMap, profMap);
+  }catch(err){
+    console.error("loadWithdrawHistory error", err);
+    if(msg) msg.textContent = `No se pudo cargar el historial. (${err.message||err})`;
+    renderWithdrawHistory([], new Map(), new Map());
   }
 }
 
@@ -2190,85 +2183,41 @@ async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
 
-  const h = hAuth();
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + localStorage.token,
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache",
+    "Content-Type":"application/json"
+  };
 
-  // ✅ Columnas reales según tu tabla withdrawal_requests
-  const sel = `id,account_id,profile_id,kind,amount,penalty_pct,full_withdrawal,reason,reason_text,status,created_at,reviewed_by,reviewed_at,note`;
-  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&order=${encodeURIComponent("created_at.desc")}&limit=200`;
-
-  let data = [];
   try{
-    const r = await fetch(url, { headers: h });
-    if(!r.ok) throw new Error(await r.text());
-    data = await r.json();
+    // ✅ Admin: usar RPC Security Definer (no depende de RLS/vistas)
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawal_requests_guard`;
+    const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
+
+    if(!res.ok){
+      const t = await res.text();
+      throw new Error(t || ("HTTP "+res.status));
+    }
+
+    const rows = await res.json();
+
+    // Cargar perfiles para pintar nombre/email (si la RPC ya incluye, igual no estorba)
+    const ids = Array.from(new Set(rows.map(r => r.profile_id).filter(Boolean)));
+    const profileMap = await loadProfilesByIds(ids);
+
+    renderWithdrawRequests(rows, profileMap);
+
+    // KPI
+    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
+    setKPI("kpiWithdrawPending", pending);
+    setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
   }catch(err){
-    console.error("listWithdrawRequests error:", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso, sesión o tabla).";
-    return;
+    console.error("listWithdrawRequests error", err);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión/RPC).";
+    renderWithdrawRequests([], new Map());
   }
-
-  // Traer emails/nombres de profiles para mostrar mejor (sin depender de joins/FK)
-  const profileIds = [...new Set(data.map(x=>x.profile_id).filter(Boolean))];
-  const profileMap = {};
-  if(profileIds.length){
-    const psel = "id,email,full_name";
-    const purl = `${BASE}/profiles?select=${encodeURIComponent(psel)}&id=in.(${profileIds.join(",")})`;
-    try{
-      const pr = await fetch(purl, { headers: h });
-      if(pr.ok){
-        const ps = await pr.json();
-        ps.forEach(p=> profileMap[p.id] = p);
-      }
-    }catch(e){/* ignore */}
-  }
-
-  const tbody = $("withdrawReqsTbody");
-  if(!tbody) return;
-  tbody.innerHTML = "";
-
-  for(const v of data){
-    const tr = document.createElement("tr");
-
-    const prof = profileMap[v.profile_id] || {};
-    const who = prof.email || v.profile_id || "";
-
-    const status = String(v.status || "").toUpperCase();
-    const statusChip = chip(status || "PENDING", status==="REJECTED"?"danger":status==="APPROVED"?"ok":"warn");
-
-    tr.innerHTML = `
-      <td class="mono">${String(v.id).slice(0,8)}…</td>
-      <td class="mono">${String(v.account_id||"").slice(0,8)}…</td>
-      <td>${escapeHtml(who)}</td>
-      <td class="right">${fmtMoney(v.amount||0)} </td>
-      <td>${statusChip}</td>
-      <td>${fmtDateTime(v.created_at)}</td>
-      <td class="right">
-        <button class="btn sm" data-act="approve" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Aprobar</button>
-        <button class="btn sm danger" data-act="reject" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Rechazar</button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-  }
-
-  // bind actions
-  tbody.querySelectorAll("button[data-act]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-id");
-      const act = btn.getAttribute("data-act");
-      if(!id) return;
-
-      if(act==="approve"){
-        if(!confirm("¿Aprobar esta solicitud?")) return;
-        await approveWithdrawReq(id);
-      }else if(act==="reject"){
-        const reason = prompt("Motivo de rechazo (opcional):", "");
-        if(reason===null) return; // cancel
-        await rejectWithdrawReq(id, reason || "");
-      }
-      await listWithdrawRequests();
-    });
-  });
 }
 
 
@@ -2856,101 +2805,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 </script>
 </body>
-
-  <script>
-(function(){
-  const MAX = 500;
-  const DIAG = window.FX_DIAG = {
-    started_at: new Date().toISOString(),
-    errors: [],
-    net: [],
-    logs: [],
-    push(arr, item){
-      arr.push(item);
-      if(arr.length > MAX) arr.shift();
-    },
-    export(){
-      const out = JSON.stringify({
-        started_at: DIAG.started_at,
-        url: location.href,
-        ua: navigator.userAgent,
-        errors: DIAG.errors,
-        net: DIAG.net,
-        logs: DIAG.logs
-      }, null, 2);
-      const blob = new Blob([out], {type:"application/json"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "fx_diag_log.json";
-      a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-    },
-    clear(){
-      DIAG.errors.length = 0;
-      DIAG.net.length = 0;
-      DIAG.logs.length = 0;
-      console.log("FX_DIAG cleared");
-    }
-  };
-
-  // console.* capture
-  ["error","warn","log"].forEach(level=>{
-    const orig = console[level].bind(console);
-    console[level] = (...args)=>{
-      DIAG.push(DIAG.logs, {t:new Date().toISOString(), level, args: args.map(a=>String(a)).slice(0,20)});
-      orig(...args);
-    };
-  });
-
-  // window errors
-  window.addEventListener("error", (e)=>{
-    DIAG.push(DIAG.errors, {
-      t:new Date().toISOString(),
-      type:"error",
-      message: e.message,
-      source: e.filename,
-      line: e.lineno,
-      col: e.colno,
-      stack: e.error && e.error.stack ? String(e.error.stack) : null
-    });
-  });
-
-  window.addEventListener("unhandledrejection", (e)=>{
-    DIAG.push(DIAG.errors, {
-      t:new Date().toISOString(),
-      type:"unhandledrejection",
-      message: String(e.reason),
-      stack: e.reason && e.reason.stack ? String(e.reason.stack) : null
-    });
-  });
-
-  // fetch capture
-  const _fetch = window.fetch.bind(window);
-  window.fetch = async (input, init={})=>{
-    const started = performance.now();
-    const url = typeof input === "string" ? input : (input && input.url);
-    try{
-      const res = await _fetch(input, init);
-      const ms = Math.round(performance.now() - started);
-      if(!res.ok){
-        let body = null;
-        try{ body = await res.clone().text(); }catch(_){}
-        DIAG.push(DIAG.net, {t:new Date().toISOString(), kind:"fetch", url, status:res.status, ms, body: body?.slice(0,2000) || null});
-      }
-      return res;
-    }catch(err){
-      const ms = Math.round(performance.now() - started);
-      DIAG.push(DIAG.net, {t:new Date().toISOString(), kind:"fetch", url, status:"NETWORK_ERROR", ms, error:String(err)});
-      throw err;
-    }
-  };
-
-  // helper para ver rápido
-  window.showFXDiag = ()=>{ console.table(DIAG.errors); console.table(DIAG.net); };
-
-  console.log("FX_DIAG ready ✅  Usa: showFXDiag()  |  FX_DIAG.export()");
-})();
-</script>
-  
 </html>
-
