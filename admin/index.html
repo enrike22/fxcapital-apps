@@ -2782,6 +2782,158 @@ document.addEventListener("DOMContentLoaded", ()=>{
 });
 </script>
 </body>
+
+  <script>
+(() => {
+  const MAX_BODY = 5000;
+  const logs = [];
+  const start = Date.now();
+
+  function nowMs(){ return Date.now() - start; }
+  function safeString(x){
+    try { return typeof x === "string" ? x : JSON.stringify(x); }
+    catch { return String(x); }
+  }
+  function push(entry){
+    logs.push({ t: nowMs(), ...entry });
+    renderLast(entry);
+  }
+
+  // ---------- UI ----------
+  const box = document.createElement("div");
+  box.style.cssText = `
+    position:fixed; right:14px; bottom:14px; z-index:999999;
+    width:420px; max-height:55vh; overflow:auto;
+    background:rgba(10,10,12,.92); color:#e9eef6;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:10px; font:12px/1.35 ui-sans-serif,system-ui;
+    box-shadow:0 18px 60px rgba(0,0,0,.6);
+  `;
+  box.innerHTML = `
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+      <div style="font-weight:700">🧪 Debug FX | CAPITAL</div>
+      <div style="opacity:.7" id="dbgCount">0</div>
+      <div style="margin-left:auto; display:flex; gap:6px;">
+        <button id="dbgExport" style="cursor:pointer;border:0;border-radius:10px;padding:6px 10px;">Exportar JSON</button>
+        <button id="dbgClear" style="cursor:pointer;border:0;border-radius:10px;padding:6px 10px;">Limpiar</button>
+      </div>
+    </div>
+    <div id="dbgList" style="display:flex; flex-direction:column; gap:6px;"></div>
+  `;
+  document.documentElement.appendChild(box);
+
+  const list = box.querySelector("#dbgList");
+  const count = box.querySelector("#dbgCount");
+
+  function renderLast(e){
+    count.textContent = String(logs.length);
+    const row = document.createElement("div");
+    row.style.cssText = "padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04)";
+    const type = e.type || "log";
+    row.innerHTML = `
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div style="font-weight:700; opacity:.9">${type}</div>
+        <div style="opacity:.6">+${e.t}ms</div>
+      </div>
+      <div style="margin-top:4px; white-space:pre-wrap; word-break:break-word; opacity:.9">${safeString(e.message || e.url || e.error || e)}</div>
+    `;
+    list.prepend(row);
+  }
+
+  box.querySelector("#dbgClear").onclick = () => {
+    logs.length = 0;
+    list.innerHTML = "";
+    count.textContent = "0";
+  };
+
+  box.querySelector("#dbgExport").onclick = async () => {
+    const blob = new Blob([JSON.stringify({ when: new Date().toISOString(), logs }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "fx_debug_log.json";
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  };
+
+  // ---------- Global JS errors ----------
+  window.addEventListener("error", (ev) => {
+    push({
+      type: "js_error",
+      message: ev.message,
+      url: ev.filename,
+      line: ev.lineno,
+      col: ev.colno,
+      error: ev.error ? String(ev.error.stack || ev.error) : null
+    });
+  });
+
+  window.addEventListener("unhandledrejection", (ev) => {
+    push({
+      type: "promise_rejection",
+      message: ev.reason ? String(ev.reason.stack || ev.reason) : "unknown"
+    });
+  });
+
+  // ---------- Console intercept ----------
+  const _err = console.error.bind(console);
+  const _warn = console.warn.bind(console);
+
+  console.error = (...args) => {
+    push({ type: "console_error", message: args.map(safeString).join(" ") });
+    _err(...args);
+  };
+  console.warn = (...args) => {
+    push({ type: "console_warn", message: args.map(safeString).join(" ") });
+    _warn(...args);
+  };
+
+  // ---------- Fetch intercept ----------
+  const _fetch = window.fetch.bind(window);
+  window.fetch = async (input, init = {}) => {
+    const url = (typeof input === "string") ? input : (input && input.url) ? input.url : String(input);
+    const method = (init && init.method) ? init.method : "GET";
+    const startT = nowMs();
+
+    try {
+      const res = await _fetch(input, init);
+      const clone = res.clone();
+      let body = "";
+      try {
+        body = await clone.text();
+        if (body.length > MAX_BODY) body = body.slice(0, MAX_BODY) + "…(truncado)";
+      } catch (e) {
+        body = "[no_text_body]";
+      }
+
+      push({
+        type: "fetch",
+        url,
+        method,
+        status: res.status,
+        ok: res.ok,
+        ms: nowMs() - startT,
+        body
+      });
+
+      return res;
+    } catch (err) {
+      push({
+        type: "fetch_error",
+        url,
+        method,
+        ms: nowMs() - startT,
+        message: String(err && err.stack ? err.stack : err)
+      });
+      throw err;
+    }
+  };
+
+  push({ type: "debug_ready", message: "Capturando errores + fetch ✅" });
+})();
+</script>
+  
 </html>
+
 
 
