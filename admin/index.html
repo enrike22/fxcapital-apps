@@ -2184,70 +2184,68 @@ async function doScheduleTopup(){
   }
 }
 
-async function listWithdrawRequests(){
-  const msgEl = $("withdrawReqsMsg");
-  if(msgEl) msgEl.textContent = "";
+async function listWithdrawRequests() {
+  const tbody = document.querySelector("#withdrawalsTable tbody");
+  if (!tbody) return;
 
-  const h = hAuth();
+  tbody.innerHTML = `<tr><td colspan="9">Cargando...</td></tr>`;
 
-  // ✅ Columnas reales según tu tabla withdrawal_requests
-  const sel = `id,account_id,profile_id,kind,amount,penalty_pct,full_withdrawal,reason,reason_text,status,created_at,reviewed_by,reviewed_at,note`;
-  const url = `${BASE}/withdrawal_requests?select=${encodeURIComponent(sel)}&order=${encodeURIComponent("created_at.desc")}&limit=200`;
+  try {
+    const res = await fetch(`${BASE}/rpc/admin_list_withdrawal_requests`, {
+      method: "POST",
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + localStorage.token,
+        "Content-Type": "application/json"
+      },
+      body: "{}"
+    });
 
-  let data = [];
-  try{
-    const r = await fetch(url, { headers: h });
-    if(!r.ok) throw new Error(await r.text());
-    data = await r.json();
-  }catch(err){
-    console.error("listWithdrawRequests error:", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes (RLS/permiso, sesión o tabla).";
-    return;
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "RPC error");
+    }
+
+    const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error("Respuesta inválida (no es array)");
+    }
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9">No hay solicitudes</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    for (const r of data) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${new Date(r.created_at).toLocaleDateString()}</td>
+          <td>${r.client_name || "-"}</td>
+          <td>${r.client_email || "-"}</td>
+          <td>${r.amount}</td>
+          <td>${r.bank_name || "-"}</td>
+          <td>${r.account_number || "-"}</td>
+          <td>${r.type || "-"}</td>
+          <td>${r.status}</td>
+          <td>
+            <button onclick="approveWithdrawal('${r.id}')">Aprobar</button>
+            <button onclick="rejectWithdrawal('${r.id}')">Rechazar</button>
+          </td>
+        </tr>
+      `;
+    }
+  } catch (err) {
+    console.error("Withdrawals error:", err);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="color:#ff6b6b">
+          Error cargando solicitudes
+        </td>
+      </tr>`;
   }
-
-  // Traer emails/nombres de profiles para mostrar mejor (sin depender de joins/FK)
-  const profileIds = [...new Set(data.map(x=>x.profile_id).filter(Boolean))];
-  const profileMap = {};
-  if(profileIds.length){
-    const psel = "id,email,full_name";
-    const purl = `${BASE}/profiles?select=${encodeURIComponent(psel)}&id=in.(${profileIds.join(",")})`;
-    try{
-      const pr = await fetch(purl, { headers: h });
-      if(pr.ok){
-        const ps = await pr.json();
-        ps.forEach(p=> profileMap[p.id] = p);
-      }
-    }catch(e){/* ignore */}
-  }
-
-  const tbody = $("withdrawReqsTbody");
-  if(!tbody) return;
-  tbody.innerHTML = "";
-
-  for(const v of data){
-    const tr = document.createElement("tr");
-
-    const prof = profileMap[v.profile_id] || {};
-    const who = prof.email || v.profile_id || "";
-
-    const status = String(v.status || "").toUpperCase();
-    const statusChip = chip(status || "PENDING", status==="REJECTED"?"danger":status==="APPROVED"?"ok":"warn");
-
-    tr.innerHTML = `
-      <td class="mono">${String(v.id).slice(0,8)}…</td>
-      <td class="mono">${String(v.account_id||"").slice(0,8)}…</td>
-      <td>${escapeHtml(who)}</td>
-      <td class="right">${fmtMoney(v.amount||0)} </td>
-      <td>${statusChip}</td>
-      <td>${fmtDateTime(v.created_at)}</td>
-      <td class="right">
-        <button class="btn sm" data-act="approve" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Aprobar</button>
-        <button class="btn sm danger" data-act="reject" data-id="${v.id}" ${status!=="PENDING"?"disabled":""}>Rechazar</button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-  }
+}
 
   // bind actions
   tbody.querySelectorAll("button[data-act]").forEach(btn=>{
@@ -2855,3 +2853,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
