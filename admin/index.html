@@ -441,6 +441,73 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 }
 </style>
 
+<script>
+/* ============================
+   FX | CAPITAL — DEBUG GLOBAL
+   ============================ */
+
+window.FX_DEBUG = {
+  errors: [],
+  logs: []
+};
+
+function fxLog(type, data) {
+  const entry = {
+    time: new Date().toISOString(),
+    type,
+    data
+  };
+  FX_DEBUG.logs.push(entry);
+  console.log("🟢 FX DEBUG:", entry);
+}
+
+function fxError(error, source = "unknown") {
+  const entry = {
+    time: new Date().toISOString(),
+    source,
+    message: error?.message || error,
+    stack: error?.stack || null
+  };
+  FX_DEBUG.errors.push(entry);
+  console.error("🔴 FX ERROR:", entry);
+}
+
+/* Captura errores JS */
+window.onerror = function (msg, src, line, col, err) {
+  fxError(err || msg, `${src}:${line}:${col}`);
+};
+
+/* Captura promesas */
+window.onunhandledrejection = function (e) {
+  fxError(e.reason, "unhandled_promise");
+};
+
+/* Intercepta fetch */
+const _fetch = window.fetch;
+window.fetch = async (...args) => {
+  try {
+    const res = await _fetch(...args);
+    if (!res.ok) {
+      fxError(
+        new Error(`FETCH ${res.status} ${res.url}`),
+        "fetch"
+      );
+    }
+    return res;
+  } catch (e) {
+    fxError(e, "fetch_exception");
+    throw e;
+  }
+};
+
+/* Para inspeccionar luego */
+window.showFXDebug = () => {
+  console.table(FX_DEBUG.errors);
+  console.table(FX_DEBUG.logs);
+};
+</script>
+
+  
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -2934,6 +3001,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
   
 </html>
+
 
 
 
