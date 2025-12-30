@@ -2856,4 +2856,101 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 </script>
 </body>
+
+  <script>
+(function(){
+  const MAX = 500;
+  const DIAG = window.FX_DIAG = {
+    started_at: new Date().toISOString(),
+    errors: [],
+    net: [],
+    logs: [],
+    push(arr, item){
+      arr.push(item);
+      if(arr.length > MAX) arr.shift();
+    },
+    export(){
+      const out = JSON.stringify({
+        started_at: DIAG.started_at,
+        url: location.href,
+        ua: navigator.userAgent,
+        errors: DIAG.errors,
+        net: DIAG.net,
+        logs: DIAG.logs
+      }, null, 2);
+      const blob = new Blob([out], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "fx_diag_log.json";
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    },
+    clear(){
+      DIAG.errors.length = 0;
+      DIAG.net.length = 0;
+      DIAG.logs.length = 0;
+      console.log("FX_DIAG cleared");
+    }
+  };
+
+  // console.* capture
+  ["error","warn","log"].forEach(level=>{
+    const orig = console[level].bind(console);
+    console[level] = (...args)=>{
+      DIAG.push(DIAG.logs, {t:new Date().toISOString(), level, args: args.map(a=>String(a)).slice(0,20)});
+      orig(...args);
+    };
+  });
+
+  // window errors
+  window.addEventListener("error", (e)=>{
+    DIAG.push(DIAG.errors, {
+      t:new Date().toISOString(),
+      type:"error",
+      message: e.message,
+      source: e.filename,
+      line: e.lineno,
+      col: e.colno,
+      stack: e.error && e.error.stack ? String(e.error.stack) : null
+    });
+  });
+
+  window.addEventListener("unhandledrejection", (e)=>{
+    DIAG.push(DIAG.errors, {
+      t:new Date().toISOString(),
+      type:"unhandledrejection",
+      message: String(e.reason),
+      stack: e.reason && e.reason.stack ? String(e.reason.stack) : null
+    });
+  });
+
+  // fetch capture
+  const _fetch = window.fetch.bind(window);
+  window.fetch = async (input, init={})=>{
+    const started = performance.now();
+    const url = typeof input === "string" ? input : (input && input.url);
+    try{
+      const res = await _fetch(input, init);
+      const ms = Math.round(performance.now() - started);
+      if(!res.ok){
+        let body = null;
+        try{ body = await res.clone().text(); }catch(_){}
+        DIAG.push(DIAG.net, {t:new Date().toISOString(), kind:"fetch", url, status:res.status, ms, body: body?.slice(0,2000) || null});
+      }
+      return res;
+    }catch(err){
+      const ms = Math.round(performance.now() - started);
+      DIAG.push(DIAG.net, {t:new Date().toISOString(), kind:"fetch", url, status:"NETWORK_ERROR", ms, error:String(err)});
+      throw err;
+    }
+  };
+
+  // helper para ver rápido
+  window.showFXDiag = ()=>{ console.table(DIAG.errors); console.table(DIAG.net); };
+
+  console.log("FX_DIAG ready ✅  Usa: showFXDiag()  |  FX_DIAG.export()");
+})();
+</script>
+  
 </html>
+
