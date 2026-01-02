@@ -884,23 +884,21 @@
   </dialog>
 
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-
-// --- FIX: asegurar setNavMode global (evita ReferenceError si una versión vieja no la trae) ---
-window.setNavMode = window.setNavMode || function(mode){
-  try{
-    const toggleWrap = document.getElementById('navPanelToggleWrap');
-    const btnDep     = document.getElementById('btnNavDeposit');
-    const btnW       = document.getElementById('btnNavWithdraw');
-    const btnBack    = document.getElementById('btnBackPanel');
-
-    const showMainNav = (mode === 'panel');
-    if(toggleWrap) toggleWrap.style.display = showMainNav ? 'inline-flex' : 'none';
-    if(btnDep)     btnDep.style.display     = showMainNav ? 'inline-flex' : 'none';
-    if(btnW)       btnW.style.display       = showMainNav ? 'inline-flex' : 'none';
-    if(btnBack)    btnBack.style.display    = showMainNav ? 'none' : 'inline-flex';
-  }catch(e){}
-};
   <script>
+  // ✅ Safety helpers (avoid ReferenceError if a function name changes between versions)
+  window.setNavMode = window.setNavMode || function(){};
+  window.setActiveNav = window.setActiveNav || function(){};
+
+  const safeSetNavMode = (...args)=>{ try{
+    if (typeof setNavMode === 'function') return safeSetNavMode(...args);
+    if (typeof window.setNavMode === 'function') return window.safeSetNavMode(...args);
+  } catch(e){} };
+
+  const safeSetActiveNav = (...args)=>{ try{
+    if (typeof setActiveNav === 'function') return safeSetActiveNav(...args);
+    if (typeof window.setActiveNav === 'function') return window.safeSetActiveNav(...args);
+  } catch(e){} };
+
   const BASE_URL   = 'https://clientes.fxcapital-gt.com/';
   const LOGIN_URL  = BASE_URL;
 
@@ -1985,8 +1983,8 @@ window.setNavMode = window.setNavMode || function(mode){
       if(panel) panel.style.display = 'none';
       if(dep)   dep.style.display   = 'block';
       if(wit)   wit.style.display   = 'none';
-      if (typeof setNavMode === 'function') setNavMode('sub');
-      setActiveNav('deposit');
+      safeSetNavMode('sub');
+      safeSetActiveNav('deposit');
       resetDepositSteps();
       window.location.hash = '#depositar';
       return;
@@ -1996,8 +1994,8 @@ window.setNavMode = window.setNavMode || function(mode){
       if(panel) panel.style.display = 'none';
       if(dep)   dep.style.display   = 'none';
       if(wit)   wit.style.display   = 'block';
-      if (typeof setNavMode === 'function') setNavMode('sub');
-      setActiveNav('withdraw');
+      safeSetNavMode('sub');
+      safeSetActiveNav('withdraw');
       window.location.hash = '#retirar';
       selectType('early');
       toggleSwitchAll(false);
@@ -2010,8 +2008,8 @@ window.setNavMode = window.setNavMode || function(mode){
     if(panel) panel.style.display = 'block';
     if(dep)   dep.style.display   = 'none';
     if(wit)   wit.style.display   = 'none';
-    if (typeof setNavMode === 'function') setNavMode('panel');
-    setActiveNav('panel');
+    safeSetNavMode('panel');
+    safeSetActiveNav('panel');
     if(window.location.hash === '#depositar' || window.location.hash === '#retirar'){
       history.replaceState(null,'', window.location.pathname);
     }
