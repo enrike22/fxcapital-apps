@@ -908,6 +908,17 @@
 
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
+  const fmtMoney = (n, cur='GTQ') => {
+    const num = Number(n||0);
+    const c = (cur||'GTQ').toString().trim().toUpperCase();
+    if(c==='GTQ' || c==='Q') return fmtQ(num);
+    try{
+      return new Intl.NumberFormat('es-GT',{style:'currency',currency:c}).format(num);
+    }catch(e){
+      const sym = (c==='USD')?'$':(c==='EUR')?'€':(c==='MXN')?'$':(c==='HNL')?'L':(c==='CRC')?'₡':(c==='PAB')?'B/.':(c==='NIO')?'C$':(c==='COP')?'$':c+' ';
+      return `${sym}${num.toFixed(2)}`;
+    }
+  };
 
   /* ==========================================
      ✅ ZONA HORARIA AMARRADA A GUATEMALA
