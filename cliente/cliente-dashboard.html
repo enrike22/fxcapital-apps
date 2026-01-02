@@ -574,7 +574,7 @@
         </div>
       </section>
 
-      <div id="panelExtras">
+      <div id="panelExtras" class="hidden">
         <section class="panel section gray" style="margin-top:18px">
           <h2 style="margin:0 0 10px 0">Resultados del mes</h2>
           <div class="muted" id="monthRange">—</div>
@@ -1785,15 +1785,22 @@
     const uid = session.user.id;
 
     const [profRes, accRes] = await Promise.all([
-      sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
-      sb.from('accounts')
-        .select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital')
-        .eq('user_id',uid)
-        .order('joined_at', { ascending:true })
+      sb.from('profiles').select('*').eq('id',uid).single(),
+      sb.from('accounts').select('*').eq('user_id',uid)
     ]);
 
     const prof = profRes?.data || null;
     const accounts = Array.isArray(accRes?.data) ? accRes.data : [];
+
+    // Orden robusto (si existen fechas)
+    try{
+      accounts.sort((a,b)=>{
+        const da = new Date(a.joined_at || a.created_at || a.inserted_at || 0).getTime();
+        const db = new Date(b.joined_at || b.created_at || b.inserted_at || 0).getTime();
+        return (isFinite(da)?da:0) - (isFinite(db)?db:0);
+      });
+    }catch{}
+
 
     CURRENT_USER_NAME  = (prof?.full_name || prof?.email || session.user.email || '—');
     CURRENT_USER_EMAIL = (prof?.email || session.user.email || '');
@@ -2092,12 +2099,13 @@
   bindMoneyInput('tAmount');
 
   (async function init(){
+    // Estado inicial premium: ocultar secciones extra antes de pintar la vista
+    setPanelExtras(false);
+
     const h = (window.location.hash||'').toLowerCase();
     if(h === '#depositar') await showView('deposit');
     else if(h === '#retirar') await showView('withdraw');
     else await showView('panel');
-
-    setPanelExtras(false);
 
     await loadHeader();
 
