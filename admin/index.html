@@ -507,18 +507,35 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <div id="app" class="hidden">
 
     <!-- SOLICITUDES DE RETIRO (pendientes) -->
-<div class="card">
-  <div class="header" style="margin:0 0 10px">
-    <h2 style="margin:0">Solicitudes de retiro</h2>
-    <div class="inline" style="gap:10px">
-      <button id="btnOpenWithdrawReqs" type="button" class="ghost">Ver</button>
+    <div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Solicitudes de retiro</h2>
+        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Monto</th>
+              <th>Banco</th>
+              <th>No. cuenta</th>
+              <th>Tipo</th>
+              <th>Nota</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawReqs"></tbody>
+        </table>
+      </div>
+
+      <p id="withdrawReqsMsg" class="small"></p>
     </div>
-  </div>
-  <p class="small" style="margin:0;opacity:.9">Se abrirán en una ventana emergente para no ocupar espacio en el panel.</p>
-</div>
 
-<!-- TOPUPS -->
-
+    <!-- TOPUPS -->
     <div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
@@ -569,6 +586,18 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
           <input id="u_email" placeholder="cliente@demo.com" type="email" autocomplete="email">
           <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
         </div>
+
+        <div>
+          <label>Cuenta seleccionada</label>
+          <div class="inline">
+            <select id="u_account_sel"></select>
+            <button type="button" id="btnAddAccount" class="ghost">+ Nueva cuenta</button>
+          </div>
+          <div class="small" id="u_accounts_hint">Selecciona qué cuenta deseas editar.</div>
+          <input type="hidden" id="u_user_id">
+          <input type="hidden" id="u_account_id">
+        </div>
+
 
         <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo" autocomplete="name"></div>
         <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555" autocomplete="tel"></div>
@@ -714,43 +743,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
   </div><!-- /app -->
 </div><!-- /container -->
-
-
-<!-- ===== MODAL: SOLICITUDES DE RETIRO ===== -->
-<div id="modalWithdrawReqs" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal" style="max-width:1100px">
-    <div class="modal-head">
-      <div>
-        <div class="modal-title">Solicitudes de retiro</div>
-        <div class="small muted">Pendientes</div>
-      </div>
-      <div class="inline" style="gap:10px">
-        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-        <button type="button" class="ghost" onclick="closeWithdrawReqsModal()">Cerrar</button>
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Email</th>
-            <th>Monto</th>
-            <th>Banco</th>
-            <th>No. cuenta</th>
-            <th>Tipo</th>
-            <th>Nota</th>
-          </tr>
-        </thead>
-        <tbody id="withdrawReqs"></tbody>
-      </table>
-    </div>
-
-    <p id="withdrawReqsMsg" class="small" style="margin-top:10px"></p>
-  </div>
-</div>
 
 <!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
 <div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -1545,18 +1537,6 @@ function closeWithdrawHistory(){
   show($("modalWithdrawHistory"), false);
 }
 
-function openWithdrawReqsModal(){
-  show($("modalWithdrawReqs"), true);
-  // refresca al abrir
-  listWithdrawRequests();
-}
-function closeWithdrawReqsModal(){
-  show($("modalWithdrawReqs"), false);
-}
-window.closeWithdrawReqsModal = closeWithdrawReqsModal;
-
-
-
 function resolveClientByAccountId(accountId){
   const x = (CACHED||[]).find(r => r.account_id === accountId);
   return {
@@ -2221,80 +2201,44 @@ async function doScheduleTopup(){
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
-  const tbody = $("withdrawReqs");
-  if(tbody) tbody.innerHTML = "";
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + (localStorage.token || ""),
-    "Content-Type": "application/json",
+    Authorization: "Bearer " + localStorage.token,
     "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
+    Pragma:"no-cache",
+    "Content-Type":"application/json"
   };
-
-  const url = `${BASE}/rpc/admin_list_withdrawal_requests_guard`;
 
   try{
-    // En PostgREST, para RPC sin parámetros, es seguro enviar body "{}"
-    const r = await fetch(url, { method:"POST", headers:h, body:"{}" });
-    if(!r.ok){
-      const t = await r.text();
-      throw new Error(`HTTP ${r.status}: ${t}`);
+    // ✅ Admin: usar RPC Security Definer (no depende de RLS/vistas)
+    const rpcUrl = `${BASE}/rest/v1/rpc/admin_list_withdrawal_requests_guard
+    const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
+
+    if(!res.ok){
+      const t = await res.text();
+      throw new Error(t || ("HTTP "+res.status));
     }
-    const rows = await r.json();
-    renderWithdrawalRequests(Array.isArray(rows) ? rows : []);
-    // contador
-    if($("kpiWithdrawPending")) $("kpiWithdrawPending").textContent = String((rows||[]).length || 0);
-  }catch(e){
-    console.error("listWithdrawRequests error:", e);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes (" + (e?.message || e) + ")";
+
+    const rows = await res.json();
+
+    // Cargar perfiles para pintar nombre/email (si la RPC ya incluye, igual no estorba)
+    const ids = Array.from(new Set(rows.map(r => r.profile_id).filter(Boolean)));
+    const profileMap = await loadProfilesByIds(ids);
+
+    renderWithdrawRequests(rows, profileMap);
+
+    // KPI
+    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
+    setKPI("kpiWithdrawPending", pending);
+    setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
+  }catch(err){
+    console.error("listWithdrawRequests error", err);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión/RPC).";
+    renderWithdrawRequests([], new Map());
   }
 }
 
-function renderWithdrawalRequests(rows){
-  const tbody = $("withdrawReqs");
-  if(!tbody) return;
-
-  const esc = (v)=> String(v ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-  const fmtD = (d)=>{
-    if(!d) return "";
-    const dt = new Date(d);
-    if(Number.isNaN(dt.getTime())) return esc(d);
-    const pad = (n)=> String(n).padStart(2,"0");
-    return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-  };
-  const fmtM = (amt, cur)=>{
-    try{ return fmtMoney(amt, cur); }catch(_){}
-    const n = Number(amt || 0);
-    return (Number.isFinite(n) ? n.toFixed(2) : String(amt||""));
-  };
-
-  if(!rows || rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="8" class="muted">Sin solicitudes</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map(r=>{
-    const fecha  = fmtD(r.created_at || r.requested_at || r.date);
-    const cliente= esc(r.client_name || r.full_name || r.name || r.customer_name || "");
-    const email  = esc(r.email || r.user_email || "");
-    const monto  = esc(fmtM(r.amount, r.currency || ""));
-    const banco  = esc(r.bank_name || "");
-    const cuenta = esc(r.account_number || r.bank_account || r.bank_account_number || "");
-    const tipo   = esc(r.type || r.method || r.withdrawal_type || "");
-    const nota   = esc(r.note || r.notes || "");
-    return `<tr>
-      <td>${fecha}</td>
-      <td>${cliente}</td>
-      <td>${email}</td>
-      <td>${monto}</td>
-      <td>${banco}</td>
-      <td>${cuenta}</td>
-      <td>${tipo}</td>
-      <td>${nota}</td>
-    </tr>`;
-  }).join("");
-}
 
 async function approveWithdrawReq(id){
   const h = hAuth();
@@ -2348,9 +2292,115 @@ async function rejectWithdrawReq(id, reason){
 
 
 /*** Editar ***/
+
+let _accountsCacheByUser = new Map(); // user_id -> array of accounts
+
+async function fetchAccountsByUser(userId){
+  if(!userId) return [];
+  if(_accountsCacheByUser.has(userId)) return _accountsCacheByUser.get(userId);
+  const r = await fetch(`${RPC}/admin_list_accounts_by_user`, {
+    method:"POST",
+    headers: headersJSON(),
+    body: JSON.stringify({ p_user_id: userId })
+  });
+  if(!r.ok) throw new Error(await r.text() || "No se pudieron listar cuentas del usuario");
+  const rows = await r.json();
+  _accountsCacheByUser.set(userId, Array.isArray(rows) ? rows : []);
+  return _accountsCacheByUser.get(userId);
+}
+
+function fillAccountFields(a){
+  if(!a) return;
+  $("u_account_id").value = a.account_id || "";
+  $("u_currency").value = a.currency || "GTQ";
+  setCapitalInputValue(a.capital);
+  $("u_joined").value   = a.joined_at ? String(a.joined_at).slice(0,10) : "";
+  $("u_plan").value     = a.plan || "STANDARD";
+  $("u_months").value   = a.invest_months ?? "12";
+  $("u_rate").value     = (a.interest_pct ?? "") === null ? "" : (a.interest_pct ?? "");
+  $("u_bank_name").value   = a.bank_name ?? "";
+  $("u_bank_account").value= a.bank_account ?? "";
+  $("u_bank_account_type").value = a.bank_account_type ?? "";
+  $("u_interest_mode").value = a.compound_interest ? "compound" : "monthly";
+  validateRatePlan();
+}
+
+async function loadAccountsUI(userId, preferredAccountId){
+  $("u_user_id").value = userId || "";
+  const sel = $("u_account_sel");
+  if(!sel) return;
+  sel.innerHTML = "";
+  const accs = await fetchAccountsByUser(userId);
+  $("u_accounts_hint").textContent = accs.length ? `Este cliente tiene ${accs.length} cuenta(s).` : "Este cliente no tiene cuentas aún.";
+  accs.forEach((a, i)=>{
+    const opt = document.createElement("option");
+    const no = (a.account_no ?? (i+1));
+    opt.value = a.account_id;
+    opt.textContent = `Cuenta No. ${no}`;
+    sel.appendChild(opt);
+  });
+  // elegir
+  let chosen = accs[0] || null;
+  if(preferredAccountId){
+    const f = accs.find(x=>x.account_id===preferredAccountId);
+    if(f) chosen = f;
+  }
+  if(chosen){
+    sel.value = chosen.account_id;
+    fillAccountFields(chosen);
+  }else{
+    $("u_account_id").value = "";
+  }
+}
+
+document.addEventListener("change", (e)=>{
+  if(e.target && e.target.id==="u_account_sel"){
+    const uid = $("u_user_id").value;
+    const accs = _accountsCacheByUser.get(uid) || [];
+    const a = accs.find(x=>x.account_id===e.target.value);
+    fillAccountFields(a);
+  }
+});
+
+async function addNewAccountForCurrentUser(){
+  const uid = $("u_user_id").value;
+  if(!uid) return alert("Primero selecciona un cliente.");
+  const sourceAccountId = $("u_account_id").value || null;
+  const btn = $("btnAddAccount");
+  if(btn) btn.disabled = true;
+  try{
+    const r = await fetch(`${RPC}/admin_create_additional_account`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({ p_user_id: uid, p_source_account_id: sourceAccountId })
+    });
+    if(!r.ok) throw new Error(await r.text() || "No se pudo crear la cuenta adicional");
+    const out = await r.json().catch(()=>null);
+    // limpiar cache y recargar
+    _accountsCacheByUser.delete(uid);
+    await loadAccountsUI(uid, out?.account_id || out || null);
+    await listUsers(); // refrescar lista principal
+  }catch(err){
+    console.error(err);
+    alert(String(err?.message || err));
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+}
+document.addEventListener("click", (e)=>{
+  if(e.target && e.target.id==="btnAddAccount"){
+    e.preventDefault();
+    addNewAccountForCurrentUser();
+  }
+});
+
+
 function editClient(x){
+  $("u_user_id").value = x.user_id || "";
   $("u_email").value = x.email || "";
-  $("u_name").value  = x.full_name || "";
+  
+  loadAccountsUI(x.user_id || "", x.account_id || null).catch(console.error);
+$("u_name").value  = x.full_name || "";
   $("u_phone").value = x.phone || "";
   $("u_currency").value = x.currency || "GTQ";
   setCapitalInputValue(x.capital);
@@ -2434,8 +2484,10 @@ async function saveUser(){
 
     if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
 
+    const selAccountId = $("u_account_id").value || null;
     const body = {
       p_email: email,
+      p_account_id: selAccountId,
       p_full_name: fullName,
       p_currency: currency,
       p_capital: capital,
@@ -2460,8 +2512,8 @@ async function saveUser(){
     const compound = (mode === "compound");
     const uidForAccount = uid || await getAuthUserIdByEmail(email);
 
-    if(uidForAccount){
-      const pr = await fetch(`${BASE}/accounts?user_id=eq.${encodeURIComponent(uidForAccount)}`, {
+    if(uidForAccount && selAccountId){
+      const pr = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId || "")}&user_id=eq.${encodeURIComponent(uidForAccount)}`, {
         method: "PATCH",
         headers: headersJSON(),
         body: JSON.stringify({ compound_interest: compound })
@@ -2749,8 +2801,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
   $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
-$("btnOpenWithdrawReqs")?.addEventListener("click", openWithdrawReqsModal);
-$("modalWithdrawReqs")?.addEventListener("click", (e)=>{ if(e.target === $("modalWithdrawReqs")) closeWithdrawReqsModal(); });
 
   $("togglePass").addEventListener("click", ()=> {
     const inp = $("u_pass");
