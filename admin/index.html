@@ -2189,44 +2189,80 @@ async function doScheduleTopup(){
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
+  const tbody = $("withdrawReqs");
+  if(tbody) tbody.innerHTML = "";
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + localStorage.token,
+    Authorization: "Bearer " + (localStorage.token || ""),
+    "Content-Type": "application/json",
     "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache",
-    "Content-Type":"application/json"
+    Pragma:"no-cache"
   };
 
+  const url = `${BASE}/rpc/admin_list_withdrawal_requests_guard`;
+
   try{
-    // ✅ Admin: usar RPC Security Definer (no depende de RLS/vistas)
-    const rpcUrl = `${BASE}/rest/v1/rpc/admin_list_withdrawal_requests_guard
-    const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
-
-    if(!res.ok){
-      const t = await res.text();
-      throw new Error(t || ("HTTP "+res.status));
+    // En PostgREST, para RPC sin parámetros, es seguro enviar body "{}"
+    const r = await fetch(url, { method:"POST", headers:h, body:"{}" });
+    if(!r.ok){
+      const t = await r.text();
+      throw new Error(`HTTP ${r.status}: ${t}`);
     }
-
-    const rows = await res.json();
-
-    // Cargar perfiles para pintar nombre/email (si la RPC ya incluye, igual no estorba)
-    const ids = Array.from(new Set(rows.map(r => r.profile_id).filter(Boolean)));
-    const profileMap = await loadProfilesByIds(ids);
-
-    renderWithdrawRequests(rows, profileMap);
-
-    // KPI
-    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
-    setKPI("kpiWithdrawPending", pending);
-    setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
-  }catch(err){
-    console.error("listWithdrawRequests error", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión/RPC).";
-    renderWithdrawRequests([], new Map());
+    const rows = await r.json();
+    renderWithdrawalRequests(Array.isArray(rows) ? rows : []);
+    // contador
+    if($("kpiWithdrawPending")) $("kpiWithdrawPending").textContent = String((rows||[]).length || 0);
+  }catch(e){
+    console.error("listWithdrawRequests error:", e);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes (" + (e?.message || e) + ")";
   }
 }
 
+function renderWithdrawalRequests(rows){
+  const tbody = $("withdrawReqs");
+  if(!tbody) return;
+
+  const esc = (v)=> String(v ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+  const fmtD = (d)=>{
+    if(!d) return "";
+    const dt = new Date(d);
+    if(Number.isNaN(dt.getTime())) return esc(d);
+    const pad = (n)=> String(n).padStart(2,"0");
+    return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  };
+  const fmtM = (amt, cur)=>{
+    try{ return fmtMoney(amt, cur); }catch(_){}
+    const n = Number(amt || 0);
+    return (Number.isFinite(n) ? n.toFixed(2) : String(amt||""));
+  };
+
+  if(!rows || rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="8" class="muted">Sin solicitudes</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r=>{
+    const fecha  = fmtD(r.created_at || r.requested_at || r.date);
+    const cliente= esc(r.client_name || r.full_name || r.name || r.customer_name || "");
+    const email  = esc(r.email || r.user_email || "");
+    const monto  = esc(fmtM(r.amount, r.currency || ""));
+    const banco  = esc(r.bank_name || "");
+    const cuenta = esc(r.account_number || r.bank_account || r.bank_account_number || "");
+    const tipo   = esc(r.type || r.method || r.withdrawal_type || "");
+    const nota   = esc(r.note || r.notes || "");
+    return `<tr>
+      <td>${fecha}</td>
+      <td>${cliente}</td>
+      <td>${email}</td>
+      <td>${monto}</td>
+      <td>${banco}</td>
+      <td>${cuenta}</td>
+      <td>${tipo}</td>
+      <td>${nota}</td>
+    </tr>`;
+  }).join("");
+}
 
 async function approveWithdrawReq(id){
   const h = hAuth();
@@ -2813,5 +2849,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-
