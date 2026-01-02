@@ -903,7 +903,14 @@ const fmtDateTime = (s)=> s ? new Date(s).toLocaleString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
 function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
-
+function hAuth(){
+  return {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + (localStorage.token || ""),
+    "Content-Type": "application/json"
+  };
+}  
+  
 function clearGlobalError(){
   const box = $("globalError");
   if(!box) return;
@@ -2806,3 +2813,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
