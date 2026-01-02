@@ -2212,7 +2212,8 @@ async function listWithdrawRequests(){
 
   try{
     // ✅ Admin: usar RPC Security Definer (no depende de RLS/vistas)
-    const rpcUrl = `${BASE}/rest/v1/rpc/admin_list_withdrawal_requests_guard
+    // Endpoint correcto para RPC en PostgREST
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawal_requests_guard`;
     const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
     if(!res.ok){
