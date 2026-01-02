@@ -507,35 +507,18 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <div id="app" class="hidden">
 
     <!-- SOLICITUDES DE RETIRO (pendientes) -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Solicitudes de retiro</h2>
-        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Banco</th>
-              <th>No. cuenta</th>
-              <th>Tipo</th>
-              <th>Nota</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawReqs"></tbody>
-        </table>
-      </div>
-
-      <p id="withdrawReqsMsg" class="small"></p>
+<div class="card">
+  <div class="header" style="margin:0 0 10px">
+    <h2 style="margin:0">Solicitudes de retiro</h2>
+    <div class="inline" style="gap:10px">
+      <button id="btnOpenWithdrawReqs" type="button" class="ghost">Ver</button>
     </div>
+  </div>
+  <p class="small" style="margin:0;opacity:.9">Se abrirán en una ventana emergente para no ocupar espacio en el panel.</p>
+</div>
 
-    <!-- TOPUPS -->
+<!-- TOPUPS -->
+
     <div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
@@ -731,6 +714,43 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
   </div><!-- /app -->
 </div><!-- /container -->
+
+
+<!-- ===== MODAL: SOLICITUDES DE RETIRO ===== -->
+<div id="modalWithdrawReqs" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:1100px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Solicitudes de retiro</div>
+        <div class="small muted">Pendientes</div>
+      </div>
+      <div class="inline" style="gap:10px">
+        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
+        <button type="button" class="ghost" onclick="closeWithdrawReqsModal()">Cerrar</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Email</th>
+            <th>Monto</th>
+            <th>Banco</th>
+            <th>No. cuenta</th>
+            <th>Tipo</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody id="withdrawReqs"></tbody>
+      </table>
+    </div>
+
+    <p id="withdrawReqsMsg" class="small" style="margin-top:10px"></p>
+  </div>
+</div>
 
 <!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
 <div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -1524,6 +1544,18 @@ function openWithdrawHistory(){
 function closeWithdrawHistory(){
   show($("modalWithdrawHistory"), false);
 }
+
+function openWithdrawReqsModal(){
+  show($("modalWithdrawReqs"), true);
+  // refresca al abrir
+  listWithdrawRequests();
+}
+function closeWithdrawReqsModal(){
+  show($("modalWithdrawReqs"), false);
+}
+window.closeWithdrawReqsModal = closeWithdrawReqsModal;
+
+
 
 function resolveClientByAccountId(accountId){
   const x = (CACHED||[]).find(r => r.account_id === accountId);
@@ -2717,6 +2749,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
   $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
+$("btnOpenWithdrawReqs")?.addEventListener("click", openWithdrawReqsModal);
+$("modalWithdrawReqs")?.addEventListener("click", (e)=>{ if(e.target === $("modalWithdrawReqs")) closeWithdrawReqsModal(); });
 
   $("togglePass").addEventListener("click", ()=> {
     const inp = $("u_pass");
