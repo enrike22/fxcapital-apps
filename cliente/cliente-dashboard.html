@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -499,6 +500,27 @@
   .status-pending .status-dot{ background: rgba(255,255,255,.40); }
   .status-approved .status-dot{ background: rgba(45,212,191,.95); }
   .status-rejected .status-dot{ background: rgba(255,77,79,.95); }
+
+.account-select{
+  width:100%;
+  background:var(--chip);
+  color:var(--fg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:900;
+  letter-spacing:.2px;
+  outline:none;
+}
+.account-select:focus{
+  border-color:#3a4654;
+  box-shadow:0 0 0 3px rgba(255,255,255,.06);
+}
+.account-select option{
+  background:#0f1012;
+  color:var(--fg);
+}
+
 </style>
 </head>
 
@@ -543,7 +565,7 @@
           <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
 
           <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
-          <div class="card group"><span class="k">Cuenta (ID)</span><span id="valAccountId" class="v">—</span></div>
+          <div class="card group"><span class="k">Cuenta</span><div class="v" style="display:flex;flex-direction:column;gap:6px"><select id="accountPicker" class="account-select" aria-label="Seleccionar cuenta"></select><span id="valAccountId" class="muted" style="font-size:12px;opacity:.85">—</span></div></div>
           <div class="card group"><span class="k">Período (meses)</span><span id="valMonths" class="v">—</span></div>
 
           <div class="card group"><span class="k">Capital</span><span id="valCapital" class="v">Q 0.00</span></div>
@@ -946,6 +968,7 @@
   let CURRENT_USER_NAME = '';
   let CURRENT_USER_EMAIL = '';
   let CURRENT_ACCOUNT_ID = null;
+  let CURRENT_ACCOUNTS = [];
 
   async function forceLogout(){
     try {
@@ -1753,13 +1776,24 @@
 
   async function loadHeader(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(!session){ const bust=`no_session=${Date.now()}`; const sep=LOGIN_URL.includes('?')?'&':'?'; window.location.replace(`${LOGIN_URL}${sep}${bust}`); return; }
-    const uid=session.user.id;
+    if(!session){
+      const bust = `no_session=${Date.now()}`;
+      const sep  = LOGIN_URL.includes('?') ? '&' : '?';
+      window.location.replace(`${LOGIN_URL}${sep}${bust}`);
+      return;
+    }
+    const uid = session.user.id;
 
-    const [{ data: prof }, { data: acc }] = await Promise.all([
+    const [profRes, accRes] = await Promise.all([
       sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
-      sb.from('accounts').select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital').eq('user_id',uid).single()
+      sb.from('accounts')
+        .select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital')
+        .eq('user_id',uid)
+        .order('joined_at', { ascending:true })
     ]);
+
+    const prof = profRes?.data || null;
+    const accounts = Array.isArray(accRes?.data) ? accRes.data : [];
 
     CURRENT_USER_NAME  = (prof?.full_name || prof?.email || session.user.email || '—');
     CURRENT_USER_EMAIL = (prof?.email || session.user.email || '');
@@ -1767,7 +1801,23 @@
     const vn = document.getElementById('valName');
     if(vn) vn.textContent = CURRENT_USER_NAME;
 
-    if(!acc){
+    // Guardamos lista
+    CURRENT_ACCOUNTS = accounts;
+
+    const picker = document.getElementById('accountPicker');
+    const setEmpty = ()=>{
+      if(picker) {
+        picker.innerHTML = '';
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Sin cuenta asignada';
+        picker.appendChild(opt);
+        picker.disabled = true;
+      }
+    };
+
+    if(!accounts.length){
+      setEmpty();
       ['valAccountId','valPlan','valCurrency','valMonths','valOpenDate','valCloseDate'].forEach(id=>{
         const el=document.getElementById(id); if(el) el.textContent='—';
       });
@@ -1781,7 +1831,54 @@
       return;
     }
 
-    CURRENT_ACCOUNT_ID = acc.id;
+    // Construir opciones (Cuenta N.1, N.2…)
+    if(picker){
+      picker.disabled = false;
+      picker.innerHTML = '';
+      accounts.forEach((a, i)=>{
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        const plan = (a.plan || '—');
+        const cur  = (a.currency || 'GTQ');
+        const cap  = (typeof a.capital === 'number' || typeof a.capital === 'string') ? fmtMoney(a.capital, cur) : '';
+        opt.textContent = `Cuenta N.${i+1} — ${plan}${cap ? ' — ' + cap : ''}`;
+        picker.appendChild(opt);
+      });
+    }
+
+    // Selección persistente
+    let preferred = null;
+    try{ preferred = localStorage.getItem('fxc_account_id'); }catch{ preferred = null; }
+    let selected = accounts.find(a=>a.id === preferred) || accounts[0];
+
+    // Si por alguna razón quedó inválido, usamos la primera.
+    if(!selected) selected = accounts[0];
+
+    if(picker) picker.value = selected.id;
+
+    // Cambiar de cuenta (actualiza todo sin recargar)
+    if(picker && !picker.dataset.bound){
+      picker.dataset.bound = '1';
+      picker.addEventListener('change', async ()=>{
+        const id = picker.value;
+        const a = accounts.find(x=>x.id === id);
+        if(!a) return;
+        await refreshForAccount(a);
+      });
+    }
+
+    async function refreshForAccount(acc){
+      // Mostrar ID y campos básicos inmediatamente (sensación premium)
+      const idEl = document.getElementById('valAccountId');
+      if(idEl) idEl.textContent = acc?.id ? `ID: ${String(acc.id).slice(0,8)}…` : '—';
+
+      const pl = document.getElementById('valPlan'); if(pl) pl.textContent = acc?.plan || '—';
+      const cu = document.getElementById('valCurrency'); if(cu) cu.textContent = acc?.currency || '—';
+      const mo = document.getElementById('valMonths'); if(mo) mo.textContent = (acc?.invest_months ?? '—');
+
+      // Reusa la lógica existente (topups, cálculos, fechas, etc.)
+      CURRENT_ACCOUNT_ID = acc.id;
+    try{ localStorage.setItem('fxc_account_id', CURRENT_ACCOUNT_ID); }catch{}
 
     const { data: approvedTopups } = await sb
       .from('topups')
@@ -1853,7 +1950,13 @@
   function resetDepositSteps(){
     document.getElementById('txStep1')?.classList.add('tx-step-active');
     document.getElementById('txStep2')?.classList.remove('tx-step-active');
+    }
+
+    await refreshForAccount(selected);
+
+    if(prof?.must_change_password){ openPwdDialog(); }
   }
+
 
   async function showView(which){
     const panel = document.getElementById('viewPanel');
