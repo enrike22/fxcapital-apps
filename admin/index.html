@@ -2363,38 +2363,35 @@ document.addEventListener("change", (e)=>{
   }
 });
 
-async function addNewAccountForCurrentUser(){
-  const uid = $("u_user_id").value;
-  if(!uid) return alert("Primero selecciona un cliente.");
-  const sourceAccountId = $("u_account_id").value || null;
-  const btn = $("btnAddAccount");
-  if(btn) btn.disabled = true;
-  try{
-    const r = await fetch(`${RPC}/admin_create_additional_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_user_id: uid, p_source_account_id: sourceAccountId })
-    });
-    if(!r.ok) throw new Error(await r.text() || "No se pudo crear la cuenta adicional");
-    const out = await r.json().catch(()=>null);
-    // limpiar cache y recargar
-    _accountsCacheByUser.delete(uid);
-    await loadAccountsUI(uid, out?.account_id || out || null);
-    await listUsers(); // refrescar lista principal
-  }catch(err){
-    console.error(err);
-    alert(String(err?.message || err));
-  }finally{
-    if(btn) btn.disabled = false;
+async function addNewAccountForCurrentUser() {
+  if (!currentUserId) {
+    alert("Selecciona un cliente primero");
+    return;
   }
-}
-document.addEventListener("click", (e)=>{
-  if(e.target && e.target.id==="btnAddAccount"){
-    e.preventDefault();
-    addNewAccountForCurrentUser();
-  }
-});
 
+  const { error } = await supabase.rpc(
+    "admin_create_additional_account",
+    {
+      p_user_id: currentUserId,
+      p_source_account_id: selectedAccountId || null
+    }
+  );
+
+  if (error) {
+    if (error.message?.includes("JWT")) {
+      alert("Tu sesión expiró. Inicia sesión nuevamente.");
+      localStorage.clear();
+      location.reload();
+      return;
+    }
+
+    alert(error.message);
+    console.error(error);
+    return;
+  }
+
+  await loadUserAccounts(currentUserId);
+}
 
 function editClient(x){
   $("u_user_id").value = x.user_id || "";
