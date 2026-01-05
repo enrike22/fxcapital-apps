@@ -2198,6 +2198,81 @@ async function doScheduleTopup(){
   }
 }
 
+async function loadProfilesByIds(ids){
+  try{
+    if(!ids || !ids.length) return new Map();
+
+    // PostgREST: id=in.(...)
+    const inList = ids.join(",");
+    const url = `${BASE}/profiles?select=${encodeURIComponent("id,full_name,email,phone")}&id=in.(${inList})`;
+
+    const r = await fetch(url, { headers: hAuth() });
+    if(!r.ok) throw new Error(await r.text());
+
+    const rows = await r.json();
+    const map = new Map();
+    (rows||[]).forEach(p => map.set(p.id, p));
+    return map;
+  }catch(e){
+    console.warn("loadProfilesByIds error", e);
+    return new Map();
+  }
+}
+
+function renderWithdrawRequests(rows, profileMap){
+  const tb = $("withdrawReqs");
+  if(!tb) return;
+
+  tb.innerHTML = "";
+  (rows||[]).forEach(r=>{
+    const p = profileMap?.get(r.profile_id) || {};
+    const full = p.full_name || r.full_name || "—";
+    const email = p.email || r.email || "—";
+
+    const tr = document.createElement("tr");
+
+    const created = r.created_at ? new Date(r.created_at).toLocaleString() : "—";
+    const amount = (r.amount ?? 0);
+
+    tr.innerHTML = `
+      <td class="nowrap">${escapeHtml(created)}</td>
+      <td>${escapeHtml(full)}</td>
+      <td>${escapeHtml(email)}</td>
+      <td class="nowrap">${escapeHtml(String(amount))}</td>
+      <td>${escapeHtml(r.bank_name || "—")}</td>
+      <td class="nowrap">${escapeHtml(r.bank_account || "—")}</td>
+      <td class="nowrap">${escapeHtml(r.bank_account_type || "—")}</td>
+      <td>${escapeHtml(r.note || "")}</td>
+      <td class="nowrap">
+        <button class="ghost" type="button" data-wd-approve="${r.id}">Aprobar</button>
+        <button class="ghost" type="button" data-wd-reject="${r.id}">Rechazar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+// Delegación de clicks para acciones
+document.addEventListener("click", async (e)=>{
+  const ap = e.target?.getAttribute?.("data-wd-approve");
+  const rj = e.target?.getAttribute?.("data-wd-reject");
+  try{
+    if(ap){
+      e.preventDefault();
+      await approveWithdrawReq(ap);
+      await listWithdrawRequests();
+    }
+    if(rj){
+      e.preventDefault();
+      await rejectWithdrawReq(rj);
+      await listWithdrawRequests();
+    }
+  }catch(err){
+    console.error(err);
+    alert(err?.message || String(err));
+  }
+});  
+  
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -2931,3 +3006,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
