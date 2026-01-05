@@ -893,6 +893,7 @@ const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
+const AUTH = PROJECT_URL + "/auth/v1";
 const SUPABASE_URL = PROJECT_URL;
 const SUPABASE_ANON_KEY = ANON_KEY;
 
@@ -902,7 +903,51 @@ function headersJSON(){
     apikey: ANON_KEY,
     Authorization: "Bearer " + (localStorage.token || ""),
     "Content-Type":"application/json",
-    "Prefer":"return=representation"
+    
+
+async function refreshAccessToken(){
+  const rt = localStorage.refresh_token || "";
+  if(!rt) return false;
+  try{
+    const r = await fetch(`${AUTH}/token?grant_type=refresh_token`, {
+      method:"POST",
+      headers:{
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    if(!r.ok) return false;
+    const data = await r.json();
+    if(data?.access_token){
+      localStorage.token = data.access_token;
+      if(data.refresh_token) localStorage.refresh_token = data.refresh_token;
+      return true;
+    }
+    return false;
+  }catch(e){
+    console.error("refreshAccessToken error", e);
+    return false;
+  }
+}
+
+async function apiFetch(url, opts={}, retry=true){
+  const r = await fetch(url, opts);
+  if((r.status===401 || r.status===403) && retry && (localStorage.refresh_token||"")){
+    const ok = await refreshAccessToken();
+    if(ok){
+      const next = {...opts};
+      if(next.headers){
+        next.headers = {...next.headers, Authorization: "Bearer " + (localStorage.token||"")};
+      }
+      return apiFetch(url, next, false);
+    }
+  }
+  return r;
+}
+
+"Prefer":"return=representation"
   };
 }
 
@@ -1200,6 +1245,7 @@ async function doLogin(e){
     }
 
     localStorage.token = data.access_token;
+  if(data.refresh_token) localStorage.refresh_token = data.refresh_token;
     localStorage.uid = data.user?.id || "";
 
     await initApp();
@@ -2199,80 +2245,51 @@ async function doScheduleTopup(){
 }
 
 async function loadProfilesByIds(ids){
-  try{
-    if(!ids || !ids.length) return new Map();
+  const map = new Map();
+  if(!ids || !ids.length) return map;
 
-    // PostgREST: id=in.(...)
-    const inList = ids.join(",");
-    const url = `${BASE}/profiles?select=${encodeURIComponent("id,full_name,email,phone")}&id=in.(${inList})`;
-
-    const r = await fetch(url, { headers: hAuth() });
-    if(!r.ok) throw new Error(await r.text());
-
-    const rows = await r.json();
-    const map = new Map();
-    (rows||[]).forEach(p => map.set(p.id, p));
-    return map;
-  }catch(e){
-    console.warn("loadProfilesByIds error", e);
-    return new Map();
+  // chunk para evitar URL muy larga
+  const chunkSize = 80;
+  for(let i=0;i<ids.length;i+=chunkSize){
+    const chunk = ids.slice(i, i+chunkSize);
+    const inList = "in.(" + chunk.join(",") + ")";
+    const h = {
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + (localStorage.token || ""),
+      "Cache-Control":"no-cache, no-store, must-revalidate",
+      Pragma:"no-cache"
+    };
+    const r = await apiFetch(`${BASE}/profiles?select=id,full_name,email,phone&id=${inList}`, { headers:h, cache:"no-store" });
+    if(r.ok){
+      const rows = await r.json();
+      (rows||[]).forEach(p=> map.set(p.id, p));
+    }
   }
+  return map;
 }
 
 function renderWithdrawRequests(rows, profileMap){
-  const tb = $("withdrawReqs");
-  if(!tb) return;
-
-  tb.innerHTML = "";
+  const body = $("withdrawReqs");
+  if(!body) return;
+  body.innerHTML = "";
   (rows||[]).forEach(r=>{
-    const p = profileMap?.get(r.profile_id) || {};
-    const full = p.full_name || r.full_name || "—";
-    const email = p.email || r.email || "—";
-
+    const p = profileMap.get(r.profile_id) || {};
     const tr = document.createElement("tr");
-
-    const created = r.created_at ? new Date(r.created_at).toLocaleString() : "—";
-    const amount = (r.amount ?? 0);
-
     tr.innerHTML = `
-      <td class="nowrap">${escapeHtml(created)}</td>
-      <td>${escapeHtml(full)}</td>
-      <td>${escapeHtml(email)}</td>
-      <td class="nowrap">${escapeHtml(String(amount))}</td>
-      <td>${escapeHtml(r.bank_name || "—")}</td>
-      <td class="nowrap">${escapeHtml(r.bank_account || "—")}</td>
-      <td class="nowrap">${escapeHtml(r.bank_account_type || "—")}</td>
-      <td>${escapeHtml(r.note || "")}</td>
-      <td class="nowrap">
-        <button class="ghost" type="button" data-wd-approve="${r.id}">Aprobar</button>
-        <button class="ghost" type="button" data-wd-reject="${r.id}">Rechazar</button>
-      </td>
+      <td>${r.created_at ? new Date(r.created_at).toLocaleString() : "—"}</td>
+      <td>${p.full_name || "—"}</td>
+      <td>${p.email || "—"}</td>
+      <td>${fmtMoney(r.amount, r.currency)}</td>
+      <td>${r.bank_name || "—"}</td>
+      <td>${r.bank_account || "—"}</td>
+      <td>${r.bank_account_type || "—"}</td>
+      <td>${r.note || "—"}</td>
+      <td class="nowrap">—</td>
     `;
-    tb.appendChild(tr);
+    body.appendChild(tr);
   });
 }
 
-// Delegación de clicks para acciones
-document.addEventListener("click", async (e)=>{
-  const ap = e.target?.getAttribute?.("data-wd-approve");
-  const rj = e.target?.getAttribute?.("data-wd-reject");
-  try{
-    if(ap){
-      e.preventDefault();
-      await approveWithdrawReq(ap);
-      await listWithdrawRequests();
-    }
-    if(rj){
-      e.preventDefault();
-      await rejectWithdrawReq(rj);
-      await listWithdrawRequests();
-    }
-  }catch(err){
-    console.error(err);
-    alert(err?.message || String(err));
-  }
-});  
-  
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -2374,7 +2391,7 @@ let _accountsCacheByUser = new Map(); // user_id -> array of accounts
 async function fetchAccountsByUser(userId){
   if(!userId) return [];
   if(_accountsCacheByUser.has(userId)) return _accountsCacheByUser.get(userId);
-  const r = await fetch(`${RPC}/admin_list_accounts_by_user`, {
+  const r = await apiFetch(`${RPC}/admin_list_accounts_by_user`, {
     method:"POST",
     headers: headersJSON(),
     body: JSON.stringify({ p_user_id: userId })
@@ -2438,35 +2455,64 @@ document.addEventListener("change", (e)=>{
   }
 });
 
-async function addNewAccountForCurrentUser() {
-  if (!currentUserId) {
-    alert("Selecciona un cliente primero");
-    return;
-  }
+async async function addNewAccountForCurrentUser(){
+  clearGlobalError();
+  const uid = $("u_user_id").value;
+  if(!uid) return alert("Primero selecciona un cliente.");
 
-  const { error } = await supabase.rpc(
-    "admin_create_additional_account",
-    {
-      p_user_id: currentUserId,
-      p_source_account_id: selectedAccountId || null
+  // Duplicar datos desde la cuenta seleccionada (si existe)
+  const sourceAccountId =
+    $("u_account_sel")?.value ||
+    $("u_account_id")?.value ||
+    null;
+
+  const btn = $("btnAddAccount");
+  if(btn) btn.disabled = true;
+
+  try{
+    const r = await apiFetch(`${RPC}/admin_create_additional_account`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_user_id: uid,
+        p_source_account_id: sourceAccountId
+      })
+    });
+    if(!r.ok){
+      const raw = await r.text();
+      const j = safeJson(raw);
+      throw new Error(j?.message || j?.error || raw || "No se pudo crear la cuenta");
     }
-  );
 
-  if (error) {
-    if (error.message?.includes("JWT")) {
-      alert("Tu sesión expiró. Inicia sesión nuevamente.");
-      localStorage.clear();
-      location.reload();
-      return;
+    // limpiar cache y recargar cuentas
+    _accountsCacheByUser.delete(uid);
+    const accs = await fetchAccountsByUser(uid);
+    await refreshAccountPicker(uid);
+
+    // seleccionar la última (max account_no)
+    let newest = null;
+    for(const a of accs){
+      if(!newest || (a.account_no||0) > (newest.account_no||0)) newest = a;
     }
-
-    alert(error.message);
-    console.error(error);
-    return;
+    if(newest){
+      if($("u_account_sel")) $("u_account_sel").value = newest.account_id;
+      fillAccountFields(newest);
+      validateRatePlan();
+    }
+  }catch(err){
+    console.error("addNewAccountForCurrentUser", err);
+    alert(JSON.stringify({ code: err.code||null, details: err.details||null, hint: err.hint||null, message: err.message||String(err) }));
+  }finally{
+    if(btn) btn.disabled = false;
   }
-
-  await loadUserAccounts(currentUserId);
 }
+document.addEventListener("click", (e)=>{
+  if(e.target && e.target.id==="btnAddAccount"){
+    e.preventDefault();
+    addNewAccountForCurrentUser();
+  }
+});
+
 
 function editClient(x){
   $("u_user_id").value = x.user_id || "";
@@ -2516,95 +2562,95 @@ $("u_rate").addEventListener("input", validateRatePlan);
 
 /*** Guardar ***/
 async function saveUser(){
+  clearGlobalError();
   const email    = $("u_email").value.trim();
   const fullName = $("u_name").value.trim();
   const phone    = $("u_phone").value.trim();
   const password = $("u_pass").value;
+
+  const accountId = $("u_account_sel")?.value || $("u_account_id")?.value || null;
+
   const currency = $("u_currency").value;
   const capital  = parseCapitalFromInput($("u_capital").value);
   const joined   = $("u_joined").value || null;
   const plan     = $("u_plan").value;
-  const months   = parseInt($("u_months").value, 10);
+  const months   = parseInt($("u_months").value, 10) || null;
   const rateStr  = $("u_rate").value;
-  const rate     = rateStr === "" ? null : Number(rateStr);
-  const bankName = $("u_bank_name").value.trim();
-  const bankAcct = $("u_bank_account").value.trim();
-  const bankType = $("u_bank_account_type").value.trim();
-  const msgEl    = $("saveMsg");
+  const rate     = rateStr==="" ? null : Number(rateStr);
+  const compound = ($("u_interest_mode")?.value === "compound");
+  const bankName = $("u_bank_name").value.trim() || null;
+  const bankAcc  = $("u_bank_account").value.trim() || null;
+  const bankType = $("u_bank_account_type").value.trim() || null;
 
-  msgEl.textContent = "Guardando…";
-  setLoading(msgEl, true);
+  if(!email) return alert("Email requerido.");
+  if(!fullName) return alert("Nombre requerido.");
+
+  const btn = $("saveBtn");
+  if(btn) btn.disabled = true;
+  $("saveMsg").textContent = "Guardando...";
 
   try{
-    if(!email) throw new Error("Email requerido");
-    if(!fullName) throw new Error("Nombre requerido");
-    if(isNaN(capital)||capital<0) throw new Error("Capital inválido");
-    if(!validateRatePlan()) throw new Error("La tasa no coincide con el plan.");
-
-    let uid = await getAuthUserIdByEmail(email);
-
-    if (!uid && password){
-      const rCreate = await createAuthUserIfNeeded(email, password, fullName);
-      if(!rCreate.ok) throw new Error("No se pudo crear en Auth (revisa whitelist/secrets).");
-      try{ uid = (await rCreate.json()).id || null; }catch{}
-      if(!uid){
-        for(let i=0;i<5 && !uid;i++){
-          await sleep(400);
-          uid = await getAuthUserIdByEmail(email);
-        }
+    // Crear Auth user si se ingresó contraseña (mín 8)
+    if(password && password.length >= 8){
+      const rS = await apiFetch(`${AUTH}/signup`, {
+        method:"POST",
+        headers:{
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify({ email, password, data:{ full_name: fullName } })
+      });
+      if(!rS.ok){
+        const raw = await rS.text();
+        const msg = (safeJson(raw)?.message || safeJson(raw)?.error_description || raw || "").toLowerCase();
+        if(!msg.includes("already") && !msg.includes("exists")) throw new Error(raw);
       }
     }
 
-    if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
-
-    const selAccountId = $("u_account_id").value || null;
-    const body = {
-      p_email: email,
-      p_account_id: selAccountId,
-      p_full_name: fullName,
-      p_currency: currency,
-      p_capital: capital,
-      p_joined_at: joined,
-      p_plan: plan,
-      p_bank_name: bankName || null,
-      p_bank_account: bankAcct || null,
-      p_invest_months: months,
-      p_interest_pct: rate,
-      p_phone: phone || null,
-      p_bank_account_type: bankType || null
-    };
-
-    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+    // RPC: upsert profile + update selected account (castea enums internamente)
+    const r = await apiFetch(`${RPC}/admin_upsert_user_with_account`, {
       method:"POST",
       headers: headersJSON(),
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        p_account_id: accountId,
+        p_email: email,
+        p_full_name: fullName,
+        p_phone: phone || null,
+        p_plan: plan,
+        p_currency: currency,
+        p_capital: capital,
+        p_joined_at: joined,
+        p_bank_name: bankName,
+        p_bank_account: bankAcc,
+        p_bank_account_type: bankType,
+        p_invest_months: months,
+        p_interest_pct: rate,
+        p_compound_interest: compound
+      })
     });
-    if(!r.ok) throw new Error(await r.text() || "Error guardando");
-
-    const mode = $("u_interest_mode").value;
-    const compound = (mode === "compound");
-    const uidForAccount = uid || await getAuthUserIdByEmail(email);
-
-    if(uidForAccount && selAccountId){
-      const pr = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId || "")}&user_id=eq.${encodeURIComponent(uidForAccount)}`, {
-        method: "PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ compound_interest: compound })
-      });
-      if(!pr.ok){
-        console.error(await pr.text().catch(()=> ""));
-        throw new Error("Se guardó el usuario, pero no se pudo actualizar el modo de interés.");
-      }
+    if(!r.ok){
+      const raw = await r.text();
+      const j = safeJson(raw);
+      throw new Error(j?.message || j?.error || raw || "No se pudo guardar");
     }
 
-    msgEl.textContent = "Guardado";
+    // refrescar lista + cuentas
     await listUsers();
-    await refreshKPIs();
-  }catch(e){
-    msgEl.textContent = "Error";
-    alert("No se pudo guardar: " + (e.message||e));
+    _accountsCacheByUser = new Map(); // reset cache
+    // volver a seleccionar usuario por email si está en cache
+    const row = CACHED.find(x => (x.email||"").toLowerCase() === email.toLowerCase());
+    if(row){
+      await editUser(row.user_id);
+    }
+
+    $("saveMsg").textContent = "✅ Guardado";
+  }catch(err){
+    console.error("saveUser", err);
+    $("saveMsg").textContent = "Error";
+    alert("No se pudo guardar: " + (err.message || String(err)));
   }finally{
-    setLoading(msgEl, false);
+    if(btn) btn.disabled = false;
   }
 }
 
@@ -3006,4 +3052,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
