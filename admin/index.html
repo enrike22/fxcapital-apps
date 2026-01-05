@@ -2206,6 +2206,65 @@ async function doScheduleTopup(){
   }
 }
 
+/*** ✅ Helpers para evitar ReferenceError (perfiles + render de retiros) ***/
+function isUUID(v){
+  return typeof v==="string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.trim());
+}
+
+async function loadProfilesByIds(ids){
+  const map = new Map();
+  if(!ids || !ids.length) return map;
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + (localStorage.token||""),
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+  const chunkSize = 80;
+  for(let i=0;i<ids.length;i+=chunkSize){
+    const chunk = ids.slice(i, i+chunkSize).filter(Boolean);
+    if(!chunk.length) continue;
+    const inList = "in.(" + chunk.join(",") + ")";
+    const url = `${BASE}/profiles?select=id,full_name,email&id=${inList}`;
+    const r = await fetch(url, { headers:h, cache:"no-store" });
+    if(!r.ok){
+      // si falla, devolvemos lo que tengamos (no rompemos la UI)
+      console.error("loadProfilesByIds", r.status, await r.text().catch(()=> ""));
+      continue;
+    }
+    const rows = await r.json().catch(()=>[]);
+    (rows||[]).forEach(p=> map.set(p.id, p));
+  }
+  return map;
+}
+
+function renderWithdrawRequests(rows, profileMap){
+  const body = $("withdrawReqs");
+  if(!body) return;
+  body.innerHTML = "";
+  (rows||[]).forEach(r=>{
+    const p = profileMap?.get?.(r.profile_id) || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
+      <td>${escapeHtml(p.full_name || "—")}</td>
+      <td>${escapeHtml(p.email || "—")}</td>
+      <td>${fmtMoney(r.amount, r.currency)}</td>
+      <td>${escapeHtml(r.bank_name || "—")}</td>
+      <td>${escapeHtml(r.bank_account || "—")}</td>
+      <td>${escapeHtml(r.bank_account_type || "—")}</td>
+      <td>${escapeHtml(r.note || "—")}</td>
+      <td class="nowrap">
+        ${(String(r.status||"").toUpperCase()==="PENDING")
+          ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
+             <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
+          : "—"}
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -2372,9 +2431,10 @@ document.addEventListener("change", (e)=>{
 });
 
 async function addNewAccountForCurrentUser(){
-  const uid = $("u_user_id").value;
-  if(!uid) return alert("Primero selecciona un cliente.");
-  const sourceAccountId = $("u_account_sel")?.value || $("u_account_id").value || null;
+  const uid = ($("u_user_id")?.value || "").trim();
+  if(!isUUID(uid)) return alert("Primero selecciona un cliente (UUID válido).");
+  let sourceAccountId = ($("u_account_sel")?.value || $("u_account_id")?.value || "").trim();
+  if(!isUUID(sourceAccountId)) sourceAccountId = null;
   const btn = $("btnAddAccount");
   if(btn) btn.disabled = true;
   try{
