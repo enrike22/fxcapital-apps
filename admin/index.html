@@ -720,15 +720,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
               <th>Nombre</th>
               <th>Email</th>
               <th>Teléfono</th>
-              <th class="nowrap">Fecha ingreso</th>
-              <th>Plan</th>
-              <th>Capital</th>
-              <th>Banco</th>
-              <th class="nowrap">No. cuenta</th>
-              <th class="nowrap">Tipo de cuenta</th>
-              <th>Meses</th>
-              <th class="nowrap">Tasa %/6m</th>
-              <th>Modo</th>
               <th class="nowrap">Acciones</th>
             </tr>
           </thead>
@@ -740,7 +731,40 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
       </p>
       <p id="usersMsg" class="small" style="margin-top:6px"></p>
+    
+
+    <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
+    <div class="card hidden" id="accountsCard">
+      <div class="header" style="margin:0 0 10px">
+        <div>
+          <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
+        </div>
+        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Cuenta</th>
+              <th>Plan</th>
+              <th>Capital</th>
+              <th>Moneda</th>
+              <th>Meses</th>
+              <th>Tasa %/6m</th>
+              <th>Modo</th>
+              <th>Banco</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="accountsBody"></tbody>
+        </table>
+      </div>
+      <p class="small" style="margin-top:10px">Tip: usa <b>Editar</b> para cargar esa cuenta en el formulario y guarda. Solo se actualiza la cuenta seleccionada.</p>
     </div>
+
+</div>
 
   </div><!-- /app -->
 </div><!-- /container -->
@@ -1348,33 +1372,89 @@ function renderUsers(rows){
 
   if(!rows || !rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="13" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
+    tr.innerHTML = `<td colspan="4" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
     tb.appendChild(tr);
     return;
   }
 
-  rows.forEach(x=>{
+  // ✅ Agrupar por cliente (1 fila por usuario) para un panel más ordenado
+  const map = new Map();
+  rows.forEach(r=>{
+    const uid = r.user_id || r.id;
+    if(!uid) return;
+    if(!map.has(uid)){
+      map.set(uid, {
+        user_id: uid,
+        full_name: r.full_name ?? '—',
+        email: r.email ?? '—',
+        phone: r.phone ?? '—'
+      });
+    }
+  });
+
+  const list = Array.from(map.values()).sort((a,b)=> String(a.full_name||"").localeCompare(String(b.full_name||""), "es"));
+
+  list.forEach(u=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${x.full_name ?? '—'}</td>
-      <td>${x.email ?? '—'}</td>
-      <td>${x.phone || '—'}</td>
-      <td class="nowrap">${fmtDate(x.joined_at)}</td>
-      <td>${x.plan ?? '—'}</td>
-      <td>${fmtMoney(x.capital, x.currency)}</td>
-      <td>${x.bank_name ?? '—'}</td>
-      <td class="nowrap">${x.bank_account ?? '—'}</td>
-      <td class="nowrap">${x.bank_account_type ?? '—'}</td>
-      <td>${x.invest_months ?? '—'}</td>
-      <td>${x.interest_pct ?? '—'}</td>
-      <td>${x.compound_interest ? "Acumulado" : "Mensual"}</td>
+      <td>${escapeHtml(u.full_name ?? '—')}</td>
+      <td>${escapeHtml(u.email ?? '—')}</td>
+      <td>${escapeHtml(u.phone ?? '—')}</td>
       <td class="nowrap">
-        <button class="ghost" onclick='editClient(${JSON.stringify(x)})'>Editar</button>
-        <button class="ghost" onclick='openResetModal(${JSON.stringify(x)})'>Reset contraseña</button>
-        <button class="danger" onclick='deleteClient(${JSON.stringify(x)})'>Eliminar</button>
+        <button class="ghost" onclick='openClientAccounts("${u.user_id}")'>Ver cuentas</button>
+        <button class="ghost" onclick='openResetModal(${JSON.stringify({ user_id: u.user_id, email: u.email, full_name: u.full_name })})'>Reset contraseña</button>
       </td>`;
     tb.appendChild(tr);
   });
+}
+
+function openClientAccounts(userId){
+  if(!isUUID(userId)) return alert("No pude identificar el cliente.");
+  const rows = (CACHED||[]).filter(x=>String(x.user_id)===String(userId));
+  const titleEl = $("accountsTitle");
+  const wrap = $("accountsCard");
+  const tb = $("accountsBody");
+
+  if(titleEl){
+    const n = rows[0]?.full_name || "Cliente";
+    const em = rows[0]?.email ? ` · ${rows[0].email}` : "";
+    titleEl.textContent = `Cuentas de ${n}${em}`;
+  }
+
+  if(tb){
+    tb.innerHTML = "";
+    if(!rows.length){
+      tb.innerHTML = `<tr><td colspan="9" class="small">Este cliente no tiene cuentas.</td></tr>`;
+    }else{
+      rows.forEach((a, i)=>{
+        const no = (a.account_no ?? (i+1));
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="nowrap">Cuenta No. ${escapeHtml(String(no))}</td>
+          <td>${escapeHtml(a.plan ?? '—')}</td>
+          <td>${fmtMoney(a.capital, a.currency)}</td>
+          <td>${escapeHtml(a.currency ?? 'GTQ')}</td>
+          <td>${escapeHtml(String(a.invest_months ?? '—'))}</td>
+          <td>${escapeHtml(String(a.interest_pct ?? '—'))}</td>
+          <td>${a.compound_interest ? "Acumulado" : "Mensual"}</td>
+          <td>${escapeHtml(a.bank_name ?? '—')}</td>
+          <td class="nowrap">
+            <button class="ghost" onclick='editClient(${JSON.stringify(a)})'>Editar</button>
+            <button class="danger" onclick='deleteClient(${JSON.stringify(a)})'>Eliminar</button>
+          </td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+  }
+
+  // mostrar card
+  if(wrap) wrap.classList.remove("hidden");
+  $("formCard")?.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function closeClientAccounts(){
+  $("accountsCard")?.classList.add("hidden");
 }
 
 /*** BUSCAR (mismo id="q") ***/
@@ -2263,7 +2343,7 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
       <td>${escapeHtml(clientName)}</td>
       <td>${escapeHtml(clientEmail)}</td>
-      <td>${fmtMoney(r.amount, r.currency)}</td>
+      <td>${fmtMoney(r.amount, r.currency || "GTQ")}</td>
       <td>${escapeHtml(bankName)}</td>
       <td>${escapeHtml(String(accountNo))}</td>
       <td>${escapeHtml(accountType)}</td>
@@ -2533,6 +2613,9 @@ $("u_rate").addEventListener("input", validateRatePlan);
 
 /*** Guardar ***/
 async function saveUser(){
+  const msgEl = $("saveMsg");
+  if(msgEl) msgEl.textContent = "";
+
   const email    = $("u_email").value.trim();
   const fullName = $("u_name").value.trim();
   const phone    = $("u_phone").value.trim();
@@ -2547,128 +2630,126 @@ async function saveUser(){
   const bankName = $("u_bank_name").value.trim();
   const bankAcct = $("u_bank_account").value.trim();
   const bankType = $("u_bank_account_type").value.trim();
-  const msgEl    = $("saveMsg");
+  const mode     = $("u_interest_mode").value;
+  const compound = (mode === "compound");
 
-  msgEl.textContent = "Guardando…";
-  setLoading(msgEl, true);
+  // Identificar cuenta seleccionada (evita mezclar cuentas)
+  let selAccountId = ($("u_account_sel")?.value || $("u_account_id")?.value || "").trim();
+  if(!isUUID(selAccountId)) selAccountId = "";
+
+  // Identificar usuario
+  let uid = ($("u_user_id")?.value || "").trim();
+  if(!isUUID(uid)){
+    uid = await getAuthedUserIdByEmail(email);
+    if(isUUID(uid)) $("u_user_id").value = uid;
+  }
 
   try{
-    if(!email) throw new Error("Email requerido");
-    if(!fullName) throw new Error("Nombre requerido");
-    if(isNaN(capital)||capital<0) throw new Error("Capital inválido");
-    if(!validateRatePlan()) throw new Error("La tasa no coincide con el plan.");
+    if(!email) throw new Error("Email requerido.");
+    if(!fullName) throw new Error("Nombre requerido.");
 
-    let uid = await getAuthUserIdByEmail(email);
+    // ✅ CASO 1: Usuario nuevo → usamos el RPC (crea Auth + Profile + 1 cuenta)
+    if(!isUUID(uid)){
+      if(!password || password.length < 8){
+        throw new Error("Para crear un usuario nuevo debes asignar una contraseña (mín. 8 caracteres).");
+      }
 
-    if (!uid && password){
-      const rCreate = await createAuthUserIfNeeded(email, password, fullName);
-      if(!rCreate.ok) throw new Error("No se pudo crear en Auth (revisa whitelist/secrets).");
-      try{ uid = (await rCreate.json()).id || null; }catch{}
-      if(!uid){
-        for(let i=0;i<5 && !uid;i++){
-          await sleep(400);
-          uid = await getAuthUserIdByEmail(email);
+      const body = {
+        p_email: email,
+        p_full_name: fullName,
+        p_phone: phone || null,
+        p_password: password,
+        p_currency: currency || "GTQ",
+        p_capital: capital,
+        p_joined_at: joined,
+        p_plan: plan,
+        p_invest_months: months,
+        p_interest_pct: rate,
+        p_bank_name: bankName || null,
+        p_bank_account: bankAcct || null,
+        p_bank_account_type: bankType || null
+      };
+
+      const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+        method:"POST",
+        headers: headersJSON(),
+        body: JSON.stringify(body)
+      });
+      if(!r.ok) throw new Error(await r.text() || "Error guardando");
+
+      // refrescar cache y cargar cuentas del usuario recién creado
+      uid = await getAuthedUserIdByEmail(email);
+      if(isUUID(uid)){
+        _accountsCacheByUser.delete(uid);
+        await loadAccountsUI(uid, null);
+        // aplicar modo interés en la cuenta seleccionada (la primera)
+        selAccountId = ($("u_account_sel")?.value || "").trim();
+        if(isUUID(selAccountId)){
+          await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}`, {
+            method:"PATCH",
+            headers: headersJSON(),
+            body: JSON.stringify({ compound_interest: compound })
+          });
         }
       }
+
+      if(msgEl) msgEl.textContent = "Guardado";
+      await listUsers();
+      await refreshKPIs();
+      return;
     }
 
-    if(!uid && !password) throw new Error("El usuario no existe en Auth. Ingresa una contraseña para crearlo.");
-
-    const selAccountId = $("u_account_id").value || null;
-    const body = {
-      p_email: email,
-      p_account_id: selAccountId,
-      p_full_name: fullName,
-      p_currency: currency,
-      p_capital: capital,
-      p_joined_at: joined,
-      p_plan: plan,
-      p_bank_name: bankName || null,
-      p_bank_account: bankAcct || null,
-      p_invest_months: months,
-      p_interest_pct: rate,
-      p_phone: phone || null,
-      p_bank_account_type: bankType || null
-    };
-
-    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST",
+    // ✅ CASO 2: Usuario existente → NO usamos RPC para editar cuenta (evita que se mezclen)
+    // 2.1 Actualizar perfil (solo datos del cliente)
+    const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, {
+      method:"PATCH",
       headers: headersJSON(),
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        full_name: fullName,
+        phone: phone || null,
+        email: email || null
+      })
     });
-    if(!r.ok) throw new Error(await r.text() || "Error guardando");
+    if(!pr.ok) throw new Error("No se pudo actualizar el perfil del cliente.");
 
-    const mode = $("u_interest_mode").value;
-    const compound = (mode === "compound");
-    const uidForAccount = uid || await getAuthUserIdByEmail(email);
-
-    if(uidForAccount && selAccountId){
-      const pr = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId || "")}&user_id=eq.${encodeURIComponent(uidForAccount)}`, {
-        method: "PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ compound_interest: compound })
-      });
-      if(!pr.ok){
-        console.error(await pr.text().catch(()=> ""));
-        throw new Error("Se guardó el usuario, pero no se pudo actualizar el modo de interés.");
-      }
-    }
-
-    msgEl.textContent = "Guardado";
-    await listUsers();
-    await refreshKPIs();
-  }catch(e){
-    msgEl.textContent = "Error";
-    alert("No se pudo guardar: " + (e.message||e));
-  }finally{
-    setLoading(msgEl, false);
-  }
-}
-
-/*** Eliminar (tu lógica original) ***/
-async function deleteClient(x){
-  // ✅ NUEVO: por defecto elimina SOLO la cuenta seleccionada (no el cliente completo)
-  // Para eliminar cliente completo (perfil + todas sus cuentas) usa deleteClientFull(x)
-  const accountId = (x && (x.account_id || x.id || x.accountId)) ? String(x.account_id || x.id || x.accountId) : "";
-  const userId = (x && x.user_id) ? String(x.user_id) : "";
-  if(!isUUID(accountId)){
-    return alert("No pude identificar la cuenta a eliminar (account_id inválido).");
-  }
-
-  const ok = await openConfirm({
-    title:"Eliminar cuenta",
-    html:`
-      <div style="margin-bottom:6px"><b>¿Eliminar solo esta cuenta?</b></div>
-      <div style="opacity:.9">Se eliminará únicamente la <b>Cuenta</b> seleccionada y su historial relacionado. El cliente (perfil) y sus otras cuentas quedarán intactas.</div>
-      <div style="margin-top:10px;opacity:.85;font-size:13px">Si quieres eliminar TODO el cliente (perfil + todas las cuentas), usa el botón "Eliminar cliente" (si lo tienes) o ejecuta la acción completa.</div>
-    `,
-    okText:"Sí, eliminar cuenta",
-    cancelText:"Cancelar"
-  });
-  if(!ok) return;
-
-  const jh = headersJSON();
-  try{
-    // 1) borrar dependencias por account_id si existen
-    await safeDelete(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(accountId)}`, jh);
-    await safeDelete(`${BASE}/topups?account_id=eq.${encodeURIComponent(accountId)}`, jh);
-    await safeDelete(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(accountId)}`, jh);
-
-    // 2) borrar SOLO la cuenta
-    await mustOk(await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, { method:"DELETE", headers: jh }), "eliminar cuenta");
-
-    // 3) refrescar UI
-    if(userId) _accountsCacheByUser.delete(userId);
-    const uid = (userId || ($("u_user_id")?.value||"").trim());
-    if(isUUID(uid)){
+    // 2.2 Actualizar SOLO la cuenta seleccionada
+    if(!selAccountId){
+      // si por algún motivo no hay selección, recarga UI
       await loadAccountsUI(uid, null);
+      selAccountId = ($("u_account_sel")?.value || "").trim();
     }
+    if(!isUUID(selAccountId)){
+      throw new Error("No se pudo identificar la cuenta seleccionada (account_id).");
+    }
+
+    const ar = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}&user_id=eq.${encodeURIComponent(uid)}`, {
+      method:"PATCH",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        currency: currency || "GTQ",
+        capital: capital,
+        joined_at: joined,
+        plan: plan,
+        invest_months: months,
+        interest_pct: rate,
+        bank_name: bankName || null,
+        bank_account: bankAcct || null,
+        bank_account_type: bankType || null,
+        compound_interest: compound
+      })
+    });
+    if(!ar.ok) throw new Error("No se pudo actualizar la cuenta seleccionada.");
+
+    // Password: se maneja desde el modal de reset (por seguridad). Aquí no lo tocamos.
+
+    if(msgEl) msgEl.textContent = "Guardado";
+    _accountsCacheByUser.delete(uid);
     await listUsers();
     await refreshKPIs();
-    alert("Cuenta eliminada correctamente.");
+
   }catch(err){
     console.error(err);
-    alert(String(err?.message || err));
+    if(msgEl) msgEl.textContent = String(err?.message || err);
   }
 }
 
@@ -3043,4 +3124,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
