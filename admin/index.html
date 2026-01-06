@@ -980,21 +980,32 @@ function setKPI(id, value, hint){
 /*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
   const token = localStorage.token;
-  if(!token) return false;
-  try{
-    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
-      method: "GET",
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
-    });
-    if(!r.ok){
-      localStorage.removeItem("token");
-      localStorage.removeItem("uid");
-      return false;
-    }
-    return true;
-  }catch{ return false; }
-}
+  if(!token) throw new Error("Sin token");
 
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: "GET",
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + token,
+      "Cache-Control":"no-cache"
+    }
+  });
+
+  if(r.status === 401 || r.status === 403){
+    // token malo → limpiar y forzar login
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    throw new Error("Sesión inválida. Vuelve a iniciar sesión.");
+  }
+
+  if(!r.ok){
+    const t = await r.text();
+    throw new Error("Auth error: " + r.status + " " + t);
+  }
+
+  return await r.json();
+}
+  
 /*** ✅ Session meta (agregado) ***/
 async function refreshSessionMeta(){
   const meta = $("sessionMeta");
@@ -3124,3 +3135,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
