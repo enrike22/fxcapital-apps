@@ -980,32 +980,21 @@ function setKPI(id, value, hint){
 /*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
   const token = localStorage.token;
-  if(!token) throw new Error("Sin token");
-
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    method: "GET",
-    headers: {
-      apikey: ANON_KEY,
-      Authorization: "Bearer " + token,
-      "Cache-Control":"no-cache"
+  if(!token) return false;
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
+    });
+    if(!r.ok){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      return false;
     }
-  });
-
-  if(r.status === 401 || r.status === 403){
-    // token malo → limpiar y forzar login
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh_token");
-    throw new Error("Sesión inválida. Vuelve a iniciar sesión.");
-  }
-
-  if(!r.ok){
-    const t = await r.text();
-    throw new Error("Auth error: " + r.status + " " + t);
-  }
-
-  return await r.json();
+    return true;
+  }catch{ return false; }
 }
-  
+
 /*** ✅ Session meta (agregado) ***/
 async function refreshSessionMeta(){
   const meta = $("sessionMeta");
@@ -2303,6 +2292,26 @@ function isUUID(v){
   return typeof v==="string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.trim());
 }
 
+function normAccountRow(a, idx){
+  a = a || {};
+  const account_id = (a.account_id || a.id || a.accountId || a.account_uuid || a.account_uuid_id || "").toString();
+  const account_no = (a.account_no ?? a.account_number ?? a.no ?? (idx+1));
+  return {
+    ...a,
+    account_id,
+    account_no,
+    // normalizar campos usados en UI
+    currency: a.currency || a.curr || a.moneda || a.ccy || "GTQ",
+    capital:  (a.capital ?? a.current_capital ?? a.saldo ?? a.balance ?? a.capital_actual),
+    joined_at: (a.joined_at || a.join_date || a.start_date || a.fecha_ingreso),
+    plan: (a.plan || a.plan_code || a.plan_name || "STANDARD"),
+    bank_name: (a.bank_name || a.bank || a.banco || ""),
+    bank_account: (a.bank_account || a.account_number_bank || a.no_cuenta || ""),
+    bank_account_type: (a.bank_account_type || a.account_type || a.tipo_cuenta || "")
+  };
+}
+
+
 async function loadProfilesByIds(ids){
   const map = new Map();
   if(!ids || !ids.length) return map;
@@ -2485,13 +2494,14 @@ async function fetchAccountsByUser(userId){
   });
   if(!r.ok) throw new Error(await r.text() || "No se pudieron listar cuentas del usuario");
   const rows = await r.json();
-  _accountsCacheByUser.set(userId, Array.isArray(rows) ? rows : []);
+  const norm = (Array.isArray(rows) ? rows : []).map((x,i)=>normAccountRow(x,i)).filter(x=>isUUID(x.account_id));
+  _accountsCacheByUser.set(userId, norm);
   return _accountsCacheByUser.get(userId);
 }
 
 function fillAccountFields(a){
   if(!a) return;
-  $("u_account_id").value = a.account_id || "";
+  $("u_account_id").value = (a.account_id || a.id || "");
   $("u_currency").value = a.currency || "GTQ";
   setCapitalInputValue(a.capital);
   $("u_joined").value   = a.joined_at ? String(a.joined_at).slice(0,10) : "";
@@ -2515,18 +2525,18 @@ async function loadAccountsUI(userId, preferredAccountId){
   accs.forEach((a, i)=>{
     const opt = document.createElement("option");
     const no = (a.account_no ?? (i+1));
-    opt.value = a.account_id;
+    opt.value = (a.account_id || a.id || "");
     opt.textContent = `Cuenta No. ${no}`;
     sel.appendChild(opt);
   });
   // elegir
   let chosen = accs[0] || null;
   if(preferredAccountId){
-    const f = accs.find(x=>x.account_id===preferredAccountId);
+    const f = accs.find(x=>(x.account_id||x.id)===preferredAccountId);
     if(f) chosen = f;
   }
   if(chosen){
-    sel.value = chosen.account_id;
+    sel.value = (chosen.account_id || chosen.id || "");
     fillAccountFields(chosen);
   }else{
     $("u_account_id").value = "";
@@ -2537,7 +2547,7 @@ document.addEventListener("change", (e)=>{
   if(e.target && e.target.id==="u_account_sel"){
     const uid = $("u_user_id").value;
     const accs = _accountsCacheByUser.get(uid) || [];
-    const a = accs.find(x=>x.account_id===e.target.value);
+    const a = accs.find(x=>(x.account_id||x.id)===e.target.value);
     fillAccountFields(a);
   }
 });
@@ -2645,8 +2655,17 @@ async function saveUser(){
   const compound = (mode === "compound");
 
   // Identificar cuenta seleccionada (evita mezclar cuentas)
-  let selAccountId = ($("u_account_sel")?.value || $("u_account_id")?.value || "").trim();
+  let selAccountId = ($("u_account_id")?.value || $("u_account_sel")?.value || "").trim();
+  
+  if(!isUUID(selAccountId)){
+    const sel = $("u_account_sel");
+    if(sel && sel.options && sel.options.length){
+      const v = sel.value || sel.options[0].value;
+      if(isUUID(v)) selAccountId = v;
+    }
+  }
   if(!isUUID(selAccountId)) selAccountId = "";
+
 
   // Identificar usuario
   let uid = ($("u_user_id")?.value || "").trim();
@@ -3135,4 +3154,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
