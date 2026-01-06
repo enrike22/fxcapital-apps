@@ -1457,6 +1457,46 @@ function closeClientAccounts(){
   $("accountsCard")?.classList.add("hidden");
 }
 
+async function deleteAccount(acc){
+  const accountId = String(acc?.account_id || acc?.id || "");
+  if(!isUUID(accountId)) return alert("No se pudo identificar la cuenta (account_id).");
+
+  const ok = await openConfirm({
+    title: "Eliminar cuenta",
+    html: `<div style="opacity:.9">Se eliminará solo esta cuenta del cliente (no elimina el login).<br><br><b>Si hay movimientos vinculados</b> (recargas/retiros), puede fallar por restricciones y tendrás que borrar esos movimientos primero.</div>`,
+    okText: "Sí, eliminar",
+    cancelText: "Cancelar"
+  });
+  if(!ok) return;
+
+  const jh = headersJSON();
+  try{
+    const r = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
+      method: "DELETE",
+      headers: jh
+    });
+    if(!r.ok){
+      const tx = await r.text().catch(()=> "");
+      throw new Error(`No se pudo eliminar (${r.status}). ${tx}`);
+    }
+
+    // limpiar cache y refrescar
+    _accountsCacheByUser.clear?.();
+    await listUsers();
+    await refreshKPIs?.();
+    alert("Cuenta eliminada.");
+    // Si la cuenta eliminada era la seleccionada en el formulario, limpiar selección
+    const sel = $("u_account_sel");
+    if(sel && sel.value === accountId){
+      sel.value = "";
+      $("u_account_id") && ($("u_account_id").value = "");
+    }
+  }catch(err){
+    console.error(err);
+    alert(String(err?.message || err));
+  }
+}
+
 /*** BUSCAR (mismo id="q") ***/
 $("q")?.addEventListener("input",(e)=>{
   const qv = e.target.value.trim().toLowerCase();
@@ -2640,7 +2680,7 @@ async function saveUser(){
   const email    = $("u_email").value.trim();
   const fullName = $("u_name").value.trim();
   const phone    = $("u_phone").value.trim();
-  const password = $("u_pass").value;
+  const password = $("u_pass").value; // Solo para CREAR usuario (no se cambia aquí si ya existe)
   const currency = $("u_currency").value;
   const capital  = parseCapitalFromInput($("u_capital").value);
   const joined   = $("u_joined").value || null;
@@ -2654,9 +2694,8 @@ async function saveUser(){
   const mode     = $("u_interest_mode").value;
   const compound = (mode === "compound");
 
-  // Identificar cuenta seleccionada (evita mezclar cuentas)
+  // Cuenta seleccionada
   let selAccountId = ($("u_account_id")?.value || $("u_account_sel")?.value || "").trim();
-  
   if(!isUUID(selAccountId)){
     const sel = $("u_account_sel");
     if(sel && sel.options && sel.options.length){
@@ -2666,8 +2705,7 @@ async function saveUser(){
   }
   if(!isUUID(selAccountId)) selAccountId = "";
 
-
-  // Identificar usuario
+  // Usuario (id del perfil)
   let uid = ($("u_user_id")?.value || "").trim();
   if(!isUUID(uid)){
     uid = await getAuthedUserIdByEmail(email);
@@ -2677,100 +2715,117 @@ async function saveUser(){
   try{
     if(!email) throw new Error("Email requerido.");
     if(!fullName) throw new Error("Nombre requerido.");
+    if(!Number.isFinite(capital) || capital < 0) throw new Error("Capital inválido.");
+    if(!Number.isFinite(months) || months <= 0) throw new Error("Meses inválidos.");
+    if(rate !== null && !Number.isFinite(rate)) throw new Error("Tasa inválida.");
 
-    // ✅ CASO 1: Usuario nuevo → usamos el RPC (crea Auth + Profile + 1 cuenta)
-    if(!isUUID(uid)){
-      if(!password || password.length < 8){
-        throw new Error("Para crear un usuario nuevo debes asignar una contraseña (mín. 8 caracteres).");
+    const profPatch = {
+      full_name: fullName,
+      email,
+      phone: phone || null
+    };
+
+    const acctPayload = {
+      currency: currency || "GTQ",
+      capital,
+      joined_at: joined,
+      plan,
+      invest_months: months,
+      interest_pct: rate,
+      bank_name: bankName || null,
+      bank_account: bankAcct || null,
+      bank_account_type: bankType || null,
+      compound_interest: compound
+    };
+
+    // ✅ Si el usuario YA existe: actualizamos perfil + SOLO la cuenta seleccionada (o creamos una nueva cuenta)
+    if(isUUID(uid)){
+      // 1) Perfil
+      const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, {
+        method: "PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify(profPatch)
+      });
+      if(!pr.ok){
+        const tx = await pr.text().catch(()=> "");
+        throw new Error(`No se pudo actualizar el perfil (${pr.status}). ${tx}`);
       }
 
-      const body = {
-        p_email: email,
-        p_full_name: fullName,
-        p_phone: phone || null,
-        p_password: password,
-        p_currency: currency || "GTQ",
-        p_capital: capital,
-        p_joined_at: joined,
-        p_plan: plan,
-        p_invest_months: months,
-        p_interest_pct: rate,
-        p_bank_name: bankName || null,
-        p_bank_account: bankAcct || null,
-        p_bank_account_type: bankType || null
-      };
-
-      const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-        method:"POST",
-        headers: headersJSON(),
-        body: JSON.stringify(body)
-      });
-      if(!r.ok) throw new Error(await r.text() || "Error guardando");
-
-      // refrescar cache y cargar cuentas del usuario recién creado
-      uid = await getAuthedUserIdByEmail(email);
-      if(isUUID(uid)){
-        _accountsCacheByUser.delete(uid);
-        await loadAccountsUI(uid, null);
-        // aplicar modo interés en la cuenta seleccionada (la primera)
-        selAccountId = ($("u_account_sel")?.value || "").trim();
-        if(isUUID(selAccountId)){
-          await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}`, {
-            method:"PATCH",
-            headers: headersJSON(),
-            body: JSON.stringify({ compound_interest: compound })
-          });
+      // 2) Cuenta (independiente)
+      if(isUUID(selAccountId)){
+        const ar = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}`, {
+          method: "PATCH",
+          headers: headersJSON(),
+          body: JSON.stringify(acctPayload)
+        });
+        if(!ar.ok){
+          const tx = await ar.text().catch(()=> "");
+          throw new Error(`No se pudo actualizar la cuenta (${ar.status}). ${tx}`);
+        }
+      }else{
+        // Crear cuenta nueva para el mismo cliente
+        const ir = await fetch(`${BASE}/accounts`, {
+          method: "POST",
+          headers: headersJSON(),
+          body: JSON.stringify({ user_id: uid, ...acctPayload })
+        });
+        if(!ir.ok){
+          const tx = await ir.text().catch(()=> "");
+          throw new Error(`No se pudo crear la nueva cuenta (${ir.status}). ${tx}`);
         }
       }
 
+      // Refrescar UI/caches
+      _accountsCacheByUser.delete(uid);
+      await loadAccountsUI(uid, selAccountId || null);
       if(msgEl) msgEl.textContent = "Guardado";
       await listUsers();
       await refreshKPIs();
       return;
     }
 
-    // ✅ CASO 2: Usuario existente → NO usamos RPC para editar cuenta (evita que se mezclen)
-    // 2.1 Actualizar perfil (solo datos del cliente)
-    const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, {
-      method:"PATCH",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        full_name: fullName,
-        phone: phone || null,
-        email: email || null
-      })
-    });
-    if(!pr.ok) throw new Error("No se pudo actualizar el perfil del cliente.");
+    // ✅ Si el usuario NO existe: usamos la RPC existente (crea auth + perfil + 1 cuenta)
+    if(!password || String(password).trim().length < 8){
+      throw new Error("Para crear un cliente nuevo, la contraseña debe tener mínimo 8 caracteres.");
+    }
 
-    // 2.2 Actualizar SOLO la cuenta seleccionada
-    if(!selAccountId){
-      // si por algún motivo no hay selección, recarga UI
+    const body = {
+      p_email: email,
+      p_full_name: fullName,
+      p_phone: phone || null,
+      p_password: password,
+      p_currency: currency || "GTQ",
+      p_capital: capital,
+      p_joined_at: joined,
+      p_plan: plan,
+      p_invest_months: months,
+      p_interest_pct: rate,
+      p_bank_name: bankName || null,
+      p_bank_account: bankAcct || null,
+      p_bank_account_type: bankType || null
+    };
+
+    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify(body)
+    });
+    if(!r.ok) throw new Error(await r.text() || "Error guardando");
+
+    // refrescar y aplicar compound_interest a la cuenta recién creada
+    uid = await getAuthedUserIdByEmail(email);
+    if(isUUID(uid)){
+      _accountsCacheByUser.delete(uid);
       await loadAccountsUI(uid, null);
       selAccountId = ($("u_account_sel")?.value || "").trim();
+      if(isUUID(selAccountId)){
+        await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}`, {
+          method:"PATCH",
+          headers: headersJSON(),
+          body: JSON.stringify({ compound_interest: compound })
+        });
+      }
     }
-    if(!isUUID(selAccountId)){
-      throw new Error("No se pudo identificar la cuenta seleccionada (account_id).");
-    }
-
-    const ar = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}&user_id=eq.${encodeURIComponent(uid)}`, {
-      method:"PATCH",
-      headers: headersJSON(),
-      body: JSON.stringify({
-        currency: currency || "GTQ",
-        capital: capital,
-        joined_at: joined,
-        plan: plan,
-        invest_months: months,
-        interest_pct: rate,
-        bank_name: bankName || null,
-        bank_account: bankAcct || null,
-        bank_account_type: bankType || null,
-        compound_interest: compound
-      })
-    });
-    if(!ar.ok) throw new Error("No se pudo actualizar la cuenta seleccionada.");
-
-    // Password: se maneja desde el modal de reset (por seguridad). Aquí no lo tocamos.
 
     if(msgEl) msgEl.textContent = "Guardado";
     _accountsCacheByUser.delete(uid);
@@ -2782,6 +2837,7 @@ async function saveUser(){
     if(msgEl) msgEl.textContent = String(err?.message || err);
   }
 }
+
 
 async function deleteClientFull(x){
   // ⚠️ Elimina PERFIL + TODAS LAS CUENTAS (acción destructiva)
@@ -2821,28 +2877,6 @@ async function safeDelete(url, headers){
   if(!r.ok) await mustOk(r, "eliminar");
 }
 
-  async function deleteAccount(acc){
-  const accountId = String(acc?.account_id || acc?.id || "");
-  if(!isUUID(accountId)) return alert("No se pudo identificar la cuenta (account_id).");
-
-  const ok = await openConfirm({
-    title: "Eliminar cuenta",
-    html: `<div style="opacity:.9">Se eliminará solo esta cuenta del cliente (no elimina el login).</div>`,
-    okText: "Sí, eliminar",
-    cancelText: "Cancelar"
-  });
-  if(!ok) return;
-
-  const jh = headersJSON();
-  const r = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
-    method: "DELETE",
-    headers: jh
-  });
-  await mustOk(r, "eliminar cuenta");
-
-  alert("Cuenta eliminada.");
-  await listClients();        // recarga lista/cache
-}
 
 /* ============================================================
    RESET PASSWORD (CLIENTES)
@@ -3175,6 +3209,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 </script>
 </body>
-</html>
-
-
+</html
+// Compat: algunas versiones llamaban getAuthUserByEmail()
+async function getAuthUserByEmail(email){
+  const id = await getAuthedUserIdByEmail(email);
+  return id ? { id } : null;
+}
+>
