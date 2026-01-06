@@ -515,19 +515,20 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Banco</th>
-              <th>No. cuenta</th>
-              <th>Tipo</th>
-              <th>Nota</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
+         <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Email</th>
+            <th>Monto</th>
+            <th>Banco</th>
+            <th>No. cuenta</th>
+            <th>Tipo cuenta</th>
+            <th>Tipo banco</th>
+            <th>Nota</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
           <tbody id="withdrawReqs"></tbody>
         </table>
       </div>
@@ -2242,17 +2243,31 @@ function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
   body.innerHTML = "";
+
   (rows||[]).forEach(r=>{
+    // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
+
+    const clientName  = r.client_full_name || p.full_name || "—";
+    const clientEmail = r.client_email || p.email || "—";
+
+    const bankName   = r.account_bank_name || r.bank_name || "—";
+    const bankAcc    = r.account_bank_account || r.bank_account || "—";
+    const bankAccTyp = r.account_bank_account_type || r.bank_account_type || "—";
+
+    const accountNo   = r.account_no ?? "—";
+    const accountType = r.account_type ?? "—";
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
-      <td>${escapeHtml(p.full_name || "—")}</td>
-      <td>${escapeHtml(p.email || "—")}</td>
+      <td>${escapeHtml(clientName)}</td>
+      <td>${escapeHtml(clientEmail)}</td>
       <td>${fmtMoney(r.amount, r.currency)}</td>
-      <td>${escapeHtml(r.bank_name || "—")}</td>
-      <td>${escapeHtml(r.bank_account || "—")}</td>
-      <td>${escapeHtml(r.bank_account_type || "—")}</td>
+      <td>${escapeHtml(bankName)}</td>
+      <td>${escapeHtml(String(accountNo))}</td>
+      <td>${escapeHtml(accountType)}</td>
+      <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
         ${(String(r.status||"").toUpperCase()==="PENDING")
@@ -2273,16 +2288,24 @@ async function listWithdrawRequests(){
     apikey: ANON_KEY,
     Authorization: "Bearer " + localStorage.token,
     "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache",
-    "Content-Type":"application/json"
+    Pragma:"no-cache"
   };
 
   try{
-    // ✅ Admin: usar RPC Security Definer (no depende de RLS/vistas)
-    // Endpoint correcto para RPC en PostgREST
-    const rpcUrl = `${BASE}/rpc/admin_list_withdrawal_requests_guard`;
-    const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
+    // ✅ Leer desde la VIEW (ya trae cliente/email/no.cuenta/banco)
+    const sel = [
+      "id","created_at","status","amount","currency",
+      "bank_name","bank_account","bank_account_type",
+      "note","account_id",
+      // campos enriquecidos por la view:
+      "client_full_name","client_email",
+      "account_no","account_type",
+      "account_bank_name","account_bank_account","account_bank_account_type"
+    ].join(",");
 
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
+
+    const res = await fetch(url, { headers:h, cache:"no-store" });
     if(!res.ok){
       const t = await res.text();
       throw new Error(t || ("HTTP "+res.status));
@@ -2290,19 +2313,17 @@ async function listWithdrawRequests(){
 
     const rows = await res.json();
 
-    // Cargar perfiles para pintar nombre/email (si la RPC ya incluye, igual no estorba)
-    const ids = Array.from(new Set(rows.map(r => r.profile_id).filter(Boolean)));
-    const profileMap = await loadProfilesByIds(ids);
-
-    renderWithdrawRequests(rows, profileMap);
+    // ✅ Ya no necesitamos loadProfilesByIds()
+    renderWithdrawRequests(rows, new Map());
 
     // KPI
     const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
     setKPI("kpiWithdrawPending", pending);
     setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
+
   }catch(err){
     console.error("listWithdrawRequests error", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión/RPC).";
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
     renderWithdrawRequests([], new Map());
   }
 }
@@ -3022,3 +3043,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
