@@ -1222,9 +1222,8 @@
 
       let saldo = capStart;
       if(isCompound){
-        // ✅ En modo acumulado, el interés NO se suma al capital (se paga al final del plazo)
         if(ended) accrued += interest;
-        saldo = capStart;
+        saldo = capStart + accrued;
       }else{
         saldo = capStart;
       }
@@ -1246,11 +1245,9 @@
 
     const note = document.getElementById('stmtNote');
     if(note){
-      const accruedLabel = fmtQ(accrued);
-      const baseNote = isCompound
-        ? `Modo: <b>Interés acumulado</b>. El <b>capital</b> no se incrementa mes a mes; los beneficios se pagan al finalizar el plazo.`
-        : `Modo: <b>Pago mensual</b>. El interés se calcula sobre el capital del mes y el capital no se acumula.`;
-      note.innerHTML = isCompound ? (baseNote + ` <br>Interés acumulado a la fecha: <b>${accruedLabel}</b>.`) : baseNote;
+      note.innerHTML = isCompound
+        ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre (si el cierre cae sábado/domingo, cambia hasta el lunes).`
+        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
 
@@ -1482,18 +1479,23 @@
       return;
     }
 
-    const { data: acc, error: accErr } = await sb
-      .from('accounts')
-      .select('id, capital')
-      .eq('user_id', session.user.id)
-      .single();
-
-    if(accErr || !acc){
-      alert('No se pudo cargar su cuenta.');
+    if(!CURRENT_ACCOUNT_ID){
+      alert('Seleccione una cuenta para realizar el retiro.');
       return;
     }
 
-    const capital = Number(acc.capital||0);
+    const { data: acc, error: accErr } = await sb
+      .from('accounts')
+      .select('id, capital')
+      .eq('id', CURRENT_ACCOUNT_ID)
+      .maybeSingle();
+
+    if(accErr || !acc){
+      console.warn('accounts error:', accErr?.message || accErr);
+      alert('No se pudo cargar su cuenta.');
+      return;
+    }
+const capital = Number(acc.capital||0);
     const all = document.getElementById('switchAll')?.classList.contains('on');
 
     const amount = all ? capital : Number(cleanMoneyStr(document.getElementById('wAmount')?.value) || 0);
@@ -1590,8 +1592,11 @@
   async function enviarTopupTransferencia(){
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ showMessage('Sesión no válida. Inicie sesión nuevamente.'); return; }
-
-    const amount = safeParseMoney(document.getElementById('tAmount')?.value);
+    if(!CURRENT_ACCOUNT_ID){
+      alert('Seleccione una cuenta para enviar el depósito.');
+      return;
+    }
+const amount = safeParseMoney(document.getElementById('tAmount')?.value);
     const bank   = (document.getElementById('tBank')?.value || '').trim();
     const notes  = (document.getElementById('tNotes')?.value || '').trim();
     const dtRaw  = (document.getElementById('tDate')?.value || '').trim();
@@ -1636,6 +1641,7 @@
 
       const { error: fnErr } = await sb.functions.invoke('create-topup', {
         body: {
+          account_id: CURRENT_ACCOUNT_ID,
           amount,
           currency: 'GTQ',
           bank_name: bank || null,
