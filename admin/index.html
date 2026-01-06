@@ -2606,69 +2606,89 @@ async function saveUser(){
 
 /*** Eliminar (tu lógica original) ***/
 async function deleteClient(x){
+  // ✅ NUEVO: por defecto elimina SOLO la cuenta seleccionada (no el cliente completo)
+  // Para eliminar cliente completo (perfil + todas sus cuentas) usa deleteClientFull(x)
+  const accountId = (x && (x.account_id || x.id || x.accountId)) ? String(x.account_id || x.id || x.accountId) : "";
+  const userId = (x && x.user_id) ? String(x.user_id) : "";
+  if(!isUUID(accountId)){
+    return alert("No pude identificar la cuenta a eliminar (account_id inválido).");
+  }
+
   const ok = await openConfirm({
-    title:"Eliminar cliente",
-    message:`<div style="font-weight:950;color:#FFD0D0;margin-bottom:6px">¿Eliminar al cliente?</div>
-             <div>Nombre: <b>${escapeHtml(x.full_name||'—')}</b></div>
-             <div>Email: <b>${escapeHtml(x.email||'—')}</b></div>
-             <div style="margin-top:8px;opacity:.9">Esto es permanente.</div>`,
-    okText:"Eliminar"
+    title:"Eliminar cuenta",
+    html:`
+      <div style="margin-bottom:6px"><b>¿Eliminar solo esta cuenta?</b></div>
+      <div style="opacity:.9">Se eliminará únicamente la <b>Cuenta</b> seleccionada y su historial relacionado. El cliente (perfil) y sus otras cuentas quedarán intactas.</div>
+      <div style="margin-top:10px;opacity:.85;font-size:13px">Si quieres eliminar TODO el cliente (perfil + todas las cuentas), usa el botón "Eliminar cliente" (si lo tienes) o ejecuta la acción completa.</div>
+    `,
+    okText:"Sí, eliminar cuenta",
+    cancelText:"Cancelar"
   });
   if(!ok) return;
 
   const jh = headersJSON();
-  const mustOk = async (resp, label) => {
-    if (!resp.ok) throw new Error(`Error al ${label}: ${(await resp.text().catch(()=>'')) || resp.status}`);
-  };
-
-  if (!x.user_id || !x.account_id){
-    const r = await fetch(`${BASE}/v_admin_users_filtered?email=eq.${encodeURIComponent(x.email)}&select=user_id,account_id`, { headers: jh, cache:"no-store" });
-    if (r.ok){
-      const rows = await r.json();
-      x.user_id = x.user_id || rows?.[0]?.user_id;
-      x.account_id = x.account_id || rows?.[0]?.account_id;
-    }
-  }
-
   try{
-    const r = await fetch(`${RPC}/admin_delete_user_cascade`, {
-      method:"POST",
-      headers: jh,
-      body: JSON.stringify({ p_email: x.email, p_dry_run: false })
-    });
-    if (r.status !== 404) await mustOk(r, "RPC admin_delete_user_cascade");
-    else throw new Error("sin RPC");
-  }catch{
-    if (x.account_id) {
-      await mustOk(await fetch(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar withdrawal_requests");
-      await mustOk(await fetch(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar admin_notifications");
-      await mustOk(await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(x.account_id)}`, { method:"DELETE", headers: jh }), "eliminar accounts");
+    // 1) borrar dependencias por account_id si existen
+    await safeDelete(`${BASE}/admin_notifications?payload->>account_id=eq.${encodeURIComponent(accountId)}`, jh);
+    await safeDelete(`${BASE}/topups?account_id=eq.${encodeURIComponent(accountId)}`, jh);
+    await safeDelete(`${BASE}/withdrawal_requests?account_id=eq.${encodeURIComponent(accountId)}`, jh);
+
+    // 2) borrar SOLO la cuenta
+    await mustOk(await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, { method:"DELETE", headers: jh }), "eliminar cuenta");
+
+    // 3) refrescar UI
+    if(userId) _accountsCacheByUser.delete(userId);
+    const uid = (userId || ($("u_user_id")?.value||"").trim());
+    if(isUUID(uid)){
+      await loadAccountsUI(uid, null);
     }
-    if (x.user_id) {
-      const rP = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(x.user_id)}`, { method:"DELETE", headers: jh });
-      if (!rP.ok && rP.status !== 404) await mustOk(rP, "eliminar profiles");
-    }
+    await listUsers();
+    await refreshKPIs();
+    alert("Cuenta eliminada correctamente.");
+  }catch(err){
+    console.error(err);
+    alert(String(err?.message || err));
   }
-
-  try{
-    let uid = x.user_id || await getAuthUserIdByEmail(x.email);
-    await fetch("https://czvpehbubfrinutztnwh.functions.supabase.co/admin-delete-user", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        apikey: ANON_KEY,
-        Authorization:"Bearer "+(localStorage.token||"")
-      },
-      body: JSON.stringify({ user_id: uid || null, email: x.email || null })
-    });
-  }catch{}
-
-  CACHED = CACHED.filter(r => (r.email||"").toLowerCase() !== (x.email||"").toLowerCase());
-  renderUsers(CACHED);
-  await listUsers();
-  await refreshKPIs();
-  alert("Cliente eliminado correctamente.");
 }
+
+async function deleteClientFull(x){
+  // ⚠️ Elimina PERFIL + TODAS LAS CUENTAS (acción destructiva)
+  const uid = (x && x.user_id) ? String(x.user_id) : "";
+  if(!isUUID(uid)) return alert("UUID de usuario inválido.");
+  const ok = await openConfirm({
+    title:"Eliminar cliente COMPLETO",
+    html:`<div style="color:#FFD0D0;margin-bottom:6px"><b>Esto eliminará el cliente y TODAS sus cuentas.</b></div>
+          <div style="opacity:.9">Se borrará el perfil y todo el historial asociado.</div>`,
+    okText:"Sí, eliminar TODO",
+    cancelText:"Cancelar"
+  });
+  if(!ok) return;
+
+  const jh = headersJSON();
+  try{
+    // borrar todo lo asociado al user_id
+    await safeDelete(`${BASE}/topups?user_id=eq.${encodeURIComponent(uid)}`, jh);
+    await safeDelete(`${BASE}/withdrawal_requests?user_id=eq.${encodeURIComponent(uid)}`, jh);
+    await safeDelete(`${BASE}/accounts?user_id=eq.${encodeURIComponent(uid)}`, jh);
+    await safeDelete(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, jh);
+
+    _accountsCacheByUser.delete(uid);
+    await listUsers();
+    await refreshKPIs();
+    alert("Cliente eliminado completamente.");
+  }catch(err){
+    console.error(err);
+    alert(String(err?.message || err));
+  }
+}
+
+// helper: delete pero ignora 404
+async function safeDelete(url, headers){
+  const r = await fetch(url, { method:"DELETE", headers });
+  if(r.status === 404) return;
+  if(!r.ok) await mustOk(r, "eliminar");
+}
+
 
 /* ============================================================
    RESET PASSWORD (CLIENTES)
