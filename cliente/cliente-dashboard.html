@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1223,8 +1222,9 @@
 
       let saldo = capStart;
       if(isCompound){
+        // ✅ En modo acumulado, el interés NO se suma al capital (se paga al final del plazo)
         if(ended) accrued += interest;
-        saldo = capStart + accrued;
+        saldo = capStart;
       }else{
         saldo = capStart;
       }
@@ -1246,9 +1246,11 @@
 
     const note = document.getElementById('stmtNote');
     if(note){
-      note.innerHTML = isCompound
-        ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre (si el cierre cae sábado/domingo, cambia hasta el lunes).`
-        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
+      const accruedLabel = fmtQ(accrued);
+      const baseNote = isCompound
+        ? `Modo: <b>Interés acumulado</b>. El <b>capital</b> no se incrementa mes a mes; los beneficios se pagan al finalizar el plazo.`
+        : `Modo: <b>Pago mensual</b>. El interés se calcula sobre el capital del mes y el capital no se acumula.`;
+      note.innerHTML = isCompound ? (baseNote + ` <br>Interés acumulado a la fecha: <b>${accruedLabel}</b>.`) : baseNote;
     }
   }
 
