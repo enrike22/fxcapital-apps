@@ -1440,7 +1440,7 @@ function openClientAccounts(userId){
           <td>${escapeHtml(a.bank_name ?? '—')}</td>
           <td class="nowrap">
             <button class="ghost" onclick='editClient(${JSON.stringify(a)})'>Editar</button>
-            <button class="danger" onclick='deleteClient(${JSON.stringify(a)})'>Eliminar</button>
+            <button class="danger" onclick='deleteAccount(${JSON.stringify(a)})'>Eliminar cuenta</button>
           </td>
         `;
         tb.appendChild(tr);
@@ -2821,6 +2821,28 @@ async function safeDelete(url, headers){
   if(!r.ok) await mustOk(r, "eliminar");
 }
 
+  async function deleteAccount(acc){
+  const accountId = String(acc?.account_id || acc?.id || "");
+  if(!isUUID(accountId)) return alert("No se pudo identificar la cuenta (account_id).");
+
+  const ok = await openConfirm({
+    title: "Eliminar cuenta",
+    html: `<div style="opacity:.9">Se eliminará solo esta cuenta del cliente (no elimina el login).</div>`,
+    okText: "Sí, eliminar",
+    cancelText: "Cancelar"
+  });
+  if(!ok) return;
+
+  const jh = headersJSON();
+  const r = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
+    method: "DELETE",
+    headers: jh
+  });
+  await mustOk(r, "eliminar cuenta");
+
+  alert("Cuenta eliminada.");
+  await listClients();        // recarga lista/cache
+}
 
 /* ============================================================
    RESET PASSWORD (CLIENTES)
@@ -3154,3 +3176,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
