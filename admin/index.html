@@ -1264,7 +1264,7 @@ async function createAuthUserIfNeeded(email, password, fullName) {
     body: JSON.stringify({ email, password, full_name: fullName })
   });
 }
-async function getAuthUserIdByEmail(email){
+async async function getAuthUserIdByEmail(email){
   try{
     const r = await fetch(`${RPC}/get_user_id_by_email`, {
       method:"POST",
@@ -2801,7 +2801,6 @@ async function saveUser(){
       p_email: email,
       p_full_name: fullName,
       p_phone: phone || null,
-      p_password: password,
       p_currency: currency || "GTQ",
       p_capital: capital,
       p_joined_at: joined,
