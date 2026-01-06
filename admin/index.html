@@ -1277,6 +1277,14 @@ async function getAuthUserIdByEmail(email){
   }catch{ return null; }
 }
 
+// ✅ Alias por compatibilidad (evita errores por nombres antiguos)
+async function getAuthedUserIdByEmail(email){
+  return await getAuthUserIdByEmail(email);
+}
+async function getAuthUserByEmail(email){
+  return await getAuthUserIdByEmail(email);
+}
+
 /*** LISTA CLIENTES ***/
 let CACHED = [];
 async function listUsers(){
