@@ -1291,8 +1291,7 @@ async function doLogin(e){
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
       method:"POST",
       headers:{
-        apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
         "Content-Type":"application/json",
         "Accept":"application/json"
       },
@@ -1341,7 +1340,6 @@ async function createAuthUserIfNeeded(email, password, fullName) {
     method:"POST",
     headers:{
       "Content-Type":"application/json",
-      apikey:ANON_KEY,
       Authorization: "Bearer "+getToken()
     },
     body: JSON.stringify({ email, password, full_name: fullName })
@@ -2254,8 +2252,7 @@ async function openReceipt(bucket, path){
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        apikey: ANON_KEY,
-        Authorization: "Bearer "+getToken()
+          Authorization: "Bearer "+getToken()
       },
       body: JSON.stringify({ bucket, path })
     });
@@ -2289,8 +2286,7 @@ async function approveTopup(topupId){
   try{
     const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
       headers: {
-        apikey: ANON_KEY,
-        Authorization: "Bearer "+getToken(),
+          Authorization: "Bearer "+getToken(),
         "Cache-Control":"no-cache, no-store, must-revalidate",
         Pragma:"no-cache"
       },
@@ -2321,8 +2317,7 @@ async function approveTopup(topupId){
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          apikey: ANON_KEY,
-          Authorization: "Bearer "+getToken()
+              Authorization: "Bearer "+getToken()
         },
         body: JSON.stringify({
           bucket: "topup-receipts",
@@ -3158,8 +3153,7 @@ async function doResetPassword(){
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        apikey: ANON_KEY,
-        Authorization: "Bearer "+getToken()
+          Authorization: "Bearer "+getToken()
       },
       body: JSON.stringify({
         email: RESET_CTX.email,
