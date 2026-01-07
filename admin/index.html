@@ -707,7 +707,54 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     </div>
 
     <!-- Lista -->
+    
+    <!-- ACREDITAR CAPITAL (DIRECTO) -->
     <div class="card">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Acreditar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="capAccount"></select>
+          <div class="small" id="capHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a acreditar</label>
+          <input id="capAmount" type="number" step="0.01" min="0" placeholder="Ej: 1000.00">
+        </div>
+
+        <div>
+          <label>Fecha efectiva</label>
+          <input id="capDate" type="date">
+          <div class="small">Sugerido: hoy. (Se usa para el cálculo/registro)</div>
+        </div>
+
+        <div>
+          <label>Banco (opcional)</label>
+          <input id="capBank" type="text" placeholder="Ej: Banrural">
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Nota interna (opcional)</label>
+        <input id="capNote" type="text" placeholder="Motivo / referencia / observación">
+      </div>
+
+      <div class="inline" style="margin-top:14px; gap:10px">
+        <button id="btnAccreditCapital" type="button" class="primary">Acreditar</button>
+        <div class="small" id="capMsg"></div>
+      </div>
+    </div>
+
+<div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Clientes</h2>
         <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
@@ -922,13 +969,37 @@ const SUPABASE_URL = PROJECT_URL;
 const SUPABASE_ANON_KEY = ANON_KEY;
 
 
+function getToken(){
+  const t = (localStorage.token || "").trim();
+  // Debe verse como JWT (3 partes)
+  if(!t || t === "null" || t === "undefined") return "";
+  if(t.split(".").length !== 3) return "";
+  return t;
+}
+
 function headersJSON(){
-  return {
+  const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + (localStorage.token || ""),
     "Content-Type":"application/json",
     "Prefer":"return=representation"
   };
+  const token = getToken();
+  if(token) h.Authorization = "Bearer " + token;
+  return h;
+}
+
+
+async function mustOk(r, action){
+  let raw = "";
+  try{ raw = await r.text(); }catch{}
+  let data = null;
+  try{ data = raw ? JSON.parse(raw) : null; }catch{ data = null; }
+
+  const msg = data?.message || data?.error_description || data?.error || raw || `Error al ${action}`;
+  const err = new Error(msg);
+  err.status = r.status;
+  err.data = data;
+  throw err;
 }
 
 /*** HELPERS UI ***/
@@ -943,7 +1014,7 @@ function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
 function hAuth(){
   return {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + (localStorage.token || ""),
+    Authorization: "Bearer "+getToken(),
     "Content-Type": "application/json"
   };
 }  
@@ -979,26 +1050,32 @@ function setKPI(id, value, hint){
 
 /*** ✅ validar sesión/token antes de cargar panel ***/
 async function validateSession(){
-  const token = localStorage.getItem("token");
-  if(!token) return null;
+  const token = (localStorage.token || "").trim();
+  if(!token) return false;
 
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: ANON_KEY,
-      Authorization: "Bearer " + token
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
+    });
+
+    // ✅ Solo borrar token si realmente es inválido/expirado
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      return false;
     }
-  });
 
-  if(r.status === 401 || r.status === 403){
-    // token malo/vencido → limpiar y listo (sin romper todo)
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
-    return null;
+    if(!r.ok){
+      // Otros errores (CORS/proxy/500) NO deben borrar sesión
+      return false;
+    }
+
+    return true;
+  }catch{
+    // Error de red: no borrar token
+    return false;
   }
-
-  if(!r.ok) return null;
-  return await r.json();
 }
 
 /*** ✅ Session meta (agregado) ***/
@@ -1076,7 +1153,7 @@ async function refreshKPIs(){
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer "+(localStorage.token||""),
+    Authorization: "Bearer "+getToken(),
     "Cache-Control":"no-cache, no-store, must-revalidate",
     Pragma:"no-cache"
   };
@@ -1265,7 +1342,7 @@ async function createAuthUserIfNeeded(email, password, fullName) {
     headers:{
       "Content-Type":"application/json",
       apikey:ANON_KEY,
-      Authorization:"Bearer "+(localStorage.token||"")
+      Authorization: "Bearer "+getToken()
     },
     body: JSON.stringify({ email, password, full_name: fullName })
   });
@@ -1299,7 +1376,7 @@ async function listUsers(){
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer "+localStorage.token,
+    Authorization: "Bearer "+getToken(),
     "Cache-Control":"no-cache, no-store, must-revalidate",
     Pragma:"no-cache"
   };
@@ -1557,10 +1634,20 @@ function refreshWithdrawPicker(){
     opt.dataset.currency = x.currency || "GTQ";
     opt.dataset.name = x.full_name || "";
     opt.dataset.email = x.email || "";
+    opt.dataset.user_id = x.user_id || "";
     sel.appendChild(opt);
   });
 
   if(hint) hint.textContent = "Selecciona una cuenta para ver el capital y retirar.";
+
+  // ✅ Reutilizar el mismo listado para "Acreditar capital"
+  const capSel = $("capAccount");
+  if(capSel){
+    capSel.innerHTML = sel.innerHTML;
+    if(!capSel.value && capSel.options.length) capSel.selectedIndex = 0;
+    updateCapHint();
+  }
+
 }
 
 function updateWithdrawHint(){
@@ -1667,6 +1754,60 @@ async function doWithdraw(){
   }
 }
 
+
+async function doAccreditCapital(){
+  const msgEl = $("capMsg");
+  if(msgEl) msgEl.textContent = "";
+
+  try{
+    const token = getToken();
+    if(!token) throw new Error("Sesión expirada. Inicia sesión de nuevo.");
+
+    const sel = $("capAccount");
+    const account_id = String(sel?.value || "");
+    if(!isUUID(account_id)) throw new Error("Selecciona una cuenta válida.");
+
+    const opt = sel.options[sel.selectedIndex];
+    const user_id = String(opt?.dataset?.user_id || "");
+    if(!isUUID(user_id)) throw new Error("No se pudo identificar el usuario de la cuenta.");
+
+    const amount = Number($("capAmount")?.value || 0);
+    if(!(amount > 0)) throw new Error("Monto inválido.");
+
+    const d = $("capDate")?.value || "";
+    if(!d) throw new Error("Selecciona una fecha efectiva.");
+
+    const bank = ($("capBank")?.value || "").trim() || null;
+
+    // RPC existente en tu DB: public.admin_accredit_capital(p_account_id, p_user_id, p_amount, p_effective_date, p_bank_name)
+    const r = await fetch(`${BASE}/rpc/admin_accredit_capital`, {
+      method: "POST",
+      headers: headersJSON(),
+      body: JSON.stringify({
+        p_account_id: account_id,
+        p_user_id: user_id,
+        p_amount: amount,
+        p_effective_date: d,
+        p_bank_name: bank
+      })
+    });
+
+    if(!r.ok) await mustOk(r, "acreditar capital");
+
+    if(msgEl) msgEl.textContent = "✅ Capital acreditado.";
+    // refrescar datos visibles
+    await listUsers();
+    refreshWithdrawPicker();
+  }catch(err){
+    console.error(err);
+    if(msgEl) msgEl.textContent = "❌ " + (err?.message || "Error");
+    alert("No se pudo acreditar: " + (err?.message || "Error"));
+  }
+}
+
+
+
+
 /* ============================================================
    ✅ HISTORIAL DE RETIROS (Modal + PDF + Borrar mostrado)
    ============================================================ */
@@ -1695,7 +1836,7 @@ async function loadWithdrawHistory(){
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + localStorage.token,
+    Authorization: "Bearer "+getToken(),
     "Cache-Control":"no-cache, no-store, must-revalidate",
     Pragma:"no-cache",
     "Content-Type":"application/json"
@@ -1919,7 +2060,7 @@ async function listTopups(){
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer "+localStorage.token,
+    Authorization: "Bearer "+getToken(),
     "Cache-Control":"no-cache, no-store, must-revalidate",
     Pragma:"no-cache"
   };
@@ -2096,7 +2237,7 @@ async function openReceipt(bucket, path){
       headers:{
         "Content-Type":"application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + (localStorage.token || "")
+        Authorization: "Bearer "+getToken()
       },
       body: JSON.stringify({ bucket, path })
     });
@@ -2131,7 +2272,7 @@ async function approveTopup(topupId){
     const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
       headers: {
         apikey: ANON_KEY,
-        Authorization: "Bearer "+localStorage.token,
+        Authorization: "Bearer "+getToken(),
         "Cache-Control":"no-cache, no-store, must-revalidate",
         Pragma:"no-cache"
       },
@@ -2163,7 +2304,7 @@ async function approveTopup(topupId){
         headers:{
           "Content-Type":"application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + (localStorage.token || "")
+          Authorization: "Bearer "+getToken()
         },
         body: JSON.stringify({
           bucket: "topup-receipts",
@@ -2371,7 +2512,7 @@ async function loadProfilesByIds(ids){
   if(!ids || !ids.length) return map;
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + (localStorage.token||""),
+    Authorization: "Bearer "+getToken(),
     "Cache-Control":"no-cache, no-store, must-revalidate",
     Pragma:"no-cache"
   };
@@ -2440,7 +2581,7 @@ async function listWithdrawRequests(){
 
   const h = {
     apikey: ANON_KEY,
-    Authorization: "Bearer " + localStorage.token,
+    Authorization: "Bearer "+getToken(),
     "Cache-Control":"no-cache, no-store, must-revalidate",
     Pragma:"no-cache"
   };
@@ -2807,6 +2948,7 @@ async function saveUser(){
       p_email: email,
       p_full_name: fullName,
       p_phone: phone || null,
+      p_password: password,
       p_currency: currency || "GTQ",
       p_capital: capital,
       p_joined_at: joined,
@@ -3007,7 +3149,7 @@ async function doResetPassword(){
       headers:{
         "Content-Type":"application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + (localStorage.token||"")
+        Authorization: "Bearer "+getToken()
       },
       body: JSON.stringify({
         email: RESET_CTX.email,
@@ -3217,7 +3359,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
       window.FX_DEBUG.download();
       alert('Log descargado: fx_admin_debug_log.json');
     }
-  });
+  
+  // Acreditar capital (directo)
+  $("capAccount")?.addEventListener("change", updateCapHint);
+  $("btnAccreditCapital")?.addEventListener("click", doAccreditCapital);
+  const capDate = $("capDate");
+  if(capDate && !capDate.value){
+    const today = new Date();
+    capDate.value = today.toISOString().slice(0,10);
+  }
+
+});
 })();
 
 </script>
@@ -3229,4 +3381,3 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
-
