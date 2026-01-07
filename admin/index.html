@@ -1650,6 +1650,24 @@ function refreshWithdrawPicker(){
 
 }
 
+
+function updateCapHint(){
+  const sel = $("capAccount");
+  const hint = $("capHint");
+  if(!sel || !hint) return;
+
+  const opt = sel.options[sel.selectedIndex];
+  if(!opt || !opt.value){
+    hint.textContent = "—";
+    return;
+  }
+
+  const cap = Number(opt.dataset.capital || 0);
+  const cur = opt.dataset.currency || "GTQ";
+  const name = opt.dataset.name || opt.dataset.email || "—";
+  hint.textContent = `${name} — Capital actual: ${fmtMoney(cap, cur)}. El monto acreditado se sumará al capital.`;
+}
+
 function updateWithdrawHint(){
   const sel = $("wdAccount");
   const hint = $("wdHint");
@@ -2832,127 +2850,110 @@ async function saveUser(){
   const msgEl = $("saveMsg");
   if(msgEl) msgEl.textContent = "";
 
-  const email    = $("u_email").value.trim();
-  const fullName = $("u_name").value.trim();
-  const phone    = $("u_phone").value.trim();
-  const password = $("u_pass").value; // Solo para CREAR usuario (no se cambia aquí si ya existe)
-  const currency = $("u_currency").value;
-  const capital  = parseCapitalFromInput($("u_capital").value);
-  const joined   = $("u_joined").value || null;
-  const plan     = $("u_plan").value;
-  const months   = parseInt($("u_months").value, 10);
-  const rateStr  = $("u_rate").value;
-  const rate     = rateStr === "" ? null : Number(rateStr);
-  const bankName = $("u_bank_name").value.trim();
-  const bankAcct = $("u_bank_account").value.trim();
-  const bankType = $("u_bank_account_type").value.trim();
-  const mode     = $("u_interest_mode").value;
-  const compound = (mode === "compound");
+  // ----- leer formulario
+  const email    = ($("u_email")?.value || "").trim().toLowerCase();
+  const fullName = ($("u_name")?.value || "").trim();
+  const phone    = ($("u_phone")?.value || "").trim();
+  const password = ($("u_pass")?.value || ""); // solo al CREAR
+  const plan     = ($("u_plan")?.value || "").trim();
+  const currency = ($("u_currency")?.value || "GTQ").trim();
+  const capital  = parseCapitalFromInput($("u_capital")?.value || "");
+  const joined   = $("u_joined")?.value || null;
+  const months   = parseInt(($("u_months")?.value || "0"), 10) || 0;
+  const rateStr  = ($("u_rate")?.value || "").trim();
+  const rate     = (rateStr === "" ? null : Number(rateStr));
+  const bankName = ($("u_bank_name")?.value || "").trim();
+  const bankAcct = ($("u_bank_account")?.value || "").trim();
+  const bankType = ($("u_bank_type")?.value || "").trim();
+  const interestMode = ($("u_interest_mode")?.value || "monthly");
+  const compound = (interestMode === "compound");
 
-  // Cuenta seleccionada
-  let selAccountId = ($("u_account_id")?.value || $("u_account_sel")?.value || "").trim();
-  if(!isUUID(selAccountId)){
-    const sel = $("u_account_sel");
-    if(sel && sel.options && sel.options.length){
-      const v = sel.value || sel.options[0].value;
-      if(isUUID(v)) selAccountId = v;
-    }
-  }
-  if(!isUUID(selAccountId)) selAccountId = "";
-
-  // Usuario (id del perfil)
+  // ids ocultos (si ya estamos editando)
   let uid = ($("u_user_id")?.value || "").trim();
-  if(!isUUID(uid)){
-    uid = await getAuthedUserIdByEmail(email);
-    if(isUUID(uid)) $("u_user_id").value = uid;
+  let accountId = ($("u_account_id")?.value || "").trim();
+
+  // Validaciones mínimas
+  if(!email) return alert("Email requerido");
+  if(!fullName) return alert("Nombre requerido");
+  if(months < 0) return alert("Meses inválidos");
+  if(rate !== null && (isNaN(rate) || rate < 0)) return alert("Interés inválido");
+  if(capital < 0) return alert("Capital inválido");
+
+  // Si no tenemos uid, intentamos resolverlo desde la lista ya cargada
+  if(!uid){
+    const found = (CACHED||[]).find(x => (x.email||"").toLowerCase() === email);
+    if(found?.user_id) uid = String(found.user_id);
+    // si viene una cuenta en el selector, úsala
+    if(found?.account_id) accountId = String(found.account_id);
   }
 
-  try{
-    if(!email) throw new Error("Email requerido.");
-    if(!fullName) throw new Error("Nombre requerido.");
-    if(!Number.isFinite(capital) || capital < 0) throw new Error("Capital inválido.");
-    if(!Number.isFinite(months) || months <= 0) throw new Error("Meses inválidos.");
-    if(rate !== null && !Number.isFinite(rate)) throw new Error("Tasa inválida.");
+  // ----- CASO A: usuario NUEVO (no existe)
+  if(!uid){
+    if(!password || password.length < 8){
+      return alert("Para crear un cliente nuevo debes poner una contraseña (mínimo 8 caracteres).");
+    }
 
-    const profPatch = {
-      full_name: fullName,
+    // Creamos Auth user + profile + (opcional) primera cuenta vía Edge Function (service_role)
+    const payload = {
       email,
-      phone: phone || null
+      password,
+      full_name: fullName,
+      phone: phone || null,
+      plan: plan || null,
+      account: {
+        currency: currency || "GTQ",
+        capital,
+        interest_pct: rate ?? 0,
+        invest_months: months,
+        joined_at: joined,
+        bank_name: bankName || null,
+        bank_account: bankAcct || null,
+        bank_account_type: bankType || null,
+        compound_interest: compound
+      }
     };
 
-    const acctPayload = {
-      currency: currency || "GTQ",
-      capital,
-      joined_at: joined,
-      plan,
-      invest_months: months,
-      interest_pct: rate,
-      bank_name: bankName || null,
-      bank_account: bankAcct || null,
-      bank_account_type: bankType || null,
-      compound_interest: compound
-    };
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/admin-create-user`, {
+      method: "POST",
+      headers: hAuth(),
+      body: JSON.stringify(payload)
+    });
 
-    // ✅ Si el usuario YA existe: actualizamos perfil + SOLO la cuenta seleccionada (o creamos una nueva cuenta)
-    if(isUUID(uid)){
-      // 1) Perfil
-      const pr = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, {
-        method: "PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify(profPatch)
-      });
-      if(!pr.ok){
-        const tx = await pr.text().catch(()=> "");
-        throw new Error(`No se pudo actualizar el perfil (${pr.status}). ${tx}`);
+    if(!r.ok){
+      // si token expiró, forzamos re-login
+      const raw = await r.text().catch(()=> "");
+      if(raw.includes("JWT expired") || r.status === 401){
+        logout?.();
+        throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
       }
-
-      // 2) Cuenta (independiente)
-      if(isUUID(selAccountId)){
-        const ar = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}`, {
-          method: "PATCH",
-          headers: headersJSON(),
-          body: JSON.stringify(acctPayload)
-        });
-        if(!ar.ok){
-          const tx = await ar.text().catch(()=> "");
-          throw new Error(`No se pudo actualizar la cuenta (${ar.status}). ${tx}`);
-        }
-      }else{
-        // Crear cuenta nueva para el mismo cliente
-        const ir = await fetch(`${BASE}/accounts`, {
-          method: "POST",
-          headers: headersJSON(),
-          body: JSON.stringify({ user_id: uid, ...acctPayload })
-        });
-        if(!ir.ok){
-          const tx = await ir.text().catch(()=> "");
-          throw new Error(`No se pudo crear la nueva cuenta (${ir.status}). ${tx}`);
-        }
-      }
-
-      // Refrescar UI/caches
-      _accountsCacheByUser.delete(uid);
-      await loadAccountsUI(uid, selAccountId || null);
-      if(msgEl) msgEl.textContent = "Guardado";
-      await listUsers();
-      await refreshKPIs();
-      return;
+      throw new Error(raw || `Error creando usuario (${r.status})`);
     }
 
-    // ✅ Si el usuario NO existe: usamos la RPC existente (crea auth + perfil + 1 cuenta)
-    if(!password || String(password).trim().length < 8){
-      throw new Error("Para crear un cliente nuevo, la contraseña debe tener mínimo 8 caracteres.");
+    const out = await r.json().catch(()=> ({}));
+    if(!out?.ok || !out?.user_id){
+      throw new Error(out?.error || "No se pudo crear el usuario");
     }
 
+    if(msgEl) msgEl.textContent = "Cliente creado";
+    _accountsCacheByUser.delete(out.user_id);
+    await listUsers();
+    await refreshKPIs();
+    // limpiar password en UI
+    if($("u_pass")) $("u_pass").value = "";
+    return;
+  }
+
+  // ----- CASO B: usuario EXISTENTE (actualizar perfil/cuenta)
+  try{
+    // (1) actualizar datos por RPC (SIN password)
     const body = {
       p_email: email,
       p_full_name: fullName,
       p_phone: phone || null,
-      p_password: password,
       p_currency: currency || "GTQ",
       p_capital: capital,
       p_joined_at: joined,
-      p_plan: plan,
+      p_plan: plan || null,
       p_invest_months: months,
       p_interest_pct: rate,
       p_bank_name: bankName || null,
@@ -2960,71 +2961,45 @@ async function saveUser(){
       p_bank_account_type: bankType || null
     };
 
-    async function saveUser() {
-  try {
-    // 1) Obtener sesión (token)
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      alert("Tu sesión expiró. Inicia sesión otra vez.");
-      location.href = "login.html";
-      return;
-    }
-
-    // 2) Leer campos (ajusta los IDs si los tuyos son diferentes)
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const full_name = document.getElementById("full_name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const plan = document.getElementById("plan").value.trim();
-
-    // (Opcional) primera cuenta
-    const currency = document.getElementById("currency").value.trim() || "GTQ";
-    const capital = Number(document.getElementById("capital").value || 0);
-    const interest_pct = Number(document.getElementById("interest_pct").value || 0);
-    const invest_months = Number(document.getElementById("invest_months").value || 0);
-    const compound_interest = document.getElementById("compound_interest").checked;
-
-    if (!email || !password) {
-      alert("Email y password son obligatorios");
-      return;
-    }
-
-    // 3) Llamar Edge Function
-    const url = "https://czvpehbufrinutztnwh.functions.supabase.co/admin-create-user";
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + session.access_token,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        full_name: full_name || null,
-        phone: phone || null,
-        plan: plan || null,
-        account: {
-          currency,
-          capital,
-          interest_pct,
-          invest_months,
-          compound_interest
-        }
-      })
+    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify(body)
     });
 
-    const out = await res.json();
-    if (!res.ok) {
-      console.error(out);
-      alert("Error: " + (out.error || out.message || "No se pudo crear"));
-      return;
+    if(!r.ok) await mustOk(r, "guardar");
+
+    // (2) compound_interest pertenece a accounts (lo actualizamos directo)
+    //     si accountId está vacío, intentamos tomar el del selector actual
+    if(!accountId){
+      const sel = $("u_account_sel");
+      if(sel && sel.value) accountId = sel.value;
+    }
+    if(accountId){
+      const r2 = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({ compound_interest: compound })
+      });
+      if(!r2.ok) await mustOk(r2, "actualizar modo de interés");
     }
 
-    alert("✅ Usuario creado: " + out.user_id);
-  } catch (e) {
-    console.error(e);
-    alert("Error inesperado: " + (e.message || e));
+    if(msgEl) msgEl.textContent = "Guardado";
+    _accountsCacheByUser.delete(uid);
+    await listUsers();
+    await refreshKPIs();
+
+    // No tocamos password en ediciones (evita FK errors / auth mismatch)
+    if($("u_pass")) $("u_pass").value = "";
+
+  }catch(err){
+    console.error(err);
+    const msg = String(err?.message || err);
+    if(msgEl) msgEl.textContent = msg;
+    if(msg.includes("JWT expired")){
+      logout?.();
+      alert("Tu sesión expiró. Inicia sesión de nuevo.");
+    }
   }
 }
 
@@ -3416,4 +3391,3 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
-
