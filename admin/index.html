@@ -2960,36 +2960,71 @@ async function saveUser(){
       p_bank_account_type: bankType || null
     };
 
-    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify(body)
-    });
-    if(!r.ok) throw new Error(await r.text() || "Error guardando");
-
-    // refrescar y aplicar compound_interest a la cuenta recién creada
-    uid = await getAuthedUserIdByEmail(email);
-    if(isUUID(uid)){
-      _accountsCacheByUser.delete(uid);
-      await loadAccountsUI(uid, null);
-      selAccountId = ($("u_account_sel")?.value || "").trim();
-      if(isUUID(selAccountId)){
-        await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(selAccountId)}`, {
-          method:"PATCH",
-          headers: headersJSON(),
-          body: JSON.stringify({ compound_interest: compound })
-        });
-      }
+    async function saveUser() {
+  try {
+    // 1) Obtener sesión (token)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert("Tu sesión expiró. Inicia sesión otra vez.");
+      location.href = "login.html";
+      return;
     }
 
-    if(msgEl) msgEl.textContent = "Guardado";
-    _accountsCacheByUser.delete(uid);
-    await listUsers();
-    await refreshKPIs();
+    // 2) Leer campos (ajusta los IDs si los tuyos son diferentes)
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const full_name = document.getElementById("full_name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const plan = document.getElementById("plan").value.trim();
 
-  }catch(err){
-    console.error(err);
-    if(msgEl) msgEl.textContent = String(err?.message || err);
+    // (Opcional) primera cuenta
+    const currency = document.getElementById("currency").value.trim() || "GTQ";
+    const capital = Number(document.getElementById("capital").value || 0);
+    const interest_pct = Number(document.getElementById("interest_pct").value || 0);
+    const invest_months = Number(document.getElementById("invest_months").value || 0);
+    const compound_interest = document.getElementById("compound_interest").checked;
+
+    if (!email || !password) {
+      alert("Email y password son obligatorios");
+      return;
+    }
+
+    // 3) Llamar Edge Function
+    const url = "https://czvpehbufrinutztnwh.functions.supabase.co/admin-create-user";
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + session.access_token,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        full_name: full_name || null,
+        phone: phone || null,
+        plan: plan || null,
+        account: {
+          currency,
+          capital,
+          interest_pct,
+          invest_months,
+          compound_interest
+        }
+      })
+    });
+
+    const out = await res.json();
+    if (!res.ok) {
+      console.error(out);
+      alert("Error: " + (out.error || out.message || "No se pudo crear"));
+      return;
+    }
+
+    alert("✅ Usuario creado: " + out.user_id);
+  } catch (e) {
+    console.error(e);
+    alert("Error inesperado: " + (e.message || e));
   }
 }
 
@@ -3381,3 +3416,4 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
+
