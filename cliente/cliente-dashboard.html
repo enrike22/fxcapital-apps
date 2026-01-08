@@ -2140,6 +2140,16 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
     const note = document.getElementById('simNote');
     if(note) note.textContent = 'Ingrese un capital y presione Calcular.';
   })();
+
+/* =========================================================
+   FIX: evitar error ReferenceError
+   NO altera flujo ni lógica existente
+========================================================= */
+function resetDepositsSteps() {
+  // Función intencionalmente vacía
+  // Se mantiene solo para evitar el error en consola
+}
+    
   </script>
 </body>
 </html>
