@@ -962,7 +962,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 const SUPABASE_URL = PROJECT_URL;
@@ -1291,7 +1291,7 @@ async function doLogin(e){
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
       method:"POST",
       headers:{
-          Authorization: "Bearer " + ANON_KEY,
+        "apikey": ANON_KEY,
         "Content-Type":"application/json",
         "Accept":"application/json"
       },
@@ -3385,4 +3385,3 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
-
