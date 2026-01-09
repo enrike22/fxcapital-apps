@@ -2956,11 +2956,17 @@ async function saveUser(){
       p_phone: phone || null
     };
 
-    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify(bodyProfile)
-    });
+   // (1) ✅ Actualizar SOLO perfil (sin RPC, sin tocar cuentas)
+const rProf = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, {
+  method: "PATCH"
+, headers: headersJSON()
+, body: JSON.stringify({
+    email: email,
+    full_name: fullName,
+    phone: phone || null
+  })
+});
+if(!rProf.ok) await mustOk(rProf, "actualizar perfil");
 
     if(!r.ok) await mustOk(r, "guardar perfil");
 
@@ -3391,3 +3397,4 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
+
