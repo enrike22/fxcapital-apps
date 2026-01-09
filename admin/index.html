@@ -2513,7 +2513,7 @@ function normAccountRow(a, idx){
     currency: a.currency || a.curr || a.moneda || a.ccy || "GTQ",
     capital:  (a.capital ?? a.current_capital ?? a.saldo ?? a.balance ?? a.capital_actual),
     joined_at: (a.joined_at || a.join_date || a.start_date || a.fecha_ingreso),
-    plan: (a.plan || a.plan_code || a.plan_name || "STANDARD"),
+    plan: (a.plan || a.account_plan || a.plan_type || a.plan_code || a.plan_name || "STANDARD"),
     bank_name: (a.bank_name || a.bank || a.banco || ""),
     bank_account: (a.bank_account || a.account_number_bank || a.no_cuenta || ""),
     bank_account_type: (a.bank_account_type || a.tipo_cuenta || a.account_type_bank || a.bank_type || "")
@@ -2696,16 +2696,20 @@ let _accountsCacheByUser = new Map(); // user_id -> array of accounts
 async function fetchAccountsByUser(userId){
   if(!userId) return [];
   if(_accountsCacheByUser.has(userId)) return _accountsCacheByUser.get(userId);
-  const r = await fetch(`${RPC}/admin_list_accounts_by_user`, {
-    method:"POST",
-    headers: headersJSON(),
-    body: JSON.stringify({ p_user_id: userId })
-  });
-  if(!r.ok) throw new Error(await r.text() || "No se pudieron listar cuentas del usuario");
-  const rows = await r.json();
-  const norm = (Array.isArray(rows) ? rows : []).map((x,i)=>normAccountRow(x,i)).filter(x=>isUUID(x.account_id));
-  // ✅ Orden fijo por account_no para que 'Cuenta No. X' nunca cambie
-  norm.sort((a,b)=>Number(a.account_no||0)-Number(b.account_no||0));
+
+  // ✅ LEE cuentas directamente de la tabla accounts para traer SIEMPRE el plan real
+  // (evita que el <select id="u_plan"> se vuelva a STANDARD por campos faltantes en un RPC)
+  const sel = [
+    'id','user_id','account_no','plan','currency','capital','initial_capital',
+    'invest_months','interest_pct','joined_at','compound_interest',
+    'bank_name','bank_account','bank_account_type','created_at'
+  ].join(',');
+
+  const url = `${BASE}/accounts?select=${encodeURIComponent(sel)}&user_id=eq.${encodeURIComponent(userId)}&order=account_no.asc.nullslast&order=created_at.asc`;
+
+  const r = await fetch(url, { headers: headersJSON() });
+  const rows = await mustOk(r, "cargar cuentas");
+  const norm = (rows||[]).map((a,i)=> normAccountRow(a, i+1)).sort((x,y)=> (x.account_no||0) - (y.account_no||0));
   _accountsCacheByUser.set(userId, norm);
   return _accountsCacheByUser.get(userId);
 }
