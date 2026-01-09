@@ -1515,7 +1515,10 @@ function openClientAccounts(userId){
     if(!rows.length){
       tb.innerHTML = `<tr><td colspan="9" class="small">Este cliente no tiene cuentas.</td></tr>`;
     }else{
-      rows.forEach((a, i)=>{
+      rows
+        .slice()
+        .sort((a,b)=>Number(a.account_no||0)-Number(b.account_no||0))
+        .forEach((a, i)=>{
         const no = (a.account_no ?? (i+1));
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -2703,6 +2706,8 @@ async function fetchAccountsByUser(userId){
   if(!r.ok) throw new Error(await r.text() || "No se pudieron listar cuentas del usuario");
   const rows = await r.json();
   const norm = (Array.isArray(rows) ? rows : []).map((x,i)=>normAccountRow(x,i)).filter(x=>isUUID(x.account_id));
+  // ✅ Orden fijo por account_no para que 'Cuenta No. X' nunca cambie
+  norm.sort((a,b)=>Number(a.account_no||0)-Number(b.account_no||0));
   _accountsCacheByUser.set(userId, norm);
   return _accountsCacheByUser.get(userId);
 }
@@ -2729,6 +2734,8 @@ async function loadAccountsUI(userId, preferredAccountId){
   if(!sel) return;
   sel.innerHTML = "";
   const accs = await fetchAccountsByUser(userId);
+  // ✅ seguridad: mantener orden por account_no
+  accs.sort((a,b)=>Number(a.account_no||0)-Number(b.account_no||0));
   $("u_accounts_hint").textContent = accs.length ? `Este cliente tiene ${accs.length} cuenta(s).` : "Este cliente no tiene cuentas aún.";
   accs.forEach((a, i)=>{
     const opt = document.createElement("option");
@@ -2859,7 +2866,7 @@ async function saveUser(){
   const rate     = (rateStr === "" ? null : Number(rateStr));
   const bankName = ($("u_bank_name")?.value || "").trim();
   const bankAcct = ($("u_bank_account")?.value || "").trim();
-  const bankType = ($("u_bank_type")?.value || "").trim();
+  const bankType = ($("u_bank_account_type")?.value || "").trim();
   const interestMode = ($("u_interest_mode")?.value || "monthly");
   const compound = (interestMode === "compound");
 
