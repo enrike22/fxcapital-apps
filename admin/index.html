@@ -1515,12 +1515,10 @@ function openClientAccounts(userId){
     if(!rows.length){
       tb.innerHTML = `<tr><td colspan="9" class="small">Este cliente no tiene cuentas.</td></tr>`;
     }else{
-      rows
-        .slice()
-        .sort((a,b)=>Number(a.account_no||0)-Number(b.account_no||0))
-        .forEach((a, i)=>{
-        const no = (a.account_no ?? (i+1));
-        const tr = document.createElement("tr");
+      sortAccountsStable(rows).forEach((a, i)=>{
+        const accId = (a.account_id || a.id || "");
+        const noRaw = (a.account_no ?? (i+1));
+        const no = getStableAccountNo(userId, accId, noRaw);const tr = document.createElement("tr");
         tr.innerHTML = `
           <td class="nowrap">Cuenta No. ${escapeHtml(String(no))}</td>
           <td>${escapeHtml(a.plan ?? '—')}</td>
@@ -2886,7 +2884,7 @@ async function ensureBankAccountType(accountId){
   try{
     const sel = "id,bank_account_type,account_no";
     const r = await fetch(`${BASE}/accounts?select=${encodeURIComponent(sel)}&id=eq.${encodeURIComponent(accountId)}&limit=1`, {
-      headers: headersAuth()
+      headers: headersJSON()
     });
     if(!r.ok) return;
     const rows = await r.json().catch(()=>[]);
