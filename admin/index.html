@@ -962,7 +962,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const ANON_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 const SUPABASE_URL = PROJECT_URL;
@@ -1291,7 +1291,7 @@ async function doLogin(e){
     const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`,{
       method:"POST",
       headers:{
-        "apikey": ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
         "Content-Type":"application/json",
         "Accept":"application/json"
       },
@@ -2761,29 +2761,47 @@ document.addEventListener("change", (e)=>{
 });
 
 async function addNewAccountForCurrentUser(){
-  const uid = ($("u_user_id")?.value || "").trim();
-  if(!isUUID(uid)) return alert("Primero selecciona un cliente (UUID válido).");
-  let sourceAccountId = ($("u_account_sel")?.value || $("u_account_id")?.value || "").trim();
-  if(!isUUID(sourceAccountId)) sourceAccountId = null;
-  const btn = $("btnAddAccount");
-  if(btn) btn.disabled = true;
-  try{
-    const r = await fetch(`${RPC}/admin_create_additional_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify({ p_user_id: uid, p_source_account_id: sourceAccountId })
-    });
-    if(!r.ok) throw new Error(await r.text() || "No se pudo crear la cuenta adicional");
-    const out = await r.json().catch(()=>null);
-    // limpiar cache y recargar
-    _accountsCacheByUser.delete(uid);
-    await loadAccountsUI(uid, out?.account_id || out || null);
-    await listUsers(); // refrescar lista principal
-  }catch(err){
-    console.error(err);
-    alert(String(err?.message || err));
-  }finally{
-    if(btn) btn.disabled = false;
+  const uid = $("u_user_id")?.value || "";
+  if(!uid){
+    alert("Primero guarda o carga un cliente.");
+    return;
+  }
+
+  // Crea una cuenta NUEVA (insert) sin tocar las existentes.
+  const payload = {
+    user_id: uid,
+    plan: $("u_plan")?.value || null,
+    currency: $("u_currency")?.value || "GTQ",
+    capital: Number(($("u_capital")?.value || 0)),
+    interest_pct: Number(($("u_interest")?.value || 0)),
+    invest_months: Number(($("u_months")?.value || 0)),
+    joined_at: $("u_joined")?.value || null,
+    bank_name: $("u_bank")?.value || null,
+    bank_account: $("u_bank_acc")?.value || null,
+    bank_account_type: $("u_bank_type")?.value || null,
+    compound_interest: ($("u_mode")?.value || "monthly") === "compound",
+  };
+
+  const r = await fetch(`${BASE}/accounts`, {
+    method:"POST",
+    headers: { ...headersJSON(), Prefer:"return=representation" },
+    body: JSON.stringify(payload),
+  });
+  const t = await r.text();
+  if(!r.ok){
+    console.error("create_additional_account_failed", r.status, t);
+    alert("No se pudo crear la nueva cuenta: "+t);
+    return;
+  }
+
+  let newId = null;
+  try { newId = JSON.parse(t)?.[0]?.id || null; } catch {}
+
+  if(newId){
+    $("u_account_id").value = newId;
+    await loadAccountsUI(uid, newId);
+  } else {
+    await loadAccountsUI(uid);
   }
 }
 document.addEventListener("click", (e)=>{
@@ -2938,46 +2956,85 @@ async function saveUser(){
     return;
   }
 
-  // ----- CASO B: usuario EXISTENTE (actualizar perfil/cuenta)
-  try{
-    // (1) actualizar datos por RPC (SIN password)
-    const body = {
-      p_email: email,
-      p_full_name: fullName,
-      p_phone: phone || null,
-      p_currency: currency || "GTQ",
-      p_capital: capital,
-      p_joined_at: joined,
-      p_plan: plan || null,
-      p_invest_months: months,
-      p_interest_pct: rate,
-      p_bank_name: bankName || null,
-      p_bank_account: bankAcct || null,
-      p_bank_account_type: bankType || null
+      // ----- CASO B: usuario existente → actualizar SOLO el profile y la cuenta seleccionada (sin tocar otras cuentas)
+    // 1) Upsert profile (merge) por id
+    const profPayload = {
+      id: uid,
+      email: email.toLowerCase(),
+      full_name: full,
+      phone: phone,
+      plan: planVal,
+      role: "client",
     };
 
-    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
-      method:"POST",
-      headers: headersJSON(),
-      body: JSON.stringify(body)
-    });
-
-    if(!r.ok) await mustOk(r, "guardar");
-
-    // (2) compound_interest pertenece a accounts (lo actualizamos directo)
-    //     si accountId está vacío, intentamos tomar el del selector actual
-    if(!accountId){
-      const sel = $("u_account_sel");
-      if(sel && sel.value) accountId = sel.value;
-    }
-    if(accountId){
-      const r2 = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
-        method:"PATCH",
-        headers: headersJSON(),
-        body: JSON.stringify({ compound_interest: compound })
+    {
+      const urlP = `${BASE}/profiles`;
+      const rP = await fetch(urlP, {
+        method: "POST",
+        headers: { ...headersJSON(), Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify(profPayload),
       });
-      if(!r2.ok) await mustOk(r2, "actualizar modo de interés");
+      const tP = await rP.text();
+      if (!rP.ok) {
+        console.error("profiles_upsert_failed", rP.status, tP);
+        throw new Error(`No se pudo guardar profile: ${tP}`);
+      }
     }
+
+    // 2) Guardar cuenta
+    const accPayload = {
+      user_id: uid,
+      plan: planVal || null,
+      currency: currency,
+      capital: Number(capital || 0),
+      interest_pct: Number(rate || 0),
+      invest_months: Number(months || 0),
+      joined_at: joined || null,
+      bank_name: bankName || null,
+      bank_account: bankAcc || null,
+      bank_account_type: bankType || null,
+      compound_interest: !!compound,
+      // si tu tabla accounts tiene columna plan, lo guardamos; si no, PostgREST lo ignorará con error,
+      // por eso NO lo mandamos aquí. (El plan se guarda en profiles.plan)
+    };
+
+    if (accountId) {
+      // UPDATE solo a la cuenta seleccionada
+      const urlA = `${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`;
+      const rA = await fetch(urlA, {
+        method: "PATCH",
+        headers: { ...headersJSON(), Prefer: "return=representation" },
+        body: JSON.stringify(accPayload),
+      });
+      const tA = await rA.text();
+      if (!rA.ok) {
+        console.error("accounts_update_failed", rA.status, tA);
+        throw new Error(`No se pudo guardar la cuenta seleccionada: ${tA}`);
+      }
+      // mantenemos accountId
+    } else {
+      // INSERT nueva cuenta para el usuario (NO sobrescribe otras)
+      const urlA = `${BASE}/accounts`;
+      const rA = await fetch(urlA, {
+        method: "POST",
+        headers: { ...headersJSON(), Prefer: "return=representation" },
+        body: JSON.stringify(accPayload),
+      });
+      const tA = await rA.text();
+      if (!rA.ok) {
+        console.error("accounts_insert_failed", rA.status, tA);
+        throw new Error(`No se pudo crear la cuenta: ${tA}`);
+      }
+      try {
+        const row = JSON.parse(tA)?.[0];
+        if (row?.id) {
+          accountId = row.id;
+          $("u_account_id").value = row.id;
+        }
+      } catch {}
+    }
+
+    await loadAccountsUI(uid, accountId);
 
     if(msgEl) msgEl.textContent = "Guardado";
     _accountsCacheByUser.delete(uid);
