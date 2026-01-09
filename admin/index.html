@@ -2518,7 +2518,7 @@ function normAccountRow(a, idx){
     plan: (a.plan || a.plan_code || a.plan_name || "STANDARD"),
     bank_name: (a.bank_name || a.bank || a.banco || ""),
     bank_account: (a.bank_account || a.account_number_bank || a.no_cuenta || ""),
-    bank_account_type: (a.bank_account_type || a.account_type || a.tipo_cuenta || "")
+    bank_account_type: (a.bank_account_type || a.tipo_cuenta || a.account_type_bank || a.bank_type || "")
   };
 }
 
@@ -2734,25 +2734,30 @@ async function loadAccountsUI(userId, preferredAccountId){
   if(!sel) return;
   sel.innerHTML = "";
   const accs = await fetchAccountsByUser(userId);
-  // ✅ seguridad: mantener orden por account_no
-  accs.sort((a,b)=>Number(a.account_no||0)-Number(b.account_no||0));
-  $("u_accounts_hint").textContent = accs.length ? `Este cliente tiene ${accs.length} cuenta(s).` : "Este cliente no tiene cuentas aún.";
-  accs.forEach((a, i)=>{
+  // ✅ orden estable para que 'Cuenta No. X' nunca cambie
+  const ordered = sortAccountsStable(accs);
+
+  $("u_accounts_hint").textContent = ordered.length ? `Este cliente tiene ${ordered.length} cuenta(s).` : "Este cliente no tiene cuentas aún.";
+  ordered.forEach((a, i)=>{
     const opt = document.createElement("option");
-    const no = (a.account_no ?? (i+1));
-    opt.value = (a.account_id || a.id || "");
+    const accId = (a.account_id || a.id || "");
+    const noRaw = (a.account_no ?? (i+1));
+    const no = getStableAccountNo(userId, accId, noRaw);
+    opt.value = accId;
     opt.textContent = `Cuenta No. ${no}`;
     sel.appendChild(opt);
   });
   // elegir
-  let chosen = accs[0] || null;
+  let chosen = ordered[0] || null;
   if(preferredAccountId){
-    const f = accs.find(x=>(x.account_id||x.id)===preferredAccountId);
+    const f = ordered.find(x=>(x.account_id||x.id)===preferredAccountId);
     if(f) chosen = f;
   }
   if(chosen){
     sel.value = (chosen.account_id || chosen.id || "");
     fillAccountFields(chosen);
+    // ✅ corregir tipo de cuenta si el RPC no lo trae o viene contaminado
+    ensureBankAccountType((chosen.account_id || chosen.id || "")).catch(()=>{});
   }else{
     $("u_account_id").value = "";
   }
@@ -2822,6 +2827,87 @@ $("u_name").value  = x.full_name || "";
   validateRatePlan();
   document.getElementById("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
+
+
+/*** === FIX multicuentas: nombre estable "Cuenta No. X" + tipo de cuenta correcto === ***/
+function _acctMapKey(uid){ return `acctLabelMap:${uid}`; }
+
+function getStableAccountNo(uid, accountId, fallbackNo){
+  const key = _acctMapKey(uid);
+  let map = {};
+  try{ map = JSON.parse(localStorage.getItem(key) || "{}") || {}; }catch(_){ map = {}; }
+
+  if(accountId && map[accountId]) return map[accountId];
+
+  // asignar uno nuevo (si no existe)
+  const used = new Set(Object.values(map).map(n=>Number(n)).filter(n=>Number.isFinite(n) && n>0));
+  let n = Number(fallbackNo);
+  if(!Number.isFinite(n) || n<=0) n = 1;
+  while(used.has(n)) n++;
+  if(accountId){
+    map[accountId] = n;
+    try{ localStorage.setItem(key, JSON.stringify(map)); }catch(_){}
+  }
+  return n;
+}
+
+function sortAccountsStable(arr){
+  return (arr||[]).slice().sort((a,b)=>{
+    const na = Number(a.account_no || 0);
+    const nb = Number(b.account_no || 0);
+    if(na && nb && na!==nb) return na-nb;
+    if(na && !nb) return -1;
+    if(!na && nb) return 1;
+
+    const da = a.joined_at ? new Date(a.joined_at).getTime() : 0;
+    const db = b.joined_at ? new Date(b.joined_at).getTime() : 0;
+    if(da && db && da!==db) return da-db;
+
+    const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if(ca && cb && ca!==cb) return ca-cb;
+
+    return String(a.account_id||a.id||"").localeCompare(String(b.account_id||b.id||""));
+  });
+}
+
+async function ensureBankAccountType(accountId){
+  // Si por algún motivo cayó "STANDARD/PLATINUM/BLACK" aquí, lo corregimos consultando la tabla accounts
+  const el = $("u_bank_account_type");
+  if(!el) return;
+  const v = (el.value || "").trim().toUpperCase();
+  if(!accountId || !isUUID(accountId)) return;
+
+  if(v === "STANDARD" || v === "PLATINUM" || v === "BLACK"){
+    el.value = ""; // evitar confusión visual
+  }
+  if(el.value && el.value.trim() && v !== "STANDARD" && v !== "PLATINUM" && v !== "BLACK") return;
+
+  try{
+    const sel = "id,bank_account_type,account_no";
+    const r = await fetch(`${BASE}/accounts?select=${encodeURIComponent(sel)}&id=eq.${encodeURIComponent(accountId)}&limit=1`, {
+      headers: headersAuth()
+    });
+    if(!r.ok) return;
+    const rows = await r.json().catch(()=>[]);
+    const row = rows && rows[0] ? rows[0] : null;
+    if(row && row.bank_account_type != null){
+      el.value = String(row.bank_account_type || "");
+    }
+    // Si existe account_no en DB, también lo fijamos en UI/caché
+    const uid = ($("u_user_id")?.value || "").trim();
+    if(uid && row && row.account_no){
+      const key = _acctMapKey(uid);
+      let map = {};
+      try{ map = JSON.parse(localStorage.getItem(key) || "{}") || {}; }catch(_){ map = {}; }
+      map[accountId] = Number(row.account_no);
+      try{ localStorage.setItem(key, JSON.stringify(map)); }catch(_){}
+    }
+  }catch(e){
+    console.warn("ensureBankAccountType error", e);
+  }
+}
+
 
 /*** Validación Plan vs Tasa ***/
 function validateRatePlan(){
