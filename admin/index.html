@@ -3420,7 +3420,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
       window.FX_DEBUG.download();
       alert('Log descargado: fx_admin_debug_log.json');
     }
-  
+  });
+
   // Acreditar capital (directo)
   $("capAccount")?.addEventListener("change", updateCapHint);
   $("btnAccreditCapital")?.addEventListener("click", doAccreditCapital);
@@ -3435,10 +3436,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 </script>
 </body>
-</html
-// Compat: algunas versiones llamaban getAuthUserByEmail()
-async function getAuthUserByEmail(email){
-  const id = await getAuthedUserIdByEmail(email);
-  return id ? { id } : null;
-}
->
+</html>
