@@ -2938,58 +2938,46 @@ async function saveUser(){
     return;
   }
 
-  // ----- CASO B: usuario EXISTENTE (actualizar perfil + cuenta seleccionada)
+  // ----- CASO B: usuario EXISTENTE (actualizar perfil/cuenta)
   try{
-    // 0) Asegurar accountId (si no viene, tomarlo del selector)
+    // (1) actualizar datos por RPC (SIN password)
+    const body = {
+      p_email: email,
+      p_full_name: fullName,
+      p_phone: phone || null,
+      p_currency: currency || "GTQ",
+      p_capital: capital,
+      p_joined_at: joined,
+      p_plan: plan || null,
+      p_invest_months: months,
+      p_interest_pct: rate,
+      p_bank_name: bankName || null,
+      p_bank_account: bankAcct || null,
+      p_bank_account_type: bankType || null
+    };
+
+    const r = await fetch(`${RPC}/admin_upsert_user_with_account`, {
+      method:"POST",
+      headers: headersJSON(),
+      body: JSON.stringify(body)
+    });
+
+    if(!r.ok) await mustOk(r, "guardar");
+
+    // (2) compound_interest pertenece a accounts (lo actualizamos directo)
+    //     si accountId está vacío, intentamos tomar el del selector actual
     if(!accountId){
       const sel = $("u_account_sel");
       if(sel && sel.value) accountId = sel.value;
     }
-    if(!isUUID(accountId)){
-      return alert("Seleccione una cuenta válida (u_account_sel) antes de guardar.");
+    if(accountId){
+      const r2 = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
+        method:"PATCH",
+        headers: headersJSON(),
+        body: JSON.stringify({ compound_interest: compound })
+      });
+      if(!r2.ok) await mustOk(r2, "actualizar modo de interés");
     }
-
-    // (1) ✅ Actualizar SOLO perfil (no tocar datos de cuentas aquí)
-    const bodyProfile = {
-      p_email: email,
-      p_full_name: fullName,
-      p_phone: phone || null
-    };
-
-   // (1) ✅ Actualizar SOLO perfil (sin RPC, sin tocar cuentas)
-const rProf = await fetch(`${BASE}/profiles?id=eq.${encodeURIComponent(uid)}`, {
-  method: "PATCH"
-, headers: headersJSON()
-, body: JSON.stringify({
-    email: email,
-    full_name: fullName,
-    phone: phone || null
-  })
-});
-if(!rProf.ok) await mustOk(rProf, "actualizar perfil");
-
-    if(!r.ok) await mustOk(r, "guardar perfil");
-
-    // (2) ✅ Actualizar SOLO la cuenta seleccionada (no afecta las otras)
-    const patchAccount = {
-      currency: currency || "GTQ",
-      capital: capital,
-      joined_at: joined,
-      plan: plan || null,
-      invest_months: months,
-      interest_pct: rate,
-      bank_name: bankName || null,
-      bank_account: bankAcct || null,
-      bank_account_type: bankType || null,
-      compound_interest: compound
-    };
-
-    const rAcc = await fetch(`${BASE}/accounts?id=eq.${encodeURIComponent(accountId)}`, {
-      method:"PATCH",
-      headers: headersJSON(),
-      body: JSON.stringify(patchAccount)
-    });
-    if(!rAcc.ok) await mustOk(rAcc, "actualizar cuenta seleccionada");
 
     if(msgEl) msgEl.textContent = "Guardado";
     _accountsCacheByUser.delete(uid);
@@ -2998,8 +2986,8 @@ if(!rProf.ok) await mustOk(rProf, "actualizar perfil");
 
     // No tocamos password en ediciones (evita FK errors / auth mismatch)
     if($("u_pass")) $("u_pass").value = "";
-  }
-catch(err){
+
+  }catch(err){
     console.error(err);
     const msg = String(err?.message || err);
     if(msgEl) msgEl.textContent = msg;
@@ -3397,4 +3385,3 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
-
