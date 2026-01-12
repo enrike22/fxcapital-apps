@@ -2688,13 +2688,17 @@ async function rejectWithdrawReq(id, reason){
   if(!r2.ok) throw new Error(await r2.text());
 }
 
+// === Aliases usados por la UI de "Solicitudes de retiro" ===
+// (El render usa approveWithdraw/openRejectWithdraw; estas funciones delegan a approveWithdrawReq/rejectWithdrawReq)
+async function approveWithdraw(withdrawId){
+  return await approveWithdrawReq(withdrawId);
+}
 
-function openRejectWithdraw(id){
+function openRejectWithdraw(withdrawId){
   const reason = prompt("Motivo de rechazo (opcional):", "");
-  if(reason === null) return; // cancelado
-  rejectWithdrawReq(id, (reason||"RECHAZADO").trim())
-    .then(()=>loadDashboard())
-    .catch(e=>alert("No se pudo rechazar: " + (e?.message || e)));
+  // Si el usuario cancela, no hacemos nada
+  if(reason === null) return;
+  return rejectWithdrawReq(withdrawId, reason || null);
 }
 
 
