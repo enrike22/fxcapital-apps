@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FX | CAPITAL R.L. — Admin</title>
+<link rel="icon" href="data:,">
 
 <style>
 /* ========= 3D PRO THEME ========= */
@@ -442,6 +443,14 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   .search-pill{min-width: 220px}
   .brand{min-width:unset}
 }
+
+/* ===== TOAST ===== */
+#toastWrap{position:fixed;right:18px;bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:min(420px,calc(100vw - 36px));}
+.toast{padding:12px 14px;border-radius:14px;background:rgba(18,18,20,.92);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.55);backdrop-filter:blur(10px);color:#f6f7fb;font-weight:750;letter-spacing:.2px}
+.toast.ok{border-color:rgba(0,255,180,.25)}
+.toast.err{border-color:rgba(255,85,85,.25)}
+.toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
+
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -963,6 +972,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   </div>
 </div>
 
+<div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
@@ -1013,6 +1024,19 @@ const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'
 const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
 const fmtDateTime = (s)=> s ? new Date(s).toLocaleString('es-GT') : '—';
 const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
+
+function toast(msg, type="ok", sub=""){
+  const wrap = $("toastWrap");
+  if(!wrap) return alert(msg);
+  const t = document.createElement("div");
+  t.className = "toast " + (type==="err" ? "err" : "ok");
+  t.innerHTML = `${escapeHtml(String(msg||""))}${sub ? `<span class="sub">${escapeHtml(String(sub||""))}</span>` : ""}`;
+  wrap.appendChild(t);
+  // auto-remove
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transform="translateY(6px)"; }, 2600);
+  setTimeout(()=>{ t.remove(); }, 3200);
+}
+
 function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
 function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
 function hAuth(){
@@ -1959,7 +1983,15 @@ function printWithdrawalsPDF(){
       th,td{border:1px solid #ddd; padding:8px; vertical-align:top;}
       th{background:#f2f2f2; text-align:left;}
       @media print{ button{display:none} }
-    </style>
+    
+/* ===== TOAST ===== */
+#toastWrap{position:fixed;right:18px;bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:min(420px,calc(100vw - 36px));}
+.toast{padding:12px 14px;border-radius:14px;background:rgba(18,18,20,.92);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.55);backdrop-filter:blur(10px);color:#f6f7fb;font-weight:750;letter-spacing:.2px}
+.toast.ok{border-color:rgba(0,255,180,.25)}
+.toast.err{border-color:rgba(255,85,85,.25)}
+.toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
+
+</style>
   </head>
   <body>
     <h1>Historial de retiros — FX | CAPITAL R.L.</h1>
@@ -2303,7 +2335,8 @@ async function approveTopup(topupId){
   try{
     const r0 = await fetch(`${BASE}/topups?select=receipt_path&id=eq.${encodeURIComponent(topupId)}&limit=1`, {
       headers: {
-          Authorization: "Bearer "+getToken(),
+        apikey: ANON_KEY,
+        Authorization: "Bearer "+getToken(),
         "Cache-Control":"no-cache, no-store, must-revalidate",
         Pragma:"no-cache"
       },
@@ -2600,8 +2633,8 @@ function renderWithdrawRequests(rows, profileMap){
           const isPending = (!st) || st.startsWith("PEND") || st==="REQUESTED";
           if(!isPending) return "—";
           return `<div class="actions">
-            <button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
-            <button class="mini danger" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>
+            <button class="mini ok" onclick="approveWithdrawUI('${r.id}')">Aprobar</button>
+            <button class="mini danger" onclick="rejectWithdrawUI('${r.id}')">Rechazar</button>
           </div>`;
         })()}
       </td>
@@ -2713,6 +2746,39 @@ async function rejectWithdrawReq(id, reason){
 // (El render usa approveWithdraw/openRejectWithdraw; estas funciones delegan a approveWithdrawReq/rejectWithdrawReq)
 async function approveWithdraw(withdrawId){
   return await approveWithdrawReq(withdrawId);
+}
+
+async function approveWithdrawUI(id){
+  // Bloqueo simple para evitar doble click
+  const btns = document.querySelectorAll(`button[onclick="approveWithdrawUI('${id}')"]`);
+  btns.forEach(b=>b.disabled=true);
+  try{
+    await approveWithdrawReq(id);
+    toast("Retiro aprobado exitosamente", "ok");
+    await listWithdrawRequests();
+  }catch(e){
+    console.error(e);
+    toast("No se pudo aprobar el retiro", "err", (e?.message||"").slice(0,180));
+  }finally{
+    btns.forEach(b=>b.disabled=false);
+  }
+}
+
+async function rejectWithdrawUI(id){
+  const reason = prompt("Motivo de rechazo (opcional):", "");
+  if(reason === null) return;
+  const btns = document.querySelectorAll(`button[onclick="rejectWithdrawUI('${id}')"]`);
+  btns.forEach(b=>b.disabled=true);
+  try{
+    await rejectWithdrawReq(id, reason || null);
+    toast("Retiro rechazado exitosamente", "ok");
+    await listWithdrawRequests();
+  }catch(e){
+    console.error(e);
+    toast("No se pudo rechazar el retiro", "err", (e?.message||"").slice(0,180));
+  }finally{
+    btns.forEach(b=>b.disabled=false);
+  }
 }
 
 function openRejectWithdraw(withdrawId){
