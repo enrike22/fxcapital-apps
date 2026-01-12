@@ -2548,92 +2548,107 @@ async function loadProfilesByIds(ids){
   return map;
 }
 
-function renderWithdrawRequests(rows, profileMap){
+function renderWithdrawRequests(rows){
   const body = $("withdrawReqs");
   if(!body) return;
   body.innerHTML = "";
 
   (rows||[]).forEach(r=>{
-    // Fallback por compatibilidad
-    const p = profileMap?.get?.(r.profile_id) || {};
-
-    const clientName  = r.client_full_name || p.full_name || "—";
-    const clientEmail = r.client_email || p.email || "—";
-
-    const bankName   = r.account_bank_name || r.bank_name || "—";
-    const bankAcc    = r.account_bank_account || r.bank_account || "—";
-    const bankAccTyp = r.account_bank_account_type || r.bank_account_type || "—";
-
-    const accountNo   = r.account_no ?? "—";
-    const accountType = r.account_type ?? "—";
+    const statusUpper = (r.status || "PENDING").toString().toUpperCase();
+    const canAct = !["APPROVED","REJECTED","CANCELLED","PAID","DONE"].includes(statusUpper);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
-      <td>${escapeHtml(clientName)}</td>
-      <td>${escapeHtml(clientEmail)}</td>
+      <td>${escapeHtml(r.full_name || "—")}</td>
+      <td>${escapeHtml(r.email || "—")}</td>
       <td>${fmtMoney(r.amount, r.currency || "GTQ")}</td>
-      <td>${escapeHtml(bankName)}</td>
-      <td>${escapeHtml(String(accountNo))}</td>
-      <td>${escapeHtml(accountType)}</td>
-      <td>${escapeHtml(bankAccTyp)}</td>
+      <td>${escapeHtml(r.bank_name || "—")}</td>
+      <td>${escapeHtml(r.bank_account || r.account_no || "—")}</td>
+      <td>${escapeHtml(r.bank_account_type || "—")}</td>
+      <td>—</td>
       <td>${escapeHtml(r.note || "—")}</td>
-      <td class="nowrap">
-        ${(["PENDING","PENDIENTE","REQUESTED"].includes(String(r.status||"").toUpperCase()))
-          ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
-             <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
-          : "—"}
+      <td>
+        ${
+        `<div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-pill primary" type="button" ${canAct ? "" : "disabled"} onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
+            <button class="btn-pill danger" type="button" ${canAct ? "" : "disabled"} onclick="rejectWithdrawReq('${r.id}')">Rechazar</button>
+          </div>` + (canAct ? "" : ('<div class="muted" style="margin-top:6px;">Estado: ' + escapeHtml(r.status||"—") + '</div>'))
+      }
       </td>
     `;
     body.appendChild(tr);
   });
+
+  if(!(rows||[]).length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="10" style="opacity:.7">No hay solicitudes de retiro.</td>`;
+    body.appendChild(tr);
+  }
 }
 
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
 
-  const h = {
-    apikey: ANON_KEY,
-    Authorization: "Bearer "+getToken(),
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
-
+  // Usa Supabase JS (más estable que depender de una VIEW)
   try{
-    // ✅ Leer desde la VIEW (ya trae cliente/email/no.cuenta/banco)
-    const sel = [
-      "id","created_at","status","amount","currency",
-      "bank_name","bank_account","bank_account_type",
-      "note","account_id",
-      // campos enriquecidos por la view:
-      "client_full_name","client_email",
-      "account_no","account_type",
-      "account_bank_name","account_bank_account","account_bank_account_type"
-    ].join(",");
+    const { data: wr, error: wrErr } = await supabase
+      .from("withdrawal_requests")
+      .select("id, created_at, profile_id, account_id, amount, currency, bank_name, bank_account, bank_account_type, note, status")
+      .order("created_at", { ascending:false })
+      .limit(50);
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
+    if(wrErr) throw wrErr;
 
-    const res = await fetch(url, { headers:h, cache:"no-store" });
-    if(!res.ok){
-      const t = await res.text();
-      throw new Error(t || ("HTTP "+res.status));
-    }
+    const profileIds = Array.from(new Set((wr||[]).map(r=>r.profile_id).filter(Boolean)));
+    const accountIds  = Array.from(new Set((wr||[]).map(r=>r.account_id).filter(Boolean)));
 
-    const rows = await res.json();
+    const [pRes, aRes] = await Promise.all([
+      profileIds.length
+        ? supabase.from("profiles").select("id, full_name, email").in("id", profileIds)
+        : Promise.resolve({ data: [], error: null }),
+      accountIds.length
+        ? supabase.from("accounts").select("id, account_no, bank_name, bank_account, bank_account_type").in("id", accountIds)
+        : Promise.resolve({ data: [], error: null })
+    ]);
 
-    // ✅ Ya no necesitamos loadProfilesByIds()
-    renderWithdrawRequests(rows, new Map());
+    if(pRes.error) throw pRes.error;
+    if(aRes.error) throw aRes.error;
 
-    // KPI
-    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
-    setKPI("kpiWithdrawPending", pending);
-    setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
+    const pMap = new Map((pRes.data||[]).map(p=>[p.id, p]));
+    const aMap = new Map((aRes.data||[]).map(a=>[a.id, a]));
 
-  }catch(err){
-    console.error("listWithdrawRequests error", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
-    renderWithdrawRequests([], new Map());
+    const rows = (wr||[]).map(r=>{
+      const p = pMap.get(r.profile_id) || {};
+      const a = aMap.get(r.account_id) || {};
+      return {
+        ...r,
+        full_name: p.full_name,
+        email: p.email,
+        account_no: a.account_no,
+        // si en la solicitud no venía banco/cuenta, usar lo de accounts como fallback
+        bank_name: r.bank_name || a.bank_name,
+        bank_account: r.bank_account || a.bank_account,
+        bank_account_type: r.bank_account_type || a.bank_account_type
+      };
+    });
+
+    renderWithdrawRequests(rows);
+    const n = rows.filter(r=>{
+      const st = (r.status || "PENDING").toString().toUpperCase();
+      return !["APPROVED","REJECTED","CANCELLED","PAID","DONE"].includes(st);
+    }).length;
+
+    const el = $("kpi_withdraw_pending");
+    if(el) el.textContent = String(n);
+
+  }catch(e){
+    console.error("Error listWithdrawRequests", e);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar retiros: " + (e?.message || e);
+    renderWithdrawRequests([]);
+    const el = $("kpi_withdraw_pending");
+    if(el) el.textContent = "0";
   }
 }
 
@@ -2673,6 +2688,11 @@ async function approveWithdrawReq(id){
 }
 
 async function rejectWithdrawReq(id, reason){
+  if(reason === undefined || reason === null){
+    const r = prompt("Motivo del rechazo (opcional):", "");
+    if(r === null) return; // cancel
+    reason = r;
+  }
   const h = hAuth();
 
   const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
