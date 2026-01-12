@@ -2591,10 +2591,8 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
-        ${(canActOnWithdrawStatus(r.status))
-          ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
+        `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
              <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
-          : "—"}
       </td>
     `;
     body.appendChild(tr);
@@ -2684,7 +2682,14 @@ async function approveWithdrawReq(id){
   if(!r2.ok) throw new Error(await r2.text());
 }
 
-async function rejectWithdrawReq(id, reason){
+async 
+function openRejectWithdraw(reqId){
+  const reason = prompt("Motivo de rechazo (opcional):", "");
+  if(reason === null) return; // cancelado
+  rejectWithdrawReq(reqId, reason || "");
+}
+
+function rejectWithdrawReq(id, reason){
   const h = hAuth();
 
   const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
