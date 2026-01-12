@@ -2548,6 +2548,18 @@ async function loadProfilesByIds(ids){
   return map;
 }
 
+function canActOnWithdrawStatus(status){
+  const s = String(status ?? "").trim().toUpperCase();
+  // Mostrar acciones para cualquier estado pendiente/en revisión.
+  // Ocultar SOLO si ya está finalizado.
+  const finalStates = new Set([
+    "APPROVED","APROBADO","REJECTED","RECHAZADO",
+    "CANCELLED","CANCELADO","PAID","PAGADO","COMPLETED","FINALIZADO"
+  ]);
+  if(!s) return true; // si no viene status, permitir acciones
+  return !finalStates.has(s);
+}
+
 function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
@@ -2579,7 +2591,7 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
-        ${(["PENDING","PENDIENTE","REQUESTED"].includes(String(r.status||"").toUpperCase()))
+        ${(canActOnWithdrawStatus(r.status))
           ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
              <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
           : "—"}
