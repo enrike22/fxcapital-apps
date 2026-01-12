@@ -188,6 +188,11 @@ button{
   box-shadow: 0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.55);
   transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
 }
+  /* ✅ Mini action buttons (withdraw approvals) */
+  button.mini{ padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; }
+  button.mini.ok{ background: rgba(34,197,94,.22); border: 1px solid rgba(34,197,94,.35); }
+  button.mini.bad{ background: rgba(239,68,68,.20); border: 1px solid rgba(239,68,68,.30); }
+
 button:hover{
   transform: translateY(-1px);
   box-shadow: 0 18px 44px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.65);
@@ -439,12 +444,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   .search-pill{min-width: 220px}
   .brand{min-width:unset}
 }
-
-.btn.mini{ padding:8px 12px; font-size:12px; border-radius:14px; }
-.btn.ok{ background: linear-gradient(135deg,#18d3b0,#10b98f); color:#061415; border:0; }
-.btn.bad{ background: linear-gradient(135deg,#ff4d4d,#d12b2b); color:#fff; border:0; }
-.nowrap{ white-space:nowrap; }
-
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -2575,26 +2574,86 @@ function renderWithdrawRequests(rows, profileMap){
     const p = profileMap?.get?.(r.profile_id) || {};
     const tr = document.createElement("tr");
 
-    const canAct = canActOnWithdrawStatus(r.status);
-    const actionsHtml = canAct
-      ? '<button class="btn mini ok" onclick="approveWithdrawReq(\''+r.id+'\')">Aprobar</button> ' +
-        '<button class="btn mini bad" onclick="openRejectWithdraw(\''+r.id+'\')">Rechazar</button>'
-      : "—";
+    // celdas básicas
+    const tdDate = document.createElement("td");
+    tdDate.textContent = r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—";
 
-    tr.innerHTML = `
-      <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
-      <td>${escapeHtml(p.full_name || "—")}</td>
-      <td>${escapeHtml(p.email || "—")}</td>
-      <td>${fmtMoney(r.amount, r.currency)}</td>
-      <td>${escapeHtml(r.bank_name || "—")}</td>
-      <td>${escapeHtml(r.bank_account || "—")}</td>
-      <td>${escapeHtml(r.bank_account_type || "—")}</td>
-      <td>${escapeHtml(r.note || "—")}</td>
-      <td class="nowrap">${actionsHtml}</td>
-    `;
+    const tdName = document.createElement("td");
+    tdName.textContent = p.full_name || "—";
+
+    const tdEmail = document.createElement("td");
+    tdEmail.textContent = p.email || "—";
+
+    const tdAmount = document.createElement("td");
+    tdAmount.textContent = fmtMoney(r.amount, r.currency || "GTQ");
+
+    const tdBank = document.createElement("td");
+    tdBank.textContent = r.bank_name || "—";
+
+    const tdAccNo = document.createElement("td");
+    tdAccNo.textContent = r.bank_account || "—";
+
+    const tdAccType = document.createElement("td");
+    tdAccType.textContent = r.bank_account_type || "—";
+
+    const tdBankType = document.createElement("td");
+    tdBankType.textContent = r.bank_type || "—";
+
+    const tdNote = document.createElement("td");
+    tdNote.textContent = r.note || "—";
+
+    const tdActions = document.createElement("td");
+    tdActions.style.whiteSpace = "nowrap";
+
+    // ✅ botones siempre visibles para PENDING (o cuando no viene status)
+    const canAct = canActOnWithdrawStatus(r.status);
+
+    if(canAct){
+      const btnOk = document.createElement("button");
+      btnOk.type = "button";
+      btnOk.textContent = "Aprobar";
+      btnOk.className = "mini ok";
+      btnOk.style.marginRight = "8px";
+      btnOk.onclick = () => approveWithdrawReq(r.id);
+
+      const btnBad = document.createElement("button");
+      btnBad.type = "button";
+      btnBad.textContent = "Rechazar";
+      btnBad.className = "mini bad";
+      btnBad.onclick = async () => {
+        const reason = prompt("Motivo de rechazo (opcional):", "");
+        if(reason === null) return;
+        try{
+          await rejectWithdrawReq(r.id, reason);
+          await listWithdrawRequests();
+          alert("Solicitud rechazada.");
+        }catch(e){
+          console.error(e);
+          alert("Error rechazando: " + (e?.message || e));
+        }
+      };
+
+      tdActions.appendChild(btnOk);
+      tdActions.appendChild(btnBad);
+    } else {
+      tdActions.textContent = "—";
+    }
+
+    tr.appendChild(tdDate);
+    tr.appendChild(tdName);
+    tr.appendChild(tdEmail);
+    tr.appendChild(tdAmount);
+    tr.appendChild(tdBank);
+    tr.appendChild(tdAccNo);
+    tr.appendChild(tdAccType);
+    tr.appendChild(tdBankType);
+    tr.appendChild(tdNote);
+    tr.appendChild(tdActions);
+
     body.appendChild(tr);
   });
 }
+
 
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
@@ -2677,13 +2736,6 @@ async function approveWithdrawReq(id){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
-}
-
-
-function openRejectWithdraw(id){
-  const note = prompt("Motivo de rechazo (opcional):", "");
-  if(note === null) return; // cancelado
-  rejectWithdrawReq(id, note);
 }
 
 async function rejectWithdrawReq(id, reason){
