@@ -2513,7 +2513,7 @@ function normAccountRow(a, idx){
     currency: a.currency || a.curr || a.moneda || a.ccy || "GTQ",
     capital:  (a.capital ?? a.current_capital ?? a.saldo ?? a.balance ?? a.capital_actual),
     joined_at: (a.joined_at || a.join_date || a.start_date || a.fecha_ingreso),
-    plan: (a.plan || a.account_plan || a.plan_type || a.plan_code || a.plan_name || "STANDARD"),
+    plan: (a.plan || a.plan_code || a.plan_name || "STANDARD"),
     bank_name: (a.bank_name || a.bank || a.banco || ""),
     bank_account: (a.bank_account || a.account_number_bank || a.no_cuenta || ""),
     bank_account_type: (a.bank_account_type || a.tipo_cuenta || a.account_type_bank || a.bank_type || "")
@@ -2697,21 +2697,20 @@ async function fetchAccountsByUser(userId){
   if(!userId) return [];
   if(_accountsCacheByUser.has(userId)) return _accountsCacheByUser.get(userId);
 
-  // ✅ LEE cuentas directamente de la tabla accounts para traer SIEMPRE el plan real
-  // (evita que el <select id="u_plan"> se vuelva a STANDARD por campos faltantes en un RPC)
+  // ✅ LEE cuentas directamente de la tabla accounts para traer SIEMPRE el plan real y el tipo de cuenta real
   const sel = [
-    'id','user_id','account_no','plan','currency','capital','initial_capital',
-    'invest_months','interest_pct','joined_at','compound_interest',
-    'bank_name','bank_account','bank_account_type','created_at'
-  ].join(',');
+    "id","user_id","account_no","plan","currency","capital","initial_capital",
+    "invest_months","interest_pct","joined_at","compound_interest",
+    "bank_name","bank_account","bank_account_type","created_at"
+  ].join(",");
 
   const url = `${BASE}/accounts?select=${encodeURIComponent(sel)}&user_id=eq.${encodeURIComponent(userId)}&order=account_no.asc.nullslast&order=created_at.asc`;
-
   const r = await fetch(url, { headers: headersJSON() });
-  const rows = await mustOk(r, "cargar cuentas");
-  const norm = (rows||[]).map((a,i)=> normAccountRow(a, i+1)).sort((x,y)=> (x.account_no||0) - (y.account_no||0));
-  _accountsCacheByUser.set(userId, norm);
-  return _accountsCacheByUser.get(userId);
+  if(!r.ok) await mustOk(r, "cargar cuentas");
+  const rows = await r.json().catch(()=>[]);
+
+  _accountsCacheByUser.set(userId, rows||[]);
+  return rows||[];
 }
 
 function fillAccountFields(a){
@@ -2720,7 +2719,7 @@ function fillAccountFields(a){
   $("u_currency").value = a.currency || "GTQ";
   setCapitalInputValue(a.capital);
   $("u_joined").value   = a.joined_at ? String(a.joined_at).slice(0,10) : "";
-  $("u_plan").value     = a.plan || "STANDARD";
+  $("u_plan").value = (a.plan ?? a.account_plan ?? $("u_plan").value ?? "STANDARD");
   $("u_months").value   = a.invest_months ?? "12";
   $("u_rate").value     = (a.interest_pct ?? "") === null ? "" : (a.interest_pct ?? "");
   $("u_bank_name").value   = a.bank_name ?? "";
@@ -2874,16 +2873,17 @@ function sortAccountsStable(arr){
 }
 
 async function ensureBankAccountType(accountId){
-  // Si por algún motivo cayó "STANDARD/PLATINUM/BLACK" aquí, lo corregimos consultando la tabla accounts
+  // Nunca "borra" el valor existente. Solo corrige si viene contaminado o falta.
   const el = $("u_bank_account_type");
   if(!el) return;
-  const v = (el.value || "").trim().toUpperCase();
+
+  const current = String(el.value || "").trim();
+  const upper = current.toUpperCase();
+
   if(!accountId || !isUUID(accountId)) return;
 
-  if(v === "STANDARD" || v === "PLATINUM" || v === "BLACK"){
-    el.value = ""; // evitar confusión visual
-  }
-  if(el.value && el.value.trim() && v !== "STANDARD" && v !== "PLATINUM" && v !== "BLACK") return;
+  // Si ya hay un valor normal (ej. Ahorro/Monetaria/Crédito), no tocarlo.
+  if(current && !["STANDARD","PLATINUM","BLACK"].includes(upper)) return;
 
   try{
     const sel = "id,bank_account_type,account_no";
@@ -2893,9 +2893,17 @@ async function ensureBankAccountType(accountId){
     if(!r.ok) return;
     const rows = await r.json().catch(()=>[]);
     const row = rows && rows[0] ? rows[0] : null;
-    if(row && row.bank_account_type != null){
-      el.value = String(row.bank_account_type || "");
+
+    // Solo sobreescribir si la DB trae un valor real
+    const dbVal = row && row.bank_account_type != null ? String(row.bank_account_type || "").trim() : "";
+    if(dbVal){
+      el.value = dbVal;
+    }else{
+      // Si la DB no tiene nada, mantenemos lo que el usuario ya tenía (aunque sea vacío)
+      // y NO colocamos "STANDARD" ni nada.
+      if(["STANDARD","PLATINUM","BLACK"].includes(upper)) el.value = "";
     }
+
     // Si existe account_no en DB, también lo fijamos en UI/caché
     const uid = ($("u_user_id")?.value || "").trim();
     if(uid && row && row.account_no){
