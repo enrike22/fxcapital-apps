@@ -2548,18 +2548,6 @@ async function loadProfilesByIds(ids){
   return map;
 }
 
-function canActOnWithdrawStatus(status){
-  const s = String(status ?? "").trim().toUpperCase();
-  // Mostrar acciones para cualquier estado pendiente/en revisión.
-  // Ocultar SOLO si ya está finalizado.
-  const finalStates = new Set([
-    "APPROVED","APROBADO","REJECTED","RECHAZADO",
-    "CANCELLED","CANCELADO","PAID","PAGADO","COMPLETED","FINALIZADO"
-  ]);
-  if(!s) return true; // si no viene status, permitir acciones
-  return !finalStates.has(s);
-}
-
 function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
@@ -2591,7 +2579,7 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
-        ${(canActOnWithdrawStatus(r.status))
+        ${(["PENDING","PENDIENTE","REQUESTED"].includes(String(r.status||"").toUpperCase()))
           ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
              <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
           : "—"}
@@ -2699,6 +2687,16 @@ async function rejectWithdrawReq(id, reason){
   });
   if(!r2.ok) throw new Error(await r2.text());
 }
+
+
+function openRejectWithdraw(id){
+  const reason = prompt("Motivo de rechazo (opcional):", "");
+  if(reason === null) return; // cancelado
+  rejectWithdrawReq(id, (reason||"RECHAZADO").trim())
+    .then(()=>loadDashboard())
+    .catch(e=>alert("No se pudo rechazar: " + (e?.message || e)));
+}
+
 
 
 /*** Editar ***/
