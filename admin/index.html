@@ -195,6 +195,9 @@ button:hover{
 }
 button:active{ transform: translateY(0px) scale(.99); }
 
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.mini{padding:8px 12px;font-size:13px;border-radius:999px}
 button.ghost{
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
   color:var(--fg);
@@ -552,7 +555,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
               <th>Email</th>
               <th>Monto</th>
               <th>Banco</th>
-              <th>Boleta</th>
+               <th>No. cuenta</th>
+               <th>Boleta</th>
               <th class="nowrap">Estado</th>
               <th class="nowrap">Efectiva</th>
               <th class="nowrap">Acciones</th>
@@ -2199,6 +2203,17 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
 
+    // No. de cuenta (multicuentas)
+    let accountNo = "—";
+    if(c2){
+      const lab = c2.account_no_label || c2.account_label;
+      if(lab) accountNo = lab;
+      else if(c2.account_no !== null && c2.account_no !== undefined) accountNo = `Cuenta No. ${c2.account_no}`;
+    }
+    if(accountNo==="—" && x.account_id){
+      accountNo = `— (${String(x.account_id).slice(-6)})`;
+    }
+
     const receipt = x.receipt_path
       ? `<button class="ghost" type="button"
             onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
@@ -2217,6 +2232,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
       <td>${email}</td>
       <td>${amt}</td>
       <td>${bank}</td>
+      <td>${accountNo}</td>
       <td>${receipt}</td>
       <td class="nowrap">${statusChip(x.status, x.effective_date)}</td>
       <td class="nowrap">${eff}</td>
@@ -2242,7 +2258,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="9" class="small">No hay recargas pendientes.</td>`;
+    tr.innerHTML = `<td colspan="10" class="small">No hay recargas pendientes.</td>`;
     tb.appendChild(tr);
   }
 }
@@ -2579,93 +2595,69 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
-        ${(["PENDING","PENDIENTE","REQUESTED"].includes(String(r.status||"").toUpperCase()))
-          ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
-             <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
-          : "—"}
+        ${(() => {
+          const st = String(r.status || "").toUpperCase().trim();
+          const isPending = (!st) || st.startsWith("PEND") || st==="REQUESTED";
+          if(!isPending) return "—";
+          return `<div class="actions">
+            <button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
+            <button class="mini danger" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>
+          </div>`;
+        })()}
       </td>
     `;
     body.appendChild(tr);
   });
 }
 
-
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
 
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+getToken(),
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
   try{
-    const { data: wrows, error: werr } = await supabase
-      .from("withdrawal_requests")
-      .select("id, created_at, profile_id, user_id, amount, currency, bank_name, bank_account, bank_account_type, note, status")
-      .eq("status","pending")
-      .order("created_at",{ascending:false})
-      .limit(200);
+    // ✅ Leer desde la VIEW (ya trae cliente/email/no.cuenta/banco)
+    const sel = [
+      "id","created_at","status","amount","currency",
+      "bank_name","bank_account","bank_account_type",
+      "note","account_id",
+      // campos enriquecidos por la view:
+      "client_full_name","client_email",
+      "account_no","account_type",
+      "account_bank_name","account_bank_account","account_bank_account_type"
+    ].join(",");
 
-    if(werr) throw werr;
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
 
-    // Mapear perfiles (usa profile_id si existe, si no user_id)
-    const ids = Array.from(new Set((wrows||[])
-      .map(r => r.profile_id || r.user_id)
-      .filter(Boolean)));
-
-    const profileMap = new Map();
-    if(ids.length){
-      const { data: prows, error: perr } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, phone")
-        .in("id", ids);
-
-      if(perr) throw perr;
-      (prows||[]).forEach(p => profileMap.set(p.id, p));
+    const res = await fetch(url, { headers:h, cache:"no-store" });
+    if(!res.ok){
+      const t = await res.text();
+      throw new Error(t || ("HTTP "+res.status));
     }
 
-    renderWithdrawRequests(wrows||[], profileMap);
+    const rows = await res.json();
 
-  }catch(e){
-    console.error(e);
-    if(msgEl) msgEl.textContent = "Error cargando retiros: " + (e?.message || e);
+    // ✅ Ya no necesitamos loadProfilesByIds()
+    renderWithdrawRequests(rows, new Map());
+
+    // KPI
+    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
+    setKPI("kpiWithdrawPending", pending);
+    setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
+
+  }catch(err){
+    console.error("listWithdrawRequests error", err);
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
     renderWithdrawRequests([], new Map());
   }
 }
 
-
-function openRejectWithdraw(row){
-  // row puede ser objeto o id
-  const w = (typeof row === "object" && row) ? row : { id: row };
-  const reason = prompt("Motivo de rechazo (opcional):", "");
-  if(reason === null) return; // cancelado
-  rejectWithdrawReq(w, reason || "");
-}
-
-async function rejectWithdrawReq(w, reason){
-  try{
-    if(!w || !w.id) throw new Error("Solicitud inválida");
-    if(!confirm("¿Rechazar este retiro?")) return;
-
-    const payload = {
-      status: "rejected",
-      reviewed_at: new Date().toISOString(),
-      reject_reason: reason || null
-    };
-
-    const res = await fetch(BASE + "/withdrawal_requests?id=eq." + encodeURIComponent(w.id), {
-      method: "PATCH",
-      headers: hAuth(),
-      body: JSON.stringify(payload)
-    });
-    if(!res.ok){
-      const t = await res.text().catch(()=> "");
-      throw new Error("No se pudo rechazar ("+res.status+"): " + t);
-    }
-    await listWithdrawRequests();
-    await refreshKPIs?.();
-    alert("Retiro rechazado.");
-  }catch(e){
-    console.error(e);
-    alert("Error rechazando retiro: " + (e?.message || e));
-  }
-}
 
 async function approveWithdrawReq(id){
   const h = hAuth();
@@ -2716,6 +2708,20 @@ async function rejectWithdrawReq(id, reason){
   });
   if(!r2.ok) throw new Error(await r2.text());
 }
+
+// === Aliases usados por la UI de "Solicitudes de retiro" ===
+// (El render usa approveWithdraw/openRejectWithdraw; estas funciones delegan a approveWithdrawReq/rejectWithdrawReq)
+async function approveWithdraw(withdrawId){
+  return await approveWithdrawReq(withdrawId);
+}
+
+function openRejectWithdraw(withdrawId){
+  const reason = prompt("Motivo de rechazo (opcional):", "");
+  // Si el usuario cancela, no hacemos nada
+  if(reason === null) return;
+  return rejectWithdrawReq(withdrawId, reason || null);
+}
+
 
 
 /*** Editar ***/
