@@ -195,6 +195,9 @@ button:hover{
 }
 button:active{ transform: translateY(0px) scale(.99); }
 
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.mini{padding:8px 12px;font-size:13px;border-radius:999px}
 button.ghost{
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
   color:var(--fg);
@@ -552,7 +555,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
               <th>Email</th>
               <th>Monto</th>
               <th>Banco</th>
-              <th>Boleta</th>
+               <th>No. cuenta</th>
+               <th>Boleta</th>
               <th class="nowrap">Estado</th>
               <th class="nowrap">Efectiva</th>
               <th class="nowrap">Acciones</th>
@@ -2199,6 +2203,17 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
     const amt  = fmtMoney(x.amount, x.currency || "GTQ");
     const bank = x.bank_name || "—";
 
+    // No. de cuenta (multicuentas)
+    let accountNo = "—";
+    if(c2){
+      const lab = c2.account_no_label || c2.account_label;
+      if(lab) accountNo = lab;
+      else if(c2.account_no !== null && c2.account_no !== undefined) accountNo = `Cuenta No. ${c2.account_no}`;
+    }
+    if(accountNo==="—" && x.account_id){
+      accountNo = `— (${String(x.account_id).slice(-6)})`;
+    }
+
     const receipt = x.receipt_path
       ? `<button class="ghost" type="button"
             onclick="openReceipt('${BUCKET}','${String(x.receipt_path).replace(/'/g,"\\'")}')">
@@ -2217,6 +2232,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
       <td>${email}</td>
       <td>${amt}</td>
       <td>${bank}</td>
+      <td>${accountNo}</td>
       <td>${receipt}</td>
       <td class="nowrap">${statusChip(x.status, x.effective_date)}</td>
       <td class="nowrap">${eff}</td>
@@ -2242,7 +2258,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="9" class="small">No hay recargas pendientes.</td>`;
+    tr.innerHTML = `<td colspan="10" class="small">No hay recargas pendientes.</td>`;
     tb.appendChild(tr);
   }
 }
@@ -2579,10 +2595,15 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
-        ${(["PENDING","PENDIENTE","REQUESTED"].includes(String(r.status||"").toUpperCase()))
-          ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
-             <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
-          : "—"}
+        ${(() => {
+          const st = String(r.status || "").toUpperCase().trim();
+          const isPending = (!st) || st.startsWith("PEND") || st==="REQUESTED";
+          if(!isPending) return "—";
+          return `<div class="actions">
+            <button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
+            <button class="mini danger" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>
+          </div>`;
+        })()}
       </td>
     `;
     body.appendChild(tr);
