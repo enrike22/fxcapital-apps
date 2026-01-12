@@ -2301,7 +2301,7 @@ async function approveTopup(topupId){
 
   const r = await fetch(`${RPC}/approve_topup`, {
     method:"POST",
-    headers: headersJSON(),
+    headers: hAuth(),
     body: JSON.stringify({ p_topup_id: topupId })
   });
 
@@ -2579,7 +2579,7 @@ function renderWithdrawRequests(rows, profileMap){
       <td>${escapeHtml(bankAccTyp)}</td>
       <td>${escapeHtml(r.note || "—")}</td>
       <td class="nowrap">
-        ${(String(r.status||"").toUpperCase()==="PENDING")
+        ${(["PENDING","PENDIENTE","REQUESTED"].includes(String(r.status||"").toUpperCase()))
           ? `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
              <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
           : "—"}
