@@ -520,6 +520,57 @@
   color:var(--fg);
 }
 
+
+  /* ✅ Badge tipo de cuenta (PLATINUM-style) */
+  .type-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:.2px;
+    border:1px solid rgba(255,255,255,.22);
+    background:
+      radial-gradient(160% 220% at 30% 0%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 55%),
+      linear-gradient(180deg, #ffffff 0%, #e7edf7 55%, #d4dbea 100%);
+    color:#0b0c0e;
+    box-shadow:
+      0 14px 36px rgba(0,0,0,.35),
+      0 0 0 5px rgba(255,255,255,.06),
+      inset 0 1px 0 rgba(255,255,255,.92);
+    white-space:nowrap;
+    max-width:100%;
+  }
+  .type-badge::before{
+    content:"◈";
+    width:18px;height:18px;border-radius:8px;
+    display:grid;place-items:center;
+    background:rgba(0,0,0,.08);
+    border:1px solid rgba(0,0,0,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.70);
+    font-size:12px;
+    line-height:1;
+  }
+  .type-badge.small{ padding:6px 10px; font-size:11.5px; }
+  .type-badge.small::before{ width:16px; height:16px; border-radius:7px; font-size:11px; }
+
+  /* Variantes sutiles */
+  .type-badge.monthly{
+    background:
+      radial-gradient(160% 220% at 30% 0%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%),
+      linear-gradient(180deg, #ffffff 0%, #eef2f9 55%, #dde3f0 100%);
+  }
+  .type-badge.compound{
+    background:
+      radial-gradient(160% 220% at 30% 0%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%),
+      linear-gradient(180deg, #ffffff 0%, #eefbf8 55%, #d2f4ee 100%);
+  }
+  .type-badge.compound::before{ content:"⧉"; }
+  .type-badge.monthly::before{ content:"≋"; }
+
+
 </style>
 </head>
 
@@ -561,7 +612,7 @@
         <div class="grid cols-3">
           <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
           <div class="card group"><span class="k">Apertura de cuenta</span><span id="valOpenDate" class="v">—</span></div>
-          <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span></div>
+          <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span><div style="margin-top:10px"><span id="badgeAccountType" class="type-badge monthly">—</span></div></div>
 
           <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
           <div class="card group"><span class="k">Cuenta</span><div class="v" style="display:flex;flex-direction:column;gap:6px"><select id="accountPicker" class="account-select" aria-label="Seleccionar cuenta"></select><span id="valAccountId" class="muted" style="font-size:12px;opacity:.85">—</span></div></div>
@@ -588,7 +639,10 @@
         </section>
 
         <section class="panel section gray" style="margin-top:18px">
-          <h2 style="margin:0 0 10px 0">Estado de cuenta</h2>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px 0">
+            <h2 style="margin:0">Estado de cuenta</h2>
+            <span id="badgeAccountTypeStmt" class="type-badge small monthly">—</span>
+          </div>
           <div class="muted" id="stmtRange">—</div>
 
           <div style="overflow:auto;margin-top:8px">
@@ -919,6 +973,34 @@
     }
   };
 
+  // ✅ Tipo de cuenta (Pago mensual vs Pago acumulado) + badges
+  function accountTypeInfo(acc){
+    const isCompound = !!(acc && acc.compound_interest);
+    return {
+      isCompound,
+      label: isCompound ? 'Pago acumulado' : 'Pago mensual',
+      css: isCompound ? 'compound' : 'monthly'
+    };
+  }
+
+  function paintAccountTypeBadges(acc){
+    const info = accountTypeInfo(acc);
+
+    const b1 = document.getElementById('badgeAccountType');
+    if(b1){
+      b1.textContent = info.label;
+      b1.classList.remove('monthly','compound');
+      b1.classList.add(info.css);
+    }
+
+    const b2 = document.getElementById('badgeAccountTypeStmt');
+    if(b2){
+      b2.textContent = info.label;
+      b2.classList.remove('monthly','compound');
+      b2.classList.add(info.css);
+    }
+  }
+
   /* ==========================================
      ✅ ZONA HORARIA AMARRADA A GUATEMALA
   ========================================== */
@@ -1245,9 +1327,10 @@
 
     const note = document.getElementById('stmtNote');
     if(note){
-      note.innerHTML = isCompound
+      const info = accountTypeInfo(acc);
+      note.innerHTML = `Tipo de cuenta: <b>${info.label}</b>. ` + (isCompound
         ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre (si el cierre cae sábado/domingo, cambia hasta el lunes).`
-        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
+        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`));
     }
   }
 
@@ -1908,6 +1991,9 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
       const pl = document.getElementById('valPlan'); if(pl) pl.textContent = acc?.plan || '—';
       const cu = document.getElementById('valCurrency'); if(cu) cu.textContent = acc?.currency || '—';
       const mo = document.getElementById('valMonths'); if(mo) mo.textContent = (acc?.invest_months ?? '—');
+
+      // ✅ Tipo de cuenta (badge)
+      paintAccountTypeBadges(acc);
 
       // Reusa la lógica existente (topups, cálculos, fechas, etc.)
       CURRENT_ACCOUNT_ID = acc.id;
