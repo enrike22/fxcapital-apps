@@ -439,6 +439,12 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   .search-pill{min-width: 220px}
   .brand{min-width:unset}
 }
+
+.btn.mini{ padding:8px 12px; font-size:12px; border-radius:14px; }
+.btn.ok{ background: linear-gradient(135deg,#18d3b0,#10b98f); color:#061415; border:0; }
+.btn.bad{ background: linear-gradient(135deg,#ff4d4d,#d12b2b); color:#fff; border:0; }
+.nowrap{ white-space:nowrap; }
+
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -2566,34 +2572,25 @@ function renderWithdrawRequests(rows, profileMap){
   body.innerHTML = "";
 
   (rows||[]).forEach(r=>{
-    // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
-
-    const clientName  = r.client_full_name || p.full_name || "—";
-    const clientEmail = r.client_email || p.email || "—";
-
-    const bankName   = r.account_bank_name || r.bank_name || "—";
-    const bankAcc    = r.account_bank_account || r.bank_account || "—";
-    const bankAccTyp = r.account_bank_account_type || r.bank_account_type || "—";
-
-    const accountNo   = r.account_no ?? "—";
-    const accountType = r.account_type ?? "—";
-
     const tr = document.createElement("tr");
+
+    const canAct = canActOnWithdrawStatus(r.status);
+    const actionsHtml = canAct
+      ? '<button class="btn mini ok" onclick="approveWithdrawReq(\''+r.id+'\')">Aprobar</button> ' +
+        '<button class="btn mini bad" onclick="openRejectWithdraw(\''+r.id+'\')">Rechazar</button>'
+      : "—";
+
     tr.innerHTML = `
       <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
-      <td>${escapeHtml(clientName)}</td>
-      <td>${escapeHtml(clientEmail)}</td>
-      <td>${fmtMoney(r.amount, r.currency || "GTQ")}</td>
-      <td>${escapeHtml(bankName)}</td>
-      <td>${escapeHtml(String(accountNo))}</td>
-      <td>${escapeHtml(accountType)}</td>
-      <td>${escapeHtml(bankAccTyp)}</td>
+      <td>${escapeHtml(p.full_name || "—")}</td>
+      <td>${escapeHtml(p.email || "—")}</td>
+      <td>${fmtMoney(r.amount, r.currency)}</td>
+      <td>${escapeHtml(r.bank_name || "—")}</td>
+      <td>${escapeHtml(r.bank_account || "—")}</td>
+      <td>${escapeHtml(r.bank_account_type || "—")}</td>
       <td>${escapeHtml(r.note || "—")}</td>
-      <td class="nowrap">
-        `<button class="mini ok" onclick="approveWithdrawReq('${r.id}')">Aprobar</button>
-             <button class="mini bad" onclick="openRejectWithdraw('${r.id}')">Rechazar</button>`
-      </td>
+      <td class="nowrap">${actionsHtml}</td>
     `;
     body.appendChild(tr);
   });
@@ -2682,14 +2679,14 @@ async function approveWithdrawReq(id){
   if(!r2.ok) throw new Error(await r2.text());
 }
 
-async 
-function openRejectWithdraw(reqId){
-  const reason = prompt("Motivo de rechazo (opcional):", "");
-  if(reason === null) return; // cancelado
-  rejectWithdrawReq(reqId, reason || "");
+
+function openRejectWithdraw(id){
+  const note = prompt("Motivo de rechazo (opcional):", "");
+  if(note === null) return; // cancelado
+  rejectWithdrawReq(id, note);
 }
 
-function rejectWithdrawReq(id, reason){
+async function rejectWithdrawReq(id, reason){
   const h = hAuth();
 
   const r2 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
