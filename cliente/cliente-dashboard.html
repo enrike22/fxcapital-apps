@@ -1991,7 +1991,24 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
   }
 
 
-  async function showView(which){
+  async 
+function resetDepositSteps(){
+  try{
+    const s1 = $("txStep1");
+    const s2 = $("txStep2");
+    if(s1) s1.classList.add("active");
+    if(s2) s2.classList.remove("active");
+    const dlg = $("tdlg");
+    if(dlg && dlg.open) dlg.close();
+    const r = $("tReceipt"); if(r) r.value = "";
+    const n = $("tNotes"); if(n) n.value = "";
+    const a = $("tAmount"); if(a) a.value = "";
+    const dt = $("tDate"); 
+    if(dt && !dt.value) dt.value = new Date().toISOString().slice(0,10);
+  }catch(_e){}
+}
+
+function showView(which){
     const panel = document.getElementById('viewPanel');
     const dep   = document.getElementById('viewDeposit');
     const wit   = document.getElementById('viewWithdraw');
