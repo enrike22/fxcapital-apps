@@ -2548,44 +2548,6 @@ async function loadProfilesByIds(ids){
   return map;
 }
 
-
-// --- Rechazar retiro (modal simple) ---
-function openRejectWithdraw(withdrawId){
-  try{
-    const reason = prompt("Motivo de rechazo (opcional):", "");
-    if(reason === null) return; // cancelado
-    rejectWithdrawReq(withdrawId, reason || "");
-  }catch(e){
-    console.error(e);
-    alert("No se pudo abrir el rechazo. Revisa consola.");
-  }
-}
-
-async function rejectWithdrawReq(withdrawId, reason){
-  if(!withdrawId) return;
-  const ok = confirm("¿Rechazar esta solicitud de retiro?");
-  if(!ok) return;
-
-  // Intento 1: actualizar status + nota (si existe la columna)
-  let upd = { status: "rejected" };
-  if(reason && reason.trim()) upd.note = reason.trim();
-
-  let { error } = await sb.from("withdrawal_requests").update(upd).eq("id", withdrawId);
-  if(error && /column .* note|note.* does not exist/i.test(error.message||"")){
-    // Reintento sin note
-    ({ error } = await sb.from("withdrawal_requests").update({ status: "rejected" }).eq("id", withdrawId));
-  }
-
-  if(error){
-    console.error(error);
-    alert("Error rechazando retiro: " + (error.message || JSON.stringify(error)));
-    return;
-  }
-
-  alert("Retiro rechazado.");
-  try{ await loadWithdrawRequests(); }catch{}
-}
-
 function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
@@ -2627,56 +2589,85 @@ function renderWithdrawRequests(rows, profileMap){
   });
 }
 
+
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
   if(msgEl) msgEl.textContent = "";
 
-  const h = {
-    apikey: ANON_KEY,
-    Authorization: "Bearer "+getToken(),
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
-
   try{
-    // ✅ Leer desde la VIEW (ya trae cliente/email/no.cuenta/banco)
-    const sel = [
-      "id","created_at","status","amount","currency",
-      "bank_name","bank_account","bank_account_type",
-      "note","account_id",
-      // campos enriquecidos por la view:
-      "client_full_name","client_email",
-      "account_no","account_type",
-      "account_bank_name","account_bank_account","account_bank_account_type"
-    ].join(",");
+    const { data: wrows, error: werr } = await supabase
+      .from("withdrawal_requests")
+      .select("id, created_at, profile_id, user_id, amount, currency, bank_name, bank_account, bank_account_type, note, status")
+      .eq("status","pending")
+      .order("created_at",{ascending:false})
+      .limit(200);
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
+    if(werr) throw werr;
 
-    const res = await fetch(url, { headers:h, cache:"no-store" });
-    if(!res.ok){
-      const t = await res.text();
-      throw new Error(t || ("HTTP "+res.status));
+    // Mapear perfiles (usa profile_id si existe, si no user_id)
+    const ids = Array.from(new Set((wrows||[])
+      .map(r => r.profile_id || r.user_id)
+      .filter(Boolean)));
+
+    const profileMap = new Map();
+    if(ids.length){
+      const { data: prows, error: perr } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone")
+        .in("id", ids);
+
+      if(perr) throw perr;
+      (prows||[]).forEach(p => profileMap.set(p.id, p));
     }
 
-    const rows = await res.json();
+    renderWithdrawRequests(wrows||[], profileMap);
 
-    // ✅ Ya no necesitamos loadProfilesByIds()
-    renderWithdrawRequests(rows, new Map());
-
-    // KPI
-    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
-    setKPI("kpiWithdrawPending", pending);
-    setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
-
-  }catch(err){
-    console.error("listWithdrawRequests error", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
+  }catch(e){
+    console.error(e);
+    if(msgEl) msgEl.textContent = "Error cargando retiros: " + (e?.message || e);
     renderWithdrawRequests([], new Map());
   }
 }
 
 
-async async function approveWithdrawReq(id){
+function openRejectWithdraw(row){
+  // row puede ser objeto o id
+  const w = (typeof row === "object" && row) ? row : { id: row };
+  const reason = prompt("Motivo de rechazo (opcional):", "");
+  if(reason === null) return; // cancelado
+  rejectWithdrawReq(w, reason || "");
+}
+
+async function rejectWithdrawReq(w, reason){
+  try{
+    if(!w || !w.id) throw new Error("Solicitud inválida");
+    if(!confirm("¿Rechazar este retiro?")) return;
+
+    const payload = {
+      status: "rejected",
+      reviewed_at: new Date().toISOString(),
+      reject_reason: reason || null
+    };
+
+    const res = await fetch(BASE + "/withdrawal_requests?id=eq." + encodeURIComponent(w.id), {
+      method: "PATCH",
+      headers: hAuth(),
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const t = await res.text().catch(()=> "");
+      throw new Error("No se pudo rechazar ("+res.status+"): " + t);
+    }
+    await listWithdrawRequests();
+    await refreshKPIs?.();
+    alert("Retiro rechazado.");
+  }catch(e){
+    console.error(e);
+    alert("Error rechazando retiro: " + (e?.message || e));
+  }
+}
+
+async function approveWithdrawReq(id){
   const h = hAuth();
 
   // 1) Obtener solicitud para saber account_id y amount
