@@ -579,21 +579,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
         📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
       </p>
-      <p 
-    <!-- ✅ OPERACIONES (Admin) - compacto -->
-    <div class="card" id="opsCard">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Operaciones (Admin)</h2>
-        <span class="small">Abrir formularios en ventana para mantener la página principal limpia.</span>
-      </div>
-      <div class="actions">
-        <button type="button" class="danger" id="btnOpenWithdrawModal">Retirar capital</button>
-        <button type="button" class="primary" id="btnOpenAccreditModal">Acreditar capital</button>
-        <button type="button" class="ghost" id="btnOpenWithdrawHistory2">Historial de retiros</button>
-      </div>
-    </div>
-
-id="topupsMsg" class="small"></p>
+      <p id="topupsMsg" class="small"></p>
     </div>
 
     <!-- Crear/Editar -->
@@ -690,7 +676,7 @@ id="topupsMsg" class="small"></p>
     </div>
 
     <!-- RETIRAR CAPITAL -->
-    <div class="card" id="cardWithdrawOps" style="display:none">
+    <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Retirar capital (Admin)</h2>
@@ -736,7 +722,7 @@ id="topupsMsg" class="small"></p>
     <!-- Lista -->
     
     <!-- ACREDITAR CAPITAL (DIRECTO) -->
-    <div class="card" id="cardAccreditOps" style="display:none">
+    <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Acreditar capital (Admin)</h2>
@@ -986,40 +972,28 @@ id="topupsMsg" class="small"></p>
   </div>
 </div>
 
-
-<!-- ===== MODAL: RETIRAR CAPITAL (Admin) ===== -->
-<div id="modalWithdrawOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Retirar capital (Admin)</h3>
-        <button class="xbtn" type="button" onclick="closeWithdrawOps()">✕</button>
-      </div>
-      <div id="withdrawOpsBody"></div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ===== MODAL: ACREDITAR CAPITAL (Admin) ===== -->
-<div id="modalAccreditOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Acreditar capital (Admin)</h3>
-        <button class="xbtn" type="button" onclick="closeAccreditOps()">✕</button>
-      </div>
-      <div id="accreditOpsBody"></div>
-    </div>
-  </div>
-</div>
-
 <div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+// Wrapper seguro para llamar RPC (POST /rest/v1/rpc/<fn>)
+async function supabaseRpc(fn, body){
+  const url = `${SUPABASE_URL}/rest/v1/rpc/${fn}`;
+  const headers = {
+    "Content-Type": "application/json",
+    apikey: ANON_KEY,
+    Authorization: `Bearer ${session?.access_token || accessToken || token || ""}`,
+  };
+  const r = await fetch(url, { method:"POST", headers, body: JSON.stringify(body || {}) });
+  const text = await r.text();
+  let data = null;
+  try{ data = text ? JSON.parse(text) : null; }catch(e){ data = text; }
+  if(!r.ok) return { ok:false, error:data || {status:r.status}, data:null };
+  return { ok:true, data, error:null };
+}
+
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 const SUPABASE_URL = PROJECT_URL;
@@ -1918,7 +1892,27 @@ function resolveClientByAccountId(accountId){
 }
 
 async function loadWithdrawHistory(){
-  const msg = $("withdrawHistoryMsg");
+  
+
+  // Fallback por si cambia el nombre del RPC (evita romper el panel)
+  async function callWithdrawHistoryRPC(){
+    const candidates = [
+      "admin_list_withdrawals_history",
+      "admin_list_withdrawals",
+      "admin_list_withdrawals_guard"
+    ];
+    let lastErr = null;
+    for(const fn of candidates){
+      try{
+        const out = await supabaseRpc(fn, {});
+        if(out && out.ok) return out.data;
+        lastErr = out?.error || lastErr;
+      }catch(e){ lastErr = e; }
+    }
+    throw lastErr || new Error("No se encontró un RPC de historial de retiros");
+  }
+
+const msg = $("withdrawHistoryMsg");
   if(msg) msg.textContent = "";
 
   const h = {
@@ -1931,7 +1925,7 @@ async function loadWithdrawHistory(){
 
   try{
     // ✅ Admin: RPC Security Definer (evita problemas de RLS/joins)
-    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_history`;
     const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
     if(!res.ok){
@@ -3623,67 +3617,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 });
 })();
-
-
-/* ===== OPERACIONES MODALES (sin romper lógica existente) ===== */
-function openWithdrawOps(){ const m=$("modalWithdrawOps"); if(m) m.classList.remove("hidden"); }
-function closeWithdrawOps(){ const m=$("modalWithdrawOps"); if(m) m.classList.add("hidden"); }
-function openAccreditOps(){ const m=$("modalAccreditOps"); if(m) m.classList.remove("hidden"); }
-function closeAccreditOps(){ const m=$("modalAccreditOps"); if(m) m.classList.add("hidden"); }
-window.closeWithdrawOps = closeWithdrawOps;
-window.closeAccreditOps = closeAccreditOps;
-
-function __mountOpsCardsIntoModals(){
-  try{
-    const wCard = document.getElementById("cardWithdrawOps");
-    const aCard = document.getElementById("cardAccreditOps");
-    const wBody = document.getElementById("withdrawOpsBody");
-    const aBody = document.getElementById("accreditOpsBody");
-
-    if(wCard && wBody && !wBody.__mounted){
-      wBody.appendChild(wCard);
-      wCard.style.display = "";
-      wBody.__mounted = true;
-    }
-    if(aCard && aBody && !aBody.__mounted){
-      aBody.appendChild(aCard);
-      aCard.style.display = "";
-      aBody.__mounted = true;
-    }
-
-    const bW = document.getElementById("btnOpenWithdrawModal");
-    if(bW && !bW.__wired){ bW.addEventListener("click", openWithdrawOps); bW.__wired=true; }
-
-    const bA = document.getElementById("btnOpenAccreditModal");
-    if(bA && !bA.__wired){ bA.addEventListener("click", openAccreditOps); bA.__wired=true; }
-
-    const bH = document.getElementById("btnOpenWithdrawHistory2");
-    if(bH && !bH.__wired){
-      bH.addEventListener("click", ()=>{
-        if(typeof openWithdrawHistory === "function"){ openWithdrawHistory(); return; }
-        const mh = document.getElementById("modalWithdrawHistory");
-        if(mh){ mh.classList.remove("hidden"); return; }
-        const btn = document.getElementById("btnOpenWithdrawHistory");
-        if(btn) btn.click();
-      });
-      bH.__wired=true;
-    }
-
-    ["modalWithdrawOps","modalAccreditOps"].forEach(id=>{
-      const m = document.getElementById(id);
-      if(m && !m.__wired){
-        m.addEventListener("click",(e)=>{ if(e.target===m){ id==="modalWithdrawOps"?closeWithdrawOps():closeAccreditOps(); }});
-        m.__wired=true;
-      }
-    });
-
-  }catch(e){
-    console.error("[ops-modals]", e);
-  }
-}
-
-setTimeout(__mountOpsCardsIntoModals, 0);
-document.addEventListener("DOMContentLoaded", ()=> setTimeout(__mountOpsCardsIntoModals, 0));
 
 </script>
 </body>
