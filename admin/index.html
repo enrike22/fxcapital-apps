@@ -451,31 +451,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast.err{border-color:rgba(255,85,85,.25)}
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
-
-/* ===== UI PATCH v13 (clientes visibles + cuentas como modal) ===== */
-#accountsCard.modal{
-  position: fixed; inset: 20px; z-index: 9999;
-  max-width: 1100px; margin: auto;
-  overflow: auto;
-}
-#accountsCard.modal.hidden{ display:none !important; }
-#accountsCard .modalHead{
-  position: sticky; top: 0;
-  background: rgba(10,12,14,.92);
-  backdrop-filter: blur(10px);
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  border-radius: 16px 16px 0 0;
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-}
-#accountsCard .modalHead .xbtn{
-  width: 38px; height: 38px; border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color:#fff; cursor:pointer;
-}
-#accountsCard .modalHead .xbtn:hover{ background: rgba(255,255,255,.10); }
-
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -856,18 +831,13 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     
 
     <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
-    <div class="card hidden modal" id="accountsCard">
-      <div class="modalHead">
+    <div class="card hidden" id="accountsCard">
+      <div class="header" style="margin:0 0 10px">
         <div>
           <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
           <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
-          <button type="button" class="xbtn" aria-label="Cerrar" onclick="closeClientAccounts()">✕</button>
-        </div>
-      </div>
-
+        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
       </div>
 
       <div class="table-wrap">
@@ -1557,6 +1527,7 @@ async function loadUsersViaJoinFallback(h){
 
 function renderUsers(rows){
   const tb = $("users");
+  if(!tb) return;
   tb.innerHTML = "";
 
   if(!rows || !rows.length){
@@ -1602,9 +1573,6 @@ function openClientAccounts(userId){
   const rows = (CACHED||[]).filter(x=>String(x.user_id)===String(userId));
   const titleEl = $("accountsTitle");
   const wrap = $("accountsCard");
-
-  if(wrap){ wrap.classList.remove(\"hidden\"); }
-  wrap?.scrollIntoView?.({ behavior:\"smooth\", block:\"start\" });
   const tb = $("accountsBody");
 
   if(titleEl){
@@ -1647,13 +1615,7 @@ function openClientAccounts(userId){
 }
 
 function closeClientAccounts(){
-  const card = $("accountsCard");
-  if(card){
-    card.classList.add("hidden");
-  }
-  // volver a la lista de clientes
-  const anchor = $("usersMsg") || $("users");
-  anchor?.scrollIntoView?.({ behavior:"smooth", block:"start" });
+  $("accountsCard")?.classList.add("hidden");
 }
 
 async function deleteAccount(acc){
@@ -1972,7 +1934,7 @@ function resolveClientByAccountId(accountId){
 }
 
 async function loadWithdrawHistory(){
-  const msg = $("withdrawHistoryMsg");
+  const msg = $("wdhMsg");
   if(msg) msg.textContent = "";
 
   const h = {
@@ -1984,28 +1946,46 @@ async function loadWithdrawHistory(){
   };
 
   try{
-    // ✅ Admin: RPC Security Definer (evita problemas de RLS/joins)
-    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
-    const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
+    let rows = [];
 
-    if(!res.ok){
-      const t = await res.text();
-      throw new Error(t || ("HTTP "+res.status));
+    // 1) Intentar RPC (si existe)
+    let usedRpc = false;
+    try{
+      const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
+      const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}), cache:"no-store" });
+
+      if(res.ok){
+        rows = await res.json().catch(()=>[]);
+        usedRpc = true;
+      }else{
+        // Si la función no existe (404 / PGRST202) o falla, caemos a REST
+        const t = await res.text().catch(()=> "");
+        console.warn("admin_list_withdrawals_guard no disponible, fallback REST:", res.status, t);
+      }
+    }catch(e){
+      console.warn("RPC withdrawals falló, fallback REST:", e);
     }
 
-    const rows = await res.json();
+    // 2) Fallback REST directo a tabla withdrawals (requiere permisos/RLS adecuados)
+    if(!usedRpc){
+      const sel = encodeURIComponent("id,account_id,amount,currency,reference,note,created_at");
+      const url = `${BASE}/withdrawals?select=${sel}&order=created_at.desc&limit=1000`;
+      const r2 = await fetch(url, { headers:h, cache:"no-store" });
+      if(!r2.ok){
+        const t2 = await r2.text().catch(()=> "");
+        throw new Error(t2 || ("HTTP "+r2.status));
+      }
+      rows = await r2.json().catch(()=>[]);
+    }
 
-    // Reusar helpers existentes para mapear cuenta→perfil
-    const accIds = Array.from(new Set(rows.map(r => r.account_id).filter(Boolean)));
-    const accMap = await loadAccountsByIds(accIds);        // Map account_id -> account row (incl user_id)
-    const userIds = Array.from(new Set(Array.from(accMap.values()).map(a => a.user_id).filter(Boolean)));
-    const profMap = await loadProfilesByIds(userIds);      // Map user_id -> profile
-
-    renderWithdrawHistory(rows, accMap, profMap);
+    // ✅ Guardar cache y render
+    WDH_CACHE = Array.isArray(rows) ? rows : [];
+    renderWithdrawHistory();
   }catch(err){
     console.error("loadWithdrawHistory error", err);
-    if(msg) msg.textContent = `No se pudo cargar el historial. (${err.message||err})`;
-    renderWithdrawHistory([], new Map(), new Map());
+    if(msg) msg.textContent = `No se pudo cargar el historial. (${err?.message||err})`;
+    WDH_CACHE = [];
+    renderWithdrawHistory();
   }
 }
 
