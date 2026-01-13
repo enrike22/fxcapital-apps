@@ -869,6 +869,13 @@ SOLICITUDES DE RETIRO (pendientes) -->
 <div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
+
+// ===== SAFE DOM HELPERS (blindaje) =====
+function safeAdd(el, evt, fn, opts){
+  try{ if(el && el.addEventListener) safeAdd(el,evt, fn, opts); }catch(e){}
+}
+
+
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
@@ -940,7 +947,7 @@ function toast(msg, type="ok", sub=""){
   if(!wrap) return alert(msg);
   const t = document.createElement("div");
   t.className = "toast " + (type==="err" ? "err" : "ok");
-  t.innerHTML = `${escapeHtml(String(msg||""))}${sub ? `<span class="sub">${escapeHtml(String(sub||""))}</span>` : ""}`;
+  if(t) t.innerHTML = `${escapeHtml(String(msg||""))}${sub ? `<span class="sub">${escapeHtml(String(sub||""))}</span>` : ""}`;
   wrap.appendChild(t);
   // auto-remove
   setTimeout(()=>{ t.style.opacity="0"; t.style.transform="translateY(6px)"; }, 2600);
@@ -948,7 +955,7 @@ function toast(msg, type="ok", sub=""){
 }
 
 function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
-function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
+function safeText(el, txt){ if(el) if(el) el.textContent = String(txt ?? ""); }
 function hAuth(){
   return {
     apikey: ANON_KEY,
@@ -961,13 +968,13 @@ function clearGlobalError(){
   const box = $("globalError");
   if(!box) return;
   show(box, false);
-  box.textContent = "";
+  if(box) box.textContent = "";
 }
 function showGlobalError(title, err){
   const box = $("globalError");
   if(!box) return;
   show(box, true);
-  box.innerHTML = `<div style="font-weight:900;color:#FFD0D0;margin-bottom:4px">${title}</div>
+  if(box) box.innerHTML = `<div style="font-weight:900;color:#FFD0D0;margin-bottom:4px">${title}</div>
                    <div>Verifique permisos, sesión o configuración del sistema e intente nuevamente.</div>`;
   console.error("[DEBUG]", err);
 }
@@ -981,9 +988,9 @@ function setGlobalError(msg){
 /*** ✅ KPI helper (fix: evita ReferenceError setKPI) ***/
 function setKPI(id, value, hint){
   const el = document.getElementById(id);
-  if(el) el.textContent = (value === null || value === undefined) ? "—" : String(value);
+  if(el) if(el) el.textContent = (value === null || value === undefined) ? "—" : String(value);
   const hintEl = document.getElementById(id + "Hint");
-  if(hintEl && hint !== undefined) hintEl.textContent = String(hint);
+  if(hintEl && hint !== undefined) if(hintEl) hintEl.textContent = String(hint);
 }
 
 /*** ✅ validar sesión/token antes de cargar panel ***/
@@ -1023,7 +1030,7 @@ async function refreshSessionMeta(){
 
   const token = localStorage.token;
   if(!token){
-    meta.textContent = "Administrador · Sesión no iniciada";
+    if(meta) meta.textContent = "Administrador · Sesión no iniciada";
     return;
   }
   try{
@@ -1032,14 +1039,14 @@ async function refreshSessionMeta(){
       headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
     });
     if(!r.ok){
-      meta.textContent = "Administrador · Sesión no iniciada";
+      if(meta) meta.textContent = "Administrador · Sesión no iniciada";
       return;
     }
     const u = await r.json().catch(()=>null);
     const email = u?.email || u?.user_metadata?.email || "admin";
-    meta.textContent = `Administrador · ${email} · Última actualización: ${new Date().toLocaleTimeString("es-GT")}`;
+    if(meta) meta.textContent = `Administrador · ${email} · Última actualización: ${new Date().toLocaleTimeString("es-GT")}`;
   }catch(e){
-    meta.textContent = `Administrador · Sesión iniciada`;
+    if(meta) meta.textContent = `Administrador · Sesión iniciada`;
     console.error(e);
   }
 }
@@ -1055,9 +1062,9 @@ function openConfirm({title, message, okText}){
     // fallback
     return Promise.resolve(window.confirm((title? (title+"\n\n"):"") + String(message||"")));
   }
-  t.textContent = title || "Confirmación";
-  msg.innerHTML = message || "¿Confirma esta acción?";
-  okBtn.textContent = okText || "Confirmar";
+  if(t) t.textContent = title || "Confirmación";
+  if(msg) msg.innerHTML = message || "¿Confirma esta acción?";
+  if(okBtn) okBtn.textContent = okText || "Confirmar";
   show(m, true);
 
   return new Promise((resolve)=>{
@@ -1073,7 +1080,7 @@ function closeConfirm(result){
 window.closeConfirm = closeConfirm;
 
 // cerrar al click fuera
-document.addEventListener("click", (e)=>{
+safeAdd(document,"click", (e)=>{
   const m = $("modalConfirm");
   if(!m || m.classList.contains("hidden")) return;
   if(e.target === m) closeConfirm(false);
@@ -1103,8 +1110,8 @@ async function refreshKPIs(){
     const wrows = await rw.json();
 
     const pendingW = (wrows||[]).filter(r=> String(r.status||"").toLowerCase()==="pending").length;
-    kW.textContent = pendingW;
-    if(kWHint) kWHint.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-GT")}`;
+    if(kW) kW.textContent = pendingW;
+    if(kWHint) if(kWHint) kWHint.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-GT")}`;
 
     // topups pending + programadas (effective_date != null) aunque status sea pending
     const rt = await fetch(`${BASE}/topups?select=id,status,created_at,effective_date&limit=800`, { headers:h, cache:"no-store" });
@@ -1116,21 +1123,21 @@ async function refreshKPIs(){
       const scheduled = !!r.effective_date;
       return s==="pending" || scheduled;
     }).length;
-    kT.textContent = pendingT;
+    if(kT) kT.textContent = pendingT;
 
     // ops 24h
     const since = Date.now() - 24*60*60*1000;
     const ops =
       (wrows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length +
       (trows||[]).filter(r=> r.created_at && (new Date(r.created_at).getTime() >= since)).length;
-    kO.textContent = ops;
+    if(kO) kO.textContent = ops;
 
     if(kWrap) show(kWrap, true);
   }catch(err){
     console.error("[KPI DEBUG]", err);
-    kW.textContent = "—";
-    kT.textContent = "—";
-    kO.textContent = "—";
+    if(kW) kW.textContent = "—";
+    if(kT) kT.textContent = "—";
+    if(kO) kO.textContent = "—";
     if(kWrap) show(kWrap, true);
   }
 }
@@ -1158,19 +1165,19 @@ function parseCapitalFromInput(val){
 }
 function bindCapitalFormatter(inputEl){
   if(!inputEl) return;
-  inputEl.addEventListener("input", () => {
+  safeAdd(inputEl,"input", () => {
     const pos = inputEl.selectionStart ?? inputEl.value.length;
     const before = inputEl.value;
     const rawNoCommas = before.replace(/,/g, "");
-    inputEl.value = formatCapitalString(rawNoCommas);
+    if(inputEl) inputEl.value = formatCapitalString(rawNoCommas);
     const diff = inputEl.value.length - before.length;
     const newPos = Math.max(0, pos + diff);
     const newPosSafe = Math.min(newPos, inputEl.value.length);
     const ss = inputEl.setSelectionRange;
     if (typeof ss === "function") ss.call(inputEl, newPosSafe, newPosSafe);
   });
-  inputEl.addEventListener("blur", () => {
-    if (!inputEl.value.replace(/[^\d]/g, "")) inputEl.value = "0";
+  safeAdd(inputEl,"blur", () => {
+    if (!inputEl.value.replace(/[^\d]/g, "")) if(inputEl) inputEl.value = "0";
   });
 }
 function setCapitalInputValue(n){
@@ -1308,7 +1315,7 @@ async function getAuthUserByEmail(email){
 let CACHED = [];
 async function listUsers(){
   const msgEl = $("usersMsg");
-  if(msgEl) msgEl.textContent = "";
+  if(msgEl) if(msgEl) msgEl.textContent = "";
 
   const h = {
     apikey: ANON_KEY,
@@ -1324,7 +1331,7 @@ async function listUsers(){
 
     if (r.ok) {
       CACHED = await r.json();
-      if(msgEl) msgEl.textContent = `Clientes cargados: ${CACHED.length}`;
+      if(msgEl) if(msgEl) msgEl.textContent = `Clientes cargados: ${CACHED.length}`;
       renderUsers(CACHED);
       refreshResetPicker();
       refreshWithdrawPicker();
@@ -1333,10 +1340,10 @@ async function listUsers(){
 
     const t = await r.text().catch(()=> "");
     console.error("v_admin_users_filtered error:", r.status, t);
-    if(msgEl) msgEl.textContent = `No se pudo cargar la vista (HTTP ${r.status}). Probando método alterno…`;
+    if(msgEl) if(msgEl) msgEl.textContent = `No se pudo cargar la vista (HTTP ${r.status}). Probando método alterno…`;
 
     CACHED = await loadUsersViaJoinFallback(h);
-    if(msgEl) msgEl.textContent = `Clientes cargados (fallback): ${CACHED.length}`;
+    if(msgEl) if(msgEl) msgEl.textContent = `Clientes cargados (fallback): ${CACHED.length}`;
     renderUsers(CACHED);
     refreshResetPicker();
     refreshWithdrawPicker();
@@ -1348,7 +1355,7 @@ async function listUsers(){
     }
   }catch(e){
     console.error(e);
-    if(msgEl) msgEl.textContent = "Error cargando clientes (revisa conexión, permisos o RLS).";
+    if(msgEl) if(msgEl) msgEl.textContent = "Error cargando clientes (revisa conexión, permisos o RLS).";
     CACHED = [];
     renderUsers(CACHED);
     refreshResetPicker();
@@ -1395,11 +1402,11 @@ async function loadUsersViaJoinFallback(h){
 
 function renderUsers(rows){
   const tb = $("users");
-  tb.innerHTML = "";
+  if(tb) tb.innerHTML = "";
 
   if(!rows || !rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="4" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
+    if(tr) tr.innerHTML = `<td colspan="4" class="small">No hay clientes para mostrar (o no se pudieron cargar).</td>`;
     tb.appendChild(tr);
     return;
   }
@@ -1423,7 +1430,7 @@ function renderUsers(rows){
 
   list.forEach(u=>{
     const tr = document.createElement("tr");
-    tr.innerHTML = `
+    if(tr) tr.innerHTML = `
       <td>${escapeHtml(u.full_name ?? '—')}</td>
       <td>${escapeHtml(u.email ?? '—')}</td>
       <td>${escapeHtml(u.phone ?? '—')}</td>
@@ -1445,19 +1452,19 @@ function openClientAccounts(userId){
   if(titleEl){
     const n = rows[0]?.full_name || "Cliente";
     const em = rows[0]?.email ? ` · ${rows[0].email}` : "";
-    titleEl.textContent = `Cuentas de ${n}${em}`;
+    if(titleEl) titleEl.textContent = `Cuentas de ${n}${em}`;
   }
 
   if(tb){
-    tb.innerHTML = "";
+    if(tb) tb.innerHTML = "";
     if(!rows.length){
-      tb.innerHTML = `<tr><td colspan="9" class="small">Este cliente no tiene cuentas.</td></tr>`;
+      if(tb) tb.innerHTML = `<tr><td colspan="9" class="small">Este cliente no tiene cuentas.</td></tr>`;
     }else{
       sortAccountsStable(rows).forEach((a, i)=>{
         const accId = (a.account_id || a.id || "");
         const noRaw = (a.account_no ?? (i+1));
         const no = getStableAccountNo(userId, accId, noRaw);const tr = document.createElement("tr");
-        tr.innerHTML = `
+        if(tr) tr.innerHTML = `
           <td class="nowrap">Cuenta No. ${escapeHtml(String(no))}</td>
           <td>${escapeHtml(a.plan ?? '—')}</td>
           <td>${fmtMoney(a.capital, a.currency)}</td>
@@ -1515,8 +1522,8 @@ async function deleteAccount(acc){
     alert("Cuenta eliminada.");
     // Si la cuenta eliminada era la seleccionada en el formulario, limpiar selección
     const sel = $("u_account_sel");
-    if(sel && sel.value === accountId){
-      sel.value = "";
+    if(sel && if(sel) sel.value === accountId){
+      if(sel) sel.value = "";
       $("u_account_id") && ($("u_account_id").value = "");
     }
   }catch(err){
@@ -1544,29 +1551,29 @@ function refreshWithdrawPicker(){
   const msg = $("wdMsg");
   if(!sel) return;
 
-  if(msg) msg.textContent = "";
-  sel.innerHTML = "";
+  if(msg) if(msg) msg.textContent = "";
+  if(sel) sel.innerHTML = "";
 
   const rows = (CACHED||[]).filter(x=>x.account_id && (x.email || x.full_name));
   if(!rows.length){
     const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "No hay clientes cargados";
+    if(opt) opt.value = "";
+    if(opt) opt.textContent = "No hay clientes cargados";
     sel.appendChild(opt);
-    if(hint) hint.textContent = "—";
+    if(hint) if(hint) hint.textContent = "—";
     return;
   }
 
   const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = "Selecciona una cuenta";
+  if(opt0) opt0.value = "";
+  if(opt0) opt0.textContent = "Selecciona una cuenta";
   sel.appendChild(opt0);
 
   rows.forEach(x=>{
     const opt = document.createElement("option");
-    opt.value = x.account_id;
+    if(opt) opt.value = x.account_id;
     const name = (x.full_name || x.email || "—");
-    opt.textContent = `${name} — ${x.email || "—"} — Capital: ${fmtMoney(x.capital, x.currency || "GTQ")}`;
+    if(opt) opt.textContent = `${name} — ${x.email || "—"} — Capital: ${fmtMoney(x.capital, x.currency || "GTQ")}`;
     opt.dataset.capital = String(x.capital ?? 0);
     opt.dataset.currency = x.currency || "GTQ";
     opt.dataset.name = x.full_name || "";
@@ -1575,12 +1582,12 @@ function refreshWithdrawPicker(){
     sel.appendChild(opt);
   });
 
-  if(hint) hint.textContent = "Selecciona una cuenta para ver el capital y retirar.";
+  if(hint) if(hint) hint.textContent = "Selecciona una cuenta para ver el capital y retirar.";
 
   // ✅ Reutilizar el mismo listado para "Acreditar capital"
   const capSel = $("capAccount");
   if(capSel){
-    capSel.innerHTML = sel.innerHTML;
+    if(capSel) capSel.innerHTML = sel.innerHTML;
     if(!capSel.value && capSel.options.length) capSel.selectedIndex = 0;
     updateCapHint();
   }
@@ -1595,14 +1602,14 @@ function updateCapHint(){
 
   const opt = sel.options[sel.selectedIndex];
   if(!opt || !opt.value){
-    hint.textContent = "—";
+    if(hint) hint.textContent = "—";
     return;
   }
 
   const cap = Number(opt.dataset.capital || 0);
   const cur = opt.dataset.currency || "GTQ";
   const name = opt.dataset.name || opt.dataset.email || "—";
-  hint.textContent = `${name} — Capital actual: ${fmtMoney(cap, cur)}. El monto acreditado se sumará al capital.`;
+  if(hint) hint.textContent = `${name} — Capital actual: ${fmtMoney(cap, cur)}. El monto acreditado se sumará al capital.`;
 }
 
 function updateWithdrawHint(){
@@ -1617,10 +1624,10 @@ function updateWithdrawHint(){
   const ccy = opt?.dataset?.currency || "GTQ";
 
   if(!sel.value){
-    hint.textContent = "—";
+    if(hint) hint.textContent = "—";
     return;
   }
-  hint.innerHTML = `<b>${name || "Cliente"}</b> — ${email || "—"}<br>Capital actual: <b>${fmtMoney(cap, ccy)}</b>`;
+  if(hint) hint.innerHTML = `<b>${name || "Cliente"}</b> — ${email || "—"}<br>Capital actual: <b>${fmtMoney(cap, ccy)}</b>`;
 }
 
 async function doWithdraw(){
@@ -1630,13 +1637,13 @@ async function doWithdraw(){
   const reference = ($("wdRef")?.value || "").trim() || null;
   const note = ($("wdNote")?.value || "").trim() || null;
 
-  if(msg) msg.textContent = "";
+  if(msg) if(msg) msg.textContent = "";
   if(!sel?.value){
-    if(msg) msg.textContent = "Selecciona una cuenta.";
+    if(msg) if(msg) msg.textContent = "Selecciona una cuenta.";
     return;
   }
   if(!amount || amount <= 0){
-    if(msg) msg.textContent = "Monto inválido.";
+    if(msg) if(msg) msg.textContent = "Monto inválido.";
     return;
   }
 
@@ -1646,7 +1653,7 @@ async function doWithdraw(){
   const who = opt?.textContent?.split("—")?.[0]?.trim() || "cliente";
 
   if(amount > cap){
-    if(msg) msg.textContent = `Fondos insuficientes. Capital actual: ${fmtMoney(cap, ccy)}`;
+    if(msg) if(msg) msg.textContent = `Fondos insuficientes. Capital actual: ${fmtMoney(cap, ccy)}`;
     return;
   }
 
@@ -1663,7 +1670,7 @@ async function doWithdraw(){
   if(!ok) return;
 
   const btn = $("btnWithdraw");
-  if(btn){ btn.disabled = true; btn.textContent = "Procesando..."; }
+  if(btn){ btn.disabled = true; if(btn) btn.textContent = "Procesando..."; }
 
   try{
     const r = await fetch(`${RPC}/withdraw_capital`,{
@@ -1686,7 +1693,7 @@ async function doWithdraw(){
     try{ data = await r.json(); }catch{ data = null; }
     const newCap = data?.[0]?.new_capital;
 
-    if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
+    if(msg) if(msg) msg.textContent = `✅ Retiro aplicado. Nuevo capital: ${fmtMoney(newCap ?? (cap-amount), ccy)}`;
 
     await listUsers();
     await refreshKPIs();
@@ -1696,7 +1703,7 @@ async function doWithdraw(){
     if($("wdNote")) $("wdNote").value = "";
   }catch(e){
     console.error(e);
-    if(msg) msg.textContent = `❌ Error: ${e.message || e}`;
+    if(msg) if(msg) msg.textContent = `❌ Error: ${e.message || e}`;
     await openConfirm({
       title:"No se pudo retirar",
       message:`<div style="color:#FFD0D0;font-weight:950;margin-bottom:6px">Operación no aplicada</div>
@@ -1705,14 +1712,14 @@ async function doWithdraw(){
     });
     closeConfirm(false);
   }finally{
-    if(btn){ btn.disabled = false; btn.textContent = "Retirar"; }
+    if(btn){ btn.disabled = false; if(btn) btn.textContent = "Retirar"; }
   }
 }
 
 
 async function doAccreditCapital(){
   const msgEl = $("capMsg");
-  if(msgEl) msgEl.textContent = "";
+  if(msgEl) if(msgEl) msgEl.textContent = "";
 
   try{
     const token = getToken();
@@ -1749,13 +1756,13 @@ async function doAccreditCapital(){
 
     if(!r.ok) await mustOk(r, "acreditar capital");
 
-    if(msgEl) msgEl.textContent = "✅ Capital acreditado.";
+    if(msgEl) if(msgEl) msgEl.textContent = "✅ Capital acreditado.";
     // refrescar datos visibles
     await listUsers();
     refreshWithdrawPicker();
   }catch(err){
     console.error(err);
-    if(msgEl) msgEl.textContent = "❌ " + (err?.message || "Error");
+    if(msgEl) if(msgEl) msgEl.textContent = "❌ " + (err?.message || "Error");
     alert("No se pudo acreditar: " + (err?.message || "Error"));
   }
 }
@@ -1807,7 +1814,7 @@ async function loadWithdrawHistory(){
   }
 
 const msg = $("withdrawHistoryMsg");
-  if(msg) msg.textContent = "";
+  if(msg) if(msg) msg.textContent = "";
 
   const h = {
     apikey: ANON_KEY,
@@ -1838,7 +1845,7 @@ const msg = $("withdrawHistoryMsg");
     renderWithdrawHistory(rows, accMap, profMap);
   }catch(err){
     console.error("loadWithdrawHistory error", err);
-    if(msg) msg.textContent = `No se pudo cargar el historial. (${err.message||err})`;
+    if(msg) if(msg) msg.textContent = `No se pudo cargar el historial. (${err.message||err})`;
     renderWithdrawHistory([], new Map(), new Map());
   }
 }
@@ -1846,11 +1853,11 @@ const msg = $("withdrawHistoryMsg");
 function renderWithdrawHistory(){
   const body = $("wdhBody");
   if(!body) return;
-  body.innerHTML = "";
+  if(body) body.innerHTML = "";
 
   if(!WDH_CACHE.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="small">No hay retiros para mostrar.</td>`;
+    if(tr) tr.innerHTML = `<td colspan="6" class="small">No hay retiros para mostrar.</td>`;
     body.appendChild(tr);
     return;
   }
@@ -1860,7 +1867,7 @@ function renderWithdrawHistory(){
     const ccy = cli.currency || "GTQ";
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `
+    if(tr) tr.innerHTML = `
       <td class="nowrap">${fmtDateTime(w.created_at)}</td>
       <td>${cli.name}</td>
       <td>${cli.email}</td>
@@ -2194,7 +2201,7 @@ async function fetchProfiles(userIds, h){
 
 async function listTopups(){
   const msgEl = $("topupsMsg");
-  if(msgEl) msgEl.textContent = "";
+  if(msgEl) if(msgEl) msgEl.textContent = "";
   clearGlobalError();
 
   const h = {
@@ -2213,7 +2220,7 @@ async function listTopups(){
   if(!r.ok){
     const t = await r.text().catch(()=> "");
     console.error("listTopups error:", r.status, t);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar recargas (revisa conexión o permisos).";
+    if(msgEl) if(msgEl) msgEl.textContent = "No se pudieron cargar recargas (revisa conexión o permisos).";
     showGlobalError("No se pudieron cargar recargas", t || r.status);
     if(r.status === 401 || r.status === 403){
       localStorage.removeItem("token");
@@ -2253,7 +2260,7 @@ async function listTopups(){
 
   renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
 
-  if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + programadas por fecha)`;
+  if(msgEl) if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + programadas por fecha)`;
 
   await refreshKPIs();
   await refreshSessionMeta();
@@ -2303,7 +2310,7 @@ function nextCycleStartISO(joinedAt){
 function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
   const tb = $("topups");
   if(!tb) return;
-  tb.innerHTML = "";
+  if(tb) tb.innerHTML = "";
 
   const BUCKET = "topup-receipts";
 
@@ -2344,7 +2351,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
     const defNextCycle = nextCycleStartISO(joined);
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `
+    if(tr) tr.innerHTML = `
       <td class="nowrap">${date}</td>
       <td>${name}</td>
       <td>${email}</td>
@@ -2376,7 +2383,7 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="10" class="small">No hay recargas pendientes.</td>`;
+    if(tr) tr.innerHTML = `<td colspan="10" class="small">No hay recargas pendientes.</td>`;
     tb.appendChild(tr);
   }
 }
@@ -2686,7 +2693,7 @@ async function loadProfilesByIds(ids){
 function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
-  body.innerHTML = "";
+  if(body) body.innerHTML = "";
 
   (rows||[]).forEach(r=>{
     // Fallback por compatibilidad
@@ -2703,7 +2710,7 @@ function renderWithdrawRequests(rows, profileMap){
     const accountType = r.account_type ?? "—";
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `
+    if(tr) tr.innerHTML = `
       <td>${r.created_at ? new Date(r.created_at).toLocaleString("es-GT") : "—"}</td>
       <td>${escapeHtml(clientName)}</td>
       <td>${escapeHtml(clientEmail)}</td>
@@ -2731,7 +2738,7 @@ function renderWithdrawRequests(rows, profileMap){
 
 async function listWithdrawRequests(){
   const msgEl = $("withdrawReqsMsg");
-  if(msgEl) msgEl.textContent = "";
+  if(msgEl) if(msgEl) msgEl.textContent = "";
 
   const h = {
     apikey: ANON_KEY,
@@ -2773,7 +2780,7 @@ async function listWithdrawRequests(){
 
   }catch(err){
     console.error("listWithdrawRequests error", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
+    if(msgEl) if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
     renderWithdrawRequests([], new Map());
   }
 }
@@ -2921,7 +2928,7 @@ async function loadAccountsUI(userId, preferredAccountId){
   $("u_user_id").value = userId || "";
   const sel = $("u_account_sel");
   if(!sel) return;
-  sel.innerHTML = "";
+  if(sel) sel.innerHTML = "";
   const accs = await fetchAccountsByUser(userId);
   // ✅ orden estable para que 'Cuenta No. X' nunca cambie
   const ordered = sortAccountsStable(accs);
@@ -2932,8 +2939,8 @@ async function loadAccountsUI(userId, preferredAccountId){
     const accId = (a.account_id || a.id || "");
     const noRaw = (a.account_no ?? (i+1));
     const no = getStableAccountNo(userId, accId, noRaw);
-    opt.value = accId;
-    opt.textContent = `Cuenta No. ${no}`;
+    if(opt) opt.value = accId;
+    if(opt) opt.textContent = `Cuenta No. ${no}`;
     sel.appendChild(opt);
   });
   // elegir
@@ -2943,7 +2950,7 @@ async function loadAccountsUI(userId, preferredAccountId){
     if(f) chosen = f;
   }
   if(chosen){
-    sel.value = (chosen.account_id || chosen.id || "");
+    if(sel) sel.value = (chosen.account_id || chosen.id || "");
     fillAccountFields(chosen);
     // ✅ corregir tipo de cuenta si el RPC no lo trae o viene contaminado
     ensureBankAccountType((chosen.account_id || chosen.id || "")).catch(()=>{});
@@ -2952,7 +2959,7 @@ async function loadAccountsUI(userId, preferredAccountId){
   }
 }
 
-document.addEventListener("change", (e)=>{
+safeAdd(document,"change", (e)=>{
   if(e.target && e.target.id==="u_account_sel"){
     const uid = $("u_user_id").value;
     const accs = _accountsCacheByUser.get(uid) || [];
@@ -2987,7 +2994,7 @@ async function addNewAccountForCurrentUser(){
     if(btn) btn.disabled = false;
   }
 }
-document.addEventListener("click", (e)=>{
+safeAdd(document,"click", (e)=>{
   if(e.target && e.target.id==="btnAddAccount"){
     e.preventDefault();
     addNewAccountForCurrentUser();
@@ -3085,11 +3092,11 @@ async function ensureBankAccountType(accountId){
     // Solo sobreescribir si la DB trae un valor real
     const dbVal = row && row.bank_account_type != null ? String(row.bank_account_type || "").trim() : "";
     if(dbVal){
-      el.value = dbVal;
+      if(el) el.value = dbVal;
     }else{
       // Si la DB no tiene nada, mantenemos lo que el usuario ya tenía (aunque sea vacío)
       // y NO colocamos "STANDARD" ni nada.
-      if(["STANDARD","PLATINUM","BLACK"].includes(upper)) el.value = "";
+      if(["STANDARD","PLATINUM","BLACK"].includes(upper)) if(el) el.value = "";
     }
 
     // Si existe account_no en DB, también lo fijamos en UI/caché
@@ -3134,7 +3141,7 @@ $("u_rate").addEventListener("input", validateRatePlan);
 /*** Guardar ***/
 async function saveUser(){
   const msgEl = $("saveMsg");
-  if(msgEl) msgEl.textContent = "";
+  if(msgEl) if(msgEl) msgEl.textContent = "";
 
   // ----- leer formulario
   const email    = ($("u_email")?.value || "").trim().toLowerCase();
@@ -3220,7 +3227,7 @@ async function saveUser(){
       throw new Error(out?.error || "No se pudo crear el usuario");
     }
 
-    if(msgEl) msgEl.textContent = "Cliente creado";
+    if(msgEl) if(msgEl) msgEl.textContent = "Cliente creado";
     _accountsCacheByUser.delete(out.user_id);
     await listUsers();
     await refreshKPIs();
@@ -3273,7 +3280,7 @@ async function saveUser(){
     });
     if(!rAcc.ok) await mustOk(rAcc, "actualizar cuenta seleccionada");
 
-    if(msgEl) msgEl.textContent = "Guardado";
+    if(msgEl) if(msgEl) msgEl.textContent = "Guardado";
     _accountsCacheByUser.delete(uid);
     await listUsers();
     await refreshKPIs();
@@ -3283,7 +3290,7 @@ async function saveUser(){
   } catch(err){
     console.error(err);
     const msg = String(err?.message || err);
-    if(msgEl) msgEl.textContent = msg;
+    if(msgEl) if(msgEl) msgEl.textContent = msg;
     if(msg.includes("JWT expired")){
       logout?.();
       alert("Tu sesión expiró. Inicia sesión de nuevo.");
@@ -3340,29 +3347,29 @@ function refreshResetPicker(){
   const sel = $("resetPick");
   if(!sel) return;
 
-  sel.innerHTML = "";
+  if(sel) sel.innerHTML = "";
   const rows = (CACHED||[]).filter(x=>x.email && x.user_id);
 
   if(!rows.length){
     const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "No hay clientes cargados";
+    if(opt) opt.value = "";
+    if(opt) opt.textContent = "No hay clientes cargados";
     sel.appendChild(opt);
     return;
   }
 
   rows.forEach(x=>{
     const opt = document.createElement("option");
-    opt.value = x.user_id;
-    opt.textContent = `${x.full_name || x.email} — ${x.email}`;
+    if(opt) opt.value = x.user_id;
+    if(opt) opt.textContent = `${x.full_name || x.email} — ${x.email}`;
     opt.dataset.email = x.email || "";
     sel.appendChild(opt);
   });
 
   if(RESET_CTX?.user_id){
-    sel.value = RESET_CTX.user_id;
+    if(sel) sel.value = RESET_CTX.user_id;
   } else {
-    sel.value = rows[0].user_id;
+    if(sel) sel.value = rows[0].user_id;
   }
 
   syncResetCtxFromPicker();
@@ -3526,7 +3533,7 @@ async function initApp(){
 }
 
 /*** BINDINGS ***/
-document.addEventListener("DOMContentLoaded", ()=>{
+safeAdd(document,"DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
   $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
@@ -3571,7 +3578,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnPrintWithdrawHistory")?.addEventListener("click", printWithdrawalsPDF);
   $("btnDeleteWithdrawalsShown")?.addEventListener("click", deleteWithdrawalsShown);
 
-  document.addEventListener("keydown", (e)=>{
+  safeAdd(document,"keydown", (e)=>{
     if(e.key === "Escape"){
       try{ closeResetModal(); }catch{}
       try{ closeScheduleTopupModal(); }catch{}
@@ -3595,10 +3602,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
   };
 
   // 1) Errores JS
-  window.addEventListener('error', (e)=>{
+  safeAdd(window,'error', (e)=>{
     push('js_error', {message: e.message, filename: e.filename, lineno: e.lineno, colno: e.colno, stack: (e.error && e.error.stack) || null});
   });
-  window.addEventListener('unhandledrejection', (e)=>{
+  safeAdd(window,'unhandledrejection', (e)=>{
     const r = e.reason;
     push('unhandled_rejection', {message: (r && (r.message||r.error_description||r.error)) || String(r), stack: r && r.stack});
   });
@@ -3650,7 +3657,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   };
 
   // Atajo: Ctrl+Shift+D descarga
-  window.addEventListener('keydown', (e)=>{
+  safeAdd(window,'keydown', (e)=>{
     if(e.ctrlKey && e.shiftKey && (e.key==='D' || e.key==='d')){
       e.preventDefault();
       window.FX_DEBUG.download();
@@ -3663,7 +3670,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const capDate = $("capDate");
   if(capDate && !capDate.value){
     const today = new Date();
-    capDate.value = today.toISOString().slice(0,10);
+    if(capDate) capDate.value = today.toISOString().slice(0,10);
   }
 
 });
