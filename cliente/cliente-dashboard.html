@@ -521,55 +521,37 @@
 }
 
 
-  /* ✅ Badge tipo de cuenta (PLATINUM-style) */
-  .type-badge{
+  /* ===== Chip / Badge (tipo de cuenta) ===== */
+  .chip{
     display:inline-flex;
     align-items:center;
     gap:8px;
-    padding:7px 12px;
+    padding:6px 12px;
     border-radius:999px;
-    font-size:12px;
     font-weight:900;
-    letter-spacing:.2px;
-    border:1px solid rgba(255,255,255,.22);
-    background:
-      radial-gradient(160% 220% at 30% 0%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 55%),
-      linear-gradient(180deg, #ffffff 0%, #e7edf7 55%, #d4dbea 100%);
-    color:#0b0c0e;
-    box-shadow:
-      0 14px 36px rgba(0,0,0,.35),
-      0 0 0 5px rgba(255,255,255,.06),
-      inset 0 1px 0 rgba(255,255,255,.92);
-    white-space:nowrap;
-    max-width:100%;
-  }
-  .type-badge::before{
-    content:"◈";
-    width:18px;height:18px;border-radius:8px;
-    display:grid;place-items:center;
-    background:rgba(0,0,0,.08);
-    border:1px solid rgba(0,0,0,.10);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.70);
     font-size:12px;
-    line-height:1;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow: 0 10px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    vertical-align:middle;
+    user-select:none;
   }
-  .type-badge.small{ padding:6px 10px; font-size:11.5px; }
-  .type-badge.small::before{ width:16px; height:16px; border-radius:7px; font-size:11px; }
-
-  /* Variantes sutiles */
-  .type-badge.monthly{
-    background:
-      radial-gradient(160% 220% at 30% 0%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%),
-      linear-gradient(180deg, #ffffff 0%, #eef2f9 55%, #dde3f0 100%);
+  .chip .dot{
+    width:10px;height:10px;border-radius:50%;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.18), 0 10px 18px rgba(0,0,0,.35);
+    background: rgba(255,255,255,.85);
   }
-  .type-badge.compound{
-    background:
-      radial-gradient(160% 220% at 30% 0%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 55%),
-      linear-gradient(180deg, #ffffff 0%, #eefbf8 55%, #d2f4ee 100%);
+  .chip--mensual{
+    background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
   }
-  .type-badge.compound::before{ content:"⧉"; }
-  .type-badge.monthly::before{ content:"≋"; }
-
+  .chip--acumulado{
+    background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+  }
+  .chip--muted{ opacity:.9; }
+  .chip-inline{ margin-left:10px; }
 
 </style>
 </head>
@@ -612,7 +594,8 @@
         <div class="grid cols-3">
           <div class="card group"><span class="k">Nombre</span><span id="valName" class="v">—</span></div>
           <div class="card group"><span class="k">Apertura de cuenta</span><span id="valOpenDate" class="v">—</span></div>
-          <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span><div style="margin-top:10px"><span id="badgeAccountType" class="type-badge monthly">—</span></div></div>
+          <div class="card group"><span class="k">Plan</span><span id="valPlan" class="v">—</span><span id="badgeAccountType" class="chip chip--muted chip--mensual chip-inline" style="display:none;"><span class="dot"></span><span id="badgeAccountTypeText">—</span></span></div>
+          <div class="card group"><span class="k">Tipo de cuenta</span><span id="valAccountType" class="v">—</span></div>
 
           <div class="card group"><span class="k">Moneda</span><span id="valCurrency" class="v">—</span></div>
           <div class="card group"><span class="k">Cuenta</span><div class="v" style="display:flex;flex-direction:column;gap:6px"><select id="accountPicker" class="account-select" aria-label="Seleccionar cuenta"></select><span id="valAccountId" class="muted" style="font-size:12px;opacity:.85">—</span></div></div>
@@ -639,10 +622,7 @@
         </section>
 
         <section class="panel section gray" style="margin-top:18px">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px 0">
-            <h2 style="margin:0">Estado de cuenta</h2>
-            <span id="badgeAccountTypeStmt" class="type-badge small monthly">—</span>
-          </div>
+          <h2 style="margin:0 0 10px 0">Estado de cuenta <span id="stmtTypeBadge" class="chip chip--muted chip--mensual" style="margin-left:10px;display:none;"><span class="dot"></span><span id="stmtTypeBadgeText">—</span></span></h2>
           <div class="muted" id="stmtRange">—</div>
 
           <div style="overflow:auto;margin-top:8px">
@@ -973,34 +953,6 @@
     }
   };
 
-  // ✅ Tipo de cuenta (Pago mensual vs Pago acumulado) + badges
-  function accountTypeInfo(acc){
-    const isCompound = !!(acc && acc.compound_interest);
-    return {
-      isCompound,
-      label: isCompound ? 'Pago acumulado' : 'Pago mensual',
-      css: isCompound ? 'compound' : 'monthly'
-    };
-  }
-
-  function paintAccountTypeBadges(acc){
-    const info = accountTypeInfo(acc);
-
-    const b1 = document.getElementById('badgeAccountType');
-    if(b1){
-      b1.textContent = info.label;
-      b1.classList.remove('monthly','compound');
-      b1.classList.add(info.css);
-    }
-
-    const b2 = document.getElementById('badgeAccountTypeStmt');
-    if(b2){
-      b2.textContent = info.label;
-      b2.classList.remove('monthly','compound');
-      b2.classList.add(info.css);
-    }
-  }
-
   /* ==========================================
      ✅ ZONA HORARIA AMARRADA A GUATEMALA
   ========================================== */
@@ -1075,6 +1027,42 @@
   let CURRENT_USER_EMAIL = '';
   let CURRENT_ACCOUNT_ID = null;
   let CURRENT_ACCOUNTS = [];
+
+  /* ============================================================
+     ✅ UI: Tipo de cuenta (badge + texto)
+     - Pago mensual: compound_interest = false
+     - Pago acumulado: compound_interest = true
+     (No altera cálculos, solo UI)
+  ============================================================ */
+  function getAccountTypeLabel(acc){
+    return acc?.compound_interest ? 'Pago acumulado' : 'Pago mensual';
+  }
+  function applyAccountTypeUI(acc){
+    const label = getAccountTypeLabel(acc);
+    const isAcc = !!acc?.compound_interest;
+
+    const valType = document.getElementById('valAccountType');
+    if(valType) valType.textContent = label;
+
+    const badge = document.getElementById('badgeAccountType');
+    const badgeTxt = document.getElementById('badgeAccountTypeText');
+    if(badge && badgeTxt){
+      badgeTxt.textContent = label;
+      badge.style.display = 'inline-flex';
+      badge.classList.toggle('chip--acumulado', isAcc);
+      badge.classList.toggle('chip--mensual', !isAcc);
+    }
+
+    const sBadge = document.getElementById('stmtTypeBadge');
+    const sBadgeTxt = document.getElementById('stmtTypeBadgeText');
+    if(sBadge && sBadgeTxt){
+      sBadgeTxt.textContent = label;
+      sBadge.style.display = 'inline-flex';
+      sBadge.classList.toggle('chip--acumulado', isAcc);
+      sBadge.classList.toggle('chip--mensual', !isAcc);
+    }
+  }
+
 
   async function forceLogout(){
     try {
@@ -1273,6 +1261,9 @@
     const monthlyRate = semRate/6;
     const isCompound = !!acc.compound_interest;
 
+    // ✅ Mostrar tipo de cuenta (badge + texto)
+    applyAccountTypeUI(acc);
+
     const initialCapital = deriveInitialCapital(acc, approvedTopups||[]);
     const buckets = buildTopupBuckets(periods, approvedTopups||[]);
 
@@ -1327,10 +1318,9 @@
 
     const note = document.getElementById('stmtNote');
     if(note){
-      const info = accountTypeInfo(acc);
-      note.innerHTML = `Tipo de cuenta: <b>${info.label}</b>. ` + (isCompound
+      note.innerHTML = isCompound
         ? `Modo: <b>Interés acumulado</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula siempre sobre el <b>capital base</b> del mes (no sobre el saldo). El <b>Saldo</b> refleja capital + intereses acumulados al cierre (si el cierre cae sábado/domingo, cambia hasta el lunes).`
-        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`);
+        : `Modo: <b>Pago mensual</b>. El <b>Capital inicio</b> se actualiza desde el mes en que entra una recarga. El <b>Interés (beneficio)</b> se calcula sobre el capital del mes, pero el <b>Saldo</b> no se acumula (se mantiene como capital). Al concluir el mes, el estado se muestra como <b>Pagado</b> automáticamente (si el cierre cae sábado/domingo, cambia a Pagado hasta el lunes).`;
     }
   }
 
@@ -1900,13 +1890,36 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
     }
     const uid = session.user.id;
 
-    const [profRes, accRes] = await Promise.all([
-      sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
-      sb.from('accounts')
-        .select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital')
-        .eq('user_id',uid)
-        .order('joined_at', { ascending:true })
-    ]);
+    let profRes, accRes;
+    for(let attempt=0; attempt<2; attempt++){
+      [profRes, accRes] = await Promise.all([
+        sb.from('profiles').select('full_name,email,must_change_password').eq('id',uid).single(),
+        sb.from('accounts')
+          .select('id,plan,currency,capital,invest_months,interest_pct,joined_at,compound_interest,initial_capital')
+          .eq('user_id',uid)
+          .order('joined_at', { ascending:true })
+      ]);
+
+      const any401 =
+        (profRes?.error && (profRes.status === 401 || profRes.error?.status === 401)) ||
+        (accRes?.error  && (accRes.status  === 401 || accRes.error?.status  === 401));
+
+      if(any401 && attempt === 0){
+        try{ await sb.auth.refreshSession(); }catch(e){}
+        continue;
+      }
+      break;
+    }
+
+    if(profRes?.error) console.warn('profiles load error:', profRes.error?.message || profRes.error);
+    if(accRes?.error){
+      console.warn('accounts load error:', accRes.error?.message || accRes.error);
+      // Si sigue en 401, obligamos re-login para recuperar tokens
+      if(accRes.status === 401 || accRes.error?.status === 401){
+        await forceLogout();
+        return;
+      }
+    }
 
     const prof = profRes?.data || null;
     const accounts = Array.isArray(accRes?.data) ? accRes.data : [];
@@ -1991,9 +2004,6 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
       const pl = document.getElementById('valPlan'); if(pl) pl.textContent = acc?.plan || '—';
       const cu = document.getElementById('valCurrency'); if(cu) cu.textContent = acc?.currency || '—';
       const mo = document.getElementById('valMonths'); if(mo) mo.textContent = (acc?.invest_months ?? '—');
-
-      // ✅ Tipo de cuenta (badge)
-      paintAccountTypeBadges(acc);
 
       // Reusa la lógica existente (topups, cálculos, fechas, etc.)
       CURRENT_ACCOUNT_ID = acc.id;
