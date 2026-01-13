@@ -687,13 +687,148 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         </div>
       </div>
 
-      <div class="inline" style="gap:10px; flex-wrap:wrap">
-        <button id="btnOpenWithdrawOps" type="button">Retirar capital</button>
-        <button id="btnOpenAccreditOps" type="button" class="ghost">Acreditar capital</button>
-        <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
+      <div class="row" style="gap:10px; flex-wrap:wrap">
+        <button type="button" class="btn" onclick="openWithdrawModal()">Retirar capital</button>
+        <button type="button" class="ghost" onclick="openAccreditModal()">Acreditar capital</button>
+        <button type="button" class="ghost" onclick="openWithdrawHistory()">Historial de retiros</button>
       </div>
     </div>
 
+<div id="modalWithdrawOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Retirar capital (Admin)</h3>
+        <button class="xbtn" type="button" onclick="closeWithdrawModal()">✕</button>
+      </div>
+      <div class="card">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Retirar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
+          </div>
+        </div>
+
+        <div class="inline" style="gap:10px">
+          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
+        </div>
+      </div>
+
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="wdAccount"></select>
+          <div class="small" id="wdHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a retirar</label>
+          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00" autocomplete="off">
+        </div>
+
+        <div>
+          <label>Referencia (opcional)</label>
+          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta" autocomplete="off">
+        </div>
+
+        <div>
+          <label>Nota interna (opcional)</label>
+          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación" autocomplete="off">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
+        <span id="wdMsg" class="small" style="opacity:.9"></span>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    
+    
+    </div>
+  </div>
+</div>
+
+
+<div id="modalAccreditOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Acreditar capital (Admin)</h3>
+        <button class="xbtn" type="button" onclick="closeAccreditModal()">✕</button>
+      </div>
+      <div class="card">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Acreditar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="capAccount"></select>
+          <div class="small" id="capHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a acreditar</label>
+          <input id="capAmount" type="number" step="0.01" min="0" placeholder="Ej: 1000.00">
+        </div>
+
+        <div>
+          <label>Fecha efectiva</label>
+          <input id="capDate" type="date">
+          <div class="small">Sugerido: hoy. (Se usa para el cálculo/registro)</div>
+        </div>
+
+        <div>
+          <label>Banco (opcional)</label>
+          <input id="capBank" type="text" placeholder="Ej: Banrural">
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Nota interna (opcional)</label>
+        <input id="capNote" type="text" placeholder="Motivo / referencia / observación">
+      </div>
+
+      <div class="inline" style="margin-top:14px; gap:10px">
+        <button id="btnAccreditCapital" type="button" class="primary">Acreditar</button>
+        <div class="small" id="capMsg"></div>
+      </div>
+    </div>
+
+<div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Clientes</h2>
+        <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
+      </p>
+      <p id="usersMsg" class="small" style="margin-top:6px"></p>
+    
 
     <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
     <div class="card hidden" id="accountsCard">
@@ -806,145 +941,12 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 </div>
 
 <!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
-<div 
-<!-- MODAL: RETIRAR CAPITAL -->
-<div id="modalOpsWithdraw" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Retirar capital (Admin)</h3>
-        <button type="button" class="modal-close" id="btnCloseOpsWithdraw">✕</button>
-      </div>
-      <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Retirar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
-          </div>
-        </div>
 
-        <div class="inline" style="gap:10px">
-          <button id="btnOpenWithdrawHistory_INNER" type="button" class="ghost">Historial de retiros</button>
-        </div>
-      </div>
-
-      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-        <div>
-          <label>Cliente / Cuenta</label>
-          <select id="wdAccount"></select>
-          <div class="small" id="wdHint">—</div>
-        </div>
-
-        <div>
-          <label>Monto a retirar</label>
-          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00" autocomplete="off">
-        </div>
-
-        <div>
-          <label>Referencia (opcional)</label>
-          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta" autocomplete="off">
-        </div>
-
-        <div>
-          <label>Nota interna (opcional)</label>
-          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación" autocomplete="off">
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
-        <span id="wdMsg" class="small" style="opacity:.9"></span>
-      </div>
-    </div>
-
-    <!-- Lista -->
     </div>
   </div>
 </div>
 
-<!-- MODAL: ACREDITAR CAPITAL -->
-<div id="modalOpsAccredit" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Acreditar capital (Admin)</h3>
-        <button type="button" class="modal-close" id="btnCloseOpsAccredit">✕</button>
-      </div>
-      <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Acreditar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
-          </div>
-        </div>
-      </div>
-
-      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-        <div>
-          <label>Cliente / Cuenta</label>
-          <select id="capAccount"></select>
-          <div class="small" id="capHint">—</div>
-        </div>
-
-        <div>
-          <label>Monto a acreditar</label>
-          <input id="capAmount" type="number" step="0.01" min="0" placeholder="Ej: 1000.00">
-        </div>
-
-        <div>
-          <label>Fecha efectiva</label>
-          <input id="capDate" type="date">
-          <div class="small">Sugerido: hoy. (Se usa para el cálculo/registro)</div>
-        </div>
-
-        <div>
-          <label>Banco (opcional)</label>
-          <input id="capBank" type="text" placeholder="Ej: Banrural">
-        </div>
-      </div>
-
-      <div style="margin-top:12px">
-        <label>Nota interna (opcional)</label>
-        <input id="capNote" type="text" placeholder="Motivo / referencia / observación">
-      </div>
-
-      <div class="inline" style="margin-top:14px; gap:10px">
-        <button id="btnAccreditCapital" type="button" class="primary">Acreditar</button>
-        <div class="small" id="capMsg"></div>
-      </div>
-    </div>
-
-<div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Clientes</h2>
-        <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Teléfono</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="users"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px">
-        <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
-      </p>
-      <p id="usersMsg" class="small" style="margin-top:6px"></p>
-    </div>
-  </div>
-</div>
-
-id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+<div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
       <div class="modal-title">
@@ -1120,21 +1122,6 @@ function setKPI(id, value, hint){
 async function validateSession(){
   const token = (localStorage.token || "").trim();
   if(!token) return false;
-
-  // Evita pedir /auth/v1/user con tokens expirados (reduce 401/403 en consola)
-  try{
-    const parts = token.split(".");
-    if(parts.length === 3){
-      const payload = JSON.parse(atob(parts[1].replace(/-/g,"+").replace(/_/g,"/")));
-      const expMs = (payload?.exp ? payload.exp*1000 : 0);
-      if(expMs && Date.now() > expMs){
-        localStorage.removeItem("token");
-        localStorage.removeItem("uid");
-        return false;
-      }
-    }
-  }catch(_e){}
-
 
   try{
     const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
@@ -1912,6 +1899,21 @@ async function doAccreditCapital(){
    ✅ HISTORIAL DE RETIROS (Modal + PDF + Borrar mostrado)
    ============================================================ */
 let WDH_CACHE = [];
+
+
+function openWithdrawModal(){ const m = $("modalWithdrawOps"); if(m) m.classList.remove("hidden"); }
+function closeWithdrawModal(){ const m = $("modalWithdrawOps"); if(m) m.classList.add("hidden"); }
+
+function openAccreditModal(){ const m = $("modalAccreditOps"); if(m) m.classList.remove("hidden"); }
+function closeAccreditModal(){ const m = $("modalAccreditOps"); if(m) m.classList.add("hidden"); }
+
+// Cerrar con click afuera
+document.addEventListener("click", (e)=>{
+  const mw = $("modalWithdrawOps");
+  if(mw && !mw.classList.contains("hidden") && e.target === mw) closeWithdrawModal();
+  const ma = $("modalAccreditOps");
+  if(ma && !ma.classList.contains("hidden") && e.target === ma) closeAccreditModal();
+});
 
 function openWithdrawHistory(){
   show($("modalWithdrawHistory"), true);
@@ -2721,7 +2723,7 @@ async function listWithdrawRequests(){
       "account_bank_name","account_bank_account","account_bank_account_type"
     ].join(",");
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc&status=eq.PENDING`;
 
     const res = await fetch(url, { headers:h, cache:"no-store" });
     if(!res.ok){
@@ -2732,8 +2734,7 @@ async function listWithdrawRequests(){
     const rows = await res.json();
 
     // ✅ Ya no necesitamos loadProfilesByIds()
-    const pendingRows = (rows||[]).filter(r=> String(r.status||'').toLowerCase()==='pending');
-    renderWithdrawRequests(pendingRows, new Map());
+    renderWithdrawRequests(rows, new Map());
 
     // KPI
     const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
@@ -2780,9 +2781,6 @@ async function approveWithdrawReq(id){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
-
-  toast("Solicitud aprobada ✅","ok");
-  await listWithdrawRequests();
 }
 
 async function rejectWithdrawReq(id, reason){
@@ -2799,9 +2797,6 @@ async function rejectWithdrawReq(id, reason){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
-
-  toast("Solicitud rechazada ✅","ok");
-  await listWithdrawRequests();
 }
 
 // === Aliases usados por la UI de "Solicitudes de retiro" ===
@@ -3542,18 +3537,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnWithdraw")?.addEventListener("click", doWithdraw);
 
   $("btnOpenWithdrawHistory")?.addEventListener("click", openWithdrawHistory);
-
-  // Operaciones (modales)
-  $("btnOpenWithdrawOps")?.addEventListener("click", ()=>{ $("modalOpsWithdraw")?.classList.remove("hidden"); });
-  $("btnCloseOpsWithdraw")?.addEventListener("click", ()=>{ $("modalOpsWithdraw")?.classList.add("hidden"); });
-
-  $("btnOpenAccreditOps")?.addEventListener("click", ()=>{ $("modalOpsAccredit")?.classList.remove("hidden"); });
-  $("btnCloseOpsAccredit")?.addEventListener("click", ()=>{ $("modalOpsAccredit")?.classList.add("hidden"); });
-
-  // Cerrar al click fuera
-  $("modalOpsWithdraw")?.addEventListener("click", (e)=>{ if(e.target === $("modalOpsWithdraw")) $("modalOpsWithdraw").classList.add("hidden"); });
-  $("modalOpsAccredit")?.addEventListener("click", (e)=>{ if(e.target === $("modalOpsAccredit")) $("modalOpsAccredit").classList.add("hidden"); });
-
   $("btnLoadWithdrawHistory")?.addEventListener("click", loadWithdrawHistory);
   $("btnPrintWithdrawHistory")?.addEventListener("click", printWithdrawalsPDF);
   $("btnDeleteWithdrawalsShown")?.addEventListener("click", deleteWithdrawalsShown);
