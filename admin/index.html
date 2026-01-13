@@ -7,15 +7,6 @@
 <link rel="icon" href="data:,">
 
 <style>
-/* ===== Modales ligeros (no rompen lógica) ===== */
-.modal-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:9999;padding:16px}
-.modal-overlay.open{display:flex}
-.modal-card{width:min(980px,96vw);max-height:92vh;overflow:auto;border-radius:22px;padding:18px 18px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);background:rgba(20,22,26,.92);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08)}
-.modal-head{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
-.modal-head h3{margin:0;font-size:18px;letter-spacing:.2px}
-.modal-close{border:0;border-radius:999px;padding:10px 14px;cursor:pointer}
-.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-
 /* ========= 3D PRO THEME ========= */
 :root{
   --bg:#07080a;
@@ -463,42 +454,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-// ===== Modales =====
-function openModal(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.classList.add('open');
-  try{
-    if(id==='modalWithdrawHistory' && typeof window.__loadWithdrawHistoryOnce==='function'){ window.__loadWithdrawHistoryOnce(); }
-  }catch(e){}
-}
-function closeModal(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.classList.remove('open');
-}
-document.addEventListener('keydown',(e)=>{
-  if(e.key==='Escape'){
-    document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
-  }
-});
-
-
-// Lazy: cargar historial de retiros solo al abrir modal (si existe la función)
-window.__withdrawHistoryLoaded = false;
-window.__loadWithdrawHistoryOnce = async function(){
-  if(window.__withdrawHistoryLoaded) return;
-  window.__withdrawHistoryLoaded = true;
-  try{
-    if(typeof loadWithdrawHistory === 'function'){ await loadWithdrawHistory(); }
-    else if(typeof refreshWithdrawHistory === 'function'){ await refreshWithdrawHistory(); }
-  }catch(e){
-    window.__withdrawHistoryLoaded = false;
-  }
-};
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -549,7 +505,680 @@ window.__loadWithdrawHistoryOnce = async function(){
   <div id="globalError" class="errorBox hidden"></div>
 
   <!-- LOGIN -->
-  <!-- moved:h -->e, okText}){
+  <div id="unauth" class="card">
+    <h2>Admin — Iniciar sesión</h2>
+    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
+      <div><label>Email</label><input id="email" type="email" required autocomplete="username"></div>
+      <div><label>Contraseña</label><input id="password" type="password" required autocomplete="current-password"></div>
+      <div style="align-self:end"><button type="submit">Entrar</button></div>
+      <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
+    </form>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+
+    <!-- SOLICITUDES DE RETIRO (pendientes) -->
+    <div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Solicitudes de retiro</h2>
+        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+         <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Email</th>
+            <th>Monto</th>
+            <th>Banco</th>
+            <th>No. cuenta</th>
+            <th>Tipo cuenta</th>
+            <th>Tipo banco</th>
+            <th>Nota</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+          <tbody id="withdrawReqs"></tbody>
+        </table>
+      </div>
+
+      <p id="withdrawReqsMsg" class="small"></p>
+    </div>
+
+    <!-- TOPUPS -->
+    <div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
+        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Monto</th>
+              <th>Banco</th>
+               <th>No. cuenta</th>
+               <th>Boleta</th>
+              <th class="nowrap">Estado</th>
+              <th class="nowrap">Efectiva</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="topups"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
+        📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
+      </p>
+      <p 
+    <!-- ✅ OPERACIONES (Admin) - compacto -->
+    <div class="card" id="opsCard">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Operaciones (Admin)</h2>
+        <span class="small">Abrir formularios en ventana para mantener la página principal limpia.</span>
+      </div>
+      <div class="actions">
+        <button type="button" class="danger" id="btnOpenWithdrawModal">Retirar capital</button>
+        <button type="button" class="primary" id="btnOpenAccreditModal">Acreditar capital</button>
+        <button type="button" class="ghost" id="btnOpenWithdrawHistory2">Historial de retiros</button>
+      </div>
+    </div>
+
+id="topupsMsg" class="small"></p>
+    </div>
+
+    <!-- Crear/Editar -->
+    <div class="card" id="formCard">
+      <h2>Crear / Editar usuario</h2>
+
+      <form id="userForm" class="row" onsubmit="return false;">
+        <div>
+          <label>Modo de intereses</label>
+          <select id="u_interest_mode">
+            <option value="monthly">Pagados mensualmente</option>
+            <option value="compound">Acumulados (hasta finalizar meses)</option>
+          </select>
+          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="u_email" placeholder="cliente@demo.com" type="email" autocomplete="email">
+          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
+        </div>
+
+        <div>
+          <label>Cuenta seleccionada</label>
+          <div class="inline">
+            <select id="u_account_sel"></select>
+            <button type="button" id="btnAddAccount" class="ghost">+ Nueva cuenta</button>
+          </div>
+          <div class="small" id="u_accounts_hint">Selecciona qué cuenta deseas editar.</div>
+          <input type="hidden" id="u_user_id">
+          <input type="hidden" id="u_account_id">
+        </div>
+
+
+        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo" autocomplete="name"></div>
+        <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555" autocomplete="tel"></div>
+
+        <div>
+          <label>Contraseña (para el cliente)</label>
+          <div class="inline">
+            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)" autocomplete="new-password">
+            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
+          </div>
+        </div>
+
+        <div>
+          <label>Moneda</label>
+          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
+        </div>
+
+        <div>
+          <label>Capital inicial</label>
+          <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+        </div>
+
+        <div><label>Fecha ingreso</label><input id="u_joined" type="date" autocomplete="off"></div>
+
+        <div>
+          <label>Plan</label>
+          <select id="u_plan">
+            <option value="STANDARD">Estandar-15%</option>
+            <option value="PLATINUM">Platinum-20%</option>
+            <option value="BLACK">Black-Tasa preferencial</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Meses de inversión</label>
+          <select id="u_months">
+            <option>6</option><option selected>12</option><option>18</option><option>24</option>
+            <option>30</option><option>36</option><option>42</option><option>48</option>
+            <option>54</option><option>60</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tasa semestral (%)</label>
+          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20" autocomplete="off">
+          <div id="rateError" class="error hidden">la tasa de interés indicada con el plan indicado no coinciden</div>
+          <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
+        </div>
+
+        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" autocomplete="organization"></div>
+        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" autocomplete="off"></div>
+        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …" autocomplete="off"></div>
+      </form>
+
+      <hr class="sep">
+
+      <div class="inline" style="gap:12px">
+        <button id="saveBtn" type="button">Guardar</button>
+        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
+        <span id="saveMsg" class="small" style="margin-left:8px"></span>
+      </div>
+    </div>
+
+    <!-- RETIRAR CAPITAL -->
+    <div class="card" id="cardWithdrawOps" style="display:none">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Retirar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
+          </div>
+        </div>
+
+        <div class="inline" style="gap:10px">
+          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
+        </div>
+      </div>
+
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="wdAccount"></select>
+          <div class="small" id="wdHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a retirar</label>
+          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00" autocomplete="off">
+        </div>
+
+        <div>
+          <label>Referencia (opcional)</label>
+          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta" autocomplete="off">
+        </div>
+
+        <div>
+          <label>Nota interna (opcional)</label>
+          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación" autocomplete="off">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
+        <span id="wdMsg" class="small" style="opacity:.9"></span>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    
+    <!-- ACREDITAR CAPITAL (DIRECTO) -->
+    <div class="card" id="cardAccreditOps" style="display:none">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Acreditar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="capAccount"></select>
+          <div class="small" id="capHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a acreditar</label>
+          <input id="capAmount" type="number" step="0.01" min="0" placeholder="Ej: 1000.00">
+        </div>
+
+        <div>
+          <label>Fecha efectiva</label>
+          <input id="capDate" type="date">
+          <div class="small">Sugerido: hoy. (Se usa para el cálculo/registro)</div>
+        </div>
+
+        <div>
+          <label>Banco (opcional)</label>
+          <input id="capBank" type="text" placeholder="Ej: Banrural">
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Nota interna (opcional)</label>
+        <input id="capNote" type="text" placeholder="Motivo / referencia / observación">
+      </div>
+
+      <div class="inline" style="margin-top:14px; gap:10px">
+        <button id="btnAccreditCapital" type="button" class="primary">Acreditar</button>
+        <div class="small" id="capMsg"></div>
+      </div>
+    </div>
+
+<div class="card">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Clientes</h2>
+        <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
+      </p>
+      <p id="usersMsg" class="small" style="margin-top:6px"></p>
+    
+
+    <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
+    <div class="card hidden" id="accountsCard">
+      <div class="header" style="margin:0 0 10px">
+        <div>
+          <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
+        </div>
+        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Cuenta</th>
+              <th>Plan</th>
+              <th>Capital</th>
+              <th>Moneda</th>
+              <th>Meses</th>
+              <th>Tasa %/6m</th>
+              <th>Modo</th>
+              <th>Banco</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="accountsBody"></tbody>
+        </table>
+      </div>
+      <p class="small" style="margin-top:10px">Tip: usa <b>Editar</b> para cargar esa cuenta en el formulario y guarda. Solo se actualiza la cuenta seleccionada.</p>
+    </div>
+
+</div>
+
+  </div><!-- /app -->
+</div><!-- /container -->
+
+<!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
+<div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Programar acreditación</h3>
+        <button class="xbtn" type="button" onclick="closeScheduleTopupModal()">✕</button>
+      </div>
+
+      <div class="small" id="schedInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Fecha efectiva (se acredita a las 9:00 AM GT)</label>
+          <input id="schedDate" type="date" autocomplete="off">
+          <div class="small">🔒 No se permiten fechas pasadas.</div>
+        </div>
+        <div>
+          <label>Nota (opcional)</label>
+          <input id="schedNote" placeholder="Ej: Se acredita al inicio del ciclo" autocomplete="off">
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="schedMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeScheduleTopupModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnDoSchedule">Programar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RESET PASSWORD ===== -->
+<div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Forzar cambio de contraseña</h3>
+        <button class="xbtn" type="button" onclick="closeResetModal()">✕</button>
+      </div>
+
+      <div class="small" id="resetClientInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div id="resetPickWrap" class="hidden">
+          <label>Seleccionar cliente</label>
+          <select id="resetPick"></select>
+          <div class="small">Elige el cliente al que le asignarás una contraseña temporal.</div>
+        </div>
+
+        <div>
+          <label>Nueva contraseña</label>
+          <input id="resetNewPass" type="text" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+          <div class="small">Luego el cliente deberá iniciar sesión y cambiarla en su modal obligatorio.</div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="resetMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeResetModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnResetDo">Aplicar reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
+<div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Historial de retiros</h3>
+        <button class="xbtn" type="button" onclick="closeWithdrawHistory()">✕</button>
+      </div>
+
+      <div class="small" id="wdhInfo">
+        Aquí puedes imprimir/guardar en PDF y luego (si quieres) borrar lo mostrado.
+      </div>
+
+      <div class="inline" style="justify-content:space-between; margin-top:12px; gap:10px; flex-wrap:wrap">
+        <div class="inline" style="gap:10px; flex-wrap:wrap">
+          <button id="btnLoadWithdrawHistory" type="button" class="ghost">Refrescar historial</button>
+          <button id="btnPrintWithdrawHistory" type="button">Imprimir / Guardar PDF</button>
+          <button id="btnDeleteWithdrawalsShown" type="button" class="danger">Borrar historial mostrado</button>
+        </div>
+        <div class="small" id="wdhMsg">—</div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Fecha</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Monto</th>
+              <th>Referencia</th>
+              <th>Motivo / Nota</th>
+            </tr>
+          </thead>
+          <tbody id="wdhBody"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px; opacity:.85">
+        ⚠️ <b>“Borrar historial mostrado”</b> elimina filas de la base de datos. Úsalo solo si ya guardaste el PDF.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
+<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(620px,100%)">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3 id="confirmTitle">Confirmación</h3>
+        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
+      </div>
+
+      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
+          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL: RETIRAR CAPITAL (Admin) ===== -->
+<div id="modalWithdrawOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Retirar capital (Admin)</h3>
+        <button class="xbtn" type="button" onclick="closeWithdrawOps()">✕</button>
+      </div>
+      <div id="withdrawOpsBody"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL: ACREDITAR CAPITAL (Admin) ===== -->
+<div id="modalAccreditOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Acreditar capital (Admin)</h3>
+        <button class="xbtn" type="button" onclick="closeAccreditOps()">✕</button>
+      </div>
+      <div id="accreditOpsBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+/*** SUPABASE CONFIG (CORRECTO) ***/
+const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+const BASE = PROJECT_URL + "/rest/v1";
+const RPC  = BASE + "/rpc";
+const SUPABASE_URL = PROJECT_URL;
+const SUPABASE_ANON_KEY = ANON_KEY;
+
+
+function getToken(){
+  const t = (localStorage.token || "").trim();
+  // Debe verse como JWT (3 partes)
+  if(!t || t === "null" || t === "undefined") return "";
+  if(t.split(".").length !== 3) return "";
+  return t;
+}
+
+function headersJSON(){
+  const h = {
+    apikey: ANON_KEY,
+    "Content-Type":"application/json",
+    "Prefer":"return=representation"
+  };
+  const token = getToken();
+  if(token) h.Authorization = "Bearer " + token;
+  return h;
+}
+
+
+async function mustOk(r, action){
+  let raw = "";
+  try{ raw = await r.text(); }catch{}
+  let data = null;
+  try{ data = raw ? JSON.parse(raw) : null; }catch{ data = null; }
+
+  const msg = data?.message || data?.error_description || data?.error || raw || `Error al ${action}`;
+  const err = new Error(msg);
+  err.status = r.status;
+  err.data = data;
+  throw err;
+}
+
+/*** HELPERS UI ***/
+const $ = (id)=> document.getElementById(id);
+const show = (el, v)=> { if(!el) return; el.classList.toggle('hidden', !v); };
+const fmtMoney = (n, ccy)=> { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:ccy||'GTQ'}).format(Number(n||0)); }catch{ return `Q ${(Number(n||0)).toFixed(2)}`; } };
+const fmtDate  = (s)=> s ? new Date(s).toLocaleDateString('es-GT') : '—';
+const fmtDateTime = (s)=> s ? new Date(s).toLocaleString('es-GT') : '—';
+const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
+
+function toast(msg, type="ok", sub=""){
+  const wrap = $("toastWrap");
+  if(!wrap) return alert(msg);
+  const t = document.createElement("div");
+  t.className = "toast " + (type==="err" ? "err" : "ok");
+  t.innerHTML = `${escapeHtml(String(msg||""))}${sub ? `<span class="sub">${escapeHtml(String(sub||""))}</span>` : ""}`;
+  wrap.appendChild(t);
+  // auto-remove
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transform="translateY(6px)"; }, 2600);
+  setTimeout(()=>{ t.remove(); }, 3200);
+}
+
+function setLoading(el, isLoading){ if(!el) return; el.classList.toggle("loading", !!isLoading); }
+function safeText(el, txt){ if(el) el.textContent = String(txt ?? ""); }
+function hAuth(){
+  return {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+getToken(),
+    "Content-Type": "application/json"
+  };
+}  
+  
+function clearGlobalError(){
+  const box = $("globalError");
+  if(!box) return;
+  show(box, false);
+  box.textContent = "";
+}
+function showGlobalError(title, err){
+  const box = $("globalError");
+  if(!box) return;
+  show(box, true);
+  box.innerHTML = `<div style="font-weight:900;color:#FFD0D0;margin-bottom:4px">${title}</div>
+                   <div>Verifique permisos, sesión o configuración del sistema e intente nuevamente.</div>`;
+  console.error("[DEBUG]", err);
+}
+
+// Compatibilidad: algunas partes usan setGlobalError(...)
+function setGlobalError(msg){
+  const t = (msg && String(msg).trim()) ? String(msg) : "Error";
+  showGlobalError(t, null);
+}
+
+/*** ✅ KPI helper (fix: evita ReferenceError setKPI) ***/
+function setKPI(id, value, hint){
+  const el = document.getElementById(id);
+  if(el) el.textContent = (value === null || value === undefined) ? "—" : String(value);
+  const hintEl = document.getElementById(id + "Hint");
+  if(hintEl && hint !== undefined) hintEl.textContent = String(hint);
+}
+
+/*** ✅ validar sesión/token antes de cargar panel ***/
+async function validateSession(){
+  const token = (localStorage.token || "").trim();
+  if(!token) return false;
+
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
+    });
+
+    // ✅ Solo borrar token si realmente es inválido/expirado
+    if(r.status === 401 || r.status === 403){
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      return false;
+    }
+
+    if(!r.ok){
+      // Otros errores (CORS/proxy/500) NO deben borrar sesión
+      return false;
+    }
+
+    return true;
+  }catch{
+    // Error de red: no borrar token
+    return false;
+  }
+}
+
+/*** ✅ Session meta (agregado) ***/
+async function refreshSessionMeta(){
+  const meta = $("sessionMeta");
+  if(!meta) return;
+
+  const token = localStorage.token;
+  if(!token){
+    meta.textContent = "Administrador · Sesión no iniciada";
+    return;
+  }
+  try{
+    const r = await fetch(`${PROJECT_URL}/auth/v1/user`, {
+      method: "GET",
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
+    });
+    if(!r.ok){
+      meta.textContent = "Administrador · Sesión no iniciada";
+      return;
+    }
+    const u = await r.json().catch(()=>null);
+    const email = u?.email || u?.user_metadata?.email || "admin";
+    meta.textContent = `Administrador · ${email} · Última actualización: ${new Date().toLocaleTimeString("es-GT")}`;
+  }catch(e){
+    meta.textContent = `Administrador · Sesión iniciada`;
+    console.error(e);
+  }
+}
+
+/*** ✅ Modal Confirm PRO (agregado, y lo usamos en vez de confirm() cuando se pueda) ***/
+let CONFIRM_RESOLVE = null;
+function openConfirm({title, message, okText}){
   const m = $("modalConfirm");
   const t = $("confirmTitle");
   const msg = $("confirmMsg");
@@ -1418,620 +2047,7 @@ function printWithdrawalsPDF(){
       <tbody>${rowsHtml}</tbody>
     </table>
     <script>window.print();<\/script>
-  
-<div id="modalWithdraw" class="modal-overlay" onclick="if(event.target===this)closeModal('modalWithdraw')">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3>Retirar capital (Admin)</h3>
-      <button class="modal-close ghost" type="button" onclick="closeModal('modalWithdraw')">Cerrar</button>
-    </div>
-    <div id="unauth" class="card">
-    <h2>Admin — Iniciar sesión</h2>
-    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
-      <div><label>Email</label><input id="email" type="email" required autocomplete="username"></div>
-      <div><label>Contraseña</label><input id="password" type="password" required autocomplete="current-password"></div>
-      <div style="align-self:end"><button type="submit">Entrar</button></div>
-      <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
-    </form>
-  </div>
-
-  <!-- APP -->
-  <div id="app" class="hidden">
-
-    <!-- SOLICITUDES DE RETIRO (pendientes) -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Solicitudes de retiro</h2>
-        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-         <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Email</th>
-            <th>Monto</th>
-            <th>Banco</th>
-            <th>No. cuenta</th>
-            <th>Tipo cuenta</th>
-            <th>Tipo banco</th>
-            <th>Nota</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-          <tbody id="withdrawReqs"></tbody>
-        </table>
-      </div>
-
-      <p id="withdrawReqsMsg" class="small"></p>
-    </div>
-
-    <!-- TOPUPS -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
-        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Banco</th>
-               <th>No. cuenta</th>
-               <th>Boleta</th>
-              <th class="nowrap">Estado</th>
-              <th class="nowrap">Efectiva</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="topups"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px">
-        ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
-        📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
-      </p>
-      <p id="topupsMsg" class="small"></p>
-    </div>
-
-    <!-- Crear/Editar -->
-    <div class="card" id="formCard">
-      <h2>Crear / Editar usuario</h2>
-
-      <form id="userForm" class="row" onsubmit="return false;">
-        <div>
-          <label>Modo de intereses</label>
-          <select id="u_interest_mode">
-            <option value="monthly">Pagados mensualmente</option>
-            <option value="compound">Acumulados (hasta finalizar meses)</option>
-          </select>
-          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="u_email" placeholder="cliente@demo.com" type="email" autocomplete="email">
-          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
-        </div>
-
-        <div>
-          <label>Cuenta seleccionada</label>
-          <div class="inline">
-            <select id="u_account_sel"></select>
-            <button type="button" id="btnAddAccount" class="ghost">+ Nueva cuenta</button>
-          </div>
-          <div class="small" id="u_accounts_hint">Selecciona qué cuenta deseas editar.</div>
-          <input type="hidden" id="u_user_id">
-          <input type="hidden" id="u_account_id">
-        </div>
-
-
-        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo" autocomplete="name"></div>
-        <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555" autocomplete="tel"></div>
-
-        <div>
-          <label>Contraseña (para el cliente)</label>
-          <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)" autocomplete="new-password">
-            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
-          </div>
-        </div>
-
-        <div>
-          <label>Moneda</label>
-          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
-        </div>
-
-        <div>
-          <label>Capital inicial</label>
-          <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
-        </div>
-
-        <div><label>Fecha ingreso</label><input id="u_joined" type="date" autocomplete="off"></div>
-
-        <div>
-          <label>Plan</label>
-          <select id="u_plan">
-            <option value="STANDARD">Estandar-15%</option>
-            <option value="PLATINUM">Platinum-20%</option>
-            <option value="BLACK">Black-Tasa preferencial</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Meses de inversión</label>
-          <select id="u_months">
-            <option>6</option><option selected>12</option><option>18</option><option>24</option>
-            <option>30</option><option>36</option><option>42</option><option>48</option>
-            <option>54</option><option>60</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Tasa semestral (%)</label>
-          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20" autocomplete="off">
-          <div id="rateError" class="error hidden">la tasa de interés indicada con el plan indicado no coinciden</div>
-          <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
-        </div>
-
-        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" autocomplete="organization"></div>
-        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" autocomplete="off"></div>
-        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …" autocomplete="off"></div>
-      </form>
-
-      <hr class="sep">
-
-      <div class="inline" style="gap:12px">
-        <button id="saveBtn" type="button">Guardar</button>
-        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
-        <span id="saveMsg" class="small" style="margin-left:8px"></span>
-      </div>
-    </div>
-
-    <!-- RETIRAR CAPITAL -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Retirar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
-          </div>
-  </div>
-</div>
-
-<div id="modalAccredit" class="modal-overlay" onclick="if(event.target===this)closeModal('modalAccredit')">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3>Acreditar capital (Admin)</h3>
-      <button class="modal-close ghost" type="button" onclick="closeModal('modalAccredit')">Cerrar</button>
-    </div>
-    <div id="unauth" class="card">
-    <h2>Admin — Iniciar sesión</h2>
-    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
-      <div><label>Email</label><input id="email" type="email" required autocomplete="username"></div>
-      <div><label>Contraseña</label><input id="password" type="password" required autocomplete="current-password"></div>
-      <div style="align-self:end"><button type="submit">Entrar</button></div>
-      <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
-    </form>
-  </div>
-
-  <!-- APP -->
-  <div id="app" class="hidden">
-
-    <!-- SOLICITUDES DE RETIRO (pendientes) -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Solicitudes de retiro</h2>
-        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-         <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Email</th>
-            <th>Monto</th>
-            <th>Banco</th>
-            <th>No. cuenta</th>
-            <th>Tipo cuenta</th>
-            <th>Tipo banco</th>
-            <th>Nota</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-          <tbody id="withdrawReqs"></tbody>
-        </table>
-      </div>
-
-      <p id="withdrawReqsMsg" class="small"></p>
-    </div>
-
-    <!-- TOPUPS -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
-        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Banco</th>
-               <th>No. cuenta</th>
-               <th>Boleta</th>
-              <th class="nowrap">Estado</th>
-              <th class="nowrap">Efectiva</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="topups"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px">
-        ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
-        📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
-      </p>
-      <p id="topupsMsg" class="small"></p>
-    </div>
-
-    <!-- Crear/Editar -->
-    <div class="card" id="formCard">
-      <h2>Crear / Editar usuario</h2>
-
-      <form id="userForm" class="row" onsubmit="return false;">
-        <div>
-          <label>Modo de intereses</label>
-          <select id="u_interest_mode">
-            <option value="monthly">Pagados mensualmente</option>
-            <option value="compound">Acumulados (hasta finalizar meses)</option>
-          </select>
-          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="u_email" placeholder="cliente@demo.com" type="email" autocomplete="email">
-          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
-        </div>
-
-        <div>
-          <label>Cuenta seleccionada</label>
-          <div class="inline">
-            <select id="u_account_sel"></select>
-            <button type="button" id="btnAddAccount" class="ghost">+ Nueva cuenta</button>
-          </div>
-          <div class="small" id="u_accounts_hint">Selecciona qué cuenta deseas editar.</div>
-          <input type="hidden" id="u_user_id">
-          <input type="hidden" id="u_account_id">
-        </div>
-
-
-        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo" autocomplete="name"></div>
-        <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555" autocomplete="tel"></div>
-
-        <div>
-          <label>Contraseña (para el cliente)</label>
-          <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)" autocomplete="new-password">
-            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
-          </div>
-        </div>
-
-        <div>
-          <label>Moneda</label>
-          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
-        </div>
-
-        <div>
-          <label>Capital inicial</label>
-          <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
-        </div>
-
-        <div><label>Fecha ingreso</label><input id="u_joined" type="date" autocomplete="off"></div>
-
-        <div>
-          <label>Plan</label>
-          <select id="u_plan">
-            <option value="STANDARD">Estandar-15%</option>
-            <option value="PLATINUM">Platinum-20%</option>
-            <option value="BLACK">Black-Tasa preferencial</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Meses de inversión</label>
-          <select id="u_months">
-            <option>6</option><option selected>12</option><option>18</option><option>24</option>
-            <option>30</option><option>36</option><option>42</option><option>48</option>
-            <option>54</option><option>60</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Tasa semestral (%)</label>
-          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20" autocomplete="off">
-          <div id="rateError" class="error hidden">la tasa de interés indicada con el plan indicado no coinciden</div>
-          <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
-        </div>
-
-        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" autocomplete="organization"></div>
-        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" autocomplete="off"></div>
-        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …" autocomplete="off"></div>
-      </form>
-
-      <hr class="sep">
-
-      <div class="inline" style="gap:12px">
-        <button id="saveBtn" type="button">Guardar</button>
-        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
-        <span id="saveMsg" class="small" style="margin-left:8px"></span>
-      </div>
-    </div>
-
-    <!-- RETIRAR CAPITAL -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Retirar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
-          </div>
-        </div>
-
-        <div class="inline" style="gap:10px">
-          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
-        </div>
-      </div>
-
-      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-        <div>
-          <label>Cliente / Cuenta</label>
-          <select id="wdAccount"></select>
-          <div class="small" id="wdHint">—</div>
-        </div>
-
-        <div>
-          <label>Monto a retirar</label>
-          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00" autocomplete="off">
-        </div>
-
-        <div>
-          <label>Referencia (opcional)</label>
-          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta" autocomplete="off">
-        </div>
-
-        <div>
-          <label>Nota interna (opcional)</label>
-          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación" autocomplete="off">
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
-        <span id="wdMsg" class="small" style="opacity:.9"></span>
-      </div>
-    </div>
-
-    <!-- Lista -->
-    
-    <!-- ACREDITAR CAPITAL (DIRECTO) -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Acreditar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
-          </div>
-  </div>
-</div>
-
-<div id="modalWithdrawHistory" class="modal-overlay" onclick="if(event.target===this)closeModal('modalWithdrawHistory')">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3>Historial de retiros</h3>
-      <button class="modal-close ghost" type="button" onclick="closeModal('modalWithdrawHistory')">Cerrar</button>
-    </div>
-    <div id="unauth" class="card">
-    <h2>Admin — Iniciar sesión</h2>
-    <form id="loginForm" class="row" style="grid-template-columns:1fr 1fr auto">
-      <div><label>Email</label><input id="email" type="email" required autocomplete="username"></div>
-      <div><label>Contraseña</label><input id="password" type="password" required autocomplete="current-password"></div>
-      <div style="align-self:end"><button type="submit">Entrar</button></div>
-      <div style="grid-column:1/-1"><p id="loginMsg" class="small"></p></div>
-    </form>
-  </div>
-
-  <!-- APP -->
-  <div id="app" class="hidden">
-
-    <!-- SOLICITUDES DE RETIRO (pendientes) -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Solicitudes de retiro</h2>
-        <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-         <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Email</th>
-            <th>Monto</th>
-            <th>Banco</th>
-            <th>No. cuenta</th>
-            <th>Tipo cuenta</th>
-            <th>Tipo banco</th>
-            <th>Nota</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-          <tbody id="withdrawReqs"></tbody>
-        </table>
-      </div>
-
-      <p id="withdrawReqsMsg" class="small"></p>
-    </div>
-
-    <!-- TOPUPS -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
-        <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Banco</th>
-               <th>No. cuenta</th>
-               <th>Boleta</th>
-              <th class="nowrap">Estado</th>
-              <th class="nowrap">Efectiva</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="topups"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px">
-        ✅ <b>Aprobar ahora</b> acredita el capital inmediatamente. <br>
-        📆 <b>Programar</b> guarda una <b>effective_date</b> y el Cron DB acreditará a las <b>9:00 AM (GT)</b> del día programado.
-      </p>
-      <p id="topupsMsg" class="small"></p>
-    </div>
-
-    <!-- Crear/Editar -->
-    <div class="card" id="formCard">
-      <h2>Crear / Editar usuario</h2>
-
-      <form id="userForm" class="row" onsubmit="return false;">
-        <div>
-          <label>Modo de intereses</label>
-          <select id="u_interest_mode">
-            <option value="monthly">Pagados mensualmente</option>
-            <option value="compound">Acumulados (hasta finalizar meses)</option>
-          </select>
-          <div class="small">“Acumulados” = no se marcan como pagados cada mes; se acumulan en saldo.</div>
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="u_email" placeholder="cliente@demo.com" type="email" autocomplete="email">
-          <div class="small">Para editar, escribe el email o usa <b>Editar</b> en la lista.</div>
-        </div>
-
-        <div>
-          <label>Cuenta seleccionada</label>
-          <div class="inline">
-            <select id="u_account_sel"></select>
-            <button type="button" id="btnAddAccount" class="ghost">+ Nueva cuenta</button>
-          </div>
-          <div class="small" id="u_accounts_hint">Selecciona qué cuenta deseas editar.</div>
-          <input type="hidden" id="u_user_id">
-          <input type="hidden" id="u_account_id">
-        </div>
-
-
-        <div><label>Nombre completo</label><input id="u_name" placeholder="Cliente Demo" autocomplete="name"></div>
-        <div><label>Teléfono (celular)</label><input id="u_phone" type="tel" inputmode="tel" placeholder="+502 5555 5555" autocomplete="tel"></div>
-
-        <div>
-          <label>Contraseña (para el cliente)</label>
-          <div class="inline">
-            <input id="u_pass" type="password" placeholder="Mín. 8 caracteres (vacío = no crea en Auth)" autocomplete="new-password">
-            <button type="button" id="togglePass" class="ghost" title="Mostrar/ocultar">👁</button>
-          </div>
-        </div>
-
-        <div>
-          <label>Moneda</label>
-          <select id="u_currency"><option>GTQ</option><option>USD</option></select>
-        </div>
-
-        <div>
-          <label>Capital inicial</label>
-          <input id="u_capital" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
-        </div>
-
-        <div><label>Fecha ingreso</label><input id="u_joined" type="date" autocomplete="off"></div>
-
-        <div>
-          <label>Plan</label>
-          <select id="u_plan">
-            <option value="STANDARD">Estandar-15%</option>
-            <option value="PLATINUM">Platinum-20%</option>
-            <option value="BLACK">Black-Tasa preferencial</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Meses de inversión</label>
-          <select id="u_months">
-            <option>6</option><option selected>12</option><option>18</option><option>24</option>
-            <option>30</option><option>36</option><option>42</option><option>48</option>
-            <option>54</option><option>60</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Tasa semestral (%)</label>
-          <input id="u_rate" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15, 20" autocomplete="off">
-          <div id="rateError" class="error hidden">la tasa de interés indicada con el plan indicado no coinciden</div>
-          <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
-        </div>
-
-        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" autocomplete="organization"></div>
-        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" autocomplete="off"></div>
-        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …" autocomplete="off"></div>
-      </form>
-
-      <hr class="sep">
-
-      <div class="inline" style="gap:12px">
-        <button id="saveBtn" type="button">Guardar</button>
-        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
-        <span id="saveMsg" class="small" style="margin-left:8px"></span>
-      </div>
-    </div>
-
-    <!-- RETIRAR CAPITAL -->
-    <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Retirar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
-          </div>
-        </div>
-
-        <div class="inline" style="gap:10px">
-          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
-        </div>
-  </div>
-</div>
-
-</body>
+  </body>
   </html>
   `;
 
@@ -2712,18 +2728,7 @@ async function listWithdrawRequests(){
 
   }catch(err){
     console.error("listWithdrawRequests error", err);
-    if(msgEl) msgEl.textContent = "No se pudieron cargar 
-<section class="card">
-  <h2>Operaciones (Admin)</h2>
-  <p class="muted">Abrir formularios en ventanas para mantener la página principal limpia y más fluida.</p>
-  <div class="modal-actions">
-    <button class="ok" type="button" onclick="openModal('modalWithdraw')">Retirar capital</button>
-    <button class="ghost" type="button" onclick="openModal('modalAccredit')">Acreditar capital</button>
-    <button class="ghost" type="button" onclick="openModal('modalWithdrawHistory')">Historial de retiros</button>
-  </div>
-</section>
-
-solicitudes de retiro (verifica permisos/sesión).";
+    if(msgEl) msgEl.textContent = "No se pudieron cargar solicitudes de retiro (verifica permisos/sesión).";
     renderWithdrawRequests([], new Map());
   }
 }
@@ -3619,6 +3624,67 @@ document.addEventListener("DOMContentLoaded", ()=>{
 });
 })();
 
+
+/* ===== OPERACIONES MODALES (sin romper lógica existente) ===== */
+function openWithdrawOps(){ const m=$("modalWithdrawOps"); if(m) m.classList.remove("hidden"); }
+function closeWithdrawOps(){ const m=$("modalWithdrawOps"); if(m) m.classList.add("hidden"); }
+function openAccreditOps(){ const m=$("modalAccreditOps"); if(m) m.classList.remove("hidden"); }
+function closeAccreditOps(){ const m=$("modalAccreditOps"); if(m) m.classList.add("hidden"); }
+window.closeWithdrawOps = closeWithdrawOps;
+window.closeAccreditOps = closeAccreditOps;
+
+function __mountOpsCardsIntoModals(){
+  try{
+    const wCard = document.getElementById("cardWithdrawOps");
+    const aCard = document.getElementById("cardAccreditOps");
+    const wBody = document.getElementById("withdrawOpsBody");
+    const aBody = document.getElementById("accreditOpsBody");
+
+    if(wCard && wBody && !wBody.__mounted){
+      wBody.appendChild(wCard);
+      wCard.style.display = "";
+      wBody.__mounted = true;
+    }
+    if(aCard && aBody && !aBody.__mounted){
+      aBody.appendChild(aCard);
+      aCard.style.display = "";
+      aBody.__mounted = true;
+    }
+
+    const bW = document.getElementById("btnOpenWithdrawModal");
+    if(bW && !bW.__wired){ bW.addEventListener("click", openWithdrawOps); bW.__wired=true; }
+
+    const bA = document.getElementById("btnOpenAccreditModal");
+    if(bA && !bA.__wired){ bA.addEventListener("click", openAccreditOps); bA.__wired=true; }
+
+    const bH = document.getElementById("btnOpenWithdrawHistory2");
+    if(bH && !bH.__wired){
+      bH.addEventListener("click", ()=>{
+        if(typeof openWithdrawHistory === "function"){ openWithdrawHistory(); return; }
+        const mh = document.getElementById("modalWithdrawHistory");
+        if(mh){ mh.classList.remove("hidden"); return; }
+        const btn = document.getElementById("btnOpenWithdrawHistory");
+        if(btn) btn.click();
+      });
+      bH.__wired=true;
+    }
+
+    ["modalWithdrawOps","modalAccreditOps"].forEach(id=>{
+      const m = document.getElementById(id);
+      if(m && !m.__wired){
+        m.addEventListener("click",(e)=>{ if(e.target===m){ id==="modalWithdrawOps"?closeWithdrawOps():closeAccreditOps(); }});
+        m.__wired=true;
+      }
+    });
+
+  }catch(e){
+    console.error("[ops-modals]", e);
+  }
+}
+
+setTimeout(__mountOpsCardsIntoModals, 0);
+document.addEventListener("DOMContentLoaded", ()=> setTimeout(__mountOpsCardsIntoModals, 0));
+
 </script>
 </body>
 </html
@@ -3628,3 +3694,4 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
+
