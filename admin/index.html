@@ -1402,11 +1402,6 @@ async function loadUsersViaJoinFallback(h){
 }
 
 function renderUsers(rows){
-
-  const body = document.getElementById("usersBody") || document.getElementById("usersTbody") || document.getElementById("clientsBody") || document.getElementById("clientsTbody");
-  if(!body){ return; }
-
-
   const tb = $("users");
   if(!tb) return;
   tb.innerHTML = "";
@@ -2315,11 +2310,6 @@ function nextCycleStartISO(joinedAt){
 }
 
 function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
-
-  const body = document.getElementById("topupsBody") || document.getElementById("topupsTbody");
-  if(!body){ return; }
-
-
   const tb = $("topups");
   if(!tb) return;
   tb.innerHTML = "";
@@ -2703,11 +2693,6 @@ async function loadProfilesByIds(ids){
 }
 
 function renderWithdrawRequests(rows, profileMap){
-
-  const body = document.getElementById("withdrawReqs") || document.getElementById("withdrawBody") || document.getElementById("withdrawTbody");
-  if(!body){ return; }
-
-
   const body = $("withdrawReqs");
   if(!body) return;
   body.innerHTML = "";
