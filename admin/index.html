@@ -451,31 +451,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast.err{border-color:rgba(255,85,85,.25)}
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
-
-/* ===== UI PATCH v13 (clientes visibles + cuentas como modal) ===== */
-#accountsCard.modal{
-  position: fixed; inset: 20px; z-index: 9999;
-  max-width: 1100px; margin: auto;
-  overflow: auto;
-}
-#accountsCard.modal.hidden{ display:none !important; }
-#accountsCard .modalHead{
-  position: sticky; top: 0;
-  background: rgba(10,12,14,.92);
-  backdrop-filter: blur(10px);
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  border-radius: 16px 16px 0 0;
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-}
-#accountsCard .modalHead .xbtn{
-  width: 38px; height: 38px; border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color:#fff; cursor:pointer;
-}
-#accountsCard .modalHead .xbtn:hover{ background: rgba(255,255,255,.10); }
-
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -700,33 +675,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
     </div>
 
-    
-    <!-- OPERACIONES (ADMIN) -->
+    <!-- RETIRAR CAPITAL -->
     <div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Operaciones (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Accesos rápidos para mantener el panel principal limpio.
-          </div>
-        </div>
-      </div>
-
-      <div class="row" style="gap:10px; flex-wrap:wrap">
-        <button type="button" class="btn" onclick="openWithdrawModal()">Retirar capital</button>
-        <button type="button" class="ghost" onclick="openAccreditModal()">Acreditar capital</button>
-        <button type="button" class="ghost" onclick="openWithdrawHistory()">Historial de retiros</button>
-      </div>
-    </div>
-
-<div id="modalWithdrawOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Retirar capital (Admin)</h3>
-        <button class="xbtn" type="button" onclick="closeWithdrawModal()">✕</button>
-      </div>
-      <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Retirar capital (Admin)</h2>
@@ -771,20 +721,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
     <!-- Lista -->
     
-    
-    </div>
-  </div>
-</div>
-
-
-<div id="modalAccreditOps" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Acreditar capital (Admin)</h3>
-        <button class="xbtn" type="button" onclick="closeAccreditModal()">✕</button>
-      </div>
-      <div class="card">
+    <!-- ACREDITAR CAPITAL (DIRECTO) -->
+    <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Acreditar capital (Admin)</h2>
@@ -856,18 +794,13 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     
 
     <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
-    <div class="card hidden modal" id="accountsCard">
-      <div class="modalHead">
+    <div class="card hidden" id="accountsCard">
+      <div class="header" style="margin:0 0 10px">
         <div>
           <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
           <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
-          <button type="button" class="xbtn" aria-label="Cerrar" onclick="closeClientAccounts()">✕</button>
-        </div>
-      </div>
-
+        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
       </div>
 
       <div class="table-wrap">
@@ -971,11 +904,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 </div>
 
 <!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
-
-    </div>
-  </div>
-</div>
-
 <div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-inner">
@@ -1050,6 +978,22 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 /*** SUPABASE CONFIG (CORRECTO) ***/
 const PROJECT_URL = "https://czvpehbubfrinutztnwh.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY";
+// Wrapper seguro para llamar RPC (POST /rest/v1/rpc/<fn>)
+async function supabaseRpc(fn, body){
+  const url = `${SUPABASE_URL}/rest/v1/rpc/${fn}`;
+  const headers = {
+    "Content-Type": "application/json",
+    apikey: ANON_KEY,
+    Authorization: `Bearer ${session?.access_token || accessToken || token || ""}`,
+  };
+  const r = await fetch(url, { method:"POST", headers, body: JSON.stringify(body || {}) });
+  const text = await r.text();
+  let data = null;
+  try{ data = text ? JSON.parse(text) : null; }catch(e){ data = text; }
+  if(!r.ok) return { ok:false, error:data || {status:r.status}, data:null };
+  return { ok:true, data, error:null };
+}
+
 const BASE = PROJECT_URL + "/rest/v1";
 const RPC  = BASE + "/rpc";
 const SUPABASE_URL = PROJECT_URL;
@@ -1602,9 +1546,6 @@ function openClientAccounts(userId){
   const rows = (CACHED||[]).filter(x=>String(x.user_id)===String(userId));
   const titleEl = $("accountsTitle");
   const wrap = $("accountsCard");
-
-  if(wrap){ wrap.classList.remove("hidden"); }
-  wrap?.scrollIntoView?.({ behavior:"smooth", block:"start" });
   const tb = $("accountsBody");
 
   if(titleEl){
@@ -1647,13 +1588,7 @@ function openClientAccounts(userId){
 }
 
 function closeClientAccounts(){
-  const card = $("accountsCard");
-  if(card){
-    card.classList.add("hidden");
-  }
-  // volver a la lista de clientes
-  const anchor = $("usersMsg") || $("users");
-  anchor?.scrollIntoView?.({ behavior:"smooth", block:"start" });
+  $("accountsCard")?.classList.add("hidden");
 }
 
 async function deleteAccount(acc){
@@ -1939,21 +1874,6 @@ async function doAccreditCapital(){
    ============================================================ */
 let WDH_CACHE = [];
 
-
-function openWithdrawModal(){ const m = $("modalWithdrawOps"); if(m) m.classList.remove("hidden"); }
-function closeWithdrawModal(){ const m = $("modalWithdrawOps"); if(m) m.classList.add("hidden"); }
-
-function openAccreditModal(){ const m = $("modalAccreditOps"); if(m) m.classList.remove("hidden"); }
-function closeAccreditModal(){ const m = $("modalAccreditOps"); if(m) m.classList.add("hidden"); }
-
-// Cerrar con click afuera
-document.addEventListener("click", (e)=>{
-  const mw = $("modalWithdrawOps");
-  if(mw && !mw.classList.contains("hidden") && e.target === mw) closeWithdrawModal();
-  const ma = $("modalAccreditOps");
-  if(ma && !ma.classList.contains("hidden") && e.target === ma) closeAccreditModal();
-});
-
 function openWithdrawHistory(){
   show($("modalWithdrawHistory"), true);
   loadWithdrawHistory();
@@ -1972,7 +1892,27 @@ function resolveClientByAccountId(accountId){
 }
 
 async function loadWithdrawHistory(){
-  const msg = $("withdrawHistoryMsg");
+  
+
+  // Fallback por si cambia el nombre del RPC (evita romper el panel)
+  async function callWithdrawHistoryRPC(){
+    const candidates = [
+      "admin_list_withdrawals_history",
+      "admin_list_withdrawals",
+      "admin_list_withdrawals_guard"
+    ];
+    let lastErr = null;
+    for(const fn of candidates){
+      try{
+        const out = await supabaseRpc(fn, {});
+        if(out && out.ok) return out.data;
+        lastErr = out?.error || lastErr;
+      }catch(e){ lastErr = e; }
+    }
+    throw lastErr || new Error("No se encontró un RPC de historial de retiros");
+  }
+
+const msg = $("withdrawHistoryMsg");
   if(msg) msg.textContent = "";
 
   const h = {
@@ -1985,7 +1925,7 @@ async function loadWithdrawHistory(){
 
   try{
     // ✅ Admin: RPC Security Definer (evita problemas de RLS/joins)
-    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_guard`;
+    const rpcUrl = `${BASE}/rpc/admin_list_withdrawals_history`;
     const res = await fetch(rpcUrl, { method:"POST", headers:h, body: JSON.stringify({}) , cache:"no-store" });
 
     if(!res.ok){
@@ -2762,7 +2702,7 @@ async function listWithdrawRequests(){
       "account_bank_name","account_bank_account","account_bank_account_type"
     ].join(",");
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc&status=eq.PENDING`;
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
 
     const res = await fetch(url, { headers:h, cache:"no-store" });
     if(!res.ok){
