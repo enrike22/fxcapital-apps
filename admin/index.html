@@ -451,6 +451,31 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast.err{border-color:rgba(255,85,85,.25)}
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
+
+/* ===== UI PATCH v13 (clientes visibles + cuentas como modal) ===== */
+#accountsCard.modal{
+  position: fixed; inset: 20px; z-index: 9999;
+  max-width: 1100px; margin: auto;
+  overflow: auto;
+}
+#accountsCard.modal.hidden{ display:none !important; }
+#accountsCard .modalHead{
+  position: sticky; top: 0;
+  background: rgba(10,12,14,.92);
+  backdrop-filter: blur(10px);
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px 16px 0 0;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+#accountsCard .modalHead .xbtn{
+  width: 38px; height: 38px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color:#fff; cursor:pointer;
+}
+#accountsCard .modalHead .xbtn:hover{ background: rgba(255,255,255,.10); }
+
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -831,13 +856,18 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     
 
     <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
-    <div class="card hidden" id="accountsCard">
-      <div class="header" style="margin:0 0 10px">
+    <div class="card hidden modal" id="accountsCard">
+      <div class="modalHead">
         <div>
           <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
           <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
         </div>
-        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
+          <button type="button" class="xbtn" aria-label="Cerrar" onclick="closeClientAccounts()">✕</button>
+        </div>
+      </div>
+
       </div>
 
       <div class="table-wrap">
@@ -1572,6 +1602,9 @@ function openClientAccounts(userId){
   const rows = (CACHED||[]).filter(x=>String(x.user_id)===String(userId));
   const titleEl = $("accountsTitle");
   const wrap = $("accountsCard");
+
+  if(wrap){ wrap.classList.remove(\"hidden\"); }
+  wrap?.scrollIntoView?.({ behavior:\"smooth\", block:\"start\" });
   const tb = $("accountsBody");
 
   if(titleEl){
@@ -1614,7 +1647,13 @@ function openClientAccounts(userId){
 }
 
 function closeClientAccounts(){
-  $("accountsCard")?.classList.add("hidden");
+  const card = $("accountsCard");
+  if(card){
+    card.classList.add("hidden");
+  }
+  // volver a la lista de clientes
+  const anchor = $("usersMsg") || $("users");
+  anchor?.scrollIntoView?.({ behavior:"smooth", block:"start" });
 }
 
 async function deleteAccount(acc){
