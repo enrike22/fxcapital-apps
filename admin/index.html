@@ -870,10 +870,11 @@ SOLICITUDES DE RETIRO (pendientes) -->
 
 <script>
 
-// ===== SAFE HELPERS =====
+// ===== SAFE HELPERS (blindaje sin recursión) =====
+const __add = EventTarget.prototype["addEventListener"];
 function safeAdd(el, evt, fn, opts){
-  if(!el || !el.addEventListener) return;
-  safeAdd(el, evt, fn, opts);
+  if(!el) return;
+  try{ __add.call(el, evt, fn, opts); }catch(e){}
 }
 
 
@@ -1403,7 +1404,6 @@ async function loadUsersViaJoinFallback(h){
 
 function renderUsers(rows){
   const tb = $("users");
-  if(!tb) return;
   tb.innerHTML = "";
 
   if(!rows || !rows.length){
