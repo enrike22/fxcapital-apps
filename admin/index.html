@@ -451,6 +451,15 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast.err{border-color:rgba(255,85,85,.25)}
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
+
+  /* ===== Segmented buttons (Operaciones Admin) ===== */
+  .seg3{display:flex;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:10px;box-shadow: var(--shadow2);backdrop-filter: blur(10px);}
+  .seg3 .seg-btn{flex:1;border-radius:999px;padding:14px 18px;font-weight:800;letter-spacing:.2px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.25);color:var(--text);transition:transform .12s ease, filter .12s ease, background .12s ease;}
+  .seg3 .seg-btn:hover{transform:translateY(-1px);filter:brightness(1.06);}
+  .seg3 .seg-btn:active{transform:translateY(0px) scale(.99);}
+  .seg3 .seg-btn:focus{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.10);}
+  /* primera carga: resalta el botón del historial como “activo” solo visual cuando el modal está abierto */
+  .seg3 .seg-btn.active{background:rgba(255,255,255,.92);color:#000;border-color:rgba(255,255,255,.55);}
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -675,8 +684,155 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
     </div>
 
-    <!-- RETIRAR CAPITAL -->
-    <div class="card">
+    
+    <!-- OPERACIONES (Admin) -->
+    <div class="card" id="opsCard">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Operaciones (Admin)</h2>
+          <div class="small">Accesos rápidos para mantener el panel principal limpio.</div>
+        </div>
+      </div>
+      <div class="seg3" role="tablist" aria-label="Operaciones admin">
+        <button type="button" class="seg-btn" onclick="openWithdrawAdminModal()">Retirar capital</button>
+        <button type="button" class="seg-btn" onclick="openAccreditAdminModal()">Acreditar capital</button>
+        <button type="button" class="seg-btn" onclick="openWithdrawHistory()">Historial de retiros</button>
+      </div>
+    </div>
+
+    <!-- (Se movieron a modales) Retirar/Acreditar capital -->
+<hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="schedMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeScheduleTopupModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnDoSchedule">Programar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RESET PASSWORD ===== -->
+<div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Forzar cambio de contraseña</h3>
+        <button class="xbtn" type="button" onclick="closeResetModal()">✕</button>
+      </div>
+
+      <div class="small" id="resetClientInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div id="resetPickWrap" class="hidden">
+          <label>Seleccionar cliente</label>
+          <select id="resetPick"></select>
+          <div class="small">Elige el cliente al que le asignarás una contraseña temporal.</div>
+        </div>
+
+        <div>
+          <label>Nueva contraseña</label>
+          <input id="resetNewPass" type="text" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+          <div class="small">Luego el cliente deberá iniciar sesión y cambiarla en su modal obligatorio.</div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" id="resetMsg"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeResetModal()">Cancelar</button>
+          <button class="ok" type="button" id="btnResetDo">Aplicar reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
+<div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Historial de retiros</h3>
+        <button class="xbtn" type="button" onclick="closeWithdrawHistory()">✕</button>
+      </div>
+
+      <div class="small" id="wdhInfo">
+        Aquí puedes imprimir/guardar en PDF y luego (si quieres) borrar lo mostrado.
+      </div>
+
+      <div class="inline" style="justify-content:space-between; margin-top:12px; gap:10px; flex-wrap:wrap">
+        <div class="inline" style="gap:10px; flex-wrap:wrap">
+          <button id="btnLoadWithdrawHistory" type="button" class="ghost">Refrescar historial</button>
+          <button id="btnPrintWithdrawHistory" type="button">Imprimir / Guardar PDF</button>
+          <button id="btnDeleteWithdrawalsShown" type="button" class="danger">Borrar historial mostrado</button>
+        </div>
+        <div class="small" id="wdhMsg">—</div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Fecha</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th>Monto</th>
+              <th>Referencia</th>
+              <th>Motivo / Nota</th>
+            </tr>
+          </thead>
+          <tbody id="wdhBody"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px; opacity:.85">
+        ⚠️ <b>“Borrar historial mostrado”</b> elimina filas de la base de datos. Úsalo solo si ya guardaste el PDF.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
+<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(620px,100%)">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3 id="confirmTitle">Confirmación</h3>
+        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
+      </div>
+
+      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
+          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+
+<!-- ===== MODAL: RETIRAR CAPITAL (Admin) ===== -->
+<div id="modalWithdrawAdmin" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Retirar capital</h3>
+        <button class="xbtn" type="button" onclick="closeWithdrawAdminModal()">✕</button>
+      </div>
+      <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Retirar capital (Admin)</h2>
@@ -721,8 +877,20 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
     <!-- Lista -->
     
-    <!-- ACREDITAR CAPITAL (DIRECTO) -->
-    <div class="card">
+    
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ACREDITAR CAPITAL (Admin) ===== -->
+<div id="modalAccreditAdmin" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Acreditar capital</h3>
+        <button class="xbtn" type="button" onclick="closeAccreditAdminModal()">✕</button>
+      </div>
+      <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Acreditar capital (Admin)</h2>
@@ -852,127 +1020,11 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         </div>
       </div>
 
-      <hr class="sep">
-
-      <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" id="schedMsg"></div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeScheduleTopupModal()">Cancelar</button>
-          <button class="ok" type="button" id="btnDoSchedule">Programar</button>
-        </div>
-      </div>
+      
     </div>
   </div>
 </div>
 
-<!-- ===== MODAL: RESET PASSWORD ===== -->
-<div id="modalReset" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Forzar cambio de contraseña</h3>
-        <button class="xbtn" type="button" onclick="closeResetModal()">✕</button>
-      </div>
-
-      <div class="small" id="resetClientInfo">—</div>
-
-      <div class="row" style="margin-top:10px">
-        <div id="resetPickWrap" class="hidden">
-          <label>Seleccionar cliente</label>
-          <select id="resetPick"></select>
-          <div class="small">Elige el cliente al que le asignarás una contraseña temporal.</div>
-        </div>
-
-        <div>
-          <label>Nueva contraseña</label>
-          <input id="resetNewPass" type="text" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-          <div class="small">Luego el cliente deberá iniciar sesión y cambiarla en su modal obligatorio.</div>
-        </div>
-      </div>
-
-      <hr class="sep">
-
-      <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" id="resetMsg"></div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeResetModal()">Cancelar</button>
-          <button class="ok" type="button" id="btnResetDo">Aplicar reset</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== MODAL: HISTORIAL DE RETIROS ===== -->
-<div id="modalWithdrawHistory" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Historial de retiros</h3>
-        <button class="xbtn" type="button" onclick="closeWithdrawHistory()">✕</button>
-      </div>
-
-      <div class="small" id="wdhInfo">
-        Aquí puedes imprimir/guardar en PDF y luego (si quieres) borrar lo mostrado.
-      </div>
-
-      <div class="inline" style="justify-content:space-between; margin-top:12px; gap:10px; flex-wrap:wrap">
-        <div class="inline" style="gap:10px; flex-wrap:wrap">
-          <button id="btnLoadWithdrawHistory" type="button" class="ghost">Refrescar historial</button>
-          <button id="btnPrintWithdrawHistory" type="button">Imprimir / Guardar PDF</button>
-          <button id="btnDeleteWithdrawalsShown" type="button" class="danger">Borrar historial mostrado</button>
-        </div>
-        <div class="small" id="wdhMsg">—</div>
-      </div>
-
-      <div class="table-wrap" style="margin-top:12px">
-        <table>
-          <thead>
-            <tr>
-              <th class="nowrap">Fecha</th>
-              <th>Cliente</th>
-              <th>Email</th>
-              <th>Monto</th>
-              <th>Referencia</th>
-              <th>Motivo / Nota</th>
-            </tr>
-          </thead>
-          <tbody id="wdhBody"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px; opacity:.85">
-        ⚠️ <b>“Borrar historial mostrado”</b> elimina filas de la base de datos. Úsalo solo si ya guardaste el PDF.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
-<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal" style="width:min(620px,100%)">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3 id="confirmTitle">Confirmación</h3>
-        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
-      </div>
-
-      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
-
-      <hr class="sep">
-
-      <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
-          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
@@ -1874,6 +1926,23 @@ async function doAccreditCapital(){
    ============================================================ */
 let WDH_CACHE = [];
 
+
+function openWithdrawAdminModal(){
+  show($("modalWithdrawAdmin"), true);
+  // refresca selector de cuentas si existe
+  try{ refreshWithdrawPicker?.(); }catch(_){}
+}
+function closeWithdrawAdminModal(){ show($("modalWithdrawAdmin"), false); }
+
+function openAccreditAdminModal(){
+  show($("modalAccreditAdmin"), true);
+  // llena selector de cuentas para acreditar
+  try{ refreshWithdrawPicker?.(); }catch(_){}
+  try{ refreshAccreditPicker?.(); }catch(_){}
+}
+function closeAccreditAdminModal(){ show($("modalAccreditAdmin"), false); }
+
+
 function openWithdrawHistory(){
   show($("modalWithdrawHistory"), true);
   loadWithdrawHistory();
@@ -2606,6 +2675,40 @@ function normAccountRow(a, idx){
 }
 
 
+
+async function loadAccountsByIds(ids){
+  const map = new Map();
+  if(!ids || !ids.length) return map;
+
+  const h = {
+    apikey: ANON_KEY,
+    Authorization: "Bearer "+getToken(),
+    "Cache-Control":"no-cache, no-store, must-revalidate",
+    Pragma:"no-cache"
+  };
+
+  // Campos mínimos para mapear account_id -> (user_id + datos)
+  const sel = [
+    "id","user_id","account_no","plan","currency","capital","initial_capital",
+    "invest_months","interest_pct","joined_at","compound_interest",
+    "bank_name","bank_account","bank_account_type","created_at"
+  ].join(",");
+
+  const chunkSize = 80;
+  for(let i=0;i<ids.length;i+=chunkSize){
+    const chunk = ids.slice(i, i+chunkSize).filter(isUUID);
+    if(!chunk.length) continue;
+    const inList = chunk.map(x=>`"${x}"`).join(",");
+    const url = `${BASE}/accounts?select=${encodeURIComponent(sel)}&id=in.(${inList})`;
+    const r = await fetch(url, { headers:h, cache:"no-store" });
+    if(!r.ok) await mustOk(r, "cargar cuentas (ids)");
+    const rows = await r.json().catch(()=>[]);
+    (rows||[]).forEach(a=> map.set(a.id, a));
+  }
+  return map;
+}
+
+
 async function loadProfilesByIds(ids){
   const map = new Map();
   if(!ids || !ids.length) return map;
@@ -2638,7 +2741,13 @@ function renderWithdrawRequests(rows, profileMap){
   if(!body) return;
   body.innerHTML = "";
 
-  (rows||[]).forEach(r=>{
+  // ✅ Solo pendientes (aprobadas/rechazadas no se muestran)
+  const pendingRows = (rows||[]).filter(r=>{
+    const st = String(r.status || "").toUpperCase().trim();
+    return (!st) || st.startsWith("PEND") || st==="REQUESTED";
+  });
+
+  (pendingRows||[]).forEach(r=>{
     // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
 
@@ -2702,7 +2811,7 @@ async function listWithdrawRequests(){
       "account_bank_name","account_bank_account","account_bank_account_type"
     ].join(",");
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.PENDING&order=created_at.desc`;
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
 
     const res = await fetch(url, { headers:h, cache:"no-store" });
     if(!res.ok){
@@ -2716,7 +2825,7 @@ async function listWithdrawRequests(){
     renderWithdrawRequests(rows, new Map());
 
     // KPI
-    const pending = rows.length;
+    const pending = rows.filter(r=> (r.status||"").toUpperCase()==="PENDING").length;
     setKPI("kpiWithdrawPending", pending);
     setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
 
@@ -3627,4 +3736,3 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
-
