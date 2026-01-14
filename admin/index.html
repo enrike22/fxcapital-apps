@@ -1008,6 +1008,51 @@ function getToken(){
   return t;
 }
 
+
+// ✅ Keep-alive de sesión: refresca access_token usando refresh_token (Supabase Auth REST)
+async function refreshAccessToken(){
+  try{
+    const rt = (localStorage.refresh_token || "").trim();
+    if(!rt) return false;
+    const r = await fetch(`${BASE}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: ANON_KEY, "Content-Type":"application/json" },
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    if(!r.ok) return false;
+    const data = await r.json().catch(()=>null);
+    if(!data?.access_token) return false;
+    localStorage.token = data.access_token;
+    if(data.refresh_token) localStorage.refresh_token = data.refresh_token;
+    if(data.user?.id) localStorage.uid = data.user.id;
+    return true;
+  }catch(_){
+    return false;
+  }
+}
+
+function scheduleAuthRefresh(){
+  try{
+    const t = getToken();
+    if(!t) return;
+    const part = t.split(".")[1] || "";
+    const b64 = part.replace(/-/g,'+').replace(/_/g,'/');
+    const payload = JSON.parse(atob(b64));
+    const expMs = (payload?.exp ? payload.exp*1000 : 0);
+    if(!expMs) return;
+
+    const now = Date.now();
+    // refrescar ~60s antes de expirar (mín 15s)
+    const ms = Math.max(15000, expMs - now - 60000);
+    clearTimeout(window.__authRefreshTimer);
+    window.__authRefreshTimer = setTimeout(async ()=>{
+      const ok = await refreshAccessToken();
+      if(ok) scheduleAuthRefresh();
+    }, ms);
+  }catch(_){/* ignore */}
+}
+
+
 function headersJSON(){
   const h = {
     apikey: ANON_KEY,
@@ -1016,78 +1061,7 @@ function headersJSON(){
   };
   const token = getToken();
   if(token) h.Authorization = "Bearer " + token;
-  
-/*** ✅ AUTH KEEP-ALIVE (evita logout por expiración) ***/
-let __authRefreshTimer = null;
-
-function base64UrlDecode(str){
-  try{
-    str = str.replace(/-/g, "+").replace(/_/g, "/");
-    const pad = str.length % 4;
-    if(pad) str += "=".repeat(4 - pad);
-    return atob(str);
-  }catch{ return ""; }
-}
-
-function getJwtExp(token){
-  try{
-    const parts = String(token||"").split(".");
-    if(parts.length !== 3) return 0;
-    const payload = JSON.parse(base64UrlDecode(parts[1]) || "{}");
-    return Number(payload?.exp || 0);
-  }catch{ return 0; }
-}
-
-async function refreshAccessToken(){
-  const rt = (localStorage.refresh_token || "").trim();
-  if(!rt) return null;
-
-  const r = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=refresh_token`,{
-    method:"POST",
-    headers:{ apikey: ANON_KEY, "Content-Type":"application/json" },
-    body: JSON.stringify({ refresh_token: rt })
-  });
-
-  const raw = await r.text().catch(()=> "");
-  let data = null;
-  try{ data = raw ? JSON.parse(raw) : null; }catch{ data = null; }
-
-  if(!r.ok || !data?.access_token){
-    return null;
-  }
-
-  localStorage.token = data.access_token;
-  if(data.refresh_token) localStorage.refresh_token = data.refresh_token;
-  if(data.user?.id) localStorage.uid = data.user.id;
-
-  return data.access_token;
-}
-
-function scheduleAuthRefresh(){
-  try{ if(__authRefreshTimer) clearTimeout(__authRefreshTimer); }catch{}
-  __authRefreshTimer = null;
-
-  const tok = getToken();
-  const exp = getJwtExp(tok);
-  if(!exp) return;
-
-  const now = Math.floor(Date.now()/1000);
-  // refresca 2 minutos antes (mínimo 10s)
-  const inSec = Math.max(10, (exp - now) - 120);
-
-  __authRefreshTimer = setTimeout(async ()=>{
-    try{
-      const newTok = await refreshAccessToken();
-      if(newTok){
-        // reprograma con el nuevo token
-        scheduleAuthRefresh();
-      }
-    }catch(e){
-      console.warn("Auto-refresh token falló:", e);
-    }
-  }, inSec*1000);
-}
-return h;
+  return h;
 }
 
 
@@ -1174,22 +1148,9 @@ async function validateSession(){
       headers: { apikey: ANON_KEY, Authorization: "Bearer " + token }
     });
 
-    // ✅ Si expira, intenta refresh antes de botar la sesión
+    // ✅ Solo borrar token si realmente es inválido/expirado
     if(r.status === 401 || r.status === 403){
-      const newTok = await refreshAccessToken().catch(()=> null);
-      if(newTok){
-        // reintenta una vez con el token nuevo
-        const r2 = await fetch(`${PROJECT_URL}/auth/v1/user`, {
-          method: "GET",
-          headers: { apikey: ANON_KEY, Authorization: "Bearer " + newTok }
-        });
-        if(r2.ok){
-          scheduleAuthRefresh();
-          return true;
-        }
-      }
       localStorage.removeItem("token");
-      localStorage.removeItem("refresh_token");
       localStorage.removeItem("uid");
       return false;
     }
@@ -1443,11 +1404,11 @@ async function doLogin(e){
     }
 
     localStorage.token = data.access_token;
-    localStorage.refresh_token = data.refresh_token || localStorage.refresh_token || "";
     localStorage.uid = data.user?.id || "";
 
-    scheduleAuthRefresh();
-    await initApp();
+    
+    localStorage.refresh_token = data.refresh_token || localStorage.refresh_token || "";
+await initApp();
 
   }catch(err){
     console.error(err);
@@ -1458,7 +1419,6 @@ async function doLogin(e){
 }
 function logout(){
   localStorage.removeItem("token");
-  localStorage.removeItem("refresh_token");
   localStorage.removeItem("uid");
   location.reload();
 }
@@ -2354,6 +2314,8 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
   if(!tb) return;
   tb.innerHTML = "";
 
+  const frag = document.createDocumentFragment();
+
   const BUCKET = "topup-receipts";
 
   rows.forEach(x=>{
@@ -2422,12 +2384,13 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
     `;
     frag.appendChild(tr);
   });
-  tb.appendChild(frag);
+
+  if(frag.childNodes.length) tb.appendChild(frag);
 
   if(!rows.length){
     const tr = document.createElement("tr");
     tr.innerHTML = `<td colspan="10" class="small">No hay recargas pendientes.</td>`;
-    tb.appendChild(tr);
+    frag.appendChild(tr);
   }
 }
 
@@ -3553,7 +3516,24 @@ async function doResetPassword(){
 
 /*** INIT ***/
 async function initApp(){
-  clearGlobalError();
+  
+  // keep-alive sesión
+  scheduleAuthRefresh();
+
+  try{
+    const t = getToken();
+    if(t){
+      const part = t.split(".")[1] || "";
+      const b64 = part.replace(/-/g,'+').replace(/_/g,'/');
+      const payload = JSON.parse(atob(b64));
+      const expMs = (payload?.exp ? payload.exp*1000 : 0);
+      if(expMs && (Date.now() > expMs - 30000)){ // si expira en <30s
+        await refreshAccessToken();
+      }
+    }
+  }catch(_){}
+
+clearGlobalError();
 
   const ok = await validateSession();
 
@@ -3571,7 +3551,6 @@ async function initApp(){
     show($("btnOpenResetGlobal"), true);
     show($("kpisWrap"), true);
 
-    scheduleAuthRefresh();
     await refreshSessionMeta();
     await listUsers();
     await listTopups();
