@@ -1008,6 +1008,51 @@ function getToken(){
   return t;
 }
 
+
+// ✅ Keep-alive de sesión: refresca access_token usando refresh_token (Supabase Auth REST)
+async function refreshAccessToken(){
+  try{
+    const rt = (localStorage.refresh_token || "").trim();
+    if(!rt) return false;
+    const r = await fetch(`${BASE}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: ANON_KEY, "Content-Type":"application/json" },
+      body: JSON.stringify({ refresh_token: rt })
+    });
+    if(!r.ok) return false;
+    const data = await r.json().catch(()=>null);
+    if(!data?.access_token) return false;
+    localStorage.token = data.access_token;
+    if(data.refresh_token) localStorage.refresh_token = data.refresh_token;
+    if(data.user?.id) localStorage.uid = data.user.id;
+    return true;
+  }catch(_){
+    return false;
+  }
+}
+
+function scheduleAuthRefresh(){
+  try{
+    const t = getToken();
+    if(!t) return;
+    const part = t.split(".")[1] || "";
+    const b64 = part.replace(/-/g,'+').replace(/_/g,'/');
+    const payload = JSON.parse(atob(b64));
+    const expMs = (payload?.exp ? payload.exp*1000 : 0);
+    if(!expMs) return;
+
+    const now = Date.now();
+    // refrescar ~60s antes de expirar (mín 15s)
+    const ms = Math.max(15000, expMs - now - 60000);
+    clearTimeout(window.__authRefreshTimer);
+    window.__authRefreshTimer = setTimeout(async ()=>{
+      const ok = await refreshAccessToken();
+      if(ok) scheduleAuthRefresh();
+    }, ms);
+  }catch(_){/* ignore */}
+}
+
+
 function headersJSON(){
   const h = {
     apikey: ANON_KEY,
@@ -1361,7 +1406,9 @@ async function doLogin(e){
     localStorage.token = data.access_token;
     localStorage.uid = data.user?.id || "";
 
-    await initApp();
+    
+    localStorage.refresh_token = data.refresh_token || localStorage.refresh_token || "";
+await initApp();
 
   }catch(err){
     console.error(err);
@@ -2168,7 +2215,7 @@ async function listTopups(){
 
   // ✅ Workaround: solo traemos PENDING y marcamos “Programada” si effective_date != null
   const sel = `id,amount,currency,status,bank_name,receipt_path,created_at,user_id,account_id,reference_code,provider,effective_date,scheduled_note`;
-  const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=eq.pending&status=eq.PENDING&order=created_at.desc`;
+  const url = `${BASE}/topups?select=${encodeURIComponent(sel)}&status=in.(pending,PENDING)&order=created_at.desc`;
 
   const r = await fetch(url, { headers:h, cache:"no-store" });
 
@@ -2267,6 +2314,8 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
   if(!tb) return;
   tb.innerHTML = "";
 
+  const frag = document.createDocumentFragment();
+
   const BUCKET = "topup-receipts";
 
   rows.forEach(x=>{
@@ -2333,13 +2382,15 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
         <button class="danger" onclick="rejectTopupPrompt('${x.id}')">Rechazar</button>
       </td>
     `;
-    tb.appendChild(tr);
+    frag.appendChild(tr);
   });
+
+  if(frag.childNodes.length) tb.appendChild(frag);
 
   if(!rows.length){
     const tr = document.createElement("tr");
     tr.innerHTML = `<td colspan="10" class="small">No hay recargas pendientes.</td>`;
-    tb.appendChild(tr);
+    frag.appendChild(tr);
   }
 }
 
@@ -3465,7 +3516,24 @@ async function doResetPassword(){
 
 /*** INIT ***/
 async function initApp(){
-  clearGlobalError();
+  
+  // keep-alive sesión
+  scheduleAuthRefresh();
+
+  try{
+    const t = getToken();
+    if(t){
+      const part = t.split(".")[1] || "";
+      const b64 = part.replace(/-/g,'+').replace(/_/g,'/');
+      const payload = JSON.parse(atob(b64));
+      const expMs = (payload?.exp ? payload.exp*1000 : 0);
+      if(expMs && (Date.now() > expMs - 30000)){ // si expira en <30s
+        await refreshAccessToken();
+      }
+    }
+  }catch(_){}
+
+clearGlobalError();
 
   const ok = await validateSession();
 
