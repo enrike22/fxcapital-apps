@@ -1632,16 +1632,12 @@ async function deleteAccount(acc){
 }
 
 /*** BUSCAR (mismo id="q") ***/
-let __qDebounce = null;
 $("q")?.addEventListener("input",(e)=>{
   const qv = e.target.value.trim().toLowerCase();
-  clearTimeout(__qDebounce);
-  __qDebounce = setTimeout(()=>{
-    if(!qv){ renderUsers(CACHED); return; }
-    const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
-      .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
-    renderUsers(filt);
-  }, 120);
+  if(!qv){ renderUsers(CACHED); return; }
+  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
+    .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
+  renderUsers(filt);
 });
 
 /* ============================================================
@@ -2641,12 +2637,8 @@ function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
   body.innerHTML = "";
-  const frag = document.createDocumentFragment();
 
   (rows||[]).forEach(r=>{
-    const __st = String(r.status || "").toUpperCase();
-    if(__st && __st !== "PENDING") return;
-
     // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
 
@@ -2683,9 +2675,8 @@ function renderWithdrawRequests(rows, profileMap){
         })()}
       </td>
     `;
-    frag.appendChild(tr);
+    body.appendChild(tr);
   });
-  body.appendChild(frag);
 }
 
 async function listWithdrawRequests(){
@@ -2737,11 +2728,21 @@ async function listWithdrawRequests(){
 }
 
 
+
+async function deleteWithdrawReq(id){
+  const h = hAuth();
+  const r = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, { method:"DELETE", headers: h });
+  if(!r.ok){
+    // Si no se puede borrar por permisos/RLS, no rompemos el flujo.
+    console.warn("No se pudo borrar withdrawal_requests", await r.text());
+  }
+}
+
 async function approveWithdrawReq(id){
   const h = hAuth();
 
   // 1) Obtener solicitud para saber account_id y amount
-  const q = `${BASE}/withdrawal_requests?select=${encodeURIComponent("id,account_id,amount,status")}&id=eq.${id}&limit=1`;
+  const q = `${BASE}/withdrawal_requests?select=${encodeURIComponent("id,account_id,amount,status")}&status=eq.PENDING&id=eq.${id}&limit=1`;
   const r0 = await fetch(q, { headers: h });
   if(!r0.ok) throw new Error(await r0.text());
   const rows = await r0.json();
@@ -2769,13 +2770,8 @@ async function approveWithdrawReq(id){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
-
-  // 4) ✅ Borrar la solicitud (ya aprobada/rechazada) para que no quede acumulada
-  const r3 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
-    method:"DELETE",
-    headers: h
-  });
-  if(!r3.ok) throw new Error(await r3.text());
+  // 4) Borrar solicitud para que no quede historial
+  try{ await deleteWithdrawReq(id); }catch(e){ console.warn(e); }
 }
 
 async function rejectWithdrawReq(id, reason){
@@ -2792,13 +2788,8 @@ async function rejectWithdrawReq(id, reason){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
-
-  // 4) ✅ Borrar la solicitud (ya aprobada/rechazada) para que no quede acumulada
-  const r3 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
-    method:"DELETE",
-    headers: h
-  });
-  if(!r3.ok) throw new Error(await r3.text());
+  // Borrar solicitud para que no quede historial
+  try{ await deleteWithdrawReq(id); }catch(e){ console.warn(e); }
 }
 
 // === Aliases usados por la UI de "Solicitudes de retiro" ===
@@ -3558,34 +3549,20 @@ document.addEventListener("DOMContentLoaded", ()=>{
   initApp();
 });
 
-/*** FX DEBUG HARNESS (captura errores + requests cuando está habilitado) ***/
+/*** FX DEBUG HARNESS (captura TODOS los errores + requests) ***/
 (function(){
-  const enabled = (localStorage.fx_debug_enabled === "1") || (new URLSearchParams(location.search).get("debug") === "1");
+
+  // ✅ Debug harness (deshabilitado por defecto para mejorar fluidez)
+  const DEBUG_ENABLED =
+    (localStorage.fx_debug_enabled === "1") ||
+    (new URLSearchParams(location.search).get("debug") === "1");
+
+  if(DEBUG_ENABLED){
   const store = [];
   const push = (type, payload) => {
-    if(!enabled) return;
     store.push({ts:new Date().toISOString(), type, ...payload});
     try{ localStorage.fx_debug_log = JSON.stringify(store.slice(-800)); }catch(e){}
   };
-
-  // API disponible siempre (aunque esté deshabilitado)
-  window.FX_DEBUG = {
-    enabled,
-    get(){ try{return JSON.parse(localStorage.fx_debug_log||'[]');}catch(e){return store;} },
-    clear(){ localStorage.removeItem('fx_debug_log'); store.length=0; },
-    download(){
-      const blob = new Blob([JSON.stringify(window.FX_DEBUG.get(), null, 2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'fx_admin_debug_log.json';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
-    }
-  };
-
-  // Si no está habilitado, no instrumentamos nada (mejor rendimiento)
-  if(!enabled) return;
 
   // 1) Errores JS
   window.addEventListener('error', (e)=>{
@@ -3627,15 +3604,32 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   };
 
+  // API para descargar
+  window.FX_DEBUG = {
+    get(){ try{return JSON.parse(localStorage.fx_debug_log||'[]');}catch(e){return store;} },
+    clear(){ localStorage.removeItem('fx_debug_log'); store.length=0; },
+    download(){
+      const blob = new Blob([JSON.stringify(window.FX_DEBUG.get(), null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'fx_admin_debug_log.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+  };
 
   // Atajo: Ctrl+Shift+D descarga
-  window.addEventListener('keydown', (e)=>{
-    if(e.ctrlKey && e.shiftKey && (e.key==='D' || e.key==='d')){
-      e.preventDefault();
-      window.FX_DEBUG.download();
-      alert('Log descargado: fx_admin_debug_log.json');
-    }
-  
+    window.addEventListener('keydown', (e)=>{
+      if(e.ctrlKey && e.shiftKey && (e.key==='D' || e.key==='d')){
+        e.preventDefault();
+        window.FX_DEBUG.download();
+        alert('Log descargado: fx_admin_debug_log.json');
+      }
+    });
+
+  }
+
   // Acreditar capital (directo)
   $("capAccount")?.addEventListener("change", updateCapHint);
   $("btnAccreditCapital")?.addEventListener("click", doAccreditCapital);
@@ -3650,11 +3644,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 </script>
 </body>
-</html
-// Compat: algunas versiones llamaban getAuthUserByEmail()
-async function getAuthUserByEmail(email){
-  const id = await getAuthedUserIdByEmail(email);
-  return id ? { id } : null;
-}
->
-
+</html>
