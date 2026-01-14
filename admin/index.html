@@ -452,14 +452,15 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
 
-  /* ===== Segmented buttons (Operaciones Admin) ===== */
-  .seg3{display:flex;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:10px;box-shadow: var(--shadow2);backdrop-filter: blur(10px);}
-  .seg3 .seg-btn{flex:1;border-radius:999px;padding:14px 18px;font-weight:800;letter-spacing:.2px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.25);color:var(--text);transition:transform .12s ease, filter .12s ease, background .12s ease;}
-  .seg3 .seg-btn:hover{transform:translateY(-1px);filter:brightness(1.06);}
-  .seg3 .seg-btn:active{transform:translateY(0px) scale(.99);}
-  .seg3 .seg-btn:focus{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.10);}
-  /* primera carga: resalta el botón del historial como “activo” solo visual cuando el modal está abierto */
-  .seg3 .seg-btn.active{background:rgba(255,255,255,.92);color:#000;border-color:rgba(255,255,255,.55);}
+/* ===== Operaciones (Admin) quick buttons ===== */
+.opCard .sub{opacity:.85;margin-top:6px}
+.segWrap{margin-top:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:10px;display:flex;gap:10px}
+.segBtn{flex:1;appearance:none;border:none;cursor:pointer;border-radius:999px;padding:14px 18px;font-weight:800;letter-spacing:.2px;
+  background:rgba(255,255,255,.06);color:#e7edf6;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}
+.segBtn:hover{background:rgba(255,255,255,.10)}
+.segBtn.primary{background:rgba(255,255,255,.92);color:#0b0f14}
+.segBtn.primary:hover{background:#fff}
+
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -670,38 +671,105 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
           <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
         </div>
 
-        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" autocomplete="organization"></div>
-        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" autocomplete="off"></div>
-        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …" autocomplete="off"></div>
-      </form>
-
-      <hr class="sep">
-
-      <div class="inline" style="gap:12px">
-        <button id="saveBtn" type="button">Guardar</button>
-        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
-        <span id="saveMsg" class="small" style="margin-left:8px"></span>
-      </div>
-    </div>
-
-    
+        <div><label>Banco</label><input id="u_bank_name" placeholder=
     <!-- OPERACIONES (Admin) -->
-    <div class="card" id="opsCard">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+    <div class="card opCard" id="opsAdminCard">
+      <div class="header" style="margin:0 0 8px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Operaciones (Admin)</h2>
-          <div class="small">Accesos rápidos para mantener el panel principal limpio.</div>
+          <div class="small sub">Accesos rápidos para mantener el panel principal limpio.</div>
         </div>
       </div>
-      <div class="seg3" role="tablist" aria-label="Operaciones admin">
-        <button type="button" class="seg-btn" onclick="openWithdrawAdminModal()">Retirar capital</button>
-        <button type="button" class="seg-btn" onclick="openAccreditAdminModal()">Acreditar capital</button>
-        <button type="button" class="seg-btn" onclick="openWithdrawHistory()">Historial de retiros</button>
+
+      <div class="segWrap" role="group" aria-label="Operaciones admin">
+        <button class="segBtn" type="button" id="btnOpWithdraw">Retirar capital</button>
+        <button class="segBtn" type="button" id="btnOpAccredit">Acreditar capital</button>
+        <button class="segBtn primary" type="button" id="btnOpHistory">Historial de retiros</button>
       </div>
     </div>
+rescar lista</button>
+      </div>
 
-    <!-- (Se movieron a modales) Retirar/Acreditar capital -->
-<hr class="sep">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
+      </p>
+      <p id="usersMsg" class="small" style="margin-top:6px"></p>
+    
+
+    <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
+    <div class="card hidden" id="accountsCard">
+      <div class="header" style="margin:0 0 10px">
+        <div>
+          <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
+        </div>
+        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Cuenta</th>
+              <th>Plan</th>
+              <th>Capital</th>
+              <th>Moneda</th>
+              <th>Meses</th>
+              <th>Tasa %/6m</th>
+              <th>Modo</th>
+              <th>Banco</th>
+              <th class="nowrap">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="accountsBody"></tbody>
+        </table>
+      </div>
+      <p class="small" style="margin-top:10px">Tip: usa <b>Editar</b> para cargar esa cuenta en el formulario y guarda. Solo se actualiza la cuenta seleccionada.</p>
+    </div>
+
+</div>
+
+  </div><!-- /app -->
+</div><!-- /container -->
+
+<!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
+<div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3>Programar acreditación</h3>
+        <button class="xbtn" type="button" onclick="closeScheduleTopupModal()">✕</button>
+      </div>
+
+      <div class="small" id="schedInfo">—</div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Fecha efectiva (se acredita a las 9:00 AM GT)</label>
+          <input id="schedDate" type="date" autocomplete="off">
+          <div class="small">🔒 No se permiten fechas pasadas.</div>
+        </div>
+        <div>
+          <label>Nota (opcional)</label>
+          <input id="schedNote" placeholder="Ej: Se acredita al inicio del ciclo" autocomplete="off">
+        </div>
+      </div>
+
+      <hr class="sep">
 
       <div class="inline" style="justify-content:space-between; gap:12px">
         <div class="small" id="schedMsg"></div>
@@ -798,31 +866,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 </div>
 
 <!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
-<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal" style="width:min(620px,100%)">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3 id="confirmTitle">Confirmación</h3>
-        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
-      </div>
-
-      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
-
-      <hr class="sep">
-
-      <div class="inline" style="justify-content:space-between; gap:12px">
-        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
-          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
-
 
 <!-- ===== MODAL: RETIRAR CAPITAL (Admin) ===== -->
 <div id="modalWithdrawAdmin" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -832,7 +875,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <h3>Retirar capital</h3>
         <button class="xbtn" type="button" onclick="closeWithdrawAdminModal()">✕</button>
       </div>
-      <div class="card">
+      <div class="modal-body">
+<div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Retirar capital (Admin)</h2>
@@ -876,8 +920,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     </div>
 
     <!-- Lista -->
-    
-    
+      </div>
     </div>
   </div>
 </div>
@@ -890,7 +933,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <h3>Acreditar capital</h3>
         <button class="xbtn" type="button" onclick="closeAccreditAdminModal()">✕</button>
       </div>
-      <div class="card">
+      <div class="modal-body">
+<div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Acreditar capital (Admin)</h2>
@@ -959,72 +1003,35 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
         <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
       </p>
       <p id="usersMsg" class="small" style="margin-top:6px"></p>
-    
-
-    <!-- CUENTAS DEL CLIENTE (nuevo: vista ordenada) -->
-    <div class="card hidden" id="accountsCard">
-      <div class="header" style="margin:0 0 10px">
-        <div>
-          <h2 id="accountsTitle" style="margin:0">Cuentas del cliente</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">Aquí puedes editar cada cuenta sin afectar a las demás.</div>
-        </div>
-        <button type="button" class="ghost" onclick="closeClientAccounts()">Volver a clientes</button>
       </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="nowrap">Cuenta</th>
-              <th>Plan</th>
-              <th>Capital</th>
-              <th>Moneda</th>
-              <th>Meses</th>
-              <th>Tasa %/6m</th>
-              <th>Modo</th>
-              <th>Banco</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="accountsBody"></tbody>
-        </table>
-      </div>
-      <p class="small" style="margin-top:10px">Tip: usa <b>Editar</b> para cargar esa cuenta en el formulario y guarda. Solo se actualiza la cuenta seleccionada.</p>
-    </div>
-
-</div>
-
-  </div><!-- /app -->
-</div><!-- /container -->
-
-<!-- ===== MODAL: PROGRAMAR TOPUP ===== -->
-<div id="modalScheduleTopup" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Programar acreditación</h3>
-        <button class="xbtn" type="button" onclick="closeScheduleTopupModal()">✕</button>
-      </div>
-
-      <div class="small" id="schedInfo">—</div>
-
-      <div class="row" style="margin-top:10px">
-        <div>
-          <label>Fecha efectiva (se acredita a las 9:00 AM GT)</label>
-          <input id="schedDate" type="date" autocomplete="off">
-          <div class="small">🔒 No se permiten fechas pasadas.</div>
-        </div>
-        <div>
-          <label>Nota (opcional)</label>
-          <input id="schedNote" placeholder="Ej: Se acredita al inicio del ciclo" autocomplete="off">
-        </div>
-      </div>
-
-      
     </div>
   </div>
 </div>
 
+<div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(620px,100%)">
+    <div class="modal-inner">
+      <div class="modal-title">
+        <h3 id="confirmTitle">Confirmación</h3>
+        <button class="xbtn" type="button" onclick="closeConfirm(false)">✕</button>
+      </div>
+
+      <div class="small" id="confirmMsg" style="color:rgba(245,247,250,.86);line-height:1.5">—</div>
+
+      <hr class="sep">
+
+      <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="small" style="opacity:.8">Esta acción quedará registrada en el historial administrativo.</div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" onclick="closeConfirm(false)">Cancelar</button>
+          <button class="ok" type="button" id="confirmOkBtn">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /*** SUPABASE CONFIG (CORRECTO) ***/
@@ -1926,23 +1933,6 @@ async function doAccreditCapital(){
    ============================================================ */
 let WDH_CACHE = [];
 
-
-function openWithdrawAdminModal(){
-  show($("modalWithdrawAdmin"), true);
-  // refresca selector de cuentas si existe
-  try{ refreshWithdrawPicker?.(); }catch(_){}
-}
-function closeWithdrawAdminModal(){ show($("modalWithdrawAdmin"), false); }
-
-function openAccreditAdminModal(){
-  show($("modalAccreditAdmin"), true);
-  // llena selector de cuentas para acreditar
-  try{ refreshWithdrawPicker?.(); }catch(_){}
-  try{ refreshAccreditPicker?.(); }catch(_){}
-}
-function closeAccreditAdminModal(){ show($("modalAccreditAdmin"), false); }
-
-
 function openWithdrawHistory(){
   show($("modalWithdrawHistory"), true);
   loadWithdrawHistory();
@@ -1950,6 +1940,29 @@ function openWithdrawHistory(){
 function closeWithdrawHistory(){
   show($("modalWithdrawHistory"), false);
 }
+
+function openWithdrawAdminModal(){
+  show($("modalWithdrawAdmin"), true);
+  // refresca selector de cuentas del retiro si existe
+  try{ refreshWithdrawPicker?.(); }catch(_){}
+}
+function closeWithdrawAdminModal(){ show($("modalWithdrawAdmin"), false); }
+
+function openAccreditAdminModal(){
+  show($("modalAccreditAdmin"), true);
+  // refresca selector de cuentas para acreditar si existe
+  try{ refreshAccreditPicker?.(); }catch(_){}
+}
+function closeAccreditAdminModal(){ show($("modalAccreditAdmin"), false); }
+
+// Cierra modal si haces click fuera (backdrop)
+document.addEventListener("click", (e)=>{
+  const b1 = $("modalWithdrawAdmin");
+  const b2 = $("modalAccreditAdmin");
+  if(b1 && !b1.classList.contains("hidden") && e.target === b1) closeWithdrawAdminModal();
+  if(b2 && !b2.classList.contains("hidden") && e.target === b2) closeAccreditAdminModal();
+});
+
 
 function resolveClientByAccountId(accountId){
   const x = (CACHED||[]).find(r => r.account_id === accountId);
@@ -2675,40 +2688,6 @@ function normAccountRow(a, idx){
 }
 
 
-
-async function loadAccountsByIds(ids){
-  const map = new Map();
-  if(!ids || !ids.length) return map;
-
-  const h = {
-    apikey: ANON_KEY,
-    Authorization: "Bearer "+getToken(),
-    "Cache-Control":"no-cache, no-store, must-revalidate",
-    Pragma:"no-cache"
-  };
-
-  // Campos mínimos para mapear account_id -> (user_id + datos)
-  const sel = [
-    "id","user_id","account_no","plan","currency","capital","initial_capital",
-    "invest_months","interest_pct","joined_at","compound_interest",
-    "bank_name","bank_account","bank_account_type","created_at"
-  ].join(",");
-
-  const chunkSize = 80;
-  for(let i=0;i<ids.length;i+=chunkSize){
-    const chunk = ids.slice(i, i+chunkSize).filter(isUUID);
-    if(!chunk.length) continue;
-    const inList = chunk.map(x=>`"${x}"`).join(",");
-    const url = `${BASE}/accounts?select=${encodeURIComponent(sel)}&id=in.(${inList})`;
-    const r = await fetch(url, { headers:h, cache:"no-store" });
-    if(!r.ok) await mustOk(r, "cargar cuentas (ids)");
-    const rows = await r.json().catch(()=>[]);
-    (rows||[]).forEach(a=> map.set(a.id, a));
-  }
-  return map;
-}
-
-
 async function loadProfilesByIds(ids){
   const map = new Map();
   if(!ids || !ids.length) return map;
@@ -2741,13 +2720,14 @@ function renderWithdrawRequests(rows, profileMap){
   if(!body) return;
   body.innerHTML = "";
 
-  // ✅ Solo pendientes (aprobadas/rechazadas no se muestran)
-  const pendingRows = (rows||[]).filter(r=>{
-    const st = String(r.status || "").toUpperCase().trim();
-    return (!st) || st.startsWith("PEND") || st==="REQUESTED";
-  });
+  // Solo pendientes (no mostrar aprobadas/rechazadas)
+  const isPending = (r)=>{
+    const s = (r?.status ?? r?.state ?? r?.withdraw_status ?? "").toString().toLowerCase().trim();
+    return !s || s==="pending" || s==="requested" || s==="request" || s==="new" || s==="open";
+  };
+  rows = (rows||[]).filter(isPending);
 
-  (pendingRows||[]).forEach(r=>{
+  (rows||[]).forEach(r=>{
     // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
 
@@ -3708,7 +3688,18 @@ document.addEventListener("DOMContentLoaded", ()=>{
   };
 
   // Atajo: Ctrl+Shift+D descarga
-  window.addEventListener('keydown', (e)=>{
+  
+function bindOpsButtons(){
+  const bw = $("btnOpWithdraw");
+  const ba = $("btnOpAccredit");
+  const bh = $("btnOpHistory");
+  if(bw) bw.onclick = openWithdrawAdminModal;
+  if(ba) ba.onclick = openAccreditAdminModal;
+  if(bh) bh.onclick = openWithdrawHistory;
+}
+try{ bindOpsButtons(); }catch(_){}
+
+window.addEventListener('keydown', (e)=>{
     if(e.ctrlKey && e.shiftKey && (e.key==='D' || e.key==='d')){
       e.preventDefault();
       window.FX_DEBUG.download();
@@ -3736,3 +3727,4 @@ async function getAuthUserByEmail(email){
   return id ? { id } : null;
 }
 >
+
