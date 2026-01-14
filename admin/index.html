@@ -1632,12 +1632,16 @@ async function deleteAccount(acc){
 }
 
 /*** BUSCAR (mismo id="q") ***/
+let __qDebounce = null;
 $("q")?.addEventListener("input",(e)=>{
   const qv = e.target.value.trim().toLowerCase();
-  if(!qv){ renderUsers(CACHED); return; }
-  const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
-    .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
-  renderUsers(filt);
+  clearTimeout(__qDebounce);
+  __qDebounce = setTimeout(()=>{
+    if(!qv){ renderUsers(CACHED); return; }
+    const filt = CACHED.filter(x=>[x.full_name,x.email,x.phone,x.plan,x.bank_name,x.bank_account,x.bank_account_type]
+      .filter(Boolean).some(v=>String(v).toLowerCase().includes(qv)));
+    renderUsers(filt);
+  }, 120);
 });
 
 /* ============================================================
@@ -2640,6 +2644,9 @@ function renderWithdrawRequests(rows, profileMap){
   const frag = document.createDocumentFragment();
 
   (rows||[]).forEach(r=>{
+    const __st = String(r.status || "").toUpperCase();
+    if(__st && __st !== "PENDING") return;
+
     // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
 
@@ -2704,7 +2711,7 @@ async function listWithdrawRequests(){
       "account_bank_name","account_bank_account","account_bank_account_type"
     ].join(",");
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.PENDING&order=created_at.desc`;
 
     const res = await fetch(url, { headers:h, cache:"no-store" });
     if(!res.ok){
