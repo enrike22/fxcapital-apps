@@ -2201,6 +2201,27 @@ async function fetchProfiles(userIds, h){
   return new Map(profs.map(p=>[p.id,p]));
 }
 
+async function fetchAccountNos(accountIds, h){
+  if(!accountIds?.length) return new Map();
+  const unique = [...new Set(accountIds.filter(Boolean))];
+  const out = new Map();
+  // chunk to avoid URL too long
+  const CHUNK = 50;
+  for(let i=0;i<unique.length;i+=CHUNK){
+    const chunk = unique.slice(i,i+CHUNK);
+    const url = `${BASE}/accounts?select=id,account_no&id=in.(${chunk.join(",")})`;
+    const r = await fetch(url, { headers:h, cache:"no-store" });
+    if(!r.ok) continue;
+    const rows = await r.json();
+    (rows||[]).forEach(a=>{
+      if(a && a.id && a.account_no !== null && a.account_no !== undefined){
+        out.set(a.id, a.account_no);
+      }
+    });
+  }
+  return out;
+}
+
 async function listTopups(){
   const msgEl = $("topupsMsg");
   if(msgEl) msgEl.textContent = "";
@@ -2260,7 +2281,10 @@ async function listTopups(){
   let profMap = new Map();
   try{ profMap = await fetchProfiles(allUserIds, h); }catch{ profMap = new Map(); }
 
-  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid);
+  let acctNoMap = new Map();
+  try{ acctNoMap = await fetchAccountNos(rows.map(x=>x.account_id).filter(Boolean), h); }catch{ acctNoMap = new Map(); }
+
+  renderTopups(rows, profMap, byUserId, byAccountId, acctToUid, acctNoMap);
 
   if(msgEl) msgEl.textContent = `Recargas: ${rows.length} (pending + programadas por fecha)`;
 
@@ -2309,7 +2333,7 @@ function nextCycleStartISO(joinedAt){
   return cand.toISOString().slice(0,10);
 }
 
-function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid){
+function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUid, acctNoMap){
   const tb = $("topups");
   if(!tb) return;
   tb.innerHTML = "";
@@ -2334,7 +2358,10 @@ function renderTopups(rows, profMap, cachedByUserId, cachedByAccountId, acctToUi
 
     // No. de cuenta (multicuentas)
     let accountNo = "—";
-    if(c2){
+    if(x.account_id && acctNoMap && acctNoMap.get(x.account_id) !== undefined){
+      accountNo = `Cuenta No. ${acctNoMap.get(x.account_id)}`;
+    }
+    if(accountNo==="—" && c2){
       const lab = c2.account_no_label || c2.account_label;
       if(lab) accountNo = lab;
       else if(c2.account_no !== null && c2.account_no !== undefined) accountNo = `Cuenta No. ${c2.account_no}`;
