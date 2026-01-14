@@ -452,15 +452,35 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
 
-/* ===== Operaciones (Admin) quick buttons ===== */
-.opCard .sub{opacity:.85;margin-top:6px}
-.segWrap{margin-top:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:10px;display:flex;gap:10px}
-.segBtn{flex:1;appearance:none;border:none;cursor:pointer;border-radius:999px;padding:14px 18px;font-weight:800;letter-spacing:.2px;
-  background:rgba(255,255,255,.06);color:#e7edf6;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}
-.segBtn:hover{background:rgba(255,255,255,.10)}
-.segBtn.primary{background:rgba(255,255,255,.92);color:#0b0f14}
-.segBtn.primary:hover{background:#fff}
-
+/* --- Layout helpers (premium) --- */
+.full{grid-column:1/-1}
+.row.tight{gap:12px}
+.segment{
+  display:flex; gap:10px; padding:10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+}
+.segment .seg-btn{
+  flex:1;
+  border-radius: 999px;
+  padding:12px 14px;
+  font-weight:900;
+  letter-spacing:.2px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.15);
+}
+.segment .seg-btn.primary{
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72));
+  color:#0B0D10;
+  border-color: rgba(0,0,0,.20);
+}
+.segment .seg-btn:hover{filter:brightness(1.05)}
+/* Ensure big sections don't get squeezed on desktop */
+@media (min-width: 980px){
+  #cardUserEditor, #cardClients, #cardWithdrawReqs, #cardTopups{grid-column:1/-1}
+}
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -528,8 +548,24 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- APP -->
   <div id="app" class="hidden">
 
+    <!-- OPERACIONES (ADMIN) - accesos rápidos -->
+    <div class="card full" id="cardOps">
+      <div class="header" style="margin:0 0 12px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Operaciones (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">Accesos rápidos para mantener el panel principal limpio.</div>
+        </div>
+      </div>
+      <div class="segment">
+        <button id="btnOpenWithdrawAdmin" type="button" class="seg-btn">Retirar capital</button>
+        <button id="btnOpenAccreditAdmin" type="button" class="seg-btn">Acreditar capital</button>
+        <button id="btnOpenWithdrawHistory" type="button" class="seg-btn primary">Historial de retiros</button>
+      </div>
+    </div>
+
+
     <!-- SOLICITUDES DE RETIRO (pendientes) -->
-    <div class="card">
+    <div class="card full" id="cardWithdrawReqs">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Solicitudes de retiro</h2>
         <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
@@ -559,7 +595,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     </div>
 
     <!-- TOPUPS -->
-    <div class="card">
+    <div class="card full" id="cardTopups">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
         <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
@@ -671,23 +707,116 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
           <div class="small">Para STANDARD debe ser 15. Para PLATINUM debe ser 20.</div>
         </div>
 
-        <div><label>Banco</label><input id="u_bank_name" placeholder=
-    <!-- OPERACIONES (Admin) -->
-    <div class="card opCard" id="opsAdminCard">
-      <div class="header" style="margin:0 0 8px; align-items:flex-start">
+        <div><label>Banco</label><input id="u_bank_name" placeholder="Banco Industrial" autocomplete="organization"></div>
+        <div><label>No. de cuenta</label><input id="u_bank_account" placeholder="1234567890" autocomplete="off"></div>
+        <div><label>Tipo de cuenta</label><input id="u_bank_account_type" placeholder="Ahorro / Monetaria / …" autocomplete="off"></div>
+      </form>
+
+      <hr class="sep">
+
+      <div class="inline" style="gap:12px">
+        <button id="saveBtn" type="button">Guardar</button>
+        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
+        <span id="saveMsg" class="small" style="margin-left:8px"></span>
+      </div>
+    </div>
+
+    <!-- RETIRAR CAPITAL -->
+    <div class="card">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
-          <h2 style="margin:0">Operaciones (Admin)</h2>
-          <div class="small sub">Accesos rápidos para mantener el panel principal limpio.</div>
+          <h2 style="margin:0">Retirar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
+          </div>
+        </div>
+
+        <div class="inline" style="gap:10px">
+          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
         </div>
       </div>
 
-      <div class="segWrap" role="group" aria-label="Operaciones admin">
-        <button class="segBtn" type="button" id="btnOpWithdraw">Retirar capital</button>
-        <button class="segBtn" type="button" id="btnOpAccredit">Acreditar capital</button>
-        <button class="segBtn primary" type="button" id="btnOpHistory">Historial de retiros</button>
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="wdAccount"></select>
+          <div class="small" id="wdHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a retirar</label>
+          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00" autocomplete="off">
+        </div>
+
+        <div>
+          <label>Referencia (opcional)</label>
+          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta" autocomplete="off">
+        </div>
+
+        <div>
+          <label>Nota interna (opcional)</label>
+          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación" autocomplete="off">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
+        <span id="wdMsg" class="small" style="opacity:.9"></span>
       </div>
     </div>
-rescar lista</button>
+
+    <!-- Lista -->
+    
+    <!-- ACREDITAR CAPITAL (DIRECTO) -->
+    <div class="card">
+      <div class="header" style="margin:0 0 10px; align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Acreditar capital (Admin)</h2>
+          <div class="small" style="margin-top:6px;opacity:.9">
+            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
+        <div>
+          <label>Cliente / Cuenta</label>
+          <select id="capAccount"></select>
+          <div class="small" id="capHint">—</div>
+        </div>
+
+        <div>
+          <label>Monto a acreditar</label>
+          <input id="capAmount" type="number" step="0.01" min="0" placeholder="Ej: 1000.00">
+        </div>
+
+        <div>
+          <label>Fecha efectiva</label>
+          <input id="capDate" type="date">
+          <div class="small">Sugerido: hoy. (Se usa para el cálculo/registro)</div>
+        </div>
+
+        <div>
+          <label>Banco (opcional)</label>
+          <input id="capBank" type="text" placeholder="Ej: Banrural">
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Nota interna (opcional)</label>
+        <input id="capNote" type="text" placeholder="Motivo / referencia / observación">
+      </div>
+
+      <div class="inline" style="margin-top:14px; gap:10px">
+        <button id="btnAccreditCapital" type="button" class="primary">Acreditar</button>
+        <div class="small" id="capMsg"></div>
+      </div>
+    </div>
+
+<div class="card full" id="cardClients">
+      <div class="header" style="margin:0 0 10px">
+        <h2 style="margin:0">Clientes</h2>
+        <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
       </div>
 
       <div class="table-wrap">
@@ -866,148 +995,6 @@ rescar lista</button>
 </div>
 
 <!-- ===== MODAL: CONFIRMACIÓN PRO (agregado) ===== -->
-
-<!-- ===== MODAL: RETIRAR CAPITAL (Admin) ===== -->
-<div id="modalWithdrawAdmin" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Retirar capital</h3>
-        <button class="xbtn" type="button" onclick="closeWithdrawAdminModal()">✕</button>
-      </div>
-      <div class="modal-body">
-<div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Retirar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Crea un registro en <b>withdrawals</b> y descuenta del <b>capital actual</b>.
-          </div>
-        </div>
-
-        <div class="inline" style="gap:10px">
-          <button id="btnOpenWithdrawHistory" type="button" class="ghost">Historial de retiros</button>
-        </div>
-      </div>
-
-      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-        <div>
-          <label>Cliente / Cuenta</label>
-          <select id="wdAccount"></select>
-          <div class="small" id="wdHint">—</div>
-        </div>
-
-        <div>
-          <label>Monto a retirar</label>
-          <input id="wdAmount" type="number" step="0.01" min="0" placeholder="Ej: 500.00" autocomplete="off">
-        </div>
-
-        <div>
-          <label>Referencia (opcional)</label>
-          <input id="wdRef" type="text" placeholder="Boleta / Banco / Nota corta" autocomplete="off">
-        </div>
-
-        <div>
-          <label>Nota interna (opcional)</label>
-          <input id="wdNote" type="text" placeholder="Motivo / solicitud / observación" autocomplete="off">
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-        <button id="btnWithdraw" class="danger" type="button">Retirar</button>
-        <span id="wdMsg" class="small" style="opacity:.9"></span>
-      </div>
-    </div>
-
-    <!-- Lista -->
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== MODAL: ACREDITAR CAPITAL (Admin) ===== -->
-<div id="modalAccreditAdmin" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-inner">
-      <div class="modal-title">
-        <h3>Acreditar capital</h3>
-        <button class="xbtn" type="button" onclick="closeAccreditAdminModal()">✕</button>
-      </div>
-      <div class="modal-body">
-<div class="card">
-      <div class="header" style="margin:0 0 10px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Acreditar capital (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">
-            Acredita capital <b>directamente</b> a una cuenta (sin editar cliente y sin recarga). Queda registro en el sistema.
-          </div>
-        </div>
-      </div>
-
-      <div class="grid" style="display:grid;gap:12px;grid-template-columns:1fr 1fr">
-        <div>
-          <label>Cliente / Cuenta</label>
-          <select id="capAccount"></select>
-          <div class="small" id="capHint">—</div>
-        </div>
-
-        <div>
-          <label>Monto a acreditar</label>
-          <input id="capAmount" type="number" step="0.01" min="0" placeholder="Ej: 1000.00">
-        </div>
-
-        <div>
-          <label>Fecha efectiva</label>
-          <input id="capDate" type="date">
-          <div class="small">Sugerido: hoy. (Se usa para el cálculo/registro)</div>
-        </div>
-
-        <div>
-          <label>Banco (opcional)</label>
-          <input id="capBank" type="text" placeholder="Ej: Banrural">
-        </div>
-      </div>
-
-      <div style="margin-top:12px">
-        <label>Nota interna (opcional)</label>
-        <input id="capNote" type="text" placeholder="Motivo / referencia / observación">
-      </div>
-
-      <div class="inline" style="margin-top:14px; gap:10px">
-        <button id="btnAccreditCapital" type="button" class="primary">Acreditar</button>
-        <div class="small" id="capMsg"></div>
-      </div>
-    </div>
-
-<div class="card">
-      <div class="header" style="margin:0 0 10px">
-        <h2 style="margin:0">Clientes</h2>
-        <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Teléfono</th>
-              <th class="nowrap">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="users"></tbody>
-        </table>
-      </div>
-
-      <p class="small" style="margin-top:10px">
-        <span class="chip"><span class="dot"></span>Modo “Acumulado” = se guarda en cuenta; “Mensual” = se paga/marca cada mes.</span>
-      </p>
-      <p id="usersMsg" class="small" style="margin-top:6px"></p>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div id="modalConfirm" class="modal-backdrop hidden" role="dialog" aria-modal="true">
   <div class="modal" style="width:min(620px,100%)">
     <div class="modal-inner">
@@ -1933,6 +1920,16 @@ async function doAccreditCapital(){
    ============================================================ */
 let WDH_CACHE = [];
 
+
+function openWithdrawAdmin(){
+  show($("modalWithdrawAdmin"), true);
+}
+function openAccreditAdmin(){
+  show($("modalAccreditAdmin"), true);
+}
+function closeModalById(id){
+  show($(id), false);
+}
 function openWithdrawHistory(){
   show($("modalWithdrawHistory"), true);
   loadWithdrawHistory();
@@ -1940,29 +1937,6 @@ function openWithdrawHistory(){
 function closeWithdrawHistory(){
   show($("modalWithdrawHistory"), false);
 }
-
-function openWithdrawAdminModal(){
-  show($("modalWithdrawAdmin"), true);
-  // refresca selector de cuentas del retiro si existe
-  try{ refreshWithdrawPicker?.(); }catch(_){}
-}
-function closeWithdrawAdminModal(){ show($("modalWithdrawAdmin"), false); }
-
-function openAccreditAdminModal(){
-  show($("modalAccreditAdmin"), true);
-  // refresca selector de cuentas para acreditar si existe
-  try{ refreshAccreditPicker?.(); }catch(_){}
-}
-function closeAccreditAdminModal(){ show($("modalAccreditAdmin"), false); }
-
-// Cierra modal si haces click fuera (backdrop)
-document.addEventListener("click", (e)=>{
-  const b1 = $("modalWithdrawAdmin");
-  const b2 = $("modalAccreditAdmin");
-  if(b1 && !b1.classList.contains("hidden") && e.target === b1) closeWithdrawAdminModal();
-  if(b2 && !b2.classList.contains("hidden") && e.target === b2) closeAccreditAdminModal();
-});
-
 
 function resolveClientByAccountId(accountId){
   const x = (CACHED||[]).find(r => r.account_id === accountId);
@@ -1973,6 +1947,24 @@ function resolveClientByAccountId(accountId){
   };
 }
 
+
+async function loadAccountsByIds(ids){
+  try{
+    const clean = Array.from(new Set((ids||[]).filter(Boolean)));
+    if(!clean.length) return new Map();
+    // Intenta leer cuentas por ids (ajusta tabla/cols si tu esquema difiere)
+    const { data, error } = await supabase
+      .from("accounts")
+      .select("id, account_no, account_type, bank_name, bank_account, bank_account_type, currency")
+      .in("id", clean);
+    if(error) throw error;
+    const mp = new Map();
+    (data||[]).forEach(a=> mp.set(a.id, a));
+    return mp;
+  }catch(_e){
+    return new Map();
+  }
+}
 async function loadWithdrawHistory(){
   
 
@@ -2720,12 +2712,12 @@ function renderWithdrawRequests(rows, profileMap){
   if(!body) return;
   body.innerHTML = "";
 
-  // Solo pendientes (no mostrar aprobadas/rechazadas)
-  const isPending = (r)=>{
-    const s = (r?.status ?? r?.state ?? r?.withdraw_status ?? "").toString().toLowerCase().trim();
-    return !s || s==="pending" || s==="requested" || s==="request" || s==="new" || s==="open";
-  };
-  rows = (rows||[]).filter(isPending);
+  // Solo pendientes (aprobadas/rechazadas no se muestran)
+  rows = (rows||[]).filter(r=>{
+    const st = String(r.status || "").toUpperCase().trim();
+    const isPending = (!st) || st.startsWith("PEND") || st==="REQUESTED";
+    return isPending;
+  });
 
   (rows||[]).forEach(r=>{
     // Fallback por compatibilidad
@@ -3166,8 +3158,8 @@ function validateRatePlan(){
   show(err, !isValid);
   return isValid;
 }
-$("u_plan").addEventListener("change", validateRatePlan);
-$("u_rate").addEventListener("input", validateRatePlan);
+on("u_plan","change", validateRatePlan);
+on("u_rate","input", validateRatePlan);
 
 /*** Guardar ***/
 async function saveUser(){
@@ -3565,18 +3557,32 @@ async function initApp(){
 
 /*** BINDINGS ***/
 document.addEventListener("DOMContentLoaded", ()=>{
-  $("loginForm").addEventListener("submit", doLogin);
-  $("logoutBtn").addEventListener("click", logout);
+  // Operaciones (Admin) -> Modales
+  on("btnOpenWithdrawAdmin","click", openWithdrawAdmin);
+  on("btnOpenAccreditAdmin","click", openAccreditAdmin);
+  on("btnOpenWithdrawHistory","click", openWithdrawHistory);
+
+  // Cerrar modales (botón X y click afuera)
+  document.addEventListener("click", (e)=>{
+    const t = e.target;
+    if(!t) return;
+    const closeId = t.getAttribute && t.getAttribute("data-close");
+    if(closeId) { closeModalById(closeId); return; }
+    if(t.classList && t.classList.contains("modal")){ show(t, false); }
+  });
+
+  on("loginForm","submit", doLogin);
+  on("logoutBtn","click", logout);
   $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
 
-  $("togglePass").addEventListener("click", ()=> {
+  on("togglePass","click", ()=> {
     const inp = $("u_pass");
     inp.type = (inp.type === "password") ? "text" : "password";
   });
 
-  $("saveBtn").addEventListener("click", saveUser);
+  on("saveBtn","click", saveUser);
 
-  $("clearBtn").addEventListener("click", ()=>{
+  on("clearBtn","click", ()=>{
     ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value="");
     $("u_currency").value="GTQ";
     $("u_plan").value="STANDARD";
@@ -3586,13 +3592,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
     validateRatePlan();
   });
 
-  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); await refreshKPIs(); });
+  on("btnRefreshUsers","click", async ()=>{ await listUsers(); await refreshKPIs(); });
   $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); await refreshKPIs(); });
 
   bindCapitalFormatter($("u_capital"));
 
-  $("btnResetDo").addEventListener("click", doResetPassword);
-  $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
+  on("btnResetDo","click", doResetPassword);
+  on("btnOpenResetGlobal","click", ()=> openResetModal(null));
   $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
 
   $("btnDoSchedule")?.addEventListener("click", doScheduleTopup);
@@ -3688,18 +3694,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   };
 
   // Atajo: Ctrl+Shift+D descarga
-  
-function bindOpsButtons(){
-  const bw = $("btnOpWithdraw");
-  const ba = $("btnOpAccredit");
-  const bh = $("btnOpHistory");
-  if(bw) bw.onclick = openWithdrawAdminModal;
-  if(ba) ba.onclick = openAccreditAdminModal;
-  if(bh) bh.onclick = openWithdrawHistory;
-}
-try{ bindOpsButtons(); }catch(_){}
-
-window.addEventListener('keydown', (e)=>{
+  window.addEventListener('keydown', (e)=>{
     if(e.ctrlKey && e.shiftKey && (e.key==='D' || e.key==='d')){
       e.preventDefault();
       window.FX_DEBUG.download();
@@ -3719,6 +3714,7 @@ window.addEventListener('keydown', (e)=>{
 })();
 
 </script>
+
 </body>
 </html
 // Compat: algunas versiones llamaban getAuthUserByEmail()
