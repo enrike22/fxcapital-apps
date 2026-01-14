@@ -451,40 +451,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast.err{border-color:rgba(255,85,85,.25)}
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
-
-/* ===== Operaciones (Admin) - Quick Actions (agregado) ===== */
-#app .card{ content-visibility:auto; contain-intrinsic-size: 900px; }
-.opbar{
-  display:flex;
-  gap:14px;
-  padding:10px;
-  border-radius:999px;
-  background: rgba(0,0,0,.28);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
-}
-.opbtn{
-  flex:1;
-  border-radius:999px;
-  padding:12px 18px;
-  font-weight:950;
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  color: var(--fg);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow: 0 12px 30px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
-}
-.opbtn:hover{ filter: brightness(1.06); }
-.opbtn.active{
-  background: linear-gradient(180deg, #ffffff, #e9edf2);
-  color:#0b0c0e;
-  border-color: rgba(0,0,0,.18);
-  box-shadow: 0 14px 34px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.65);
-}
-.focusPulse{
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(230,193,90,.22), 0 0 60px rgba(230,193,90,.14), var(--shadow);
-}
-
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -551,18 +517,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 
   <!-- APP -->
   <div id="app" class="hidden">
-
-    <!-- ✅ Operaciones (Admin) (agregado) -->
-    <div class="card" id="opsCard">
-      <h2 style="margin:0 0 6px">Operaciones (Admin)</h2>
-      <div class="small" style="margin-bottom:12px;opacity:.9">Accesos rápidos para mantener el panel principal limpio.</div>
-      <div class="opbar" role="tablist" aria-label="Operaciones admin">
-        <button id="opWithdraw" type="button" class="opbtn active">Retirar capital</button>
-        <button id="opAccredit" type="button" class="opbtn">Acreditar capital</button>
-        <button id="opHistory" type="button" class="opbtn">Historial de retiros</button>
-      </div>
-    </div>
-
 
     <!-- SOLICITUDES DE RETIRO (pendientes) -->
     <div class="card">
@@ -722,7 +676,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     </div>
 
     <!-- RETIRAR CAPITAL -->
-    <div class="card" id="withdrawCard">
+    <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Retirar capital (Admin)</h2>
@@ -768,7 +722,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     <!-- Lista -->
     
     <!-- ACREDITAR CAPITAL (DIRECTO) -->
-    <div class="card" id="accreditCard">
+    <div class="card">
       <div class="header" style="margin:0 0 10px; align-items:flex-start">
         <div>
           <h2 style="margin:0">Acreditar capital (Admin)</h2>
@@ -2748,7 +2702,7 @@ async function listWithdrawRequests(){
       "account_bank_name","account_bank_account","account_bank_account_type"
     ].join(",");
 
-    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&order=created_at.desc`;
+    const url = `${BASE}/v_admin_withdrawal_requests?select=${encodeURIComponent(sel)}&status=eq.PENDING&order=created_at.desc`;
 
     const res = await fetch(url, { headers:h, cache:"no-store" });
     if(!res.ok){
@@ -2758,16 +2712,11 @@ async function listWithdrawRequests(){
 
     const rows = await res.json();
 
-    // ✅ Solo pendientes (las aprobadas/rechazadas ya no se muestran aquí)
-    const pendingRows = (rows||[]).filter(r=>{
-      const st = String(r.status || "").toUpperCase().trim();
-      return (!st) || st.startsWith("PEND") || st === "REQUESTED";
-    });
-
-    renderWithdrawRequests(pendingRows, new Map());
+    // ✅ Ya no necesitamos loadProfilesByIds()
+    renderWithdrawRequests(rows, new Map());
 
     // KPI
-    const pending = pendingRows.length;
+    const pending = rows.length;
     setKPI("kpiWithdrawPending", pending);
     setKPI("kpiOpsToday", pending + (Number($("kpiTopupsPending")?.dataset?.value||0)));
 
@@ -3530,40 +3479,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("loginForm").addEventListener("submit", doLogin);
   $("logoutBtn").addEventListener("click", logout);
   $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
-
-  // ✅ Operaciones (Admin) - botones rápidos
-  const setOpActive = (btnId)=>{
-    ["opWithdraw","opAccredit","opHistory"].forEach(id=> $(""+id)?.classList.remove("active"));
-    $(btnId)?.classList.add("active");
-  };
-
-  const pulseFocus = (el)=>{
-    if(!el) return;
-    el.classList.add("focusPulse");
-    clearTimeout(el._pulseT);
-    el._pulseT = setTimeout(()=> el.classList.remove("focusPulse"), 900);
-  };
-
-  $("opWithdraw")?.addEventListener("click", ()=>{
-    setOpActive("opWithdraw");
-    const el = $("withdrawCard");
-    el?.scrollIntoView({ behavior:"smooth", block:"start" });
-    pulseFocus(el);
-  });
-
-  $("opAccredit")?.addEventListener("click", ()=>{
-    setOpActive("opAccredit");
-    const el = $("accreditCard");
-    el?.scrollIntoView({ behavior:"smooth", block:"start" });
-    pulseFocus(el);
-  });
-
-  $("opHistory")?.addEventListener("click", ()=>{
-    setOpActive("opHistory");
-    // reusar el botón existente (no cambiamos tu lógica)
-    $("btnOpenWithdrawHistory")?.click();
-  });
-
 
   $("togglePass").addEventListener("click", ()=> {
     const inp = $("u_pass");
