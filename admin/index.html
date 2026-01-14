@@ -2637,6 +2637,7 @@ function renderWithdrawRequests(rows, profileMap){
   const body = $("withdrawReqs");
   if(!body) return;
   body.innerHTML = "";
+  const frag = document.createDocumentFragment();
 
   (rows||[]).forEach(r=>{
     // Fallback por compatibilidad
@@ -2675,8 +2676,9 @@ function renderWithdrawRequests(rows, profileMap){
         })()}
       </td>
     `;
-    body.appendChild(tr);
+    frag.appendChild(tr);
   });
+  body.appendChild(frag);
 }
 
 async function listWithdrawRequests(){
@@ -2760,6 +2762,13 @@ async function approveWithdrawReq(id){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
+
+  // 4) ✅ Borrar la solicitud (ya aprobada/rechazada) para que no quede acumulada
+  const r3 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
+    method:"DELETE",
+    headers: h
+  });
+  if(!r3.ok) throw new Error(await r3.text());
 }
 
 async function rejectWithdrawReq(id, reason){
@@ -2776,6 +2785,13 @@ async function rejectWithdrawReq(id, reason){
     })
   });
   if(!r2.ok) throw new Error(await r2.text());
+
+  // 4) ✅ Borrar la solicitud (ya aprobada/rechazada) para que no quede acumulada
+  const r3 = await fetch(`${BASE}/withdrawal_requests?id=eq.${id}`, {
+    method:"DELETE",
+    headers: h
+  });
+  if(!r3.ok) throw new Error(await r3.text());
 }
 
 // === Aliases usados por la UI de "Solicitudes de retiro" ===
@@ -3535,13 +3551,34 @@ document.addEventListener("DOMContentLoaded", ()=>{
   initApp();
 });
 
-/*** FX DEBUG HARNESS (captura TODOS los errores + requests) ***/
+/*** FX DEBUG HARNESS (captura errores + requests cuando está habilitado) ***/
 (function(){
+  const enabled = (localStorage.fx_debug_enabled === "1") || (new URLSearchParams(location.search).get("debug") === "1");
   const store = [];
   const push = (type, payload) => {
+    if(!enabled) return;
     store.push({ts:new Date().toISOString(), type, ...payload});
     try{ localStorage.fx_debug_log = JSON.stringify(store.slice(-800)); }catch(e){}
   };
+
+  // API disponible siempre (aunque esté deshabilitado)
+  window.FX_DEBUG = {
+    enabled,
+    get(){ try{return JSON.parse(localStorage.fx_debug_log||'[]');}catch(e){return store;} },
+    clear(){ localStorage.removeItem('fx_debug_log'); store.length=0; },
+    download(){
+      const blob = new Blob([JSON.stringify(window.FX_DEBUG.get(), null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'fx_admin_debug_log.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+  };
+
+  // Si no está habilitado, no instrumentamos nada (mejor rendimiento)
+  if(!enabled) return;
 
   // 1) Errores JS
   window.addEventListener('error', (e)=>{
@@ -3583,20 +3620,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   };
 
-  // API para descargar
-  window.FX_DEBUG = {
-    get(){ try{return JSON.parse(localStorage.fx_debug_log||'[]');}catch(e){return store;} },
-    clear(){ localStorage.removeItem('fx_debug_log'); store.length=0; },
-    download(){
-      const blob = new Blob([JSON.stringify(window.FX_DEBUG.get(), null, 2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'fx_admin_debug_log.json';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
-    }
-  };
 
   // Atajo: Ctrl+Shift+D descarga
   window.addEventListener('keydown', (e)=>{
