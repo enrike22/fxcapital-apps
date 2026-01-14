@@ -451,36 +451,6 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
 .toast.err{border-color:rgba(255,85,85,.25)}
 .toast .sub{display:block;margin-top:4px;font-weight:650;opacity:.82;font-size:12.5px;line-height:1.35}
 
-
-/* --- Layout helpers (premium) --- */
-.full{grid-column:1/-1}
-.row.tight{gap:12px}
-.segment{
-  display:flex; gap:10px; padding:10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-}
-.segment .seg-btn{
-  flex:1;
-  border-radius: 999px;
-  padding:12px 14px;
-  font-weight:900;
-  letter-spacing:.2px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(0,0,0,.15);
-}
-.segment .seg-btn.primary{
-  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72));
-  color:#0B0D10;
-  border-color: rgba(0,0,0,.20);
-}
-.segment .seg-btn:hover{filter:brightness(1.05)}
-/* Ensure big sections don't get squeezed on desktop */
-@media (min-width: 980px){
-  #cardUserEditor, #cardClients, #cardWithdrawReqs, #cardTopups{grid-column:1/-1}
-}
 </style>
 
 <!-- Supabase JS (CDN) agregado (no rompe el fetch existente, por si luego lo quieres usar) -->
@@ -548,24 +518,8 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
   <!-- APP -->
   <div id="app" class="hidden">
 
-    <!-- OPERACIONES (ADMIN) - accesos rápidos -->
-    <div class="card full" id="cardOps">
-      <div class="header" style="margin:0 0 12px; align-items:flex-start">
-        <div>
-          <h2 style="margin:0">Operaciones (Admin)</h2>
-          <div class="small" style="margin-top:6px;opacity:.9">Accesos rápidos para mantener el panel principal limpio.</div>
-        </div>
-      </div>
-      <div class="segment">
-        <button id="btnOpenWithdrawAdmin" type="button" class="seg-btn">Retirar capital</button>
-        <button id="btnOpenAccreditAdmin" type="button" class="seg-btn">Acreditar capital</button>
-        <button id="btnOpenWithdrawHistory" type="button" class="seg-btn primary">Historial de retiros</button>
-      </div>
-    </div>
-
-
     <!-- SOLICITUDES DE RETIRO (pendientes) -->
-    <div class="card full" id="cardWithdrawReqs">
+    <div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Solicitudes de retiro</h2>
         <button id="btnRefreshWithdrawReqs" type="button" class="ghost">Refrescar</button>
@@ -595,7 +549,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
     </div>
 
     <!-- TOPUPS -->
-    <div class="card full" id="cardTopups">
+    <div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Recargas (pendientes / programadas)</h2>
         <button id="btnRefreshTopups" type="button" class="ghost">Refrescar</button>
@@ -813,7 +767,7 @@ tbody tr:hover{ background: rgba(255,255,255,.035); }
       </div>
     </div>
 
-<div class="card full" id="cardClients">
+<div class="card">
       <div class="header" style="margin:0 0 10px">
         <h2 style="margin:0">Clientes</h2>
         <button id="btnRefreshUsers" type="button" class="ghost">Refrescar lista</button>
@@ -1920,16 +1874,6 @@ async function doAccreditCapital(){
    ============================================================ */
 let WDH_CACHE = [];
 
-
-function openWithdrawAdmin(){
-  show($("modalWithdrawAdmin"), true);
-}
-function openAccreditAdmin(){
-  show($("modalAccreditAdmin"), true);
-}
-function closeModalById(id){
-  show($(id), false);
-}
 function openWithdrawHistory(){
   show($("modalWithdrawHistory"), true);
   loadWithdrawHistory();
@@ -1947,24 +1891,6 @@ function resolveClientByAccountId(accountId){
   };
 }
 
-
-async function loadAccountsByIds(ids){
-  try{
-    const clean = Array.from(new Set((ids||[]).filter(Boolean)));
-    if(!clean.length) return new Map();
-    // Intenta leer cuentas por ids (ajusta tabla/cols si tu esquema difiere)
-    const { data, error } = await supabase
-      .from("accounts")
-      .select("id, account_no, account_type, bank_name, bank_account, bank_account_type, currency")
-      .in("id", clean);
-    if(error) throw error;
-    const mp = new Map();
-    (data||[]).forEach(a=> mp.set(a.id, a));
-    return mp;
-  }catch(_e){
-    return new Map();
-  }
-}
 async function loadWithdrawHistory(){
   
 
@@ -2712,13 +2638,6 @@ function renderWithdrawRequests(rows, profileMap){
   if(!body) return;
   body.innerHTML = "";
 
-  // Solo pendientes (aprobadas/rechazadas no se muestran)
-  rows = (rows||[]).filter(r=>{
-    const st = String(r.status || "").toUpperCase().trim();
-    const isPending = (!st) || st.startsWith("PEND") || st==="REQUESTED";
-    return isPending;
-  });
-
   (rows||[]).forEach(r=>{
     // Fallback por compatibilidad
     const p = profileMap?.get?.(r.profile_id) || {};
@@ -3158,8 +3077,8 @@ function validateRatePlan(){
   show(err, !isValid);
   return isValid;
 }
-on("u_plan","change", validateRatePlan);
-on("u_rate","input", validateRatePlan);
+$("u_plan").addEventListener("change", validateRatePlan);
+$("u_rate").addEventListener("input", validateRatePlan);
 
 /*** Guardar ***/
 async function saveUser(){
@@ -3557,32 +3476,18 @@ async function initApp(){
 
 /*** BINDINGS ***/
 document.addEventListener("DOMContentLoaded", ()=>{
-  // Operaciones (Admin) -> Modales
-  on("btnOpenWithdrawAdmin","click", openWithdrawAdmin);
-  on("btnOpenAccreditAdmin","click", openAccreditAdmin);
-  on("btnOpenWithdrawHistory","click", openWithdrawHistory);
-
-  // Cerrar modales (botón X y click afuera)
-  document.addEventListener("click", (e)=>{
-    const t = e.target;
-    if(!t) return;
-    const closeId = t.getAttribute && t.getAttribute("data-close");
-    if(closeId) { closeModalById(closeId); return; }
-    if(t.classList && t.classList.contains("modal")){ show(t, false); }
-  });
-
-  on("loginForm","submit", doLogin);
-  on("logoutBtn","click", logout);
+  $("loginForm").addEventListener("submit", doLogin);
+  $("logoutBtn").addEventListener("click", logout);
   $("btnRefreshWithdrawReqs")?.addEventListener("click", listWithdrawRequests);
 
-  on("togglePass","click", ()=> {
+  $("togglePass").addEventListener("click", ()=> {
     const inp = $("u_pass");
     inp.type = (inp.type === "password") ? "text" : "password";
   });
 
-  on("saveBtn","click", saveUser);
+  $("saveBtn").addEventListener("click", saveUser);
 
-  on("clearBtn","click", ()=>{
+  $("clearBtn").addEventListener("click", ()=>{
     ["u_email","u_name","u_phone","u_pass","u_capital","u_joined","u_rate","u_bank_name","u_bank_account","u_bank_account_type"].forEach(id=>$(id).value="");
     $("u_currency").value="GTQ";
     $("u_plan").value="STANDARD";
@@ -3592,13 +3497,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
     validateRatePlan();
   });
 
-  on("btnRefreshUsers","click", async ()=>{ await listUsers(); await refreshKPIs(); });
+  $("btnRefreshUsers").addEventListener("click", async ()=>{ await listUsers(); await refreshKPIs(); });
   $("btnRefreshTopups")?.addEventListener("click", async ()=>{ await listTopups(); await refreshKPIs(); });
 
   bindCapitalFormatter($("u_capital"));
 
-  on("btnResetDo","click", doResetPassword);
-  on("btnOpenResetGlobal","click", ()=> openResetModal(null));
+  $("btnResetDo").addEventListener("click", doResetPassword);
+  $("btnOpenResetGlobal").addEventListener("click", ()=> openResetModal(null));
   $("resetPick")?.addEventListener("change", syncResetCtxFromPicker);
 
   $("btnDoSchedule")?.addEventListener("click", doScheduleTopup);
@@ -3714,7 +3619,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
 })();
 
 </script>
-
 </body>
 </html
 // Compat: algunas versiones llamaban getAuthUserByEmail()
