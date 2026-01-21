@@ -170,7 +170,11 @@
     // Autologin si ya hay sesión
     (async () => {
       const { data:{ session } } = await sb.auth.getSession();
-      if (session) window.location.replace(DASHBOARD_PATH);
+      if (session) {
+        try { window.Android?.onLoginSuccess?.(session.user?.email || ''); } catch(e) {}
+        try { window.Android?.onLoginSuccess?.(email); } catch(e) {}
+      window.location.replace(DASHBOARD_PATH);
+      }
     })();
 
     // Utilidades
@@ -202,6 +206,7 @@
         }
         return;
       }
+      try { window.Android?.onLoginSuccess?.(email); } catch(e) {}
       window.location.replace(DASHBOARD_PATH);
     }
     $('btnLogin').addEventListener('click', doLogin);
