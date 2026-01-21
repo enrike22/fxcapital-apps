@@ -1077,6 +1077,8 @@
         }catch(e){}
       }
     } finally {
+      // ✅ Avisar a Android para limpiar cuenta ligada a biometría
+      try { window.Android?.onLogout?.(); } catch(e) {}
       const bust = `logged_out=${Date.now()}`;
       const sep  = LOGIN_URL.includes('?') ? '&' : '?';
       window.location.replace(`${LOGIN_URL}${sep}${bust}`);
@@ -1926,6 +1928,9 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
 
     CURRENT_USER_NAME  = (prof?.full_name || prof?.email || session.user.email || '—');
     CURRENT_USER_EMAIL = (prof?.email || session.user.email || '');
+
+    // ✅ Avisar a Android qué cuenta quedó activa (para ligar biometría por email)
+    try { window.Android?.onLoginSuccess?.(CURRENT_USER_EMAIL || ''); } catch(e) {}
 
     const vn = document.getElementById('valName');
     if(vn) vn.textContent = CURRENT_USER_NAME;
