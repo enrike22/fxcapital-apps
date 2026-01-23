@@ -1028,6 +1028,25 @@
   let CURRENT_ACCOUNT_ID = null;
   let CURRENT_ACCOUNTS = [];
 
+// ✅ Mostrar modal de cambio de contraseña SOLO 1 vez por sesión (al hacer login)
+let PWD_PROMPT_SHOWN = false;
+
+function maybeOpenPwdDialogOnce(mustChange){
+  if(!mustChange) return;
+  if(PWD_PROMPT_SHOWN) return;
+
+  try{
+    if(sessionStorage.getItem('fxc_pwd_prompt_shown') === '1'){
+      PWD_PROMPT_SHOWN = true;
+      return;
+    }
+    sessionStorage.setItem('fxc_pwd_prompt_shown','1');
+  }catch(e){}
+
+  PWD_PROMPT_SHOWN = true;
+  openPwdDialog();
+}
+
   /* ============================================================
      ✅ UI: Tipo de cuenta (badge + texto)
      - Pago mensual: compound_interest = false
@@ -1961,7 +1980,7 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
       const sp = document.getElementById('simPlan'); if(sp) sp.textContent = '—';
       renderSim(0,0);
 
-      if(prof?.must_change_password){ openPwdDialog(); }
+      
       return;
     }
 
@@ -2053,7 +2072,7 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
     // ✅ Viernes 9AM Guatemala + joined exacto
     paintWeeks(acc, {});
 
-    if(prof?.must_change_password){ openPwdDialog(); }
+    
   }
 
   let CURRENT_VIEW = 'panel';
@@ -2088,7 +2107,7 @@ const amount = safeParseMoney(document.getElementById('tAmount')?.value);
 
     await refreshForAccount(selected);
 
-    if(prof?.must_change_password){ openPwdDialog(); }
+    
   }
 
 
