@@ -939,6 +939,28 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnBlaGJ1YmZyaW51dHp0bndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MzU1MTIsImV4cCI6MjA3NDQxMTUxMn0.m07fP_x2_q8MyjZWcy1xbV-Te841Vv0NNaFKq4GDSsY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
 
+
+  // ✅ Permite que Android "loguee" restaurando sesión (biometría)
+  window.__setNativeSession = async (access, refresh, emailHint) => {
+    try {
+      if (!access || !refresh) return { ok:false, error:'missing_tokens' };
+
+      const { data, error } = await sb.auth.setSession({
+        access_token: access,
+        refresh_token: refresh
+      });
+
+      if (error) return { ok:false, error: error.message || 'setSession_error' };
+
+      const em = data?.session?.user?.email || emailHint || '';
+      try { window.Android?.onLoginSuccess?.(em); } catch(e) {}
+
+      return { ok:true };
+    } catch (e) {
+      return { ok:false, error: String(e) };
+    }
+  };
+
   const $ = s=>document.querySelector(s);
   const fmtQ = n => { try{ return new Intl.NumberFormat('es-GT',{style:'currency',currency:'GTQ'}).format(n||0) }catch(e){ return `Q ${(Number(n)||0).toFixed(2)}` } };
   const fmtMoney = (n, cur='GTQ') => {
@@ -1097,6 +1119,7 @@ function maybeOpenPwdDialogOnce(mustChange){
       }
     } finally {
       // ✅ Avisar a Android para limpiar cuenta ligada a biometría
+      try { window.AndroidSessionBridge?.clearSession?.(); } catch(e) {}
       try { window.Android?.onLogout?.(); } catch(e) {}
       const bust = `logged_out=${Date.now()}`;
       const sep  = LOGIN_URL.includes('?') ? '&' : '?';
